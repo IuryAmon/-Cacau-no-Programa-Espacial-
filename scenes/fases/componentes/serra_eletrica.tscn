@@ -1,0 +1,197 @@
+[gd_scene format=3 uid="uid://cvmtnwx22kdwl"]
+
+[ext_resource type="Script" uid="uid://d1mg51m6ltyqo" path="res://scripts/fases/serra_eletrica.gd" id="1_serra"]
+[ext_resource type="Texture2D" uid="uid://cbwchxw5sghqa" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile000.png" id="a0"]
+[ext_resource type="Texture2D" uid="uid://bxw68wjficmy7" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile001.png" id="a1"]
+[ext_resource type="Texture2D" uid="uid://cug73bgbxhudf" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile002.png" id="a2"]
+[ext_resource type="Texture2D" uid="uid://4qmx2u0b2d8k" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile003.png" id="a3"]
+[ext_resource type="Texture2D" uid="uid://bnspsv4j0dlo6" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile004.png" id="a4"]
+[ext_resource type="Texture2D" uid="uid://03ld6uws0j1l" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile005.png" id="a5"]
+[ext_resource type="Texture2D" uid="uid://bici8q5yrc3lq" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile006.png" id="a6"]
+[ext_resource type="Texture2D" uid="uid://dfg43cue3uamu" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile007.png" id="a7"]
+[ext_resource type="Texture2D" uid="uid://stmrx2718uek" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile008.png" id="a8"]
+[ext_resource type="Texture2D" uid="uid://bagk3f614wuyl" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile009.png" id="a9"]
+[ext_resource type="Texture2D" uid="uid://xns73kpakspx" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile010.png" id="a10"]
+[ext_resource type="Texture2D" uid="uid://qbgwv586gy1t" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile011.png" id="a11"]
+[ext_resource type="Texture2D" uid="uid://vbehmbovm0qy" path="res://assets/Lab/Traps/Individual_PNGs/saw_activate/tile012.png" id="a12"]
+[ext_resource type="Texture2D" uid="uid://cty2f18xi2h5g" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile000.png" id="d0"]
+[ext_resource type="Texture2D" uid="uid://dahgfikef578" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile001.png" id="d1"]
+[ext_resource type="Texture2D" uid="uid://dg8ghxkd8sq0p" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile002.png" id="d2"]
+[ext_resource type="Texture2D" uid="uid://b14de1kym0a0i" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile003.png" id="d3"]
+[ext_resource type="Texture2D" uid="uid://f0sp6ejv8h2r" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile004.png" id="d4"]
+[ext_resource type="Texture2D" uid="uid://bgfy816tmoqip" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile005.png" id="d5"]
+[ext_resource type="Texture2D" uid="uid://xgfat6xo53c0" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile006.png" id="d6"]
+[ext_resource type="Texture2D" uid="uid://crus48m4kaghj" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile007.png" id="d7"]
+[ext_resource type="Texture2D" uid="uid://b8orwt6fqqht3" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile008.png" id="d8"]
+[ext_resource type="Texture2D" uid="uid://bfg7t7pnwtu52" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile009.png" id="d9"]
+[ext_resource type="Texture2D" uid="uid://ljynhip6832j" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile010.png" id="d10"]
+[ext_resource type="Texture2D" uid="uid://df8h0m61xj68e" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile011.png" id="d11"]
+[ext_resource type="Texture2D" uid="uid://bet7p6uouj6yf" path="res://assets/Lab/Traps/Individual_PNGs/saw_deactivate/tile012.png" id="d12"]
+[ext_resource type="Texture2D" uid="uid://b38k27bk27ebx" path="res://assets/Lab/Traps/Individual_PNGs/saw_idle/tile000.png" id="i0"]
+[ext_resource type="Texture2D" uid="uid://c4cluq4357mh3" path="res://assets/Lab/Traps/Individual_PNGs/saw_idle/tile001.png" id="i1"]
+[ext_resource type="Texture2D" uid="uid://d2mvijr43ijpb" path="res://assets/Lab/Traps/Individual_PNGs/saw_idle/tile002.png" id="i2"]
+[ext_resource type="Texture2D" uid="uid://bydx0h3b76g0n" path="res://assets/Lab/Traps/Individual_PNGs/saw_idle/tile003.png" id="i3"]
+[ext_resource type="Texture2D" uid="uid://c0luwjg5xci2p" path="res://assets/Lab/Traps/Individual_PNGs/saw_idle/tile004.png" id="i4"]
+[ext_resource type="Texture2D" uid="uid://d2em8ok7vjjt1" path="res://assets/Lab/Traps/Individual_PNGs/saw_idle/tile005.png" id="i5"]
+[ext_resource type="AudioStream" uid="uid://cyd3h0xtfarc2" path="res://sounds/SerraRodando.mp3" id="som"]
+[ext_resource type="AudioStream" uid="uid://2ov16vwy81d6" path="res://sounds/SerraHit.mp3" id="som_hit"]
+[ext_resource type="AudioStream" uid="uid://d2i7r7mj07a7c" path="res://sounds/SerraParando.mp3" id="som_parando"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_serra"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("i0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("i1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("i2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("i3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("i4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("i5")
+}],
+"loop": true,
+"name": &"armado",
+"speed": 14.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("a0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a9")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a10")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a11")
+}, {
+"duration": 1.0,
+"texture": ExtResource("a12")
+}],
+"loop": false,
+"name": &"ativando",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("d0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d9")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d10")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d11")
+}, {
+"duration": 1.0,
+"texture": ExtResource("d12")
+}],
+"loop": false,
+"name": &"desativando",
+"speed": 12.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_4vaai"]
+radius = 26.076809
+
+[node name="SerraEletrica" type="Area2D" unique_id=1044318725 groups=["serra_eletrica"]]
+script = ExtResource("1_serra")
+segmentos = 1
+
+[node name="Visual" type="AnimatedSprite2D" parent="." unique_id=1739205630]
+position = Vector2(0, -32)
+rotation = 1.5707964
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_serra")
+animation = &"desativando"
+autoplay = "armado"
+
+[node name="Segmentos" type="Node2D" parent="." unique_id=1225090583]
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=1836274941]
+position = Vector2(2, -10)
+shape = SubResource("CircleShape2D_4vaai")
+debug_color = Color(1, 0.25, 0.28, 0.32)
+
+[node name="SomLaser" type="AudioStreamPlayer2D" parent="." unique_id=1509876234]
+position = Vector2(0, -24)
+stream = ExtResource("som")
+volume_db = -22.0
+max_distance = 700.0
+attenuation = 2.0
+
+[node name="AtrasoDesligar" type="Timer" parent="." unique_id=1660439827]
+one_shot = true
+
+[node name="SomParando" type="AudioStreamPlayer2D" parent="." unique_id=1073385592]
+position = Vector2(0, -24)
+stream = ExtResource("som_parando")
+volume_db = -14.0
+max_distance = 900.0
+attenuation = 1.6
+
+[node name="SomCorte" type="AudioStreamPlayer2D" parent="." unique_id=1918640473]
+position = Vector2(0, -24)
+stream = ExtResource("som_hit")
+volume_db = -5.0
+max_distance = 1200.0

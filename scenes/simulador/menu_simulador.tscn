@@ -1,0 +1,113 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/simulador/menu_simulador.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="2_fonte"]
+[ext_resource type="AudioStream" path="res://sounds/PauseButton.mp3" id="3_som"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_normal"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hover"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pressed"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_disabled"]
+
+[sub_resource type="Theme" id="Theme_menu"]
+Button/colors/font_color = Color(0.83137256, 0.85490197, 0.9019608, 1)
+Button/colors/font_focus_color = Color(1, 0.827451, 0.22745098, 1)
+Button/colors/font_hover_color = Color(1, 0.827451, 0.22745098, 1)
+Button/colors/font_pressed_color = Color(1, 0.9490196, 0.6392157, 1)
+Button/styles/disabled = SubResource("StyleBoxEmpty_disabled")
+Button/styles/focus = SubResource("StyleBoxEmpty_focus")
+Button/styles/hover = SubResource("StyleBoxEmpty_hover")
+Button/styles/normal = SubResource("StyleBoxEmpty_normal")
+Button/styles/pressed = SubResource("StyleBoxEmpty_pressed")
+
+[node name="MenuSimulador" type="CanvasLayer"]
+process_mode = 3
+layer = 10
+visible = false
+script = ExtResource("1_script")
+
+[node name="Fundo" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.06, 0.72)
+
+[node name="Centro" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Opcoes" type="VBoxContainer" parent="Centro"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -170.0
+offset_right = 300.0
+offset_bottom = 170.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="Titulo" type="Label" parent="Centro/Opcoes"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6392157, 0.827451, 1, 1)
+theme_override_fonts/font = ExtResource("2_fonte")
+theme_override_font_sizes/font_size = 26
+text = "SIMULADOR DE VOO"
+horizontal_alignment = 1
+
+[node name="Pontuacao" type="Label" parent="Centro/Opcoes"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7137255, 0.7411765, 0.79607844, 1)
+theme_override_fonts/font = ExtResource("2_fonte")
+theme_override_font_sizes/font_size = 20
+text = "0 / 1000 pontos"
+horizontal_alignment = 1
+
+[node name="Espaco" type="Control" parent="Centro/Opcoes"]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+
+[node name="Continuar" type="Button" parent="Centro/Opcoes"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../Sair")
+focus_neighbor_bottom = NodePath("../Sair")
+theme = SubResource("Theme_menu")
+theme_override_fonts/font = ExtResource("2_fonte")
+theme_override_font_sizes/font_size = 40
+text = "Continuar"
+
+[node name="Sair" type="Button" parent="Centro/Opcoes"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../Continuar")
+focus_neighbor_bottom = NodePath("../Continuar")
+theme = SubResource("Theme_menu")
+theme_override_fonts/font = ExtResource("2_fonte")
+theme_override_font_sizes/font_size = 40
+text = "Sair do simulador"
+
+[node name="Dica" type="Label" parent="Centro/Opcoes"]
+layout_mode = 2
+modulate = Color(1, 1, 1, 0.5)
+theme_override_fonts/font = ExtResource("2_fonte")
+theme_override_font_sizes/font_size = 16
+text = "ESC volta para a simulação"
+horizontal_alignment = 1
+
+[node name="SomBotao" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_som")
+volume_db = -6.0

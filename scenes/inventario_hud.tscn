@@ -1,0 +1,36 @@
+[gd_scene load_steps=6 format=3 uid="uid://yo0lc83f8k4g"]
+
+[ext_resource type="Script" uid="uid://xal4lrb8ohu0" path="res://scripts/inventario_hud.gd" id="1_o6yin"]
+[ext_resource type="Script" path="res://scripts/ui/mochila_hud.gd" id="2_mochila"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="3_np1et"]
+[ext_resource type="PackedScene" uid="uid://byfujg4367igw" path="res://scenes/ui/popup_item.tscn" id="4_popup"]
+[ext_resource type="AudioStream" uid="uid://c86fbcl03hwvb" path="res://sounds/Blip2.wav" id="5_som"]
+
+[node name="InventarioHud" type="CanvasLayer"]
+process_mode = 3
+layer = 95
+script = ExtResource("1_o6yin")
+
+[node name="Mochila" type="Control" parent="."]
+metadata/_edit_lock_ = true
+texture_filter = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -342.0
+offset_top = 20.0
+offset_right = -26.0
+offset_bottom = 172.0
+grow_horizontal = 0
+mouse_filter = 2
+script = ExtResource("2_mochila")
+fonte = ExtResource("3_np1et")
+previa_cheia = true
+
+[node name="PopupItem" parent="." instance=ExtResource("4_popup")]
+metadata/_edit_lock_ = true
+
+[node name="SomGuardar" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("5_som")
+volume_db = -8.0

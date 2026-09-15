@@ -1,0 +1,54 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/madeira.gd" id="1_are1c"]
+[ext_resource type="Texture2D" uid="uid://qj3koocxx666" path="res://assets/Lab/fornalha/madeira.png" id="2_mad"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/aviso_interacao.tscn" id="3_aviso"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ugun4"]
+size = Vector2(80, 70)
+
+[node name="Madeira" type="Area2D" unique_id=349234401 groups=["madeira"]]
+script = ExtResource("1_are1c")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=310168207]
+scale = Vector2(2, 2)
+texture = ExtResource("2_mad")
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=1232115907]
+offset_left = -17.0
+offset_top = -11.0
+offset_right = 17.0
+offset_bottom = 11.0
+mouse_filter = 2
+color = Color(0.45, 0.32, 0.2, 1)
+
+[node name="Miolo" type="ColorRect" parent="Placeholder" unique_id=1451605484]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 5.0
+offset_right = 28.0
+offset_bottom = 17.0
+mouse_filter = 2
+color = Color(0.58, 0.42, 0.26, 1)
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=1867218926]
+shape = SubResource("RectangleShape2D_ugun4")
+
+[node name="Rotulo" type="Label" parent="." unique_id=2069131385]
+visible = false
+offset_left = -100.0
+offset_top = -59.0
+offset_right = 100.0
+offset_bottom = -13.0
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+text = "madeira [E]"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ExclamacaoAnimada" parent="." instance=ExtResource("3_aviso")]
+position = Vector2(0, -52)
+scale = Vector2(1.2, 1.2)

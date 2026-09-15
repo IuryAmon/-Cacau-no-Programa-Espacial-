@@ -1,0 +1,13 @@
+join cientista (cientista_feliz) right
+cientista: Ei! Consegue me ouvir aí de dentro? O rádio da cabine ainda funciona. Ótimo.
+cientista (cientista_serio): Antes que você se empolgue\: esse foguete não vai a lugar nenhum. Ele é o simulador de voo do centro de treinamento.
+cientista: Cabine de verdade, tela no lugar da janela, e o resto é software meu. Estava desligado desde que me trancaram do lado de fora.
+cientista (cientista_mto_feliz): Mas agora o sistema me reconhece de novo! Deixa comigo, eu vou ligar o simulador.
+cientista (cientista_serio): O exercício é este\: a rota está entupida de moléculas soltas, e você limpa o caminho neutralizando cada uma.
+cientista: A nave tem dois canhões. O azul dispara OH-, que é base. O verde dispara H+, que é ácido.
+cientista (cientista_feliz): Aí funciona igualzinho ao béquer\: ácido só é neutralizado por base, e base só é neutralizada por ácido.
+cientista: Bolha azul escrita HCl é ácido, derruba com o canhão azul. Bolha verde escrita NaOH é base, derruba com o canhão verde.
+cientista (cientista_bravo): E não adianta insistir com o tiro errado. Não vai acontecer nada. Química não negocia.
+cientista (cientista_serio): Meta do treinamento\: 1000 pontos. Cuidado com a integridade da nave, ela é o seu limite.
+cientista (cientista_feliz): WASD pilota, ESPAÇO é o canhão azul, ENTER é o verde. Se cansar, ESC pausa e você sai quando quiser.
+cientista (cientista_mto_feliz): Ligando em três... dois... um...

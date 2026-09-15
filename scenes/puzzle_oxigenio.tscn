@@ -1,0 +1,322 @@
+[gd_scene format=3 uid="uid://po3x8y2qmn5a"]
+
+[ext_resource type="Script" uid="uid://cchnvip3303lf" path="res://scripts/puzzle_oxigenio.gd" id="1_po"]
+[ext_resource type="AudioStream" uid="uid://d184o4jmhqq0t" path="res://sounds/PuzzleConcluido2.mp3" id="2_po"]
+[ext_resource type="Texture2D" uid="uid://b7ovl1r1j4y8c" path="res://assets/Gaiola/fundo_puzzle_gaiola.png" id="3_po"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="4_po"]
+[ext_resource type="Texture2D" uid="uid://cv81r1ff5kpi8" path="res://assets/Gaiola/particulas_puzzle.png" id="5_po"]
+[ext_resource type="AudioStream" uid="uid://0t8yju2oahhm" path="res://sounds/AcessoNegado.mp3" id="6_po"]
+[ext_resource type="AudioStream" uid="uid://bxtvw2yqbqsj6" path="res://sounds/drag.mp3" id="7_po"]
+[ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="8_po"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_atombg"]
+atlas = ExtResource("5_po")
+region = Rect2(166, 40, 254, 254)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nucleo"]
+bg_color = Color(0.4, 0.28, 0, 0.5)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.82, 0, 1)
+corner_radius_top_left = 45
+corner_radius_top_right = 45
+corner_radius_bottom_right = 45
+corner_radius_bottom_left = 45
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eletron1"]
+atlas = ExtResource("5_po")
+region = Rect2(115, 125, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eletron2"]
+atlas = ExtResource("5_po")
+region = Rect2(115, 125, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eletron3"]
+atlas = ExtResource("5_po")
+region = Rect2(115, 125, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eletron4"]
+atlas = ExtResource("5_po")
+region = Rect2(115, 125, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eletron5"]
+atlas = ExtResource("5_po")
+region = Rect2(115, 125, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eletron6"]
+atlas = ExtResource("5_po")
+region = Rect2(115, 125, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eletron7"]
+atlas = ExtResource("5_po")
+region = Rect2(115, 125, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eletron8"]
+atlas = ExtResource("5_po")
+region = Rect2(115, 125, 25, 25)
+
+[node name="PuzzleOxigenio" type="CanvasLayer" unique_id=-1429857133]
+layer = 10
+visible = false
+script = ExtResource("1_po")
+
+[node name="AudioSucesso" type="AudioStreamPlayer" parent="." unique_id=-571002560]
+stream = ExtResource("2_po")
+volume_db = 2.0
+
+[node name="AudioErro" type="AudioStreamPlayer" parent="." unique_id=-571002559]
+stream = ExtResource("6_po")
+volume_db = 2.0
+
+[node name="AudioDrag" type="AudioStreamPlayer" parent="." unique_id=-571002558]
+stream = ExtResource("7_po")
+
+[node name="AudioPop" type="AudioStreamPlayer" parent="." unique_id=-571002557]
+stream = ExtResource("8_po")
+
+[node name="RootControl" type="Control" parent="." unique_id=-1027800291]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Fundo" type="ColorRect" parent="RootControl" unique_id=-1060742655]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.72)
+
+[node name="Painel" type="TextureRect" parent="RootControl" unique_id=-707516923]
+layout_mode = 0
+offset_left = -609.0
+offset_top = -490.0
+offset_right = 991.0
+offset_bottom = 410.0
+scale = Vector2(2, 2)
+mouse_filter = 2
+texture = ExtResource("3_po")
+
+[node name="Titulo" type="Label" parent="RootControl" unique_id=-1266080570]
+layout_mode = 0
+offset_left = 513.0
+offset_top = 186.0
+offset_right = 1301.0
+offset_bottom = 253.0
+theme_override_colors/font_color = Color(0.29945153, 0, 0.0070019774, 1)
+theme_override_constants/line_spacing = 8
+theme_override_fonts/font = ExtResource("4_po")
+theme_override_font_sizes/font_size = 33
+text = "ARRASTE O ELETRON PARA COMPLETAR
+A ELETROSFERA DO ATOMO DE OXIGÊNIO"
+horizontal_alignment = 1
+
+[node name="Instrucoes" type="Label" parent="RootControl" unique_id=-719099383]
+layout_mode = 0
+offset_left = 426.0
+offset_top = 177.0
+offset_right = 532.0
+offset_bottom = 209.0
+theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
+theme_override_fonts/font = ExtResource("4_po")
+theme_override_font_sizes/font_size = 11
+text = "ESC para fechar"
+horizontal_alignment = 1
+
+[node name="AtomoBG" type="TextureRect" parent="RootControl" unique_id=-1136539932]
+layout_mode = 0
+offset_left = 659.0
+offset_top = 267.0
+offset_right = 959.0
+offset_bottom = 567.0
+scale = Vector2(1.5, 1.5)
+mouse_filter = 2
+texture = SubResource("AtlasTexture_atombg")
+
+[node name="AtomoBG2" type="TextureRect" parent="RootControl" unique_id=1399174332]
+layout_mode = 0
+offset_left = 758.0
+offset_top = 365.0
+offset_right = 1012.0
+offset_bottom = 619.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_atombg")
+
+[node name="ZonaNucleo" type="Panel" parent="RootControl" unique_id=-885151923]
+layout_mode = 0
+offset_left = 839.0
+offset_top = 447.0
+offset_right = 929.0
+offset_bottom = 537.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_nucleo")
+
+[node name="HintNucleo" type="Label" parent="RootControl/ZonaNucleo" unique_id=-869786891]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
+theme_override_font_sizes/font_size = 11
+text = "8p + 8n"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LabelCamadaK" type="Label" parent="RootControl" unique_id=-294967293]
+layout_mode = 0
+offset_left = 979.0
+offset_top = 581.0
+offset_right = 1069.0
+offset_bottom = 603.0
+theme_override_colors/font_color = Color(0.5, 0.7, 1, 0.9)
+theme_override_fonts/font = ExtResource("4_po")
+theme_override_font_sizes/font_size = 11
+text = "K"
+
+[node name="LabelCamadaL" type="Label" parent="RootControl" unique_id=-294967292]
+layout_mode = 0
+offset_left = 1053.0
+offset_top = 648.0
+offset_right = 1143.0
+offset_bottom = 670.0
+theme_override_colors/font_color = Color(0.2, 0.9, 0.9, 0.9)
+theme_override_fonts/font = ExtResource("4_po")
+theme_override_font_sizes/font_size = 11
+text = "L "
+
+[node name="LabelEletrons" type="Label" parent="RootControl" unique_id=-294967291]
+layout_mode = 0
+offset_left = 1154.0
+offset_top = 361.0
+offset_right = 1304.0
+offset_bottom = 383.0
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_fonts/font = ExtResource("4_po")
+theme_override_font_sizes/font_size = 11
+text = "Elétron:"
+horizontal_alignment = 1
+
+[node name="PecaEletron1" type="TextureRect" parent="RootControl" unique_id=-294967285]
+layout_mode = 0
+offset_left = 1210.0
+offset_top = 389.0
+offset_right = 1245.0
+offset_bottom = 424.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_eletron1")
+
+[node name="PecaEletron2" type="TextureRect" parent="RootControl" unique_id=-294967284]
+visible = false
+layout_mode = 0
+offset_left = 1117.0
+offset_top = 386.0
+offset_right = 1152.0
+offset_bottom = 421.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_eletron2")
+
+[node name="PecaEletron3" type="TextureRect" parent="RootControl" unique_id=-294967283]
+visible = false
+layout_mode = 0
+offset_left = 1117.0
+offset_top = 386.0
+offset_right = 1152.0
+offset_bottom = 421.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_eletron3")
+
+[node name="PecaEletron4" type="TextureRect" parent="RootControl" unique_id=-294967282]
+visible = false
+layout_mode = 0
+offset_left = 1117.0
+offset_top = 386.0
+offset_right = 1152.0
+offset_bottom = 421.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_eletron4")
+
+[node name="PecaEletron5" type="TextureRect" parent="RootControl" unique_id=-294967281]
+visible = false
+layout_mode = 0
+offset_left = 1117.0
+offset_top = 386.0
+offset_right = 1152.0
+offset_bottom = 421.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_eletron5")
+
+[node name="PecaEletron6" type="TextureRect" parent="RootControl" unique_id=-294967280]
+visible = false
+layout_mode = 0
+offset_left = 1117.0
+offset_top = 386.0
+offset_right = 1152.0
+offset_bottom = 421.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_eletron6")
+
+[node name="PecaEletron7" type="TextureRect" parent="RootControl" unique_id=-294967279]
+visible = false
+layout_mode = 0
+offset_left = 1117.0
+offset_top = 386.0
+offset_right = 1152.0
+offset_bottom = 421.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_eletron7")
+
+[node name="PecaEletron8" type="TextureRect" parent="RootControl" unique_id=-294967278]
+visible = false
+layout_mode = 0
+offset_left = 1117.0
+offset_top = 386.0
+offset_right = 1152.0
+offset_bottom = 421.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_eletron8")
+
+[node name="LabelStatusK" type="Label" parent="RootControl" unique_id=-616323427]
+layout_mode = 0
+offset_left = 1051.0
+offset_top = 634.0
+offset_right = 1427.0
+offset_bottom = 666.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("4_po")
+theme_override_font_sizes/font_size = 22
+text = "CAMADA K:  0 e-"
+horizontal_alignment = 1
+
+[node name="LabelStatusL" type="Label" parent="RootControl" unique_id=-616323426]
+layout_mode = 0
+offset_left = 1051.0
+offset_top = 668.0
+offset_right = 1427.0
+offset_bottom = 700.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("4_po")
+theme_override_font_sizes/font_size = 22
+text = "CAMADA L:  0 e-"
+horizontal_alignment = 1
+
+[node name="LabelAbrirGaiola" type="Label" parent="RootControl" unique_id=555100801]
+visible = false
+layout_mode = 0
+offset_left = 500.0
+offset_top = 815.0
+offset_right = 1100.0
+offset_bottom = 850.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_fonts/font = ExtResource("4_po")
+theme_override_font_sizes/font_size = 22
+text = "APERTE E PARA ABRIR A GAIOLA"
+horizontal_alignment = 1

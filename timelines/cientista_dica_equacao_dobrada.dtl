@@ -1,0 +1,4 @@
+join cientista (cientista_feliz) right
+cientista (cientista_feliz): Isso! Quimicamente essa equação até fecha...
+cientista: ...mas repara: 4, 2 e 4 têm um fator em comum. Você representou o dobro do necessário!
+cientista (cientista_feliz): Sempre usa os menores números inteiros possíveis. Divide tudo por 2 e tenta de novo!

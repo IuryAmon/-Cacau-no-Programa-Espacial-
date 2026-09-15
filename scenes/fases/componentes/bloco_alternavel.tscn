@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/bloco_alternavel.gd" id="1_e757w"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hx5nr"]
+size = Vector2(120, 20)
+
+[node name="BlocoAlternavel" type="StaticBody2D" unique_id=28948616]
+script = ExtResource("1_e757w")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=1653204301]
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=496695225]
+offset_left = -60.0
+offset_top = -10.0
+offset_right = 60.0
+offset_bottom = 10.0
+mouse_filter = 2
+color = Color(0.55, 0.35, 0.3, 1)
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=1631970763]
+shape = SubResource("RectangleShape2D_hx5nr")

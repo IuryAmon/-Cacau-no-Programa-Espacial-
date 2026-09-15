@@ -1,0 +1,116 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/checkpoint.gd" id="1_checkpoint"]
+[ext_resource type="Texture2D" uid="uid://d1pjaprwetg7d" path="res://assets/Checkpoint/checkpoint_flag.png" id="2_flag"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="3_fonte"]
+[ext_resource type="AudioStream" uid="uid://c37mxpqvim15y" path="res://sounds/checkpoint sound.mp3" id="4_som"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f0"]
+atlas = ExtResource("2_flag")
+region = Rect2(0, 0, 96, 106)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f1"]
+atlas = ExtResource("2_flag")
+region = Rect2(96, 0, 96, 106)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f2"]
+atlas = ExtResource("2_flag")
+region = Rect2(192, 0, 96, 106)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f3"]
+atlas = ExtResource("2_flag")
+region = Rect2(288, 0, 96, 106)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f4"]
+atlas = ExtResource("2_flag")
+region = Rect2(384, 0, 96, 106)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f5"]
+atlas = ExtResource("2_flag")
+region = Rect2(480, 0, 96, 106)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f6"]
+atlas = ExtResource("2_flag")
+region = Rect2(576, 0, 96, 106)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_checkpoint"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f3")
+}],
+"loop": true,
+"name": &"ativada",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f6")
+}],
+"loop": true,
+"name": &"desativada",
+"speed": 6.0
+}]
+
+[sub_resource type="FontVariation" id="FontVariation_checkpoint"]
+base_font = ExtResource("3_fonte")
+spacing_glyph = 4
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_checkpoint"]
+size = Vector2(56, 162)
+
+[node name="Checkpoint" type="Area2D" groups=["checkpoint"]]
+script = ExtResource("1_checkpoint")
+
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+position = Vector2(-21, -78)
+scale = Vector2(1.5, 1.5)
+sprite_frames = SubResource("SpriteFrames_checkpoint")
+animation = &"desativada"
+autoplay = "desativada"
+
+[node name="Colisao" type="CollisionShape2D" parent="."]
+position = Vector2(0, -81)
+shape = SubResource("RectangleShape2D_checkpoint")
+
+[node name="SomAtivar" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_som")
+
+[node name="Aviso" type="Node2D" parent="."]
+visible = false
+z_index = 50
+position = Vector2(0, -195)
+
+[node name="Texto" type="Label" parent="Aviso"]
+offset_left = -130.0
+offset_top = -17.0
+offset_right = 130.0
+offset_bottom = 17.0
+pivot_offset = Vector2(130, 17)
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.08, 0.05, 0.05, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.45)
+theme_override_constants/outline_size = 6
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 2
+theme_override_fonts/font = SubResource("FontVariation_checkpoint")
+theme_override_font_sizes/font_size = 19
+text = "CHECKPOINT"
+horizontal_alignment = 1
+vertical_alignment = 1

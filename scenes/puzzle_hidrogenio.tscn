@@ -1,0 +1,278 @@
+[gd_scene format=3 uid="uid://kwlhg33y6rxc"]
+
+[ext_resource type="Script" uid="uid://devwb3gt5xgdm" path="res://scripts/puzzle_hidrogenio.gd" id="1_ph"]
+[ext_resource type="AudioStream" uid="uid://d184o4jmhqq0t" path="res://sounds/PuzzleConcluido2.mp3" id="2_ph"]
+[ext_resource type="Texture2D" uid="uid://b7ovl1r1j4y8c" path="res://assets/Gaiola/fundo_puzzle_gaiola.png" id="3_4opf7"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="4_54aeq"]
+[ext_resource type="Texture2D" uid="uid://cv81r1ff5kpi8" path="res://assets/Gaiola/particulas_puzzle.png" id="4_vrkcy"]
+[ext_resource type="AudioStream" uid="uid://0t8yju2oahhm" path="res://sounds/AcessoNegado.mp3" id="6_ph"]
+[ext_resource type="AudioStream" uid="uid://bxtvw2yqbqsj6" path="res://sounds/drag.mp3" id="7_ph"]
+[ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="8_ph"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_atombg"]
+atlas = ExtResource("4_vrkcy")
+region = Rect2(166, 40, 254, 254)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nucleo"]
+bg_color = Color(0, 0, 0, 0)
+border_color = Color(1, 0.8, 0, 0.9)
+corner_radius_top_left = 40
+corner_radius_top_right = 40
+corner_radius_bottom_right = 40
+corner_radius_bottom_left = 40
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_proton"]
+atlas = ExtResource("4_vrkcy")
+region = Rect2(44, 106, 62, 62)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_neutron"]
+atlas = ExtResource("4_vrkcy")
+region = Rect2(43, 177, 62, 62)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eletron"]
+atlas = ExtResource("4_vrkcy")
+region = Rect2(115, 125, 25, 25)
+
+[node name="PuzzleHidrogenio" type="CanvasLayer" unique_id=1865110162]
+layer = 10
+script = ExtResource("1_ph")
+
+[node name="AudioSucesso" type="AudioStreamPlayer" parent="." unique_id=723964735]
+stream = ExtResource("2_ph")
+volume_db = 2.0
+
+[node name="AudioErro" type="AudioStreamPlayer" parent="." unique_id=723964736]
+stream = ExtResource("6_ph")
+volume_db = 2.0
+
+[node name="AudioDrag" type="AudioStreamPlayer" parent="." unique_id=723964737]
+stream = ExtResource("7_ph")
+volume_db = 0.0
+
+[node name="AudioPop" type="AudioStreamPlayer" parent="." unique_id=723964738]
+stream = ExtResource("8_ph")
+volume_db = 0.0
+
+[node name="RootControl" type="Control" parent="." unique_id=267167004]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Fundo" type="ColorRect" parent="RootControl" unique_id=1234224640]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Painel" type="TextureRect" parent="RootControl" unique_id=587450372]
+layout_mode = 0
+offset_left = -609.0
+offset_top = -490.0
+offset_right = 991.0
+offset_bottom = 410.0
+scale = Vector2(2, 2)
+mouse_filter = 2
+texture = ExtResource("3_4opf7")
+
+[node name="Titulo" type="Label" parent="RootControl" unique_id=1028886725]
+layout_mode = 0
+offset_left = 529.0
+offset_top = 190.0
+offset_right = 1269.0
+offset_bottom = 257.0
+theme_override_colors/font_color = Color(0.29945153, 0, 0.0070019774, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 33
+theme_override_constants/line_spacing = 8
+text = "REPRESENTE O ÁTOMO DE HIDROGÊNIO
+ARRASTANDO AS PARTÍCULAS"
+horizontal_alignment = 1
+
+[node name="Instrucoes" type="Label" parent="RootControl" unique_id=575867912]
+layout_mode = 0
+offset_left = 426.0
+offset_top = 177.0
+offset_right = 532.0
+offset_bottom = 209.0
+theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 11
+text = "ESC para fechar"
+horizontal_alignment = 1
+
+[node name="AtomoBG" type="TextureRect" parent="RootControl" unique_id=158427363]
+layout_mode = 0
+offset_left = 553.0
+offset_top = 267.0
+offset_right = 845.6666
+offset_bottom = 559.6666
+scale = Vector2(1.5, 1.5)
+mouse_filter = 2
+texture = SubResource("AtlasTexture_atombg")
+
+[node name="Label" type="Label" parent="RootControl/AtomoBG" unique_id=735215943]
+layout_mode = 0
+offset_left = 157.33333
+offset_top = 56.00001
+offset_right = 263.3333
+offset_bottom = 79.000015
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+text = "Eletrosfera"
+
+[node name="ZonaNucleo" type="Panel" parent="RootControl" unique_id=409815372]
+layout_mode = 0
+offset_left = 737.0
+offset_top = 450.0
+offset_right = 808.0
+offset_bottom = 523.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_nucleo")
+
+[node name="HintNucleo" type="Label" parent="RootControl/ZonaNucleo" unique_id=1425180404]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -3.0
+offset_top = 14.0
+offset_right = 10.0
+offset_bottom = 46.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 22
+theme_override_constants/line_spacing = 8
+text = ".
+
+Núcleo"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ZonaOrbita" type="TextureRect" parent="RootControl" unique_id=573731146]
+layout_mode = 0
+offset_left = 926.0
+offset_top = 348.0
+offset_right = 986.0
+offset_bottom = 408.0
+mouse_filter = 2
+
+[node name="PecaProton" type="TextureRect" parent="RootControl" unique_id=113765283]
+layout_mode = 0
+offset_left = 1193.0
+offset_top = 349.0
+offset_right = 1273.0
+offset_bottom = 429.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+
+[node name="LabelNomeP" type="Label" parent="RootControl" unique_id=561517388]
+layout_mode = 0
+offset_left = 1138.0
+offset_top = 433.0
+offset_right = 1330.0
+offset_bottom = 455.0
+theme_override_colors/font_color = Color(1, 0.6, 0.6, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 11
+text = "Próton"
+horizontal_alignment = 1
+
+[node name="PecaNeutron" type="TextureRect" parent="RootControl" unique_id=113765284]
+layout_mode = 0
+offset_left = 1057.0
+offset_top = 349.0
+offset_right = 1137.0
+offset_bottom = 429.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+
+[node name="LabelNomeN" type="Label" parent="RootControl" unique_id=561517389]
+layout_mode = 0
+offset_left = 1004.0
+offset_top = 432.0
+offset_right = 1196.0
+offset_bottom = 454.0
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 11
+text = "Nêutron"
+horizontal_alignment = 1
+
+[node name="PecaEletron" type="TextureRect" parent="RootControl" unique_id=892145036]
+layout_mode = 0
+offset_left = 1140.0
+offset_top = 487.0
+offset_right = 1188.0
+offset_bottom = 535.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_eletron")
+
+[node name="LabelNomeE" type="Label" parent="RootControl" unique_id=2037326576]
+layout_mode = 0
+offset_left = 1073.0
+offset_top = 544.0
+offset_right = 1265.0
+offset_bottom = 566.0
+theme_override_colors/font_color = Color(0.6, 0.7, 1, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 11
+text = "Elétron"
+horizontal_alignment = 1
+
+[node name="LabelStatusProton" type="Label" parent="RootControl" unique_id=678643868]
+layout_mode = 0
+offset_left = 1027.0
+offset_top = 653.0
+offset_right = 1503.0
+offset_bottom = 678.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 22
+text = "PRÓTON:   0"
+horizontal_alignment = 1
+
+[node name="LabelStatusEletron" type="Label" parent="RootControl" unique_id=678643869]
+layout_mode = 0
+offset_left = 1027.0
+offset_top = 680.0
+offset_right = 1503.0
+offset_bottom = 705.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 22
+text = "ELÉTRON:  0"
+horizontal_alignment = 1
+
+[node name="LabelStatusNeutron" type="Label" parent="RootControl" unique_id=678643870]
+layout_mode = 0
+offset_left = 1027.0
+offset_top = 707.0
+offset_right = 1503.0
+offset_bottom = 732.0
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 22
+text = "NÊUTRON:  0"
+horizontal_alignment = 1
+
+[node name="LabelAbrirGaiola" type="Label" parent="RootControl" unique_id=555100701]
+visible = false
+layout_mode = 0
+offset_left = 500.0
+offset_top = 815.0
+offset_right = 1100.0
+offset_bottom = 850.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 22
+text = "APERTE E PARA ABRIR A GAIOLA"
+horizontal_alignment = 1

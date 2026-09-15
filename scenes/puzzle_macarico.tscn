@@ -1,0 +1,392 @@
+[gd_scene format=3 uid="uid://bnekrea2h8yv1"]
+
+[ext_resource type="Script" uid="uid://016l7aahtqvo" path="res://scripts/puzzle_macarico.gd" id="1_pm"]
+[ext_resource type="AudioStream" uid="uid://d184o4jmhqq0t" path="res://sounds/PuzzleConcluido2.mp3" id="2_pm"]
+[ext_resource type="AudioStream" uid="uid://0t8yju2oahhm" path="res://sounds/AcessoNegado.mp3" id="3_pm"]
+[ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="4_pm"]
+[ext_resource type="Texture2D" uid="uid://b7ovl1r1j4y8c" path="res://assets/Gaiola/fundo_puzzle_gaiola.png" id="5_pm"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="6_pm"]
+[ext_resource type="Shader" uid="uid://eo6tsbla4dkl" path="res://shaders/painel_red_to_green.gdshader" id="7_pm"]
+[ext_resource type="Script" uid="uid://bcyu6qtcwplym" path="res://scripts/ui/chama_preview.gd" id="8_pm"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_verde"]
+shader = ExtResource("7_pm")
+shader_parameter/progress = 0.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_caixa"]
+bg_color = Color(0.1, 0.11, 0.15, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.33, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_botao"]
+bg_color = Color(0.18, 0.2, 0.26, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.42, 0.46, 0.54, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_acendedor"]
+bg_color = Color(0.16, 0.17, 0.22, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.43, 0.5, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="PuzzleMacarico" type="CanvasLayer" unique_id=1726006748]
+layer = 15
+script = ExtResource("1_pm")
+
+[node name="AudioSucesso" type="AudioStreamPlayer" parent="." unique_id=1840148340]
+stream = ExtResource("2_pm")
+
+[node name="AudioErro" type="AudioStreamPlayer" parent="." unique_id=1178572285]
+stream = ExtResource("3_pm")
+
+[node name="AudioClique" type="AudioStreamPlayer" parent="." unique_id=1067005661]
+stream = ExtResource("4_pm")
+volume_db = -8.0
+
+[node name="RootControl" type="Control" parent="." unique_id=731828963]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Fundo" type="ColorRect" parent="RootControl" unique_id=1263212743]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Painel" type="TextureRect" parent="RootControl" unique_id=1715032362]
+material = SubResource("ShaderMaterial_verde")
+layout_mode = 0
+offset_left = -609.0
+offset_top = -490.0
+offset_right = 991.0
+offset_bottom = 410.0
+scale = Vector2(2, 2)
+mouse_filter = 2
+texture = ExtResource("5_pm")
+
+[node name="Conteudo" type="Control" parent="RootControl" unique_id=1345779813]
+anchors_preset = 0
+offset_left = 396.0
+offset_top = 145.0
+offset_right = 1376.0
+offset_bottom = 745.0
+mouse_filter = 2
+
+[node name="Titulo" type="Label" parent="RootControl/Conteudo" unique_id=725968911]
+layout_mode = 0
+offset_top = 18.0
+offset_right = 980.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.92, 0.94, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 23
+text = "REGULE A MISTURA DO MAÇARICO"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Reacao" type="Label" parent="RootControl/Conteudo" unique_id=516112741]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 58.0
+offset_right = 920.0
+offset_bottom = 86.0
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 16
+text = "2 H₂  +  O₂  →  2 H₂O"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ValvulaH2" type="Panel" parent="RootControl/Conteudo" unique_id=2004658480]
+layout_mode = 0
+offset_left = 66.0
+offset_top = 112.0
+offset_right = 256.0
+offset_bottom = 442.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_caixa")
+
+[node name="Titulo" type="Label" parent="RootControl/Conteudo/ValvulaH2" unique_id=19071493]
+layout_mode = 0
+offset_top = 12.0
+offset_right = 190.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.45, 0.72, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 14
+text = "H₂"
+horizontal_alignment = 1
+
+[node name="Trilho" type="ColorRect" parent="RootControl/Conteudo/ValvulaH2" unique_id=593734261]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 48.0
+offset_right = 76.0
+offset_bottom = 258.0
+mouse_filter = 2
+color = Color(0.07, 0.08, 0.11, 1)
+
+[node name="Barra" type="ColorRect" parent="RootControl/Conteudo/ValvulaH2/Trilho" unique_id=16980878]
+layout_mode = 0
+offset_top = 210.0
+offset_right = 52.0
+offset_bottom = 210.0
+mouse_filter = 2
+color = Color(0.45, 0.72, 1, 1)
+
+[node name="Numero" type="Label" parent="RootControl/Conteudo/ValvulaH2" unique_id=775882084]
+layout_mode = 0
+offset_left = 94.0
+offset_top = 104.0
+offset_right = 164.0
+offset_bottom = 160.0
+theme_override_colors/font_color = Color(0.92, 0.94, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 40
+text = "0"
+horizontal_alignment = 1
+
+[node name="BotaoMais" type="Panel" parent="RootControl/Conteudo/ValvulaH2" unique_id=455747709]
+layout_mode = 0
+offset_left = 98.0
+offset_top = 50.0
+offset_right = 160.0
+offset_bottom = 94.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_botao")
+
+[node name="Simbolo" type="Label" parent="RootControl/Conteudo/ValvulaH2/BotaoMais" unique_id=730241406]
+layout_mode = 0
+offset_right = 62.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.92, 0.94, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 22
+text = "+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoMenos" type="Panel" parent="RootControl/Conteudo/ValvulaH2" unique_id=1393680630]
+layout_mode = 0
+offset_left = 98.0
+offset_top = 190.0
+offset_right = 160.0
+offset_bottom = 234.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_botao")
+
+[node name="Simbolo" type="Label" parent="RootControl/Conteudo/ValvulaH2/BotaoMenos" unique_id=67960022]
+layout_mode = 0
+offset_right = 62.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.92, 0.94, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 22
+text = "−"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ValvulaO2" type="Panel" parent="RootControl/Conteudo" unique_id=1860725623]
+layout_mode = 0
+offset_left = 724.0
+offset_top = 112.0
+offset_right = 914.0
+offset_bottom = 442.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_caixa")
+
+[node name="Titulo" type="Label" parent="RootControl/Conteudo/ValvulaO2" unique_id=1640759892]
+layout_mode = 0
+offset_top = 12.0
+offset_right = 190.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(1, 0.55, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 14
+text = "O₂"
+horizontal_alignment = 1
+
+[node name="Trilho" type="ColorRect" parent="RootControl/Conteudo/ValvulaO2" unique_id=775425853]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 48.0
+offset_right = 76.0
+offset_bottom = 258.0
+mouse_filter = 2
+color = Color(0.07, 0.08, 0.11, 1)
+
+[node name="Barra" type="ColorRect" parent="RootControl/Conteudo/ValvulaO2/Trilho" unique_id=1894113000]
+layout_mode = 0
+offset_top = 210.0
+offset_right = 52.0
+offset_bottom = 210.0
+mouse_filter = 2
+color = Color(1, 0.55, 0.45, 1)
+
+[node name="Numero" type="Label" parent="RootControl/Conteudo/ValvulaO2" unique_id=886448597]
+layout_mode = 0
+offset_left = 94.0
+offset_top = 104.0
+offset_right = 164.0
+offset_bottom = 160.0
+theme_override_colors/font_color = Color(0.92, 0.94, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 40
+text = "0"
+horizontal_alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="BotaoMais" type="Panel" parent="RootControl/Conteudo/ValvulaO2" unique_id=697751241]
+layout_mode = 0
+offset_left = 98.0
+offset_top = 50.0
+offset_right = 160.0
+offset_bottom = 94.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_botao")
+
+[node name="Simbolo" type="Label" parent="RootControl/Conteudo/ValvulaO2/BotaoMais" unique_id=1427612880]
+layout_mode = 0
+offset_right = 62.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.92, 0.94, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 22
+text = "+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoMenos" type="Panel" parent="RootControl/Conteudo/ValvulaO2" unique_id=301623481]
+layout_mode = 0
+offset_left = 98.0
+offset_top = 190.0
+offset_right = 160.0
+offset_bottom = 234.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_botao")
+
+[node name="Simbolo" type="Label" parent="RootControl/Conteudo/ValvulaO2/BotaoMenos" unique_id=913291582]
+layout_mode = 0
+offset_right = 62.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.92, 0.94, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 22
+text = "−"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Chama" type="Control" parent="RootControl/Conteudo" unique_id=1575147054]
+anchors_preset = 0
+offset_left = 380.0
+offset_top = 112.0
+offset_right = 600.0
+offset_bottom = 372.0
+mouse_filter = 2
+script = ExtResource("8_pm")
+
+[node name="Acendedor" type="Panel" parent="RootControl/Conteudo" unique_id=1162356876]
+layout_mode = 0
+offset_left = 375.0
+offset_top = 384.0
+offset_right = 605.0
+offset_bottom = 426.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_acendedor")
+
+[node name="Texto" type="Label" parent="RootControl/Conteudo/Acendedor" unique_id=1819184192]
+layout_mode = 0
+offset_right = 230.0
+offset_bottom = 42.0
+theme_override_colors/font_color = Color(0.92, 0.94, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 15
+text = "ACENDER"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Razao" type="Label" parent="RootControl/Conteudo" unique_id=1198783832]
+layout_mode = 0
+offset_top = 452.0
+offset_right = 980.0
+offset_bottom = 480.0
+theme_override_colors/font_color = Color(0.62, 0.66, 0.74, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 18
+text = "H₂ : O₂   =   0 : 0"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Diagnostico" type="Label" parent="RootControl/Conteudo" unique_id=1297719690]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 486.0
+offset_right = 930.0
+offset_bottom = 542.0
+theme_override_colors/font_color = Color(0.95, 0.6, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Status" type="Label" parent="RootControl/Conteudo" unique_id=714019320]
+layout_mode = 0
+offset_top = 548.0
+offset_right = 980.0
+offset_bottom = 574.0
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_pm")
+theme_override_font_sizes/font_size = 13
+text = "W/S abrem e fecham   ·   ESPAÇO acende   ·   ESC sai"
+horizontal_alignment = 1
+autowrap_mode = 3

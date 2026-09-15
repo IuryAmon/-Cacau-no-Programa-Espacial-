@@ -1,0 +1,5 @@
+join cientista (cientista_feliz) right
+cientista (cientista_feliz): Boa, os cilindros já estão instalados! Agora vem a parte importante, balancear a equação.
+cientista: Numa reação química, os átomos não desaparecem nem surgem do nada, eles só trocam de lugar. Por isso a quantidade de cada átomo precisa ser igual nos dois lados da seta.
+cientista: Olha os painéis "REAGENTES" e "PRODUTOS", eles mostram quantos átomos de H e O tem em cada lado.
+cientista (cientista_feliz): Usa os botões [img=20x20]res://assets/UI/setas/seta_cima.png[/img] e [img=20x20]res://assets/UI/setas/seta_baixo.png[/img] pra mudar o coeficiente, que é o número na frente de cada molécula, até os dois lados baterem. E sempre com os menores números possíveis. Bora testar!

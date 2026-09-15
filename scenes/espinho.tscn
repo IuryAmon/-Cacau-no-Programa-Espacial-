@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://d2bc4lrqthy2c"]
+
+[ext_resource type="Script" uid="uid://c1c3hwxp78a8f" path="res://scripts/espinho.gd" id="1_espinho"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_espinho"]
+size = Vector2(1386.5, 16)
+
+[node name="Espinho" type="Area2D" unique_id=1767608427 groups=["espinho"]]
+script = ExtResource("1_espinho")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=757409548]
+shape = SubResource("RectangleShape2D_espinho")

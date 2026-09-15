@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/gerar_cenas_fases.gd" id="1_gerador"]
+
+[node name="GerarCenasFases" type="Node"]
+script = ExtResource("1_gerador")

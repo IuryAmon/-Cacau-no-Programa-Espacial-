@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://klp2385eswm4"]
+
+[ext_resource type="Script" uid="uid://m554fu08x662" path="res://scripts/plataforma.gd" id="1_4jb62"]
+[ext_resource type="Texture2D" uid="uid://dvwpcf3wra0t4" path="res://assets/Lab/Tileset/Individual_PNGs/platform_moving/tile000.png" id="1_rkcww"]
+[ext_resource type="AudioStream" uid="uid://bxqk72faqwrb" path="res://sounds/AtivacaoPlataforma.mp3" id="3_ke8ey"]
+
+[sub_resource type="Curve2D" id="Curve2D_4jb62"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, -4, -3, 0, 0, 0, 0, -1, 312)
+}
+point_count = 2
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ke8ey"]
+size = Vector2(32, 12)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_14w5t"]
+atlas = ExtResource("1_rkcww")
+region = Rect2(0, 76, 32, 12)
+
+[node name="Path2D" type="Path2D" unique_id=1044440731]
+curve = SubResource("Curve2D_4jb62")
+script = ExtResource("1_4jb62")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="." unique_id=1134605892]
+position = Vector2(-4, -3)
+rotation = 1.5612729
+
+[node name="RemoteTransform2D" type="RemoteTransform2D" parent="PathFollow2D" unique_id=1355999651]
+rotation = -1.5707964
+remote_path = NodePath("../../platform")
+
+[node name="platform" type="AnimatableBody2D" parent="." unique_id=1611689587]
+position = Vector2(-4, -3)
+rotation = -0.009523511
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="platform" unique_id=89734528]
+scale = Vector2(3, 3)
+shape = SubResource("RectangleShape2D_ke8ey")
+one_way_collision = true
+
+[node name="Sprite2D" type="Sprite2D" parent="platform" unique_id=827744144]
+scale = Vector2(3, 3)
+texture = SubResource("AtlasTexture_14w5t")
+
+[node name="SomAtivacao" type="AudioStreamPlayer2D" parent="platform" unique_id=629578899]
+stream = ExtResource("3_ke8ey")
+volume_db = -16.0
+pitch_scale = 2.0
+max_distance = 800.0
+attenuation = 1.6

@@ -1,0 +1,1087 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/final_orbita.gd" id="1_rfgpu"]
+
+[node name="FinalOrbita" type="Node2D" unique_id=1731382079]
+script = ExtResource("1_rfgpu")
+
+[node name="Espaco" type="ColorRect" parent="." unique_id=27803684]
+z_index = -20
+offset_right = 1600.0
+offset_bottom = 900.0
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.08, 1)
+
+[node name="Estrelas" type="Node2D" parent="." unique_id=1018483623]
+
+[node name="Estrela0" type="ColorRect" parent="Estrelas" unique_id=485120144]
+z_index = -19
+offset_left = 867.39136
+offset_top = 64.41581
+offset_right = 869.7557
+offset_bottom = 66.78012
+mouse_filter = 2
+color = Color(1, 1, 1, 0.7136315)
+
+[node name="Estrela1" type="ColorRect" parent="Estrelas" unique_id=149182587]
+z_index = -19
+offset_left = 296.17038
+offset_top = 306.97427
+offset_right = 298.4133
+offset_bottom = 309.2172
+mouse_filter = 2
+color = Color(1, 1, 1, 0.35268354)
+
+[node name="Estrela2" type="ColorRect" parent="Estrelas" unique_id=161411212]
+z_index = -19
+offset_left = 1578.6873
+offset_top = 1.1323436
+offset_right = 1580.2894
+offset_bottom = 2.7345614
+mouse_filter = 2
+color = Color(1, 1, 1, 0.3975385)
+
+[node name="Estrela3" type="ColorRect" parent="Estrelas" unique_id=93062231]
+z_index = -19
+offset_left = 1245.7715
+offset_top = 277.8962
+offset_right = 1248.068
+offset_bottom = 280.1927
+mouse_filter = 2
+color = Color(1, 1, 1, 0.43494022)
+
+[node name="Estrela4" type="ColorRect" parent="Estrelas" unique_id=426020863]
+z_index = -19
+offset_left = 1533.1013
+offset_top = 412.64926
+offset_right = 1534.4249
+offset_bottom = 413.9729
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6831449)
+
+[node name="Estrela5" type="ColorRect" parent="Estrelas" unique_id=881939575]
+z_index = -19
+offset_left = 1001.45825
+offset_top = 367.7418
+offset_right = 1003.3363
+offset_bottom = 369.61987
+mouse_filter = 2
+color = Color(1, 1, 1, 0.3537165)
+
+[node name="Estrela6" type="ColorRect" parent="Estrelas" unique_id=1599689897]
+z_index = -19
+offset_left = 1037.1981
+offset_top = 666.55255
+offset_right = 1039.1318
+offset_bottom = 668.4863
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6880076)
+
+[node name="Estrela7" type="ColorRect" parent="Estrelas" unique_id=1070863395]
+z_index = -19
+offset_left = 367.36404
+offset_top = 701.0316
+offset_right = 369.878
+offset_bottom = 703.54553
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6922287)
+
+[node name="Estrela8" type="ColorRect" parent="Estrelas" unique_id=1495342506]
+z_index = -19
+offset_left = 473.18564
+offset_top = 693.86017
+offset_right = 475.097
+offset_bottom = 695.7715
+mouse_filter = 2
+color = Color(1, 1, 1, 0.61397946)
+
+[node name="Estrela9" type="ColorRect" parent="Estrelas" unique_id=704344719]
+z_index = -19
+offset_left = 536.1502
+offset_top = 7.5865927
+offset_right = 538.13904
+offset_bottom = 9.575408
+mouse_filter = 2
+color = Color(1, 1, 1, 0.89869744)
+
+[node name="Estrela10" type="ColorRect" parent="Estrelas" unique_id=1130409340]
+z_index = -19
+offset_left = 586.6114
+offset_top = 284.14337
+offset_right = 587.97
+offset_bottom = 285.50195
+mouse_filter = 2
+color = Color(1, 1, 1, 0.88232756)
+
+[node name="Estrela11" type="ColorRect" parent="Estrelas" unique_id=1144441196]
+z_index = -19
+offset_left = 894.47015
+offset_top = 419.48004
+offset_right = 896.66144
+offset_bottom = 421.6713
+mouse_filter = 2
+color = Color(1, 1, 1, 0.35059822)
+
+[node name="Estrela12" type="ColorRect" parent="Estrelas" unique_id=450894895]
+z_index = -19
+offset_left = 499.30573
+offset_top = 735.3524
+offset_right = 501.52148
+offset_bottom = 737.5682
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6781403)
+
+[node name="Estrela13" type="ColorRect" parent="Estrelas" unique_id=977785742]
+z_index = -19
+offset_left = 46.44123
+offset_top = 749.90454
+offset_right = 48.950058
+offset_bottom = 752.4134
+mouse_filter = 2
+color = Color(1, 1, 1, 0.72749835)
+
+[node name="Estrela14" type="ColorRect" parent="Estrelas" unique_id=1750002198]
+z_index = -19
+offset_left = 1380.6418
+offset_top = 879.3522
+offset_right = 1382.1144
+offset_bottom = 880.8247
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5004355)
+
+[node name="Estrela15" type="ColorRect" parent="Estrelas" unique_id=716046164]
+z_index = -19
+offset_left = 1345.2622
+offset_top = 544.4029
+offset_right = 1346.9645
+offset_bottom = 546.10516
+mouse_filter = 2
+color = Color(1, 1, 1, 0.36803022)
+
+[node name="Estrela16" type="ColorRect" parent="Estrelas" unique_id=1318306997]
+z_index = -19
+offset_left = 1085.9957
+offset_top = 165.98564
+offset_right = 1087.8473
+offset_bottom = 167.83723
+mouse_filter = 2
+color = Color(1, 1, 1, 0.65591115)
+
+[node name="Estrela17" type="ColorRect" parent="Estrelas" unique_id=1771385364]
+z_index = -19
+offset_left = 1414.3228
+offset_top = 789.46844
+offset_right = 1416.168
+offset_bottom = 791.3137
+mouse_filter = 2
+color = Color(1, 1, 1, 0.7524681)
+
+[node name="Estrela18" type="ColorRect" parent="Estrelas" unique_id=2007065129]
+z_index = -19
+offset_left = 139.608
+offset_top = 438.81805
+offset_right = 141.19463
+offset_bottom = 440.40466
+mouse_filter = 2
+color = Color(1, 1, 1, 0.389838)
+
+[node name="Estrela19" type="ColorRect" parent="Estrelas" unique_id=1401172372]
+z_index = -19
+offset_left = 145.08055
+offset_top = 122.91486
+offset_right = 147.86739
+offset_bottom = 125.701706
+mouse_filter = 2
+color = Color(1, 1, 1, 0.7905413)
+
+[node name="Estrela20" type="ColorRect" parent="Estrelas" unique_id=779173266]
+z_index = -19
+offset_left = 1241.5271
+offset_top = 645.6265
+offset_right = 1243.9977
+offset_bottom = 648.0971
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6793442)
+
+[node name="Estrela21" type="ColorRect" parent="Estrelas" unique_id=2136726395]
+z_index = -19
+offset_left = 316.0386
+offset_top = 348.42603
+offset_right = 318.68857
+offset_bottom = 351.076
+mouse_filter = 2
+color = Color(1, 1, 1, 0.580781)
+
+[node name="Estrela22" type="ColorRect" parent="Estrelas" unique_id=30916540]
+z_index = -19
+offset_left = 100.89667
+offset_top = 754.5283
+offset_right = 103.80006
+offset_bottom = 757.4317
+mouse_filter = 2
+color = Color(1, 1, 1, 0.58074456)
+
+[node name="Estrela23" type="ColorRect" parent="Estrelas" unique_id=1446561707]
+z_index = -19
+offset_left = 217.12534
+offset_top = 366.35788
+offset_right = 218.74954
+offset_bottom = 367.9821
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5452863)
+
+[node name="Estrela24" type="ColorRect" parent="Estrelas" unique_id=603740517]
+z_index = -19
+offset_left = 579.4286
+offset_top = 378.207
+offset_right = 580.47015
+offset_bottom = 379.2486
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5233925)
+
+[node name="Estrela25" type="ColorRect" parent="Estrelas" unique_id=1138089841]
+z_index = -19
+offset_left = 941.369
+offset_top = 244.01733
+offset_right = 943.6571
+offset_bottom = 246.30545
+mouse_filter = 2
+color = Color(1, 1, 1, 0.75610995)
+
+[node name="Estrela26" type="ColorRect" parent="Estrelas" unique_id=876131611]
+z_index = -19
+offset_left = 275.70444
+offset_top = 395.42264
+offset_right = 276.93375
+offset_bottom = 396.65195
+mouse_filter = 2
+color = Color(1, 1, 1, 0.8747663)
+
+[node name="Estrela27" type="ColorRect" parent="Estrelas" unique_id=1187846775]
+z_index = -19
+offset_left = 1319.2483
+offset_top = 789.65656
+offset_right = 1320.9834
+offset_bottom = 791.39166
+mouse_filter = 2
+color = Color(1, 1, 1, 0.36387575)
+
+[node name="Estrela28" type="ColorRect" parent="Estrelas" unique_id=527922669]
+z_index = -19
+offset_left = 323.28372
+offset_top = 313.32068
+offset_right = 324.59695
+offset_bottom = 314.6339
+mouse_filter = 2
+color = Color(1, 1, 1, 0.3468476)
+
+[node name="Estrela29" type="ColorRect" parent="Estrelas" unique_id=1772641328]
+z_index = -19
+offset_left = 401.2613
+offset_top = 5.6255226
+offset_right = 402.60672
+offset_bottom = 6.9709463
+mouse_filter = 2
+color = Color(1, 1, 1, 0.89648926)
+
+[node name="Estrela30" type="ColorRect" parent="Estrelas" unique_id=2063492498]
+z_index = -19
+offset_left = 1508.7537
+offset_top = 98.19514
+offset_right = 1510.9612
+offset_bottom = 100.402626
+mouse_filter = 2
+color = Color(1, 1, 1, 0.46356177)
+
+[node name="Estrela31" type="ColorRect" parent="Estrelas" unique_id=237519321]
+z_index = -19
+offset_left = 979.6365
+offset_top = 702.747
+offset_right = 982.4493
+offset_bottom = 705.5598
+mouse_filter = 2
+color = Color(1, 1, 1, 0.31294876)
+
+[node name="Estrela32" type="ColorRect" parent="Estrelas" unique_id=792306845]
+z_index = -19
+offset_left = 804.6139
+offset_top = 866.496
+offset_right = 806.0897
+offset_bottom = 867.9718
+mouse_filter = 2
+color = Color(1, 1, 1, 0.87555623)
+
+[node name="Estrela33" type="ColorRect" parent="Estrelas" unique_id=594665416]
+z_index = -19
+offset_left = 1246.4213
+offset_top = 29.61541
+offset_right = 1248.1323
+offset_bottom = 31.326416
+mouse_filter = 2
+color = Color(1, 1, 1, 0.69611156)
+
+[node name="Estrela34" type="ColorRect" parent="Estrelas" unique_id=1176002297]
+z_index = -19
+offset_left = 10.139801
+offset_top = 247.89679
+offset_right = 13.047209
+offset_bottom = 250.8042
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6648626)
+
+[node name="Estrela35" type="ColorRect" parent="Estrelas" unique_id=1167549920]
+z_index = -19
+offset_left = 1459.2644
+offset_top = 57.208096
+offset_right = 1461.6348
+offset_bottom = 59.57848
+mouse_filter = 2
+color = Color(1, 1, 1, 0.83729345)
+
+[node name="Estrela36" type="ColorRect" parent="Estrelas" unique_id=774483255]
+z_index = -19
+offset_left = 513.9029
+offset_top = 889.11914
+offset_right = 515.5972
+offset_bottom = 890.8135
+mouse_filter = 2
+color = Color(1, 1, 1, 0.80017847)
+
+[node name="Estrela37" type="ColorRect" parent="Estrelas" unique_id=757124545]
+z_index = -19
+offset_left = 1382.6377
+offset_top = 845.09546
+offset_right = 1385.147
+offset_bottom = 847.6048
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6829847)
+
+[node name="Estrela38" type="ColorRect" parent="Estrelas" unique_id=1752613768]
+z_index = -19
+offset_left = 412.81686
+offset_top = 49.826912
+offset_right = 414.97568
+offset_bottom = 51.985718
+mouse_filter = 2
+color = Color(1, 1, 1, 0.46076843)
+
+[node name="Estrela39" type="ColorRect" parent="Estrelas" unique_id=2034918528]
+z_index = -19
+offset_left = 505.81488
+offset_top = 579.9046
+offset_right = 507.8909
+offset_bottom = 581.9806
+mouse_filter = 2
+color = Color(1, 1, 1, 0.3183701)
+
+[node name="Estrela40" type="ColorRect" parent="Estrelas" unique_id=1853669399]
+z_index = -19
+offset_left = 318.68445
+offset_top = 470.45663
+offset_right = 320.15207
+offset_bottom = 471.92426
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6061993)
+
+[node name="Estrela41" type="ColorRect" parent="Estrelas" unique_id=400559600]
+z_index = -19
+offset_left = 981.4956
+offset_top = 214.83621
+offset_right = 984.10895
+offset_bottom = 217.44957
+mouse_filter = 2
+color = Color(1, 1, 1, 0.73444265)
+
+[node name="Estrela42" type="ColorRect" parent="Estrelas" unique_id=862966870]
+z_index = -19
+offset_left = 1460.5331
+offset_top = 25.913115
+offset_right = 1463.5142
+offset_bottom = 28.894205
+mouse_filter = 2
+color = Color(1, 1, 1, 0.4295401)
+
+[node name="Estrela43" type="ColorRect" parent="Estrelas" unique_id=1614967686]
+z_index = -19
+offset_left = 758.8186
+offset_top = 596.6753
+offset_right = 759.9739
+offset_bottom = 597.83057
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6044611)
+
+[node name="Estrela44" type="ColorRect" parent="Estrelas" unique_id=833436809]
+z_index = -19
+offset_left = 767.17236
+offset_top = 87.49834
+offset_right = 768.8728
+offset_bottom = 89.19876
+mouse_filter = 2
+color = Color(1, 1, 1, 0.36642557)
+
+[node name="Estrela45" type="ColorRect" parent="Estrelas" unique_id=139023813]
+z_index = -19
+offset_left = 395.1589
+offset_top = 207.12042
+offset_right = 396.9052
+offset_bottom = 208.86674
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5228363)
+
+[node name="Estrela46" type="ColorRect" parent="Estrelas" unique_id=567007014]
+z_index = -19
+offset_left = 1198.4724
+offset_top = 117.86856
+offset_right = 1200.4766
+offset_bottom = 119.87271
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5365369)
+
+[node name="Estrela47" type="ColorRect" parent="Estrelas" unique_id=520367358]
+z_index = -19
+offset_left = 1046.6024
+offset_top = 569.94867
+offset_right = 1049.0824
+offset_bottom = 572.42865
+mouse_filter = 2
+color = Color(1, 1, 1, 0.76876414)
+
+[node name="Estrela48" type="ColorRect" parent="Estrelas" unique_id=95786398]
+z_index = -19
+offset_left = 518.0412
+offset_top = 346.1109
+offset_right = 519.94965
+offset_bottom = 348.01932
+mouse_filter = 2
+color = Color(1, 1, 1, 0.72943366)
+
+[node name="Estrela49" type="ColorRect" parent="Estrelas" unique_id=1263843436]
+z_index = -19
+offset_left = 675.27435
+offset_top = 891.0241
+offset_right = 676.4898
+offset_bottom = 892.23956
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5932405)
+
+[node name="Estrela50" type="ColorRect" parent="Estrelas" unique_id=918765541]
+z_index = -19
+offset_left = 1404.9688
+offset_top = 538.76556
+offset_right = 1406.8237
+offset_bottom = 540.6205
+mouse_filter = 2
+color = Color(1, 1, 1, 0.45238394)
+
+[node name="Estrela51" type="ColorRect" parent="Estrelas" unique_id=186473462]
+z_index = -19
+offset_left = 1070.757
+offset_top = 534.98706
+offset_right = 1073.0782
+offset_bottom = 537.30835
+mouse_filter = 2
+color = Color(1, 1, 1, 0.35920182)
+
+[node name="Estrela52" type="ColorRect" parent="Estrelas" unique_id=61955710]
+z_index = -19
+offset_left = 420.7636
+offset_top = 574.3789
+offset_right = 423.33258
+offset_bottom = 576.9479
+mouse_filter = 2
+color = Color(1, 1, 1, 0.86892915)
+
+[node name="Estrela53" type="ColorRect" parent="Estrelas" unique_id=813373787]
+z_index = -19
+offset_left = 1219.2412
+offset_top = 335.15018
+offset_right = 1220.95
+offset_bottom = 336.85886
+mouse_filter = 2
+color = Color(1, 1, 1, 0.3449044)
+
+[node name="Estrela54" type="ColorRect" parent="Estrelas" unique_id=303336053]
+z_index = -19
+offset_left = 872.5687
+offset_top = 262.60294
+offset_right = 874.0424
+offset_bottom = 264.07663
+mouse_filter = 2
+color = Color(1, 1, 1, 0.83502555)
+
+[node name="Estrela55" type="ColorRect" parent="Estrelas" unique_id=1717851217]
+z_index = -19
+offset_left = 1457.6921
+offset_top = 728.9928
+offset_right = 1459.8864
+offset_bottom = 731.187
+mouse_filter = 2
+color = Color(1, 1, 1, 0.3597901)
+
+[node name="Estrela56" type="ColorRect" parent="Estrelas" unique_id=1126565995]
+z_index = -19
+offset_left = 836.2051
+offset_top = 164.69348
+offset_right = 837.9242
+offset_bottom = 166.41261
+mouse_filter = 2
+color = Color(1, 1, 1, 0.43651062)
+
+[node name="Estrela57" type="ColorRect" parent="Estrelas" unique_id=1802087837]
+z_index = -19
+offset_left = 1268.7336
+offset_top = 714.9529
+offset_right = 1270.508
+offset_bottom = 716.7273
+mouse_filter = 2
+color = Color(1, 1, 1, 0.3744409)
+
+[node name="Estrela58" type="ColorRect" parent="Estrelas" unique_id=747563044]
+z_index = -19
+offset_left = 534.0488
+offset_top = 418.07697
+offset_right = 536.31805
+offset_bottom = 420.34616
+mouse_filter = 2
+color = Color(1, 1, 1, 0.33376256)
+
+[node name="Estrela59" type="ColorRect" parent="Estrelas" unique_id=233455362]
+z_index = -19
+offset_left = 23.805126
+offset_top = 29.778767
+offset_right = 25.220741
+offset_bottom = 31.194382
+mouse_filter = 2
+color = Color(1, 1, 1, 0.42968717)
+
+[node name="Estrela60" type="ColorRect" parent="Estrelas" unique_id=511480028]
+z_index = -19
+offset_left = 174.30423
+offset_top = 829.42505
+offset_right = 175.97157
+offset_bottom = 831.0924
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5961644)
+
+[node name="Estrela61" type="ColorRect" parent="Estrelas" unique_id=50809142]
+z_index = -19
+offset_left = 1453.7034
+offset_top = 210.5978
+offset_right = 1455.9177
+offset_bottom = 212.81209
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5340859)
+
+[node name="Estrela62" type="ColorRect" parent="Estrelas" unique_id=176020212]
+z_index = -19
+offset_left = 975.39716
+offset_top = 473.23666
+offset_right = 977.45795
+offset_bottom = 475.2975
+mouse_filter = 2
+color = Color(1, 1, 1, 0.59376395)
+
+[node name="Estrela63" type="ColorRect" parent="Estrelas" unique_id=1908151557]
+z_index = -19
+offset_left = 1188.7238
+offset_top = 181.29445
+offset_right = 1190.0323
+offset_bottom = 182.60301
+mouse_filter = 2
+color = Color(1, 1, 1, 0.37520143)
+
+[node name="Estrela64" type="ColorRect" parent="Estrelas" unique_id=289083934]
+z_index = -19
+offset_left = 74.687904
+offset_top = 173.80946
+offset_right = 76.60144
+offset_bottom = 175.72299
+mouse_filter = 2
+color = Color(1, 1, 1, 0.69420093)
+
+[node name="Estrela65" type="ColorRect" parent="Estrelas" unique_id=1553064021]
+z_index = -19
+offset_left = 980.6868
+offset_top = 237.41373
+offset_right = 981.8679
+offset_bottom = 238.5948
+mouse_filter = 2
+color = Color(1, 1, 1, 0.8148969)
+
+[node name="Estrela66" type="ColorRect" parent="Estrelas" unique_id=516164891]
+z_index = -19
+offset_left = 684.69806
+offset_top = 136.3623
+offset_right = 686.7339
+offset_bottom = 138.39812
+mouse_filter = 2
+color = Color(1, 1, 1, 0.62599754)
+
+[node name="Estrela67" type="ColorRect" parent="Estrelas" unique_id=953633891]
+z_index = -19
+offset_left = 263.81522
+offset_top = 437.56955
+offset_right = 265.82858
+offset_bottom = 439.58292
+mouse_filter = 2
+color = Color(1, 1, 1, 0.7192801)
+
+[node name="Estrela68" type="ColorRect" parent="Estrelas" unique_id=1452403679]
+z_index = -19
+offset_left = 227.95193
+offset_top = 267.2963
+offset_right = 230.74828
+offset_bottom = 270.09265
+mouse_filter = 2
+color = Color(1, 1, 1, 0.3208709)
+
+[node name="Estrela69" type="ColorRect" parent="Estrelas" unique_id=63637684]
+z_index = -19
+offset_left = 708.544
+offset_top = 886.3053
+offset_right = 710.71313
+offset_bottom = 888.4744
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6571269)
+
+[node name="Estrela70" type="ColorRect" parent="Estrelas" unique_id=1655345587]
+z_index = -19
+offset_left = 847.3222
+offset_top = 448.17407
+offset_right = 850.25336
+offset_bottom = 451.10522
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5361469)
+
+[node name="Estrela71" type="ColorRect" parent="Estrelas" unique_id=1570634419]
+z_index = -19
+offset_left = 1489.7214
+offset_top = 183.55807
+offset_right = 1491.092
+offset_bottom = 184.92868
+mouse_filter = 2
+color = Color(1, 1, 1, 0.34540802)
+
+[node name="Estrela72" type="ColorRect" parent="Estrelas" unique_id=6272360]
+z_index = -19
+offset_left = 564.5132
+offset_top = 715.5304
+offset_right = 566.0269
+offset_bottom = 717.0441
+mouse_filter = 2
+color = Color(1, 1, 1, 0.506952)
+
+[node name="Estrela73" type="ColorRect" parent="Estrelas" unique_id=1998693100]
+z_index = -19
+offset_left = 737.09467
+offset_top = 847.50885
+offset_right = 738.9592
+offset_bottom = 849.3734
+mouse_filter = 2
+color = Color(1, 1, 1, 0.64478034)
+
+[node name="Estrela74" type="ColorRect" parent="Estrelas" unique_id=341709193]
+z_index = -19
+offset_left = 1232.8981
+offset_top = 688.9801
+offset_right = 1234.9703
+offset_bottom = 691.05237
+mouse_filter = 2
+color = Color(1, 1, 1, 0.8563352)
+
+[node name="Estrela75" type="ColorRect" parent="Estrelas" unique_id=376781427]
+z_index = -19
+offset_left = 1221.98
+offset_top = 631.901
+offset_right = 1223.8394
+offset_bottom = 633.76044
+mouse_filter = 2
+color = Color(1, 1, 1, 0.77025485)
+
+[node name="Estrela76" type="ColorRect" parent="Estrelas" unique_id=876122495]
+z_index = -19
+offset_left = 853.8992
+offset_top = 270.26785
+offset_right = 856.8798
+offset_bottom = 273.24854
+mouse_filter = 2
+color = Color(1, 1, 1, 0.34592307)
+
+[node name="Estrela77" type="ColorRect" parent="Estrelas" unique_id=931266017]
+z_index = -19
+offset_left = 854.9819
+offset_top = 605.5114
+offset_right = 856.70703
+offset_bottom = 607.2366
+mouse_filter = 2
+color = Color(1, 1, 1, 0.4472352)
+
+[node name="Estrela78" type="ColorRect" parent="Estrelas" unique_id=1582272719]
+z_index = -19
+offset_left = 1196.6719
+offset_top = 876.33215
+offset_right = 1197.7784
+offset_bottom = 877.4387
+mouse_filter = 2
+color = Color(1, 1, 1, 0.3876803)
+
+[node name="Estrela79" type="ColorRect" parent="Estrelas" unique_id=1974373087]
+z_index = -19
+offset_left = 1463.0001
+offset_top = 252.10832
+offset_right = 1464.8718
+offset_bottom = 253.98006
+mouse_filter = 2
+color = Color(1, 1, 1, 0.35699204)
+
+[node name="Estrela80" type="ColorRect" parent="Estrelas" unique_id=1624633816]
+z_index = -19
+offset_left = 349.73132
+offset_top = 864.4254
+offset_right = 351.8788
+offset_bottom = 866.57294
+mouse_filter = 2
+color = Color(1, 1, 1, 0.3905846)
+
+[node name="Estrela81" type="ColorRect" parent="Estrelas" unique_id=168693360]
+z_index = -19
+offset_left = 1239.9673
+offset_top = 651.3668
+offset_right = 1241.8264
+offset_bottom = 653.2259
+mouse_filter = 2
+color = Color(1, 1, 1, 0.30510393)
+
+[node name="Estrela82" type="ColorRect" parent="Estrelas" unique_id=694200491]
+z_index = -19
+offset_left = 21.569288
+offset_top = 731.13104
+offset_right = 23.513205
+offset_bottom = 733.07495
+mouse_filter = 2
+color = Color(1, 1, 1, 0.88148665)
+
+[node name="Estrela83" type="ColorRect" parent="Estrelas" unique_id=242370306]
+z_index = -19
+offset_left = 252.2838
+offset_top = 42.41385
+offset_right = 255.17877
+offset_bottom = 45.308823
+mouse_filter = 2
+color = Color(1, 1, 1, 0.5612669)
+
+[node name="Estrela84" type="ColorRect" parent="Estrelas" unique_id=27663427]
+z_index = -19
+offset_left = 741.8965
+offset_top = 22.4173
+offset_right = 743.216
+offset_bottom = 23.736792
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6516011)
+
+[node name="Estrela85" type="ColorRect" parent="Estrelas" unique_id=1965869803]
+z_index = -19
+offset_left = 830.0985
+offset_top = 847.14166
+offset_right = 831.2079
+offset_bottom = 848.25104
+mouse_filter = 2
+color = Color(1, 1, 1, 0.36886403)
+
+[node name="Estrela86" type="ColorRect" parent="Estrelas" unique_id=1779401285]
+z_index = -19
+offset_left = 962.40125
+offset_top = 703.05316
+offset_right = 964.3289
+offset_bottom = 704.98083
+mouse_filter = 2
+color = Color(1, 1, 1, 0.77849054)
+
+[node name="Estrela87" type="ColorRect" parent="Estrelas" unique_id=1102927038]
+z_index = -19
+offset_left = 248.75163
+offset_top = 541.41656
+offset_right = 249.95284
+offset_bottom = 542.61774
+mouse_filter = 2
+color = Color(1, 1, 1, 0.34520712)
+
+[node name="Estrela88" type="ColorRect" parent="Estrelas" unique_id=22296315]
+z_index = -19
+offset_left = 675.21515
+offset_top = 366.5393
+offset_right = 677.2488
+offset_bottom = 368.57294
+mouse_filter = 2
+color = Color(1, 1, 1, 0.43775243)
+
+[node name="Estrela89" type="ColorRect" parent="Estrelas" unique_id=1918529767]
+z_index = -19
+offset_left = 545.70605
+offset_top = 781.1877
+offset_right = 546.7808
+offset_bottom = 782.26245
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6841844)
+
+[node name="Terra" type="Node2D" parent="." unique_id=875262246]
+position = Vector2(1150, 700)
+
+[node name="Halo" type="Polygon2D" parent="Terra" unique_id=2030488554]
+z_index = -15
+color = Color(0.15, 0.35, 0.7, 1)
+polygon = PackedVector2Array(340, 0, 333.46698, 66.33071, 314.11902, 130.11237, 282.69968, 188.89389, 240.4163, 240.4163, 188.89389, 282.69968, 130.11237, 314.11902, 66.33071, 333.46698, 2.0818308e-14, 340, -66.33071, 333.46698, -130.11237, 314.11902, -188.89389, 282.69968, -240.4163, 240.4163, -282.69968, 188.89389, -314.11902, 130.11237, -333.46698, 66.33071, -340, 4.1636616e-14, -333.46698, -66.33071, -314.11902, -130.11237, -282.69968, -188.89389, -240.4163, -240.4163, -188.89389, -282.69968, -130.11237, -314.11902, -66.33071, -333.46698, -6.2454924e-14, -340, 66.33071, -333.46698, 130.11237, -314.11902, 188.89389, -282.69968, 240.4163, -240.4163, 282.69968, -188.89389, 314.11902, -130.11237, 333.46698, -66.33071)
+
+[node name="Oceano" type="Polygon2D" parent="Terra" unique_id=1216293398]
+z_index = -14
+color = Color(0.2, 0.45, 0.8, 1)
+polygon = PackedVector2Array(330, 0, 323.65912, 64.37981, 304.88025, 126.28553, 274.38498, 183.33818, 233.34523, 233.34523, 183.33818, 274.38498, 126.28553, 304.88025, 64.37981, 323.65912, 2.0206005e-14, 330, -64.37981, 323.65912, -126.28553, 304.88025, -183.33818, 274.38498, -233.34523, 233.34523, -274.38498, 183.33818, -304.88025, 126.28553, -323.65912, 64.37981, -330, 4.041201e-14, -323.65912, -64.37981, -304.88025, -126.28553, -274.38498, -183.33818, -233.34523, -233.34523, -183.33818, -274.38498, -126.28553, -304.88025, -64.37981, -323.65912, -6.0618015e-14, -330, 64.37981, -323.65912, 126.28553, -304.88025, 183.33818, -274.38498, 233.34523, -233.34523, 274.38498, -183.33818, 304.88025, -126.28553, 323.65912, -64.37981)
+
+[node name="Continente0" type="Polygon2D" parent="Terra" unique_id=375754437]
+z_index = -13
+position = Vector2(-120, -140)
+color = Color(0.25, 0.55, 0.3, 1)
+polygon = PackedVector2Array(60, 0, 58.847115, 11.70542, 55.43277, 22.961006, 49.888176, 33.334213, 42.426407, 42.426407, 33.334213, 49.888176, 22.961006, 55.43277, 11.70542, 58.847115, 3.673819e-15, 60, -11.70542, 58.847115, -22.961006, 55.43277, -33.334213, 49.888176, -42.426407, 42.426407, -49.888176, 33.334213, -55.43277, 22.961006, -58.847115, 11.70542, -60, 7.347638e-15, -58.847115, -11.70542, -55.43277, -22.961006, -49.888176, -33.334213, -42.426407, -42.426407, -33.334213, -49.888176, -22.961006, -55.43277, -11.70542, -58.847115, -1.1021457e-14, -60, 11.70542, -58.847115, 22.961006, -55.43277, 33.334213, -49.888176, 42.426407, -42.426407, 49.888176, -33.334213, 55.43277, -22.961006, 58.847115, -11.70542)
+
+[node name="Continente1" type="Polygon2D" parent="Terra" unique_id=428074991]
+z_index = -13
+position = Vector2(60, -60)
+color = Color(0.25, 0.55, 0.3, 1)
+polygon = PackedVector2Array(72, 0, 70.61654, 14.046503, 66.519325, 27.553207, 59.86581, 40.001057, 50.911686, 50.911686, 40.001057, 59.86581, 27.553207, 66.519325, 14.046503, 70.61654, 4.408583e-15, 72, -14.046503, 70.61654, -27.553207, 66.519325, -40.001057, 59.86581, -50.911686, 50.911686, -59.86581, 40.001057, -66.519325, 27.553207, -70.61654, 14.046503, -72, 8.817166e-15, -70.61654, -14.046503, -66.519325, -27.553207, -59.86581, -40.001057, -50.911686, -50.911686, -40.001057, -59.86581, -27.553207, -66.519325, -14.046503, -70.61654, -1.3225749e-14, -72, 14.046503, -70.61654, 27.553207, -66.519325, 40.001057, -59.86581, 50.911686, -50.911686, 59.86581, -40.001057, 66.519325, -27.553207, 70.61654, -14.046503)
+
+[node name="Continente2" type="Polygon2D" parent="Terra" unique_id=1047358378]
+z_index = -13
+position = Vector2(-40, 90)
+color = Color(0.25, 0.55, 0.3, 1)
+polygon = PackedVector2Array(84, 0, 82.38596, 16.387587, 77.60588, 32.14541, 69.843445, 46.6679, 59.39697, 59.39697, 46.6679, 69.843445, 32.14541, 77.60588, 16.387587, 82.38596, 5.1433467e-15, 84, -16.387587, 82.38596, -32.14541, 77.60588, -46.6679, 69.843445, -59.39697, 59.39697, -69.843445, 46.6679, -77.60588, 32.14541, -82.38596, 16.387587, -84, 1.0286693e-14, -82.38596, -16.387587, -77.60588, -32.14541, -69.843445, -46.6679, -59.39697, -59.39697, -46.6679, -69.843445, -32.14541, -77.60588, -16.387587, -82.38596, -1.543004e-14, -84, 16.387587, -82.38596, 32.14541, -77.60588, 46.6679, -69.843445, 59.39697, -59.39697, 69.843445, -46.6679, 77.60588, -32.14541, 82.38596, -16.387587)
+
+[node name="Continente3" type="Polygon2D" parent="Terra" unique_id=869909765]
+z_index = -13
+position = Vector2(160, -180)
+color = Color(0.25, 0.55, 0.3, 1)
+polygon = PackedVector2Array(96, 0, 94.15538, 18.728672, 88.69243, 36.73761, 79.82108, 53.334743, 67.88225, 67.88225, 53.334743, 79.82108, 36.73761, 88.69243, 18.728672, 94.15538, 5.8781105e-15, 96, -18.728672, 94.15538, -36.73761, 88.69243, -53.334743, 79.82108, -67.88225, 67.88225, -79.82108, 53.334743, -88.69243, 36.73761, -94.15538, 18.728672, -96, 1.1756221e-14, -94.15538, -18.728672, -88.69243, -36.73761, -79.82108, -53.334743, -67.88225, -67.88225, -53.334743, -79.82108, -36.73761, -88.69243, -18.728672, -94.15538, -1.7634331e-14, -96, 18.728672, -94.15538, 36.73761, -88.69243, 53.334743, -79.82108, 67.88225, -67.88225, 79.82108, -53.334743, 88.69243, -36.73761, 94.15538, -18.728672)
+
+[node name="Moldura" type="Node2D" parent="." unique_id=1939288671]
+
+[node name="Topo" type="ColorRect" parent="Moldura" unique_id=230089252]
+z_index = -5
+offset_right = 1600.0
+offset_bottom = 90.0
+mouse_filter = 2
+color = Color(0.1, 0.1, 0.13, 1)
+
+[node name="Baixo" type="ColorRect" parent="Moldura" unique_id=153209180]
+z_index = -5
+offset_top = 810.0
+offset_right = 1600.0
+offset_bottom = 900.0
+mouse_filter = 2
+color = Color(0.1, 0.1, 0.13, 1)
+
+[node name="Esquerda" type="ColorRect" parent="Moldura" unique_id=2103104614]
+z_index = -5
+offset_right = 110.0
+offset_bottom = 900.0
+mouse_filter = 2
+color = Color(0.1, 0.1, 0.13, 1)
+
+[node name="Direita" type="ColorRect" parent="Moldura" unique_id=1699985199]
+z_index = -5
+offset_left = 1490.0
+offset_right = 1600.0
+offset_bottom = 900.0
+mouse_filter = 2
+color = Color(0.1, 0.1, 0.13, 1)
+
+[node name="Gotas" type="Node2D" parent="." unique_id=720480969]
+
+[node name="Gota0" type="Polygon2D" parent="Gotas" unique_id=840428436]
+z_index = -8
+position = Vector2(824.7901, 272.3529)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(8.9201765, 0, 8.748777, 1.7402401, 8.241168, 3.4136038, 7.4168553, 4.955785, 6.307517, 6.307517, 4.955785, 7.4168553, 3.4136038, 8.241168, 1.7402401, 8.748777, 5.4618527e-16, 8.9201765, -1.7402401, 8.748777, -3.4136038, 8.241168, -4.955785, 7.4168553, -6.307517, 6.307517, -7.4168553, 4.955785, -8.241168, 3.4136038, -8.748777, 1.7402401, -8.9201765, 1.0923705e-15, -8.748777, -1.7402401, -8.241168, -3.4136038, -7.4168553, -4.955785, -6.307517, -6.307517, -4.955785, -7.4168553, -3.4136038, -8.241168, -1.7402401, -8.748777, -1.6385557e-15, -8.9201765, 1.7402401, -8.748777, 3.4136038, -8.241168, 4.955785, -7.4168553, 6.307517, -6.307517, 7.4168553, -4.955785, 8.241168, -3.4136038, 8.748777, -1.7402401)
+
+[node name="Gota1" type="Polygon2D" parent="Gotas" unique_id=1037286617]
+z_index = -8
+position = Vector2(491.52197, 472.76968)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(10.709427, 0, 10.503648, 2.0893056, 9.89422, 4.09832, 8.904563, 5.949839, 7.572708, 7.572708, 5.949839, 8.904563, 4.09832, 9.89422, 2.0893056, 10.503648, 6.557416e-16, 10.709427, -2.0893056, 10.503648, -4.09832, 9.89422, -5.949839, 8.904563, -7.572708, 7.572708, -8.904563, 5.949839, -9.89422, 4.09832, -10.503648, 2.0893056, -10.709427, 1.3114832e-15, -10.503648, -2.0893056, -9.89422, -4.09832, -8.904563, -5.949839, -7.572708, -7.572708, -5.949839, -8.904563, -4.09832, -9.89422, -2.0893056, -10.503648, -1.967225e-15, -10.709427, 2.0893056, -10.503648, 4.09832, -9.89422, 5.949839, -8.904563, 7.572708, -7.572708, 8.904563, -5.949839, 9.89422, -4.09832, 10.503648, -2.0893056)
+
+[node name="Gota2" type="Polygon2D" parent="Gotas" unique_id=942028219]
+z_index = -8
+position = Vector2(858.12897, 320.72244)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(4.3839903, 0, 4.299753, 0.8552741, 4.0502787, 1.6776804, 3.6451547, 2.4356146, 3.0999491, 3.0999491, 2.4356146, 3.6451547, 1.6776804, 4.0502787, 0.8552741, 4.299753, 2.684331e-16, 4.3839903, -0.8552741, 4.299753, -1.6776804, 4.0502787, -2.4356146, 3.6451547, -3.0999491, 3.0999491, -3.6451547, 2.4356146, -4.0502787, 1.6776804, -4.299753, 0.8552741, -4.3839903, 5.368662e-16, -4.299753, -0.8552741, -4.0502787, -1.6776804, -3.6451547, -2.4356146, -3.0999491, -3.0999491, -2.4356146, -3.6451547, -1.6776804, -4.0502787, -0.8552741, -4.299753, -8.0529937e-16, -4.3839903, 0.8552741, -4.299753, 1.6776804, -4.0502787, 2.4356146, -3.6451547, 3.0999491, -3.0999491, 3.6451547, -2.4356146, 4.0502787, -1.6776804, 4.299753, -0.8552741)
+
+[node name="Gota3" type="Polygon2D" parent="Gotas" unique_id=2020207859]
+z_index = -8
+position = Vector2(1168.319, 510.95557)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(4.166127, 0, 4.0860763, 0.8127711, 3.8489995, 1.5943078, 3.464008, 2.3145764, 2.9458969, 2.9458969, 2.3145764, 3.464008, 1.5943078, 3.8489995, 0.8127711, 4.0860763, 2.550933e-16, 4.166127, -0.8127711, 4.0860763, -1.5943078, 3.8489995, -2.3145764, 3.464008, -2.9458969, 2.9458969, -3.464008, 2.3145764, -3.8489995, 1.5943078, -4.0860763, 0.8127711, -4.166127, 5.101866e-16, -4.0860763, -0.8127711, -3.8489995, -1.5943078, -3.464008, -2.3145764, -2.9458969, -2.9458969, -2.3145764, -3.464008, -1.5943078, -3.8489995, -0.8127711, -4.0860763, -7.6527987e-16, -4.166127, 0.8127711, -4.0860763, 1.5943078, -3.8489995, 2.3145764, -3.464008, 2.9458969, -2.9458969, 3.464008, -2.3145764, 3.8489995, -1.5943078, 4.0860763, -0.8127711)
+
+[node name="Gota4" type="Polygon2D" parent="Gotas" unique_id=419355358]
+z_index = -8
+position = Vector2(681.333, 527.223)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(8.361736, 0, 8.201068, 1.6312939, 7.725237, 3.199898, 6.9525294, 4.6455317, 5.9126406, 5.9126406, 4.6455317, 6.9525294, 3.199898, 7.725237, 1.6312939, 8.201068, 5.1199176e-16, 8.361736, -1.6312939, 8.201068, -3.199898, 7.725237, -4.6455317, 6.9525294, -5.9126406, 5.9126406, -6.9525294, 4.6455317, -7.725237, 3.199898, -8.201068, 1.6312939, -8.361736, 1.0239835e-15, -8.201068, -1.6312939, -7.725237, -3.199898, -6.9525294, -4.6455317, -5.9126406, -5.9126406, -4.6455317, -6.9525294, -3.199898, -7.725237, -1.6312939, -8.201068, -1.5359753e-15, -8.361736, 1.6312939, -8.201068, 3.199898, -7.725237, 4.6455317, -6.9525294, 5.9126406, -5.9126406, 6.9525294, -4.6455317, 7.725237, -3.199898, 8.201068, -1.6312939)
+
+[node name="Gota5" type="Polygon2D" parent="Gotas" unique_id=1194129860]
+z_index = -8
+position = Vector2(531.70465, 602.39233)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(7.9034505, 0, 7.751588, 1.5418867, 7.301836, 3.0245194, 6.571479, 4.390922, 5.5885835, 5.5885835, 4.390922, 6.571479, 3.0245194, 7.301836, 1.5418867, 7.751588, 4.839308e-16, 7.9034505, -1.5418867, 7.751588, -3.0245194, 7.301836, -4.390922, 6.571479, -5.5885835, 5.5885835, -6.571479, 4.390922, -7.301836, 3.0245194, -7.751588, 1.5418867, -7.9034505, 9.678616e-16, -7.751588, -1.5418867, -7.301836, -3.0245194, -6.571479, -4.390922, -5.5885835, -5.5885835, -4.390922, -6.571479, -3.0245194, -7.301836, -1.5418867, -7.751588, -1.4517923e-15, -7.9034505, 1.5418867, -7.751588, 3.0245194, -7.301836, 4.390922, -6.571479, 5.5885835, -5.5885835, 6.571479, -4.390922, 7.301836, -3.0245194, 7.751588, -1.5418867)
+
+[node name="Gota6" type="Polygon2D" parent="Gotas" unique_id=543933076]
+z_index = -8
+position = Vector2(365.13565, 263.23523)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(6.272027, 0, 6.1515117, 1.2236118, 5.794597, 2.4002008, 5.2149997, 3.4845517, 4.434993, 4.434993, 3.4845517, 5.2149997, 2.4002008, 5.794597, 1.2236118, 6.1515117, 3.840382e-16, 6.272027, -1.2236118, 6.1515117, -2.4002008, 5.794597, -3.4845517, 5.2149997, -4.434993, 4.434993, -5.2149997, 3.4845517, -5.794597, 2.4002008, -6.1515117, 1.2236118, -6.272027, 7.680764e-16, -6.1515117, -1.2236118, -5.794597, -2.4002008, -5.2149997, -3.4845517, -4.434993, -4.434993, -3.4845517, -5.2149997, -2.4002008, -5.794597, -1.2236118, -6.1515117, -1.1521146e-15, -6.272027, 1.2236118, -6.1515117, 2.4002008, -5.794597, 3.4845517, -5.2149997, 4.434993, -4.434993, 5.2149997, -3.4845517, 5.794597, -2.4002008, 6.1515117, -1.2236118)
+
+[node name="Gota7" type="Polygon2D" parent="Gotas" unique_id=1631065231]
+z_index = -8
+position = Vector2(773.24365, 229.76509)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(7.2840185, 0, 7.1440578, 1.4210415, 6.7295556, 2.7874732, 6.05644, 4.046784, 5.150579, 5.150579, 4.046784, 6.05644, 2.7874732, 6.7295556, 1.4210415, 7.1440578, 4.4600276e-16, 7.2840185, -1.4210415, 7.1440578, -2.7874732, 6.7295556, -4.046784, 6.05644, -5.150579, 5.150579, -6.05644, 4.046784, -6.7295556, 2.7874732, -7.1440578, 1.4210415, -7.2840185, 8.920055e-16, -7.1440578, -1.4210415, -6.7295556, -2.7874732, -6.05644, -4.046784, -5.150579, -5.150579, -4.046784, -6.05644, -2.7874732, -6.7295556, -1.4210415, -7.1440578, -1.3380083e-15, -7.2840185, 1.4210415, -7.1440578, 2.7874732, -6.7295556, 4.046784, -6.05644, 5.150579, -5.150579, 6.05644, -4.046784, 6.7295556, -2.7874732, 7.1440578, -1.4210415)
+
+[node name="Gota8" type="Polygon2D" parent="Gotas" unique_id=1574712332]
+z_index = -8
+position = Vector2(1115.0837, 560.4546)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(5.480153, 0, 5.374853, 1.0691248, 5.063001, 2.0971637, 4.5565805, 3.04461, 3.8750534, 3.8750534, 3.04461, 4.5565805, 2.0971637, 5.063001, 1.0691248, 5.374853, 3.3555152e-16, 5.480153, -1.0691248, 5.374853, -2.0971637, 5.063001, -3.04461, 4.5565805, -3.8750534, 3.8750534, -4.5565805, 3.04461, -5.063001, 2.0971637, -5.374853, 1.0691248, -5.480153, 6.7110304e-16, -5.374853, -1.0691248, -5.063001, -2.0971637, -4.5565805, -3.04461, -3.8750534, -3.8750534, -3.04461, -4.5565805, -2.0971637, -5.063001, -1.0691248, -5.374853, -1.0066545e-15, -5.480153, 1.0691248, -5.374853, 2.0971637, -5.063001, 3.04461, -4.5565805, 3.8750534, -3.8750534, 4.5565805, -3.04461, 5.063001, -2.0971637, 5.374853, -1.0691248)
+
+[node name="Gota9" type="Polygon2D" parent="Gotas" unique_id=29911567]
+z_index = -8
+position = Vector2(1300.4941, 537.62256)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(10.058788, 0, 9.865511, 1.9623723, 9.293108, 3.8493316, 8.363577, 5.5883636, 7.1126375, 7.1126375, 5.5883636, 8.363577, 3.8493316, 9.293108, 1.9623723, 9.865511, 6.159028e-16, 10.058788, -1.9623723, 9.865511, -3.8493316, 9.293108, -5.5883636, 8.363577, -7.1126375, 7.1126375, -8.363577, 5.5883636, -9.293108, 3.8493316, -9.865511, 1.9623723, -10.058788, 1.2318056e-15, -9.865511, -1.9623723, -9.293108, -3.8493316, -8.363577, -5.5883636, -7.1126375, -7.1126375, -5.5883636, -8.363577, -3.8493316, -9.293108, -1.9623723, -9.865511, -1.8477084e-15, -10.058788, 1.9623723, -9.865511, 3.8493316, -9.293108, 5.5883636, -8.363577, 7.1126375, -7.1126375, 8.363577, -5.5883636, 9.293108, -3.8493316, 9.865511, -1.9623723)
+
+[node name="Gota10" type="Polygon2D" parent="Gotas" unique_id=810137411]
+z_index = -8
+position = Vector2(332.93246, 511.5498)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(9.34589, 0, 9.166311, 1.8232927, 8.634477, 3.576517, 7.7708235, 5.1922984, 6.608542, 6.608542, 5.1922984, 7.7708235, 3.576517, 8.634477, 1.8232927, 9.166311, 5.722518e-16, 9.34589, -1.8232927, 9.166311, -3.576517, 8.634477, -5.1922984, 7.7708235, -6.608542, 6.608542, -7.7708235, 5.1922984, -8.634477, 3.576517, -9.166311, 1.8232927, -9.34589, 1.1445036e-15, -9.166311, -1.8232927, -8.634477, -3.576517, -7.7708235, -5.1922984, -6.608542, -6.608542, -5.1922984, -7.7708235, -3.576517, -8.634477, -1.8232927, -9.166311, -1.7167555e-15, -9.34589, 1.8232927, -9.166311, 3.576517, -8.634477, 5.1922984, -7.7708235, 6.608542, -6.608542, 7.7708235, -5.1922984, 8.634477, -3.576517, 9.166311, -1.8232927)
+
+[node name="Gota11" type="Polygon2D" parent="Gotas" unique_id=586028949]
+z_index = -8
+position = Vector2(1194.5289, 739.044)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(10.28393, 0, 10.086327, 2.0062952, 9.501112, 3.9354894, 8.550775, 5.713445, 7.2718363, 7.2718363, 5.713445, 8.550775, 3.9354894, 9.501112, 2.0062952, 10.086327, 6.296883e-16, 10.28393, -2.0062952, 10.086327, -3.9354894, 9.501112, -5.713445, 8.550775, -7.2718363, 7.2718363, -8.550775, 5.713445, -9.501112, 3.9354894, -10.086327, 2.0062952, -10.28393, 1.2593766e-15, -10.086327, -2.0062952, -9.501112, -3.9354894, -8.550775, -5.713445, -7.2718363, -7.2718363, -5.713445, -8.550775, -3.9354894, -9.501112, -2.0062952, -10.086327, -1.889065e-15, -10.28393, 2.0062952, -10.086327, 3.9354894, -9.501112, 5.713445, -8.550775, 7.2718363, -7.2718363, 8.550775, -5.713445, 9.501112, -3.9354894, 10.086327, -2.0062952)
+
+[node name="Gota12" type="Polygon2D" parent="Gotas" unique_id=1458483588]
+z_index = -8
+position = Vector2(850.98706, 312.34763)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(9.574271, 0, 9.390304, 1.8678477, 8.845473, 3.663915, 7.9607153, 5.31918, 6.770032, 6.770032, 5.31918, 7.9607153, 3.663915, 8.845473, 1.8678477, 9.390304, 5.862357e-16, 9.574271, -1.8678477, 9.390304, -3.663915, 8.845473, -5.31918, 7.9607153, -6.770032, 6.770032, -7.9607153, 5.31918, -8.845473, 3.663915, -9.390304, 1.8678477, -9.574271, 1.1724714e-15, -9.390304, -1.8678477, -8.845473, -3.663915, -7.9607153, -5.31918, -6.770032, -6.770032, -5.31918, -7.9607153, -3.663915, -8.845473, -1.8678477, -9.390304, -1.758707e-15, -9.574271, 1.8678477, -9.390304, 3.663915, -8.845473, 5.31918, -7.9607153, 6.770032, -6.770032, 7.9607153, -5.31918, 8.845473, -3.663915, 9.390304, -1.8678477)
+
+[node name="Gota13" type="Polygon2D" parent="Gotas" unique_id=1657148628]
+z_index = -8
+position = Vector2(1084.6289, 422.24835)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(5.03567, 0, 4.9389105, 0.98241043, 4.6523523, 1.9270674, 4.1870065, 2.7976682, 3.5607562, 3.5607562, 2.7976682, 4.1870065, 1.9270674, 4.6523523, 0.98241043, 4.9389105, 3.0833566e-16, 5.03567, -0.98241043, 4.9389105, -1.9270674, 4.6523523, -2.7976682, 4.1870065, -3.5607562, 3.5607562, -4.1870065, 2.7976682, -4.6523523, 1.9270674, -4.9389105, 0.98241043, -5.03567, 6.166713e-16, -4.9389105, -0.98241043, -4.6523523, -1.9270674, -4.1870065, -2.7976682, -3.5607562, -3.5607562, -2.7976682, -4.1870065, -1.9270674, -4.6523523, -0.98241043, -4.9389105, -9.25007e-16, -5.03567, 0.98241043, -4.9389105, 1.9270674, -4.6523523, 2.7976682, -4.1870065, 3.5607562, -3.5607562, 4.1870065, -2.7976682, 4.6523523, -1.9270674, 4.9389105, -0.98241043)
+
+[node name="Gota14" type="Polygon2D" parent="Gotas" unique_id=2002456778]
+z_index = -8
+position = Vector2(1350.4823, 332.1336)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(4.275034, 0, 4.19289, 0.83401775, 3.9496162, 1.6359847, 3.5545607, 2.3750818, 3.0229053, 3.0229053, 2.3750818, 3.5545607, 1.6359847, 3.9496162, 0.83401775, 4.19289, 2.617617e-16, 4.275034, -0.83401775, 4.19289, -1.6359847, 3.9496162, -2.3750818, 3.5545607, -3.0229053, 3.0229053, -3.5545607, 2.3750818, -3.9496162, 1.6359847, -4.19289, 0.83401775, -4.275034, 5.235234e-16, -4.19289, -0.83401775, -3.9496162, -1.6359847, -3.5545607, -2.3750818, -3.0229053, -3.0229053, -2.3750818, -3.5545607, -1.6359847, -3.9496162, -0.83401775, -4.19289, -7.8528504e-16, -4.275034, 0.83401775, -4.19289, 1.6359847, -3.9496162, 2.3750818, -3.5545607, 3.0229053, -3.0229053, 3.5545607, -2.3750818, 3.9496162, -1.6359847, 4.19289, -0.83401775)
+
+[node name="Gota15" type="Polygon2D" parent="Gotas" unique_id=1232988969]
+z_index = -8
+position = Vector2(1059.2651, 710.52155)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(7.126234, 0, 6.989305, 1.3902593, 6.5837817, 2.7270916, 5.9252467, 3.9591236, 5.039008, 5.039008, 3.9591236, 5.9252467, 2.7270916, 6.5837817, 1.3902593, 6.989305, 4.3634158e-16, 7.126234, -1.3902593, 6.989305, -2.7270916, 6.5837817, -3.9591236, 5.9252467, -5.039008, 5.039008, -5.9252467, 3.9591236, -6.5837817, 2.7270916, -6.989305, 1.3902593, -7.126234, 8.7268317e-16, -6.989305, -1.3902593, -6.5837817, -2.7270916, -5.9252467, -3.9591236, -5.039008, -5.039008, -3.9591236, -5.9252467, -2.7270916, -6.5837817, -1.3902593, -6.989305, -1.3090247e-15, -7.126234, 1.3902593, -6.989305, 2.7270916, -6.5837817, 3.9591236, -5.9252467, 5.039008, -5.039008, 5.9252467, -3.9591236, 6.5837817, -2.7270916, 6.989305, -1.3902593)
+
+[node name="Gota16" type="Polygon2D" parent="Gotas" unique_id=1368610751]
+z_index = -8
+position = Vector2(732.12836, 447.82706)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(7.844217, 0, 7.693492, 1.5303308, 7.2471113, 3.0018518, 6.522228, 4.3580136, 5.546699, 5.546699, 4.3580136, 6.522228, 3.0018518, 7.2471113, 1.5303308, 7.693492, 4.803039e-16, 7.844217, -1.5303308, 7.693492, -3.0018518, 7.2471113, -4.3580136, 6.522228, -5.546699, 5.546699, -6.522228, 4.3580136, -7.2471113, 3.0018518, -7.693492, 1.5303308, -7.844217, 9.606078e-16, -7.693492, -1.5303308, -7.2471113, -3.0018518, -6.522228, -4.3580136, -5.546699, -5.546699, -4.3580136, -6.522228, -3.0018518, -7.2471113, -1.5303308, -7.693492, -1.4409117e-15, -7.844217, 1.5303308, -7.693492, 3.0018518, -7.2471113, 4.3580136, -6.522228, 5.546699, -5.546699, 6.522228, -4.3580136, 7.2471113, -3.0018518, 7.693492, -1.5303308)
+
+[node name="Gota17" type="Polygon2D" parent="Gotas" unique_id=57184850]
+z_index = -8
+position = Vector2(434.45215, 184.83707)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(5.9922986, 0, 5.877158, 1.1690395, 5.536162, 2.2931533, 4.9824142, 3.3291428, 4.237195, 4.237195, 3.3291428, 4.9824142, 2.2931533, 5.536162, 1.1690395, 5.877158, 3.6691035e-16, 5.9922986, -1.1690395, 5.877158, -2.2931533, 5.536162, -3.3291428, 4.9824142, -4.237195, 4.237195, -4.9824142, 3.3291428, -5.536162, 2.2931533, -5.877158, 1.1690395, -5.9922986, 7.338207e-16, -5.877158, -1.1690395, -5.536162, -2.2931533, -4.9824142, -3.3291428, -4.237195, -4.237195, -3.3291428, -4.9824142, -2.2931533, -5.536162, -1.1690395, -5.877158, -1.1007311e-15, -5.9922986, 1.1690395, -5.877158, 2.2931533, -5.536162, 3.3291428, -4.9824142, 4.237195, -4.237195, 4.9824142, -3.3291428, 5.536162, -2.2931533, 5.877158, -1.1690395)
+
+[node name="Gota18" type="Polygon2D" parent="Gotas" unique_id=623988405]
+z_index = -8
+position = Vector2(781.1324, 302.83493)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(10.10445, 0, 9.9102955, 1.9712805, 9.335295, 3.8668056, 8.401544, 5.613732, 7.144925, 7.144925, 5.613732, 8.401544, 3.8668056, 9.335295, 1.9712805, 9.9102955, 6.186987e-16, 10.10445, -1.9712805, 9.9102955, -3.8668056, 9.335295, -5.613732, 8.401544, -7.144925, 7.144925, -8.401544, 5.613732, -9.335295, 3.8668056, -9.9102955, 1.9712805, -10.10445, 1.2373974e-15, -9.9102955, -1.9712805, -9.335295, -3.8668056, -8.401544, -5.613732, -7.144925, -7.144925, -5.613732, -8.401544, -3.8668056, -9.335295, -1.9712805, -9.9102955, -1.856096e-15, -10.10445, 1.9712805, -9.9102955, 3.8668056, -9.335295, 5.613732, -8.401544, 7.144925, -7.144925, 8.401544, -5.613732, 9.335295, -3.8668056, 9.9102955, -1.9712805)
+
+[node name="Gota19" type="Polygon2D" parent="Gotas" unique_id=73852922]
+z_index = -8
+position = Vector2(291.7647, 699.59546)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(4.0374866, 0, 3.9599073, 0.78767455, 3.7301512, 1.5450792, 3.3570473, 2.2431073, 2.854934, 2.854934, 2.2431073, 3.3570473, 1.5450792, 3.7301512, 0.78767455, 3.9599073, 2.4721657e-16, 4.0374866, -0.78767455, 3.9599073, -1.5450792, 3.7301512, -2.2431073, 3.3570473, -2.854934, 2.854934, -3.3570473, 2.2431073, -3.7301512, 1.5450792, -3.9599073, 0.78767455, -4.0374866, 4.9443314e-16, -3.9599073, -0.78767455, -3.7301512, -1.5450792, -3.3570473, -2.2431073, -2.854934, -2.854934, -2.2431073, -3.3570473, -1.5450792, -3.7301512, -0.78767455, -3.9599073, -7.4164977e-16, -4.0374866, 0.78767455, -3.9599073, 1.5450792, -3.7301512, 2.2431073, -3.3570473, 2.854934, -2.854934, 3.3570473, -2.2431073, 3.7301512, -1.5450792, 3.9599073, -0.78767455)
+
+[node name="Gota20" type="Polygon2D" parent="Gotas" unique_id=1014432397]
+z_index = -8
+position = Vector2(457.07202, 232.47464)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(10.926348, 0, 10.716401, 2.1316247, 10.094628, 4.181332, 9.084926, 6.0703535, 7.7260942, 7.7260942, 6.0703535, 9.084926, 4.181332, 10.094628, 2.1316247, 10.716401, 6.6902373e-16, 10.926348, -2.1316247, 10.716401, -4.181332, 10.094628, -6.0703535, 9.084926, -7.7260942, 7.7260942, -9.084926, 6.0703535, -10.094628, 4.181332, -10.716401, 2.1316247, -10.926348, 1.3380475e-15, -10.716401, -2.1316247, -10.094628, -4.181332, -9.084926, -6.0703535, -7.7260942, -7.7260942, -6.0703535, -9.084926, -4.181332, -10.094628, -2.1316247, -10.716401, -2.0070713e-15, -10.926348, 2.1316247, -10.716401, 4.181332, -10.094628, 6.0703535, -9.084926, 7.7260942, -7.7260942, 9.084926, -6.0703535, 10.094628, -4.181332, 10.716401, -2.1316247)
+
+[node name="Gota21" type="Polygon2D" parent="Gotas" unique_id=1962917579]
+z_index = -8
+position = Vector2(1308.2128, 402.1471)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(7.3496246, 0, 7.2084036, 1.4338406, 6.7901673, 2.8125796, 6.1109896, 4.083233, 5.1969695, 5.1969695, 4.083233, 6.1109896, 2.8125796, 6.7901673, 1.4338406, 7.2084036, 4.5001987e-16, 7.3496246, -1.4338406, 7.2084036, -2.8125796, 6.7901673, -4.083233, 6.1109896, -5.1969695, 5.1969695, -6.1109896, 4.083233, -6.7901673, 2.8125796, -7.2084036, 1.4338406, -7.3496246, 9.000397e-16, -7.2084036, -1.4338406, -6.7901673, -2.8125796, -6.1109896, -4.083233, -5.1969695, -5.1969695, -4.083233, -6.1109896, -2.8125796, -6.7901673, -1.4338406, -7.2084036, -1.3500596e-15, -7.3496246, 1.4338406, -7.2084036, 2.8125796, -6.7901673, 4.083233, -6.1109896, 5.1969695, -5.1969695, 6.1109896, -4.083233, 6.7901673, -2.8125796, 7.2084036, -1.4338406)
+
+[node name="Gota22" type="Polygon2D" parent="Gotas" unique_id=1102066283]
+z_index = -8
+position = Vector2(1161.7126, 437.7516)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(8.120918, 0, 7.9648767, 1.5843126, 7.50275, 3.1077409, 6.7522964, 4.5117407, 5.7423563, 5.7423563, 4.5117407, 6.7522964, 3.1077409, 7.50275, 1.5843126, 7.9648767, 4.972464e-16, 8.120918, -1.5843126, 7.9648767, -3.1077409, 7.50275, -4.5117407, 6.7522964, -5.7423563, 5.7423563, -6.7522964, 4.5117407, -7.50275, 3.1077409, -7.9648767, 1.5843126, -8.120918, 9.944928e-16, -7.9648767, -1.5843126, -7.50275, -3.1077409, -6.7522964, -4.5117407, -5.7423563, -5.7423563, -4.5117407, -6.7522964, -3.1077409, -7.50275, -1.5843126, -7.9648767, -1.4917393e-15, -8.120918, 1.5843126, -7.9648767, 3.1077409, -7.50275, 4.5117407, -6.7522964, 5.7423563, -5.7423563, 6.7522964, -4.5117407, 7.50275, -3.1077409, 7.9648767, -1.5843126)
+
+[node name="Gota23" type="Polygon2D" parent="Gotas" unique_id=442367543]
+z_index = -8
+position = Vector2(1148.0057, 647.8804)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(6.499507, 0, 6.3746204, 1.267991, 6.004761, 2.4872537, 5.4041424, 3.6109326, 4.595845, 4.595845, 3.6109326, 5.4041424, 2.4872537, 6.004761, 1.267991, 6.3746204, 3.9796686e-16, 6.499507, -1.267991, 6.3746204, -2.4872537, 6.004761, -3.6109326, 5.4041424, -4.595845, 4.595845, -5.4041424, 3.6109326, -6.004761, 2.4872537, -6.3746204, 1.267991, -6.499507, 7.959337e-16, -6.3746204, -1.267991, -6.004761, -2.4872537, -5.4041424, -3.6109326, -4.595845, -4.595845, -3.6109326, -5.4041424, -2.4872537, -6.004761, -1.267991, -6.3746204, -1.1939007e-15, -6.499507, 1.267991, -6.3746204, 2.4872537, -6.004761, 3.6109326, -5.4041424, 4.595845, -4.595845, 5.4041424, -3.6109326, 6.004761, -2.4872537, 6.3746204, -1.267991)
+
+[node name="Gota24" type="Polygon2D" parent="Gotas" unique_id=443639115]
+z_index = -8
+position = Vector2(435.31955, 262.40378)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(10.919504, 0, 10.709688, 2.1302896, 10.088306, 4.1787133, 9.079236, 6.0665517, 7.7212553, 7.7212553, 6.0665517, 9.079236, 4.1787133, 10.088306, 2.1302896, 10.709688, 6.686047e-16, 10.919504, -2.1302896, 10.709688, -4.1787133, 10.088306, -6.0665517, 9.079236, -7.7212553, 7.7212553, -9.079236, 6.0665517, -10.088306, 4.1787133, -10.709688, 2.1302896, -10.919504, 1.3372094e-15, -10.709688, -2.1302896, -10.088306, -4.1787133, -9.079236, -6.0665517, -7.7212553, -7.7212553, -6.0665517, -9.079236, -4.1787133, -10.088306, -2.1302896, -10.709688, -2.005814e-15, -10.919504, 2.1302896, -10.709688, 4.1787133, -10.088306, 6.0665517, -9.079236, 7.7212553, -7.7212553, 9.079236, -6.0665517, 10.088306, -4.1787133, 10.709688, -2.1302896)
+
+[node name="Gota25" type="Polygon2D" parent="Gotas" unique_id=50515020]
+z_index = -8
+position = Vector2(1329.1992, 476.73276)
+color = Color(0.75, 0.88, 1, 0.5)
+polygon = PackedVector2Array(9.50168, 0, 9.319108, 1.8536859, 8.778408, 3.6361356, 7.900358, 5.278851, 6.7187023, 6.7187023, 5.278851, 7.900358, 3.6361356, 8.778408, 1.8536859, 9.319108, 5.8179093e-16, 9.50168, -1.8536859, 9.319108, -3.6361356, 8.778408, -5.278851, 7.900358, -6.7187023, 6.7187023, -7.900358, 5.278851, -8.778408, 3.6361356, -9.319108, 1.8536859, -9.50168, 1.1635819e-15, -9.319108, -1.8536859, -8.778408, -3.6361356, -7.900358, -5.278851, -6.7187023, -6.7187023, -5.278851, -7.900358, -3.6361356, -8.778408, -1.8536859, -9.319108, -1.7453727e-15, -9.50168, 1.8536859, -9.319108, 3.6361356, -8.778408, 5.278851, -7.900358, 6.7187023, -6.7187023, 7.900358, -5.278851, 8.778408, -3.6361356, 9.319108, -1.8536859)
+
+[node name="Texto" type="Label" parent="." unique_id=1555002178]
+offset_left = 200.0
+offset_top = 270.5
+offset_right = 1400.0
+offset_bottom = 449.5
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+text = "Em órbita.
+
+No vidro, gotículas de água — o produto da primeira reação de todas:
+2H₂ + O₂ → 2H₂O
+
+C · H · O · N · P · S
+Seis elementos, uma missão."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Rodape" type="Label" parent="." unique_id=112252093]
+offset_left = 200.0
+offset_top = 705.5
+offset_right = 1400.0
+offset_bottom = 754.5
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.7, 0.72, 0.8, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+text = "FIM DO PROTÓTIPO — obrigado por jogar!
+[E] volta ao laboratório"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/simulador/meteoro.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/simulador/explosao_azul.tscn" id="2_explosao"]
+[ext_resource type="Texture2D" path="res://assets/simulador lua/tiros/3.png" id="3_moleculas"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_corpo"]
+radius = 86.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hcl"]
+atlas = ExtResource("3_moleculas")
+region = Rect2(0, 0, 960, 1080)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_hcl"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hcl")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="MeteoroAcido" type="Area2D" groups=["enemy"]]
+collision_layer = 2
+script = ExtResource("1_script")
+tiro_que_neutraliza = &"blue_bullet"
+pontos = 20
+explosao_cena = ExtResource("2_explosao")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_corpo")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 2
+position = Vector2(29.5, -12.5)
+scale = Vector2(0.71354175, 0.6990741)
+sprite_frames = SubResource("SpriteFrames_hcl")
+autoplay = "default"

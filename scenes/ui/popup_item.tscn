@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3 uid="uid://byfujg4367igw"]
+
+[ext_resource type="Script" path="res://scripts/ui/popup_item.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="2_fonte"]
+[ext_resource type="Texture2D" uid="uid://cehsjfi1vp4do" path="res://assets/itens/Full Sheet.png" id="3_folha"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_previa"]
+atlas = ExtResource("3_folha")
+region = Rect2(0, 48, 16, 16)
+
+[node name="PopupItem" type="Control"]
+process_mode = 3
+texture_filter = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+fonte = ExtResource("2_fonte")
+fonte_texto = ExtResource("2_fonte")
+previa_nome = "Cilindro de Oxigênio (Comburente)"
+previa_descricao = "Quando combinado ao hidrogênio, libera a força bruta que impulsiona o foguete."
+previa_id = "Cilindro_Oxigenio"
+previa_icone = SubResource("AtlasTexture_previa")
+previa_destino = "MOCHILA · SLOT 1"

@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://b07jcxp6nwp7c"]
+
+[ext_resource type="Texture2D" uid="uid://26ai84u0fefx" path="res://assets/UI/Chat-1.png" id="1_jjwva"]
+[ext_resource type="Script" uid="uid://d0few538rjrkr" path="res://scripts/dialog_box_player.gd" id="1_xpbej"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="2_xpbej"]
+[ext_resource type="AudioStream" uid="uid://c86fbcl03hwvb" path="res://sounds/Blip2.wav" id="4_oae7q"]
+
+[node name="dialog_box_player" type="Node2D" unique_id=42857148 groups=["grupo_caixa_player"]]
+script = ExtResource("1_xpbej")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1816718605]
+layout_direction = 3
+offset_right = 84.0
+offset_bottom = 92.0
+
+[node name="NinePatchRect" type="NinePatchRect" parent="MarginContainer" unique_id=1135378456]
+layout_mode = 2
+texture = ExtResource("1_jjwva")
+region_rect = Rect2(424, 8, 60, 68)
+patch_margin_left = 36
+patch_margin_top = 44
+patch_margin_right = 40
+patch_margin_bottom = 48
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer" unique_id=93344242]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="Label" type="Label" parent="MarginContainer/MarginContainer" unique_id=1705035627]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_xpbej")
+vertical_alignment = 1
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=71312309]
+stream = ExtResource("4_oae7q")

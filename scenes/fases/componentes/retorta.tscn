@@ -1,0 +1,249 @@
+[gd_scene format=3 uid="uid://dpxakpbhyd8af"]
+
+[ext_resource type="Script" uid="uid://ctssjl13xb8oc" path="res://scripts/fases/retorta.gd" id="1_tg85c"]
+[ext_resource type="Texture2D" uid="uid://ju6w5pfiw7ih" path="res://assets/Lab/fornalha/FornalhaDesligada.png" id="6_fdesl"]
+[ext_resource type="Texture2D" uid="uid://b1s4syltyx83t" path="res://assets/Lab/fornalha/FornalhaLigada.png" id="7_flig"]
+[ext_resource type="Texture2D" uid="uid://b0qq0sb12ekpa" path="res://assets/Lab/fornalha/fornalhaComMadeira.png" id="8_fmad"]
+[ext_resource type="Texture2D" uid="uid://buqko3wmshd30" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes001.png" id="9_exclam"]
+[ext_resource type="Texture2D" uid="uid://c5w4hjng2b3eh" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes039.png" id="10_fogo"]
+[ext_resource type="AudioStream" uid="uid://bwnlfw8eax788" path="res://sounds/ColocandoMadeira.mp3" id="11_summadeira"]
+[ext_resource type="Texture2D" uid="uid://72n4rv8s0yc4" path="res://assets/itens/Carvão.png" id="12_carvao"]
+[ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="13_pop"]
+[ext_resource type="AudioStream" uid="uid://b1q5n1qckojur" path="res://sounds/FOGO.mp3" id="14_fogo"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_forn_off"]
+atlas = ExtResource("6_fdesl")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_forn_0"]
+atlas = ExtResource("7_flig")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_forn_1"]
+atlas = ExtResource("7_flig")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_forn_2"]
+atlas = ExtResource("7_flig")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_forn_3"]
+atlas = ExtResource("7_flig")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_forn_4"]
+atlas = ExtResource("7_flig")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_forn_5"]
+atlas = ExtResource("7_flig")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_forn_mad0"]
+atlas = ExtResource("8_fmad")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_forn_mad1"]
+atlas = ExtResource("8_fmad")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_forn_mad2"]
+atlas = ExtResource("8_fmad")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_fornalha"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_forn_off")
+}],
+"loop": true,
+"name": &"desligada",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_forn_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_forn_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_forn_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_forn_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_forn_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_forn_5")
+}],
+"loop": true,
+"name": &"ligada",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_forn_mad0")
+}],
+"loop": true,
+"name": &"madeira1",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_forn_mad1")
+}],
+"loop": true,
+"name": &"madeira2",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_forn_mad2")
+}],
+"loop": true,
+"name": &"madeira3",
+"speed": 1.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exclam0"]
+atlas = ExtResource("9_exclam")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exclam1"]
+atlas = ExtResource("9_exclam")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exclam2"]
+atlas = ExtResource("9_exclam")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_exclamacao"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exclam0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exclam1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exclam2")
+}],
+"loop": true,
+"name": &"default",
+"speed": 3.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fogo0"]
+atlas = ExtResource("10_fogo")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fogo1"]
+atlas = ExtResource("10_fogo")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fogo2"]
+atlas = ExtResource("10_fogo")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_fogo"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fogo0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fogo1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fogo2")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mjhgn"]
+size = Vector2(240, 200)
+
+[node name="Retorta" type="Node2D" unique_id=647293797]
+script = ExtResource("1_tg85c")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=922510075]
+position = Vector2(0, -126)
+scale = Vector2(3, 3)
+sprite_frames = SubResource("SpriteFrames_fornalha")
+animation = &"desligada"
+autoplay = "desligada"
+frame_progress = 0.6542248
+
+[node name="Placeholder" type="Node2D" parent="." unique_id=2118339362]
+visible = false
+
+[node name="Corpo" type="ColorRect" parent="Placeholder" unique_id=320476331]
+offset_left = -75.0
+offset_top = -170.0
+offset_right = 75.0
+mouse_filter = 2
+color = Color(0.22, 0.2, 0.24, 1)
+
+[node name="Camara" type="ColorRect" parent="Placeholder" unique_id=961070180]
+offset_left = -60.0
+offset_top = -150.0
+offset_right = 60.0
+offset_bottom = -20.0
+mouse_filter = 2
+color = Color(0.3, 0.26, 0.3, 1)
+
+[node name="Chamine" type="ColorRect" parent="Placeholder" unique_id=477043434]
+offset_left = 75.0
+offset_top = -170.0
+offset_right = 105.0
+offset_bottom = -110.0
+mouse_filter = 2
+color = Color(0.22, 0.2, 0.24, 1)
+
+[node name="AreaInteracao" type="Area2D" parent="." unique_id=1772743943]
+
+[node name="Colisao" type="CollisionShape2D" parent="AreaInteracao" unique_id=1846868954]
+position = Vector2(0, -80)
+shape = SubResource("RectangleShape2D_mjhgn")
+
+[node name="PontoDaCelula" type="Marker2D" parent="." unique_id=296517409]
+position = Vector2(0, -360)
+
+[node name="ExclamacaoAnimada" type="AnimatedSprite2D" parent="." unique_id=3820941157]
+visible = false
+z_index = 1
+position = Vector2(0, -260)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_exclamacao")
+
+[node name="PopupMadeira" type="AnimatedSprite2D" parent="." unique_id=3820941158]
+visible = false
+z_index = 1
+position = Vector2(0, -260)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_fogo")
+
+[node name="SomColocarMadeira" type="AudioStreamPlayer2D" parent="." unique_id=3820941159]
+stream = ExtResource("11_summadeira")
+volume_db = 12.0
+
+[node name="SpriteCarvao" type="Sprite2D" parent="." unique_id=3820941160]
+visible = false
+z_index = 1
+position = Vector2(0, -110)
+scale = Vector2(2, 2)
+texture = ExtResource("12_carvao")
+
+[node name="SomCarvaoPronto" type="AudioStreamPlayer2D" parent="." unique_id=3820941161]
+stream = ExtResource("13_pop")
+
+[node name="SomFogo" type="AudioStreamPlayer2D" parent="." unique_id=3820941162]
+stream = ExtResource("14_fogo")
+volume_db = -8.0

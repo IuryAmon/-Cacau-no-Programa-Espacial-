@@ -1,0 +1,25 @@
+join cientista (cientista_feliz) right
+cientista (cientista_feliz): Ah, você é a candidata?
+- Sim!
+	cientista (cientista_serio): Boa, boa... entra na fila então.
+	cientista (cientista_mto_feliz): Brincadeira! Você é a primeira a chegar. Mas tô preso aqui fora por causa de uma situação que eu preferia não explicar
+	- Não se explique então
+		cientista (cientista_feliz): Ótimo. Adoro alguém prático. A gente se entende.
+	- Como um ciêntista como você arrumou emprego aqui?
+		update cientista (cientista_mtobravo) [animation="Shake X" length=0.15 repeat=1]
+		cientista: Como assim "um cientista como eu"? Que tipo de pergunta é essa?!
+		cientista (cientista_bravo): Olha, eu sei... Sair sem minha carteira de identificação em um num dia como hoje foi...
+		cientista (cientista_serio): Burrice mesmo, como pode...
+		cientista (cientista_bravo): Eu tinha UM trabalho hoje. UM!!!
+		cientista (cientista_bravo): E aqui estou eu, do lado de fora, pedindo ajuda pra uma criança...
+		cientista: Apenas fui buscar meu jaleco no varal e o sistema não me reconheceu quando voltei...
+		cientista (cientista_feliz): Mas isso fica entre a gente, certo? Agora foco!
+	cientista (cientista_serio): Temos um problema sério.
+	cientista: Esse sistema de segurança foi todo projetado pelo Dr. Chico. Ele é... peculiar. Obcecado com química e combustão.
+	cientista: Pra desativar, o sistema pede que a gente faça uma reação. A reação de combustão do gás hidrogênio.
+	cientista: Precisa de duas amostras\: H[font_size=14]2[/font_size] e O[font_size=14]2[/font_size]. O hidrogênio tá lá em cima do laboratório.
+	cientista: Ah, e aquelas escadas pregadas na arvore que você passou? É uma espécie de mirante. Também foi o Dr. Chico que construiu pra assistir ao lançamento. O O[font_size=14]2[/font_size] tá lá em cima dele.
+	cientista: Vou acionar o elevador pra você subir ao telhado. Vai lá, corre![signal=missao_aceita]
+- Não.
+	cientista: Ah... tá. Então você veio no dia errado, no lugar errado, na hora errada.
+	cientista: Adeus...

@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/piso_eletrificado.gd" id="1_ro0lk"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_a7ww8"]
+size = Vector2(300, 24)
+
+[node name="PisoEletrificado" type="Area2D" unique_id=1526264895]
+script = ExtResource("1_ro0lk")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=1662487005]
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=624840739]
+offset_left = -150.0
+offset_top = -12.0
+offset_right = 150.0
+offset_bottom = 12.0
+mouse_filter = 2
+color = Color(0.2, 0.2, 0.1, 1)
+
+[node name="Listras" type="Node2D" parent="Placeholder" unique_id=100565335]
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=1922549715]
+shape = SubResource("RectangleShape2D_a7ww8")

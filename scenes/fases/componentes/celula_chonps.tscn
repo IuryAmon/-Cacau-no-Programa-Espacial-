@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/celula_chonps.gd" id="1_qihr4"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1bb0i"]
+size = Vector2(70, 70)
+
+[node name="CelulaChonps" type="Area2D" unique_id=1982601170]
+script = ExtResource("1_qihr4")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=18061957]
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=1941532994]
+offset_left = -23.0
+offset_top = -23.0
+offset_right = 23.0
+offset_bottom = 23.0
+mouse_filter = 2
+color = Color(0.25, 0.25, 0.27, 1)
+
+[node name="Miolo" type="ColorRect" parent="Placeholder" unique_id=1253634196]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 41.0
+offset_bottom = 41.0
+mouse_filter = 2
+color = Color(0.35, 0.35, 0.38, 1)
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=1928067169]
+shape = SubResource("RectangleShape2D_1bb0i")
+
+[node name="Letra" type="Label" parent="." unique_id=466289601]
+offset_left = -23.0
+offset_top = -23.0
+offset_right = 23.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.05, 0.05, 0.08, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+text = "C"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/teste_caixa_eletrica.gd" id="1_teste"]
+
+[node name="TesteCaixaEletrica" type="Node"]
+script = ExtResource("1_teste")

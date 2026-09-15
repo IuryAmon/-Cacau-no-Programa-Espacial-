@@ -1,0 +1,210 @@
+[gd_scene format=3 uid="uid://drteescqr411h"]
+
+[ext_resource type="Script" uid="uid://bhqxelhrl3owq" path="res://scripts/simulador/simulador_lua.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://c3jqyasiimotc" path="res://scripts/simulador/parallax_simulador.gd" id="2_parallax"]
+[ext_resource type="Script" uid="uid://btrar3r655kll" path="res://scripts/simulador/spawner_meteoros.gd" id="3_spawner"]
+[ext_resource type="Texture2D" uid="uid://dhlb0efsm5o66" path="res://assets/simulador lua/parallax/moon_sky.png" id="4_ceu"]
+[ext_resource type="Texture2D" uid="uid://bvxih6vfvth3o" path="res://assets/simulador lua/parallax/moon_earth.png" id="5_terra"]
+[ext_resource type="Texture2D" uid="uid://ci22pvo73nl5y" path="res://assets/simulador lua/parallax/moon_back.png" id="6_fundo"]
+[ext_resource type="Texture2D" uid="uid://hih3oy64b3a8" path="res://assets/simulador lua/parallax/moon_mid.png" id="7_meio"]
+[ext_resource type="Texture2D" uid="uid://6xn4c485uvpf" path="res://assets/simulador lua/parallax/moon_front.png" id="8_frente"]
+[ext_resource type="Texture2D" uid="uid://bwvhhj6rvdmdv" path="res://assets/simulador lua/parallax/moon_floor.png" id="9_chao"]
+[ext_resource type="PackedScene" path="res://scenes/simulador/nave_player.tscn" id="10_nave"]
+[ext_resource type="PackedScene" path="res://scenes/simulador/meteoro_acido.tscn" id="11_acido"]
+[ext_resource type="PackedScene" path="res://scenes/simulador/meteoro_basico.tscn" id="12_basico"]
+[ext_resource type="PackedScene" path="res://scenes/simulador/explosao_azul.tscn" id="13_explosao"]
+[ext_resource type="PackedScene" path="res://scenes/simulador/menu_simulador.tscn" id="14_menu"]
+[ext_resource type="AudioStream" uid="uid://dvydq6mdhg1cc" path="res://assets/simulador lua/sons/8-bit Starless - King Crimson [l2Zjz77FjzA].mp3" id="15_musica"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="16_fonte"]
+[ext_resource type="Texture2D" uid="uid://gss6tnkpvgo5" path="res://assets/simulador lua/tiros/Sprites Tiros.png" id="17_tiros"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_vital.tscn" id="18_hudvital"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icone_azul"]
+atlas = ExtResource("17_tiros")
+region = Rect2(0, 0, 960, 1080)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icone_verde"]
+atlas = ExtResource("17_tiros")
+region = Rect2(960, 0, 960, 1080)
+
+[node name="SimuladorLua" type="Node2D" unique_id=2137175041]
+script = ExtResource("1_script")
+explosao_da_nave = ExtResource("13_explosao")
+
+[node name="Fundo" type="Node2D" parent="." unique_id=1711603185]
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="Fundo" unique_id=1640358879]
+script = ExtResource("2_parallax")
+
+[node name="Ceu" type="ParallaxLayer" parent="Fundo/ParallaxBackground" unique_id=1254951903]
+motion_scale = Vector2(0, 0)
+motion_mirroring = Vector2(1900, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="Fundo/ParallaxBackground/Ceu" unique_id=400736987]
+position = Vector2(950, 400)
+texture = ExtResource("4_ceu")
+
+[node name="Terra" type="ParallaxLayer" parent="Fundo/ParallaxBackground" unique_id=1051931232]
+motion_scale = Vector2(0.01, 0.01)
+
+[node name="Sprite2D" type="Sprite2D" parent="Fundo/ParallaxBackground/Terra" unique_id=516793374]
+position = Vector2(1900, 400)
+texture = ExtResource("5_terra")
+
+[node name="Montanhas" type="ParallaxLayer" parent="Fundo/ParallaxBackground" unique_id=1574042295]
+motion_scale = Vector2(0.3, 0.3)
+motion_mirroring = Vector2(3800, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="Fundo/ParallaxBackground/Montanhas" unique_id=887629677]
+position = Vector2(1900, 575)
+scale = Vector2(1, 0.65)
+texture = ExtResource("6_fundo")
+
+[node name="Meio" type="ParallaxLayer" parent="Fundo/ParallaxBackground" unique_id=2137332759]
+motion_scale = Vector2(0.5, 0.5)
+motion_mirroring = Vector2(3800, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="Fundo/ParallaxBackground/Meio" unique_id=461492462]
+position = Vector2(1900, 575)
+scale = Vector2(1, 0.65)
+texture = ExtResource("7_meio")
+
+[node name="Frente" type="ParallaxLayer" parent="Fundo/ParallaxBackground" unique_id=2142811907]
+motion_scale = Vector2(0.7, 0.7)
+motion_mirroring = Vector2(3800, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="Fundo/ParallaxBackground/Frente" unique_id=38593489]
+position = Vector2(1900, 575)
+scale = Vector2(1, 0.65)
+texture = ExtResource("8_frente")
+
+[node name="Chao" type="ParallaxLayer" parent="Fundo/ParallaxBackground" unique_id=984231289]
+motion_scale = Vector2(0.9, 0.9)
+motion_mirroring = Vector2(1900, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="Fundo/ParallaxBackground/Chao" unique_id=1122240165]
+position = Vector2(950, 575)
+scale = Vector2(1, 0.65)
+texture = ExtResource("9_chao")
+
+[node name="Nave" parent="." unique_id=267989496 instance=ExtResource("10_nave")]
+position = Vector2(430, 450)
+
+[node name="Spawner" type="Node2D" parent="." unique_id=919802657]
+script = ExtResource("3_spawner")
+meteoro_acido = ExtResource("11_acido")
+meteoro_basico = ExtResource("12_basico")
+
+[node name="Musica" type="AudioStreamPlayer" parent="." unique_id=1758708563]
+stream = ExtResource("15_musica")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=369237521]
+layer = 0
+
+[node name="HudRaiz" type="Control" parent="HUD" unique_id=1319770546]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HudNave" parent="HUD/HudRaiz" unique_id=1002294047 instance=ExtResource("18_hudvital")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+offset_left = 36.0
+offset_top = 24.0
+offset_right = 488.0
+offset_bottom = 144.0
+modo = 1
+titulo = "NAVE MK-I"
+subtitulo = "CASCO"
+segmentos = 0
+mostrar_porcentagem = true
+
+[node name="Placar" type="VBoxContainer" parent="HUD/HudRaiz" unique_id=213765497]
+layout_mode = 1
+offset_left = 40.0
+offset_top = 150.0
+offset_right = 440.0
+offset_bottom = 244.0
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Rotulo" type="Label" parent="HUD/HudRaiz/Placar" unique_id=1144644292]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6392157, 0.827451, 1, 0.8)
+theme_override_colors/font_outline_color = Color(0.02, 0.03, 0.06, 0.85)
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("16_fonte")
+theme_override_font_sizes/font_size = 16
+text = "OBJETIVO"
+
+[node name="PontuacaoLabel" type="Label" parent="HUD/HudRaiz/Placar" unique_id=1556069618]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0.02, 0.03, 0.06, 0.9)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("16_fonte")
+theme_override_font_sizes/font_size = 38
+text = "0 / 700"
+
+[node name="Controles" type="HBoxContainer" parent="HUD/HudRaiz" unique_id=659142861]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = -138.0
+offset_right = 560.0
+offset_bottom = -84.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 34
+
+[node name="Azul" type="HBoxContainer" parent="HUD/HudRaiz/Controles" unique_id=1076607184]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Icone" type="TextureRect" parent="HUD/HudRaiz/Controles/Azul" unique_id=1368348075]
+texture_filter = 2
+custom_minimum_size = Vector2(68, 68)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("AtlasTexture_icone_azul")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Tecla" type="Label" parent="HUD/HudRaiz/Controles/Azul" unique_id=1391392826]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.827451, 0.87058824, 1, 0.85)
+theme_override_fonts/font = ExtResource("16_fonte")
+theme_override_font_sizes/font_size = 20
+text = "ESPAÇO"
+
+[node name="Verde" type="HBoxContainer" parent="HUD/HudRaiz/Controles" unique_id=173940746]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Icone" type="TextureRect" parent="HUD/HudRaiz/Controles/Verde" unique_id=579368754]
+texture_filter = 2
+custom_minimum_size = Vector2(68, 68)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("AtlasTexture_icone_verde")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Tecla" type="Label" parent="HUD/HudRaiz/Controles/Verde" unique_id=318921732]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.827451, 1, 0.87058824, 0.85)
+theme_override_fonts/font = ExtResource("16_fonte")
+theme_override_font_sizes/font_size = 20
+text = "ENTER"
+
+[node name="MenuSimulador" parent="." unique_id=475202349 instance=ExtResource("14_menu")]

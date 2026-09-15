@@ -1,0 +1,246 @@
+[gd_scene format=3 uid="uid://b2un5uc6giuc2"]
+
+[ext_resource type="Script" uid="uid://q5oms8ell7s2" path="res://scripts/fases/caixa_eletrica.gd" id="1_caixel"]
+[ext_resource type="Texture2D" uid="uid://cttst545y0mep" path="res://assets/Lab/Caixa Eletricaa/CAIXA ELETRICA0.png" id="2_cxa0"]
+[ext_resource type="Texture2D" uid="uid://bdadvhdfejvaw" path="res://assets/Lab/Caixa Eletricaa/CAIXA ELETRICA1.png" id="3_cxa1"]
+[ext_resource type="Texture2D" uid="uid://ofvo12gnv3bd" path="res://assets/Lab/Caixa Eletricaa/CAIXA ELETRICA2.png" id="4_cxa2"]
+[ext_resource type="Texture2D" uid="uid://bi68xygawuxtd" path="res://assets/Lab/Caixa Eletricaa/CAIXA ELETRICA3.png" id="5_cxa3"]
+[ext_resource type="AudioStream" uid="uid://blipngtdwh2n3" path="res://sounds/metal hit.mp3" id="6_metal"]
+[ext_resource type="AudioStream" uid="uid://ln8dnexu0rvd" path="res://sounds/eletricidade.mp3" id="7_eletr"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_caixa"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_cxa1")
+}],
+"loop": false,
+"name": &"intacta",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_cxa0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_cxa1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_cxa2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_cxa3")
+}],
+"loop": false,
+"name": &"quebrando",
+"speed": 12.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_caixa"]
+size = Vector2(42, 44)
+
+[sub_resource type="Gradient" id="Gradient_bola"]
+offsets = PackedFloat32Array(0, 0.55, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.5, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_luz"]
+gradient = SubResource("Gradient_bola")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_impacto"]
+offsets = PackedFloat32Array(0, 0.2, 0.65, 1)
+colors = PackedColorArray(1, 1, 0.93, 1, 1, 0.86, 0.42, 1, 1, 0.5, 0.14, 0.9, 0.6, 0.16, 0.05, 0)
+
+[sub_resource type="Gradient" id="Gradient_arco"]
+offsets = PackedFloat32Array(0, 0.25, 0.7, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.65, 0.92, 1, 1, 0.28, 0.55, 1, 0.85, 0.12, 0.2, 0.7, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_fumaca"]
+gradient = SubResource("Gradient_bola")
+width = 32
+height = 32
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_aviso"]
+offsets = PackedFloat32Array(0, 0.35, 1)
+colors = PackedColorArray(1, 0.96, 0.82, 1, 1, 0.76, 0.3, 0.9, 0.85, 0.45, 0.1, 0)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_aviso"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_fumaca"]
+offsets = PackedFloat32Array(0, 0.25, 1)
+colors = PackedColorArray(0.55, 0.57, 0.62, 0, 0.42, 0.44, 0.5, 0.4, 0.25, 0.26, 0.3, 0)
+
+[node name="CaixaEletrica" type="Area2D" unique_id=930382930]
+script = ExtResource("1_caixel")
+
+[node name="Visual" type="AnimatedSprite2D" parent="." unique_id=265582344]
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_caixa")
+animation = &"intacta"
+
+[node name="BrilhoAlvo" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_aviso")
+modulate = Color(1, 0.72, 0.28, 0)
+position = Vector2(0, 11)
+scale = Vector2(0.29, 0.29)
+texture = SubResource("GradientTexture2D_luz")
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=937099016]
+position = Vector2(0, 10)
+shape = SubResource("RectangleShape2D_caixa")
+debug_color = Color(1, 0.66, 0.15, 0.32)
+
+[node name="LuzArco" type="PointLight2D" parent="." unique_id=471191235]
+position = Vector2(0, 4)
+color = Color(0.62, 0.82, 1, 1)
+energy = 0.6
+texture = SubResource("GradientTexture2D_luz")
+texture_scale = 0.9
+
+[node name="FaiscasImpacto" type="CPUParticles2D" parent="." unique_id=2011186549]
+position = Vector2(0, 9)
+emitting = false
+amount = 34
+lifetime = 0.55
+one_shot = true
+explosiveness = 0.95
+randomness = 0.4
+lifetime_randomness = 0.4
+emission_shape = 3
+emission_rect_extents = Vector2(12, 14)
+direction = Vector2(0, -1)
+spread = 78.0
+gravity = Vector2(0, 900)
+initial_velocity_min = 130.0
+initial_velocity_max = 380.0
+damping_min = 8.0
+damping_max = 40.0
+scale_amount_min = 1.5
+scale_amount_max = 3.5
+color_ramp = SubResource("Gradient_impacto")
+
+[node name="FaiscasArco" type="CPUParticles2D" parent="." unique_id=2048818243]
+position = Vector2(0, 11)
+emitting = false
+amount = 26
+lifetime = 0.45
+one_shot = true
+explosiveness = 1.0
+randomness = 0.5
+lifetime_randomness = 0.5
+emission_shape = 3
+emission_rect_extents = Vector2(9, 12)
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, 520)
+initial_velocity_min = 60.0
+initial_velocity_max = 300.0
+damping_min = 20.0
+damping_max = 70.0
+scale_amount_max = 3.0
+color_ramp = SubResource("Gradient_arco")
+
+[node name="FiosSoltos" type="CPUParticles2D" parent="." unique_id=1828872499]
+position = Vector2(0, 11)
+emitting = false
+amount = 14
+lifetime = 0.7
+randomness = 0.6
+lifetime_randomness = 0.6
+emission_shape = 3
+emission_rect_extents = Vector2(10, 8)
+direction = Vector2(0, 1)
+gravity = Vector2(0, 700)
+initial_velocity_min = 10.0
+initial_velocity_max = 90.0
+damping_min = 10.0
+damping_max = 30.0
+scale_amount_max = 2.2
+color_ramp = SubResource("Gradient_arco")
+
+[node name="Fumaca" type="CPUParticles2D" parent="." unique_id=1380221914]
+position = Vector2(0, 11)
+emitting = false
+amount = 10
+texture = SubResource("GradientTexture2D_fumaca")
+lifetime = 1.4
+randomness = 0.5
+lifetime_randomness = 0.5
+emission_shape = 3
+emission_rect_extents = Vector2(8, 4)
+direction = Vector2(0, -1)
+spread = 22.0
+gravity = Vector2(0, -34)
+initial_velocity_min = 12.0
+initial_velocity_max = 36.0
+angular_velocity_min = -40.0
+angular_velocity_max = 40.0
+scale_amount_min = 0.6
+scale_amount_max = 1.6
+color_ramp = SubResource("Gradient_fumaca")
+
+[node name="SomImpacto" type="AudioStreamPlayer2D" parent="." unique_id=1992073887]
+position = Vector2(0, 5)
+stream = ExtResource("6_metal")
+volume_db = -1.0
+max_distance = 1400.0
+
+[node name="SomEletricidade" type="AudioStreamPlayer2D" parent="." unique_id=1821248150]
+position = Vector2(0, 11)
+stream = ExtResource("7_eletr")
+volume_db = -5.0
+max_distance = 950.0
+attenuation = 1.8
+
+[node name="FaiscaAviso" type="CPUParticles2D" parent="."]
+position = Vector2(0, 2)
+emitting = false
+amount = 3
+lifetime = 0.45
+one_shot = true
+explosiveness = 1.0
+randomness = 0.6
+lifetime_randomness = 0.5
+emission_shape = 3
+emission_rect_extents = Vector2(11, 12)
+direction = Vector2(0, -1)
+spread = 55.0
+gravity = Vector2(0, 620)
+initial_velocity_min = 25.0
+initial_velocity_max = 90.0
+damping_min = 10.0
+damping_max = 40.0
+scale_amount_min = 1.0
+scale_amount_max = 2.0
+color_ramp = SubResource("Gradient_aviso")
+
+[node name="TempoFaisca" type="Timer" parent="."]
+one_shot = true
+
+[node name="TempoArco" type="Timer" parent="." unique_id=1288816977]
+one_shot = true
+
+[node name="TempoEstalo" type="Timer" parent="." unique_id=1935284449]
+one_shot = true
+
+[node name="Rotulo" type="Label" parent="." unique_id=1107451233]
+visible = false
+offset_left = -110.0
+offset_top = -84.0
+offset_right = 110.0
+offset_bottom = -38.0
+theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

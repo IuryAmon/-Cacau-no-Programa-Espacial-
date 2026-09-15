@@ -1,0 +1,301 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/torreta_laser.gd" id="1_torreta"]
+[ext_resource type="Texture2D" uid="uid://cgv6hrklhqbnu" path="res://assets/Lab/Traps/corpo_torreta.png" id="corpo"]
+[ext_resource type="Texture2D" uid="uid://db8wrg6bbs81w" path="res://assets/Lab/Traps/cabeça_da_torreta.png" id="cabeca"]
+[ext_resource type="AudioStream" uid="uid://ln8dnexu0rvd" path="res://sounds/eletricidade.mp3" id="som_tiro"]
+[ext_resource type="Script" path="res://scripts/fases/hitbox_bumerangue.gd" id="hitbox_sc"]
+[ext_resource type="AudioStream" uid="uid://blipngtdwh2n3" path="res://sounds/metal hit.mp3" id="som_quebra"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_alvo"]
+size = Vector2(56, 44)
+
+[sub_resource type="Gradient" id="Gradient_bola"]
+offsets = PackedFloat32Array(0, 0.55, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.5, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_puff"]
+gradient = SubResource("Gradient_bola")
+width = 32
+height = 32
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_fumaca"]
+offsets = PackedFloat32Array(0, 0.22, 0.6, 1)
+colors = PackedColorArray(0.58, 0.59, 0.63, 0, 0.46, 0.47, 0.51, 0.45, 0.33, 0.34, 0.38, 0.26, 0.22, 0.23, 0.26, 0)
+
+[sub_resource type="Curve" id="Curve_fumaca"]
+_data = [Vector2(0, 0.3), 0.0, 1.4, 0, 0, Vector2(1, 1), 0.9, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_faisca"]
+offsets = PackedFloat32Array(0, 0.18, 0.62, 1)
+colors = PackedColorArray(1, 1, 0.94, 1, 1, 0.84, 0.4, 1, 1, 0.46, 0.12, 0.9, 0.55, 0.14, 0.04, 0)
+
+[sub_resource type="Gradient" id="Gradient_chispa"]
+offsets = PackedFloat32Array(0, 0.25, 0.7, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.68, 0.93, 1, 1, 0.3, 0.58, 1, 0.85, 0.12, 0.2, 0.7, 0)
+
+[sub_resource type="AtlasTexture" id="quadro_0"]
+atlas = ExtResource("cabeca")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_1"]
+atlas = ExtResource("cabeca")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_2"]
+atlas = ExtResource("cabeca")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_3"]
+atlas = ExtResource("cabeca")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_4"]
+atlas = ExtResource("cabeca")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_5"]
+atlas = ExtResource("cabeca")
+region = Rect2(160, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_6"]
+atlas = ExtResource("cabeca")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_7"]
+atlas = ExtResource("cabeca")
+region = Rect2(224, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_8"]
+atlas = ExtResource("cabeca")
+region = Rect2(256, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_9"]
+atlas = ExtResource("cabeca")
+region = Rect2(288, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_10"]
+atlas = ExtResource("cabeca")
+region = Rect2(320, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_11"]
+atlas = ExtResource("cabeca")
+region = Rect2(352, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_12"]
+atlas = ExtResource("cabeca")
+region = Rect2(384, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_13"]
+atlas = ExtResource("cabeca")
+region = Rect2(416, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_14"]
+atlas = ExtResource("cabeca")
+region = Rect2(448, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_15"]
+atlas = ExtResource("cabeca")
+region = Rect2(480, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="quadro_16"]
+atlas = ExtResource("cabeca")
+region = Rect2(512, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_torreta"]
+animations = [{
+"frames": [
+{
+"duration": 1.0,
+"texture": SubResource("quadro_0")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_1")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_2")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_3")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_4")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_5")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_6")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_7")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_8")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_9")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_10")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_11")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_12")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_13")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_14")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_15")
+},
+{
+"duration": 1.0,
+"texture": SubResource("quadro_16")
+}
+],
+"loop": false,
+"name": &"disparo",
+"speed": 14.0
+}]
+
+[node name="TorretaLaser" type="Node2D" groups=["torreta"]]
+script = ExtResource("1_torreta")
+
+[node name="Base" type="Node2D" parent="."]
+
+[node name="Corpo" type="Sprite2D" parent="Base"]
+position = Vector2(32, 0)
+rotation = 1.5707964
+scale = Vector2(2, 2)
+texture = ExtResource("corpo")
+flip_h = true
+
+[node name="Canhao" type="Node2D" parent="Base"]
+position = Vector2(22, 0)
+
+[node name="Visual" type="AnimatedSprite2D" parent="Base/Canhao"]
+position = Vector2(10, 0)
+rotation = 1.5707964
+scale = Vector2(2, 2)
+flip_h = true
+sprite_frames = SubResource("SpriteFrames_torreta")
+animation = &"disparo"
+frame = 16
+
+[node name="Boca" type="Marker2D" parent="Base/Canhao"]
+position = Vector2(36, 0)
+
+[node name="SomTiro" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("som_tiro")
+volume_db = -9.0
+pitch_scale = 1.4
+max_distance = 1600.0
+
+[node name="AreaAlvo" type="Area2D" parent="Base" groups=["alvo_bumerangue"]]
+position = Vector2(30, 0)
+script = ExtResource("hitbox_sc")
+
+[node name="Colisao" type="CollisionShape2D" parent="Base/AreaAlvo"]
+shape = SubResource("RectangleShape2D_alvo")
+debug_color = Color(1, 0.42, 0.2, 0.32)
+
+[node name="Fumaca" type="CPUParticles2D" parent="Base"]
+position = Vector2(28, 0)
+emitting = false
+amount = 9
+texture = SubResource("GradientTexture2D_puff")
+lifetime = 1.9
+randomness = 0.5
+lifetime_randomness = 0.55
+emission_shape = 3
+emission_rect_extents = Vector2(7, 6)
+direction = Vector2(0, -1)
+spread = 18.0
+gravity = Vector2(0, -30)
+initial_velocity_min = 12.0
+initial_velocity_max = 34.0
+angular_velocity_min = -38.0
+angular_velocity_max = 38.0
+damping_min = 3.0
+damping_max = 12.0
+scale_amount_min = 0.5
+scale_amount_max = 1.5
+scale_amount_curve = SubResource("Curve_fumaca")
+color_ramp = SubResource("Gradient_fumaca")
+
+[node name="Faiscas" type="CPUParticles2D" parent="Base"]
+position = Vector2(30, 0)
+emitting = false
+amount = 26
+lifetime = 0.6
+one_shot = true
+explosiveness = 0.95
+randomness = 0.4
+lifetime_randomness = 0.45
+emission_shape = 3
+emission_rect_extents = Vector2(11, 10)
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, 780)
+initial_velocity_min = 90.0
+initial_velocity_max = 320.0
+damping_min = 10.0
+damping_max = 50.0
+scale_amount_min = 1.4
+scale_amount_max = 3.2
+color_ramp = SubResource("Gradient_faisca")
+
+[node name="Chispas" type="CPUParticles2D" parent="Base"]
+position = Vector2(32, 0)
+emitting = false
+amount = 8
+lifetime = 0.45
+one_shot = true
+explosiveness = 1.0
+randomness = 0.5
+lifetime_randomness = 0.5
+emission_shape = 3
+emission_rect_extents = Vector2(7, 7)
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, 600)
+initial_velocity_min = 40.0
+initial_velocity_max = 160.0
+damping_min = 15.0
+damping_max = 60.0
+scale_amount_min = 1.0
+scale_amount_max = 2.4
+color_ramp = SubResource("Gradient_chispa")
+
+[node name="SomQuebra" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("som_quebra")
+volume_db = -2.0
+max_distance = 1400.0
+
+[node name="TempoChispa" type="Timer" parent="."]
+one_shot = true

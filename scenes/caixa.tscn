@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://bkt447sivx7nf"]
+
+[ext_resource type="Texture2D" uid="uid://c35bwm13mpeak" path="res://assets/Area Aberta/GandalfHardcore Background layers/Decor.png" id="1_a26xw"]
+[ext_resource type="Script" uid="uid://cheuuyo7m638b" path="res://scripts/caixa.gd" id="2_caixa"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_i2vea"]
+atlas = ExtResource("1_a26xw")
+region = Rect2(0, 16, 32, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fk7g3"]
+size = Vector2(80, 44)
+
+[node name="Caixa" type="CharacterBody2D" unique_id=1367361575 groups=["empurravel"]]
+script = ExtResource("2_caixa")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=877439017]
+scale = Vector2(3.2, 3.2)
+texture = SubResource("AtlasTexture_i2vea")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1076316809]
+position = Vector2(-2, -4)
+shape = SubResource("RectangleShape2D_fk7g3")

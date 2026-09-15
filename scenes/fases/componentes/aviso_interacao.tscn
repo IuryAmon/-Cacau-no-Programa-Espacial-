@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://buqko3wmshd30" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes001.png" id="1_emote"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exc0"]
+atlas = ExtResource("1_emote")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exc1"]
+atlas = ExtResource("1_emote")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exc2"]
+atlas = ExtResource("1_emote")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_exclamacao"]
+animations = [{
+"frames": [
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exc0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exc1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exc2")
+}
+],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="AvisoInteracao" type="AnimatedSprite2D"]
+visible = false
+sprite_frames = SubResource("SpriteFrames_exclamacao")
+animation = &"default"

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://ck7uqp3uemo00"
+path="res://.godot/imported/ahmed_abdulaal-laser-312360.mp3-4224a9237ad1cd62706fa9b6fd5f7ae1.mp3str"
+
+[deps]
+
+source_file="res://assets/simulador lua/sons/ahmed_abdulaal-laser-312360.mp3"
+dest_files=["res://.godot/imported/ahmed_abdulaal-laser-312360.mp3-4224a9237ad1cd62706fa9b6fd5f7ae1.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

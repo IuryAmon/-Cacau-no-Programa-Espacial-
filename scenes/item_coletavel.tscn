@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://dnghs12bps4c"]
+
+[ext_resource type="Script" uid="uid://d2grc3a3atqht" path="res://scripts/item_coletavel.gd" id="1_unfi8"]
+[ext_resource type="Texture2D" uid="uid://cehsjfi1vp4do" path="res://assets/itens/Full Sheet.png" id="2_uekrr"]
+[ext_resource type="Texture2D" uid="uid://buqko3wmshd30" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes001.png" id="3_uekrr"]
+[ext_resource type="AudioStream" uid="uid://bbwytlsg4i0cd" path="res://sounds/CollectSound.mp3" id="4_cs407"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uekrr"]
+atlas = ExtResource("2_uekrr")
+region = Rect2(0, 48, 16, 16)
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_lbqhk"]
+radius = 18.0
+height = 42.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ilyow"]
+atlas = ExtResource("2_uekrr")
+region = Rect2(0, 48, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xqv3r"]
+atlas = ExtResource("3_uekrr")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cs407"]
+atlas = ExtResource("3_uekrr")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pf2u3"]
+atlas = ExtResource("3_uekrr")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_twplx"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xqv3r")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cs407")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pf2u3")
+}],
+"loop": true,
+"name": &"default",
+"speed": 3.0
+}]
+
+[node name="ItemColetavel" type="Area2D" unique_id=491931314]
+script = ExtResource("1_unfi8")
+textura_do_item = SubResource("AtlasTexture_uekrr")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=168740699]
+position = Vector2(-1, -12)
+shape = SubResource("CapsuleShape2D_lbqhk")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=912105017]
+texture = SubResource("AtlasTexture_ilyow")
+
+[node name="ExclamacaoAnimada" type="AnimatedSprite2D" parent="." unique_id=1356485798]
+position = Vector2(-8, -23)
+scale = Vector2(0.33984372, 0.33984372)
+sprite_frames = SubResource("SpriteFrames_twplx")
+autoplay = "default"
+frame = 1
+frame_progress = 1.0
+
+[node name="SomColeta" type="AudioStreamPlayer2D" parent="." unique_id=964844676]
+process_mode = 3
+stream = ExtResource("4_cs407")
+volume_db = -4.269
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_exited" from="." to="." method="_on_body_exited"]

@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://duk6qkgxelt70"]
+
+[ext_resource type="Script" uid="uid://bw0p8obuier62" path="res://scripts/health_hud.gd" id="1_bcxjj"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_vital.tscn" id="2_hudvital"]
+
+[node name="HealthHUD" type="CanvasLayer"]
+script = ExtResource("1_bcxjj")
+
+[node name="HudVital" parent="." instance=ExtResource("2_hudvital")]
+offset_left = 36.0
+offset_top = 24.0
+offset_right = 488.0
+offset_bottom = 144.0
+modo = 0
+titulo = "CACAU"
+subtitulo = "VITAL"
+segmentos = 3

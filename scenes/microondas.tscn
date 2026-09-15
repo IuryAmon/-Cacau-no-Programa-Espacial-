@@ -1,0 +1,352 @@
+[gd_scene format=3 uid="uid://btl2hcbj3ny1d"]
+
+[ext_resource type="Script" uid="uid://t5v7ikgkkqw4" path="res://scripts/microondas.gd" id="1_mw"]
+[ext_resource type="Texture2D" uid="uid://c2p05ma7cxr6u" path="res://assets/Microwave/Idle.png" id="2_mw"]
+[ext_resource type="Texture2D" uid="uid://blasnvskbqoo8" path="res://assets/Microwave/Walk.png" id="3_mw"]
+[ext_resource type="Texture2D" uid="uid://c4dqggyw0qdhb" path="res://assets/Microwave/Attack.png" id="4_mw"]
+[ext_resource type="Texture2D" uid="uid://drgxw33044w3a" path="res://assets/Microwave/Hit.png" id="5_mw"]
+[ext_resource type="Texture2D" uid="uid://d32ida2ca86up" path="res://assets/Microwave/Death.png" id="6_mw"]
+
+[sub_resource type="AtlasTexture" id="AT_at0"]
+atlas = ExtResource("4_mw")
+region = Rect2(0, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at1"]
+atlas = ExtResource("4_mw")
+region = Rect2(80, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at2"]
+atlas = ExtResource("4_mw")
+region = Rect2(160, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at3"]
+atlas = ExtResource("4_mw")
+region = Rect2(240, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at4"]
+atlas = ExtResource("4_mw")
+region = Rect2(320, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at5"]
+atlas = ExtResource("4_mw")
+region = Rect2(400, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at6"]
+atlas = ExtResource("4_mw")
+region = Rect2(480, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at7"]
+atlas = ExtResource("4_mw")
+region = Rect2(560, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at8"]
+atlas = ExtResource("4_mw")
+region = Rect2(640, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at9"]
+atlas = ExtResource("4_mw")
+region = Rect2(720, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at10"]
+atlas = ExtResource("4_mw")
+region = Rect2(800, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at11"]
+atlas = ExtResource("4_mw")
+region = Rect2(880, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at12"]
+atlas = ExtResource("4_mw")
+region = Rect2(960, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at13"]
+atlas = ExtResource("4_mw")
+region = Rect2(1040, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_at14"]
+atlas = ExtResource("4_mw")
+region = Rect2(1120, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_dt0"]
+atlas = ExtResource("6_mw")
+region = Rect2(0, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_dt1"]
+atlas = ExtResource("6_mw")
+region = Rect2(80, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_dt2"]
+atlas = ExtResource("6_mw")
+region = Rect2(160, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_dt3"]
+atlas = ExtResource("6_mw")
+region = Rect2(240, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_dt4"]
+atlas = ExtResource("6_mw")
+region = Rect2(320, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_dt5"]
+atlas = ExtResource("6_mw")
+region = Rect2(400, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_dt6"]
+atlas = ExtResource("6_mw")
+region = Rect2(480, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_dt7"]
+atlas = ExtResource("6_mw")
+region = Rect2(560, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_ht0"]
+atlas = ExtResource("5_mw")
+region = Rect2(0, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_ht1"]
+atlas = ExtResource("5_mw")
+region = Rect2(80, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_ht2"]
+atlas = ExtResource("5_mw")
+region = Rect2(160, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_ht3"]
+atlas = ExtResource("5_mw")
+region = Rect2(240, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_id0"]
+atlas = ExtResource("2_mw")
+region = Rect2(0, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_id1"]
+atlas = ExtResource("2_mw")
+region = Rect2(80, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_id2"]
+atlas = ExtResource("2_mw")
+region = Rect2(160, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_id3"]
+atlas = ExtResource("2_mw")
+region = Rect2(240, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_id4"]
+atlas = ExtResource("2_mw")
+region = Rect2(320, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_wk0"]
+atlas = ExtResource("3_mw")
+region = Rect2(0, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_wk1"]
+atlas = ExtResource("3_mw")
+region = Rect2(80, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_wk2"]
+atlas = ExtResource("3_mw")
+region = Rect2(160, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_wk3"]
+atlas = ExtResource("3_mw")
+region = Rect2(240, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_wk4"]
+atlas = ExtResource("3_mw")
+region = Rect2(320, 0, 80, 80)
+
+[sub_resource type="AtlasTexture" id="AT_wk5"]
+atlas = ExtResource("3_mw")
+region = Rect2(400, 0, 80, 80)
+
+[sub_resource type="SpriteFrames" id="SF_microondas"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AT_at0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at9")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_at14")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AT_dt0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_dt1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_dt2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_dt3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_dt4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_dt5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_dt6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_dt7")
+}],
+"loop": false,
+"name": &"death",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AT_ht0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_ht1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_ht2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_ht3")
+}],
+"loop": false,
+"name": &"hit",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AT_id0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_id1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_id2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_id3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_id4")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AT_wk0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_wk1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_wk2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_wk3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_wk4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AT_wk5")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 10.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_iyy31"]
+size = Vector2(30, 22.8)
+
+[sub_resource type="CircleShape2D" id="CS_deteccao"]
+radius = 102.399994
+
+[sub_resource type="RectangleShape2D" id="CS_pisada"]
+size = Vector2(36, 10)
+
+[sub_resource type="RectangleShape2D" id="CS_hitbox"]
+size = Vector2(34.5, 23.7)
+
+[node name="Microondas" type="CharacterBody2D" unique_id=1027109801 groups=["microwave"]]
+scale = Vector2(2.5, 2.5)
+script = ExtResource("1_mw")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=828763175]
+position = Vector2(0.5, -10.5)
+sprite_frames = SubResource("SF_microondas")
+animation = &"walk"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1386498236]
+position = Vector2(3.4999995, -0.6000003)
+scale = Vector2(0.99999994, 0.99999994)
+shape = SubResource("RectangleShape2D_iyy31")
+
+[node name="AreaDeteccao" type="Area2D" parent="." unique_id=2089918302]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AreaDeteccao" unique_id=1731326901]
+shape = SubResource("CS_deteccao")
+
+[node name="PontoTiro" type="Node2D" parent="." unique_id=1963678101]
+position = Vector2(3.5, 0)
+
+[node name="AreaPisada" type="Area2D" parent="." unique_id=1962703034]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AreaPisada" unique_id=1909310594]
+position = Vector2(4, -15.6)
+shape = SubResource("CS_pisada")
+
+[node name="AreaHitbox" type="Area2D" parent="." unique_id=1604488603]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AreaHitbox" unique_id=1731226610]
+position = Vector2(3.749999, -5.35)
+scale = Vector2(0.99999976, 0.99999976)
+shape = SubResource("CS_hitbox")

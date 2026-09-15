@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/plataforma_movel.gd" id="1_movel"]
+[ext_resource type="Texture2D" uid="uid://mjgfw5df3d2y" path="res://assets/Lab2/Plataformas.png" id="2_arte"]
+[ext_resource type="Shader" path="res://shaders/deslocar_matiz.gdshader" id="3_matiz"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_movel"]
+atlas = ExtResource("2_arte")
+region = Rect2(0, 0, 96, 16)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_movel"]
+shader = ExtResource("3_matiz")
+shader_parameter/giro_matiz = 0.5
+shader_parameter/saturacao_minima = 0.35
+shader_parameter/valor_minimo = 0.35
+shader_parameter/brilho = 1.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_movel"]
+size = Vector2(192, 32)
+
+[node name="PlataformaMovel" type="AnimatableBody2D"]
+script = ExtResource("1_movel")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_movel")
+scale = Vector2(2, 2)
+texture = SubResource("AtlasTexture_movel")
+
+[node name="Colisao" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_movel")
+one_way_collision = true
+one_way_collision_margin = 4.0

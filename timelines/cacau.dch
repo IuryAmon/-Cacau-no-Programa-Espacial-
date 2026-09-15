@@ -1,0 +1,31 @@
+{
+"@path": "res://addons/dialogic/Resources/character.gd",
+"@subpath": NodePath(""),
+&"_translation_id": "",
+&"color": Color(1, 0.6, 0, 1),
+&"custom_info": {
+"prefix": "",
+"sound_mood_default": "",
+"sound_moods": {},
+"style": "",
+"suffix": ""
+},
+&"default_portrait": "cacau_feliz",
+&"description": "",
+&"display_name": "Cacau",
+&"mirror": false,
+&"nicknames": [""],
+&"offset": Vector2(-80, 0),
+&"portraits": {
+"cacau_feliz": {
+"export_overrides": {
+"image": "\"res://assets/Cacau Assets/icon dialogic/iconfeliz.png\""
+},
+"mirror": true,
+"offset": Vector2(0, 0),
+"scale": 1,
+"scene": "res://addons/dialogic/Modules/HighlightPortrait/simple_highlight_portrait.tscn"
+}
+},
+&"scale": 0.7
+}

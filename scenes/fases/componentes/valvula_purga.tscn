@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/valvula_purga.gd" id="1_enj5l"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_oc2mx"]
+size = Vector2(90, 90)
+
+[node name="ValvulaPurga" type="Area2D" unique_id=861978758]
+script = ExtResource("1_enj5l")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=2046071069]
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=2085017986]
+offset_left = -13.0
+offset_top = -13.0
+offset_right = 13.0
+offset_bottom = 13.0
+mouse_filter = 2
+color = Color(0.3, 0.5, 0.85, 1)
+
+[node name="Miolo" type="ColorRect" parent="Placeholder" unique_id=1699675419]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 20.0
+offset_bottom = 20.0
+mouse_filter = 2
+color = Color(0.65, 0.8, 1, 1)
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=1799321321]
+shape = SubResource("RectangleShape2D_oc2mx")
+
+[node name="Rotulo" type="Label" parent="." unique_id=1417622889]
+offset_left = -40.0
+offset_top = -57.0
+offset_right = 40.0
+offset_bottom = -11.0
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+text = "N₂"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Puff" type="CPUParticles2D" parent="." unique_id=258282060]
+emitting = false
+amount = 14
+lifetime = 0.4
+one_shot = true
+explosiveness = 1.0
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 60.0
+initial_velocity_max = 160.0
+scale_amount_min = 2.0
+scale_amount_max = 5.0
+color = Color(0.7, 0.85, 1, 0.8)

@@ -1,0 +1,19 @@
+join cientista (cientista_feliz) right
+cientista: Espera! Antes de você ir embora... preciso confessar uma coisa.
+cientista (cientista_serio): Lembra do Dr. Chico? O "gênio peculiar" que projetou todo esse sistema de segurança?
+set {reveal_name} = "Dr. Chico"
+audio "res://sounds/Descoberta.mp3"
+cientista (cientista_mto_feliz): Sou eu! Dr. Chico, em pessoa!
+- O QUÊ?!
+	cientista (cientista_feliz): Pois é! Fiquei do lado de fora de propósito.
+- Eu já desconfiava...
+	cientista (cientista_serio): Hmm... esperta. Talvez esperta demais.
+cientista: Eu queria testar o seu potencial de verdade. E que jeito melhor do que te colocar frente a frente com os meus desafios?
+cientista (cientista_feliz): E você foi além do que eu esperava! Resolveu tudo usando química de verdade.
+cientista (cientista_serio): Presta atenção no que você fez\: a combustão do hidrogênio.
+cientista: 2H[font_size=14]2[/font_size] + O[font_size=14]2[/font_size] → 2H[font_size=14]2[/font_size]O
+cientista: O gás hidrogênio reage com o gás oxigênio e libera MUITA energia. E o único produto formado é... água!
+cientista (cientista_mto_feliz): É por isso que foguetes movidos a hidrogênio não poluem na queima do combustível.
+cientista: Enquanto combustíveis fósseis soltam CO[font_size=14]2[/font_size] e outros poluentes, a queima do hidrogênio só solta vapor de água na atmosfera.
+cientista (cientista_feliz): Energia limpa e potente o suficiente pra levar a humanidade ao espaço. A química é ou não é incrível?
+cientista (cientista_mto_feliz): Parabéns! Você passou no meu teste com louvor. Bem-vinda ao laboratório!

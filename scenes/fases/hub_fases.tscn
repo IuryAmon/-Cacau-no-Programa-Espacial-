@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/painel_chonps.tscn" id="1_k1tvb"]
+[ext_resource type="Script" path="res://scripts/fases/painel_chonps.gd" id="2_k72ha"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_fase.tscn" id="3_jystg"]
+[ext_resource type="Script" path="res://scripts/fases/porta_fase.gd" id="4_jyfd4"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_ala_eletrolise.tscn" id="5_porta_elet"]
+
+[node name="HubFases" type="Node2D" unique_id=1414139177]
+
+[node name="PainelChonps" type="Node2D" parent="." unique_id=1592784654 instance=ExtResource("1_k1tvb")]
+position = Vector2(1150, 20)
+script = ExtResource("2_k72ha")
+
+[node name="PortaOficina" parent="." unique_id=2121293960 instance=ExtResource("5_porta_elet")]
+position = Vector2(1400, 59.75)
+cena_destino = "res://scenes/fases/fase1_oficina.tscn"
+tag_destino = "entrada_oficina"
+recebe_chegada = true
+tag_aqui = "volta_da_oficina"
+direcao_saida = -1.0
+
+[node name="PortaTorre" type="Area2D" parent="." unique_id=1172269186 instance=ExtResource("3_jystg")]
+position = Vector2(1560, 118)
+script = ExtResource("4_jyfd4")
+rotulo = "TORRE DE GASES E ESTUFA"
+cena_destino = "res://scenes/fases/fase2_torre.tscn"
+tag_aqui = "volta_da_torre"
+tag_destino = "entrada"
+cor_porta = Color(0.35, 0.6, 0.45, 1)
+
+[node name="FossoVentilacao" type="Area2D" parent="." unique_id=673030331 instance=ExtResource("3_jystg")]
+position = Vector2(980, 118)
+script = ExtResource("4_jyfd4")
+rotulo = "FOSSO DE VENTILAÇÃO (subsolo)"
+cena_destino = "res://scenes/fases/fase3_subsolo.tscn"
+tag_aqui = "volta_do_fosso"
+tag_destino = "entrada"
+requer_habilidade = "mochila"
+mensagem_trancada = "Fundo demais para descer no pulo.
+Só com a mochila propulsora de N₂."
+cor_porta = Color(0.4, 0.42, 0.5, 1)
+no_piso = true
+
+[node name="PortaLancamento" type="Area2D" parent="." unique_id=2089108028 instance=ExtResource("3_jystg")]
+position = Vector2(1720, 118)
+script = ExtResource("4_jyfd4")
+rotulo = "TORRE DE LANÇAMENTO"
+cena_destino = "res://scenes/fases/fase_final.tscn"
+tag_aqui = "volta_do_lancamento"
+tag_destino = "entrada"
+cor_porta = Color(0.7, 0.45, 0.5, 1)

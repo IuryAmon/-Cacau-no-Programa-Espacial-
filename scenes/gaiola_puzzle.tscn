@@ -1,0 +1,169 @@
+[gd_scene format=3 uid="uid://b8oj4b8cgohh"]
+
+[ext_resource type="Script" uid="uid://bn38egkh7gy16" path="res://scripts/gaiola_puzzle.gd" id="1_gp"]
+[ext_resource type="Texture2D" uid="uid://m1h5rk3qapv5" path="res://assets/Gaiola/abrindosheet.png" id="2_oux2m"]
+[ext_resource type="Texture2D" uid="uid://buqko3wmshd30" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes001.png" id="2_rdh6g"]
+[ext_resource type="AudioStream" uid="uid://rp6pivrfb2iw" path="res://sounds/openGaiola.mp3" id="3_rdh6g"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oux2m"]
+atlas = ExtResource("2_rdh6g")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pf2u3"]
+atlas = ExtResource("2_rdh6g")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ip1rq"]
+atlas = ExtResource("2_rdh6g")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_exclamacao"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oux2m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pf2u3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ip1rq")
+}],
+"loop": true,
+"name": &"default",
+"speed": 3.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_corpo"]
+size = Vector2(66, 77)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_deteccao"]
+radius = 80.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_04xj7"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(328, 0, 41, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_axhnm"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(41, 0, 41, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_67map"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(82, 0, 41, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q2t6l"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(123, 0, 41, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xxhhf"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(0, 0, 41, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rdbb8"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(164, 0, 41, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nh0em"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(205, 0, 41, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rj8f1"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(246, 0, 41, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0egjf"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(287, 0, 41, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_766sg"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(328, 0, 41, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_766in"]
+atlas = ExtResource("2_oux2m")
+region = Rect2(0, 0, 41, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_gaiola"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_04xj7")
+}],
+"loop": true,
+"name": &"aberta",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_axhnm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_67map")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q2t6l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xxhhf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rdbb8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nh0em")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rj8f1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0egjf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_766sg")
+}],
+"loop": false,
+"name": &"abrindo",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_766in")
+}],
+"loop": true,
+"name": &"fechada",
+"speed": 5.0
+}]
+
+[node name="GaiolaPuzzle" type="Node2D" unique_id=1451513222]
+script = ExtResource("1_gp")
+
+[node name="ExclamacaoAnimada" type="AnimatedSprite2D" parent="." unique_id=2139257988]
+z_index = 1
+position = Vector2(0, -57)
+sprite_frames = SubResource("SpriteFrames_exclamacao")
+
+[node name="CorpoFisico" type="StaticBody2D" parent="." unique_id=311307009]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CorpoFisico" unique_id=315286951]
+shape = SubResource("RectangleShape2D_corpo")
+
+[node name="ZonaDeteccao" type="Area2D" parent="." unique_id=652639826]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaDeteccao" unique_id=418263845]
+visible = false
+shape = SubResource("CircleShape2D_deteccao")
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=281964195]
+stream = ExtResource("3_rdh6g")
+pitch_scale = 2.0
+
+[node name="GaiolaAnimada" type="AnimatedSprite2D" parent="." unique_id=279100264]
+position = Vector2(-3, -24)
+sprite_frames = SubResource("SpriteFrames_gaiola")
+animation = &"abrindo"
+frame = 8
+frame_progress = 1.0
+
+[connection signal="body_entered" from="ZonaDeteccao" to="." method="_on_zona_deteccao_body_entered"]
+[connection signal="body_exited" from="ZonaDeteccao" to="." method="_on_zona_deteccao_body_exited"]

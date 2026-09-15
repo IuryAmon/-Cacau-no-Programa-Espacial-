@@ -1,0 +1,100 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/simulador/nave_player.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/simulador lua/nave/sprite_player_spaceship_up_down.png" id="2_nave"]
+[ext_resource type="PackedScene" path="res://scenes/simulador/tiro_azul.tscn" id="3_tiro_azul"]
+[ext_resource type="PackedScene" path="res://scenes/simulador/tiro_verde.tscn" id="4_tiro_verde"]
+[ext_resource type="AudioStream" path="res://assets/simulador lua/sons/ahmed_abdulaal-laser-312360.mp3" id="5_laser"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_nave"]
+radius = 23.0
+height = 258.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada"]
+atlas = ExtResource("2_nave")
+region = Rect2(0, 0, 350, 150)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mov0"]
+atlas = ExtResource("2_nave")
+region = Rect2(0, 0, 350, 150)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mov1"]
+atlas = ExtResource("2_nave")
+region = Rect2(350, 0, 350, 150)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mov2"]
+atlas = ExtResource("2_nave")
+region = Rect2(700, 0, 350, 150)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mov3"]
+atlas = ExtResource("2_nave")
+region = Rect2(1050, 0, 350, 150)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mov4"]
+atlas = ExtResource("2_nave")
+region = Rect2(1400, 0, 350, 150)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mov5"]
+atlas = ExtResource("2_nave")
+region = Rect2(1750, 0, 350, 150)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mov6"]
+atlas = ExtResource("2_nave")
+region = Rect2(2100, 0, 350, 150)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_nave"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mov0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mov1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mov2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mov3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mov4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mov5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mov6")
+}],
+"loop": false,
+"name": &"moving",
+"speed": 35.0
+}]
+
+[node name="Nave" type="CharacterBody2D" groups=["player"]]
+collision_mask = 0
+script = ExtResource("1_script")
+tiro_azul = ExtResource("3_tiro_azul")
+tiro_verde = ExtResource("4_tiro_verde")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_nave")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_nave")
+animation = &"default"
+autoplay = "default"
+
+[node name="SomTiro" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_laser")
+volume_db = -27.497
+pitch_scale = 1.16

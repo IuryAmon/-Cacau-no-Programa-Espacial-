@@ -1,0 +1,73 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/estacao_recarga.gd" id="1_0g66y"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bgys0"]
+size = Vector2(150, 130)
+
+[sub_resource type="Gradient" id="Gradient_u3rf8"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_qxbrt"]
+gradient = SubResource("Gradient_u3rf8")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[node name="EstacaoRecarga" type="Area2D" unique_id=1292922501]
+script = ExtResource("1_0g66y")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=592228446]
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=59540822]
+offset_left = -35.0
+offset_top = -90.0
+offset_right = 35.0
+mouse_filter = 2
+color = Color(0.2, 0.3, 0.25, 1)
+
+[node name="FrascoA" type="ColorRect" parent="Placeholder" unique_id=424836986]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 15.0
+offset_right = 32.0
+offset_bottom = 55.0
+mouse_filter = 2
+color = Color(0.55, 0.9, 0.5, 1)
+
+[node name="FrascoB" type="ColorRect" parent="Placeholder" unique_id=1652269890]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 15.0
+offset_right = 60.0
+offset_bottom = 55.0
+mouse_filter = 2
+color = Color(0.4, 0.7, 0.95, 1)
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=2000287889]
+position = Vector2(0, -45)
+shape = SubResource("RectangleShape2D_bgys0")
+
+[node name="Rotulo" type="Label" parent="." unique_id=714482678]
+offset_left = -130.0
+offset_top = -164.5
+offset_right = 130.0
+offset_bottom = -115.5
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+text = "ESTAÇÃO DE MISTURA
+recarga do sinalizador [E]"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Luz" type="PointLight2D" parent="." unique_id=2095029369]
+position = Vector2(0, -55)
+color = Color(0.6, 0.95, 0.7, 1)
+energy = 0.9
+texture = SubResource("GradientTexture2D_qxbrt")
+texture_scale = 1.4

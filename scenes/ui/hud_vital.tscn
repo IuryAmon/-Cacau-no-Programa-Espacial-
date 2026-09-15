@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud_vital.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="2_fonte"]
+
+[node name="HudVital" type="Control"]
+metadata/_edit_lock_ = true
+custom_minimum_size = Vector2(452, 120)
+offset_right = 452.0
+offset_bottom = 120.0
+mouse_filter = 2
+script = ExtResource("1_script")
+modo = 0
+titulo = "CACAU"
+subtitulo = "VITAL"
+segmentos = 3
+mostrar_porcentagem = false
+fonte = ExtResource("2_fonte")

@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/mesa_puzzle.gd" id="1_2a7u1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_flnqq"]
+size = Vector2(200, 140)
+
+[node name="MesaPuzzle" type="Area2D" unique_id=706795556]
+script = ExtResource("1_2a7u1")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=1803017719]
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=1747224862]
+offset_left = -60.0
+offset_top = -80.0
+offset_right = 60.0
+mouse_filter = 2
+color = Color(0.15, 0.28, 0.2, 1)
+
+[node name="Miolo" type="ColorRect" parent="Placeholder" unique_id=525583590]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 110.0
+offset_bottom = 70.0
+mouse_filter = 2
+color = Color(0.3, 0.55, 0.4, 1)
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=981975847]
+position = Vector2(0, -40)
+shape = SubResource("RectangleShape2D_flnqq")
+
+[node name="Rotulo" type="Label" parent="." unique_id=585703421]
+offset_left = -150.0
+offset_top = -154.5
+offset_right = 150.0
+offset_bottom = -105.5
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+text = "PAINEL
+[E]"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

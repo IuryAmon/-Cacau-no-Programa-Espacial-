@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/pickup_habilidade.gd" id="1_v87s1"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/aviso_interacao.tscn" id="2_aviso"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_utm35"]
+size = Vector2(90, 90)
+
+[node name="PickupHabilidade" type="Area2D" unique_id=1978634874]
+script = ExtResource("1_v87s1")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=1016355903]
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=2135136677]
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+mouse_filter = 2
+color = Color(0.58, 0.45, 0.15, 1)
+
+[node name="Miolo" type="ColorRect" parent="Placeholder" unique_id=1181187712]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 35.0
+offset_bottom = 35.0
+mouse_filter = 2
+color = Color(0.95, 0.75, 0.25, 1)
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=1760954513]
+shape = SubResource("RectangleShape2D_utm35")
+
+[node name="Rotulo" type="Label" parent="." unique_id=502084797]
+visible = false
+offset_left = -130.0
+offset_top = -90.5
+offset_right = 130.0
+offset_bottom = -41.5
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+text = "FERRAMENTA
+[E]"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ExclamacaoAnimada" parent="." instance=ExtResource("2_aviso")]
+position = Vector2(0, -66)
+scale = Vector2(1.4, 1.4)

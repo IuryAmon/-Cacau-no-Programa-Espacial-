@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/porta_fase.gd" id="1_i530p"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ck7jv"]
+size = Vector2(110, 140)
+
+[node name="PortaFase" type="Area2D" unique_id=2121293960]
+script = ExtResource("1_i530p")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=1903072107]
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=1686771924]
+offset_left = -32.0
+offset_top = -110.0
+offset_right = 32.0
+mouse_filter = 2
+color = Color(0.45, 0.55, 0.65, 1)
+
+[node name="Miolo" type="ColorRect" parent="Placeholder" unique_id=714894648]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 56.0
+offset_bottom = 102.0
+mouse_filter = 2
+color = Color(0.29, 0.36, 0.42, 1)
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=137401328]
+position = Vector2(0, -60)
+shape = SubResource("RectangleShape2D_ck7jv")
+
+[node name="Rotulo" type="Label" parent="." unique_id=266691245]
+offset_left = -150.0
+offset_top = -214.5
+offset_right = 150.0
+offset_bottom = -165.5
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+text = "PORTA
+[E]"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

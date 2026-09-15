@@ -1,0 +1,29 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/simulador/explosao.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/simulador lua/sons/explosion-very-far-away-gamemaster-audio-3-00-03.mp3" id="2_som"]
+
+[node name="ExplosaoAzul" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
+emitting = false
+amount = 150
+one_shot = true
+explosiveness = 0.88
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 50.06
+initial_velocity_max = 300.0
+angular_velocity_min = 0.01
+angular_velocity_max = 245.71
+damping_min = 3.174
+damping_max = 100.0
+scale_amount_min = 7.0
+scale_amount_max = 7.0
+color = Color(0.11207495, 0.4788676, 0.98624766, 1)
+
+[node name="SomExplosao" type="AudioStreamPlayer2D" parent="CPUParticles2D"]
+stream = ExtResource("2_som")
+volume_db = 14.0
+pitch_scale = 0.74

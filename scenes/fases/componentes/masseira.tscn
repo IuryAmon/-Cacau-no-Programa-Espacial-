@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/masseira.gd" id="1_n6jen"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_t2vka"]
+size = Vector2(220, 160)
+
+[node name="Masseira" type="Area2D" unique_id=1829372783]
+script = ExtResource("1_n6jen")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=755564475]
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=380130823]
+offset_left = -80.0
+offset_top = -110.0
+offset_right = 80.0
+mouse_filter = 2
+color = Color(0.4, 0.38, 0.2, 1)
+
+[node name="Miolo" type="ColorRect" parent="Placeholder" unique_id=1542346824]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = 145.0
+offset_bottom = 95.0
+mouse_filter = 2
+color = Color(0.55, 0.5, 0.25, 1)
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=33516203]
+position = Vector2(0, -55)
+shape = SubResource("RectangleShape2D_t2vka")
+
+[node name="Rotulo" type="Label" parent="." unique_id=1419884995]
+offset_left = -150.0
+offset_top = -184.5
+offset_right = 150.0
+offset_bottom = -135.5
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 5
+text = "MASSEIRA DE VULCANIZAÇÃO
+dosar o enxofre [E]"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
