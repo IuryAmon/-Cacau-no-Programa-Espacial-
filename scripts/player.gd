@@ -107,6 +107,8 @@ var _macarico_geracao : int = 0
 # Tecla livre (Q): a pose que ela liga precisa se lembrar de que foi ela, para
 # não desligar as poses que a chapa soldada e a retorta acendem sozinhas.
 const ACAO_MACARICO := "usar_macarico"
+## Habilidade do Progresso que a tecla exige — sem ela no cinto, Q não acende.
+const HABILIDADE_MACARICO := "macarico"
 var _macarico_por_tecla : bool = false
 ## Ponta do maçarico em coordenadas do Player, com a personagem virada para a
 ## direita — é daqui que sai a luz azul. Espelha sozinho quando ela vira.
@@ -379,9 +381,10 @@ func _rebobinar_macarico() -> void:
 
 
 ## Segurar Q acende o maçarico em qualquer lugar; soltar guarda de volta.
-## Só começa com a personagem livre — no meio de um diálogo, de um knockback ou
-## de uma cena scriptada a tecla não faz nada. Soltar, ao contrário, sempre
-## vale: se ela levar dano de maçarico na mão, a pose sai junto.
+## Só começa COM A FERRAMENTA NO CINTO e com a personagem livre — no meio de um
+## diálogo, de um knockback ou de uma cena scriptada a tecla não faz nada.
+## Soltar, ao contrário, sempre vale: se ela levar dano de maçarico na mão, a
+## pose sai junto.
 func _processar_tecla_macarico() -> void:
 	var segurando := Input.is_action_pressed(ACAO_MACARICO)
 
@@ -392,6 +395,13 @@ func _processar_tecla_macarico() -> void:
 		return
 
 	if not segurando:
+		return
+	# A tecla era o único caminho que acendia a chama sem perguntar se ela já
+	# tinha sido conquistada: dava para sair queimando o mapa desde o começo do
+	# jogo, com o maçarico ainda trancado na gaiola do pátio. Quem usa a chama
+	# por conta própria (chapa soldada, retorta, porta de metal) sempre checou
+	# isto antes de chamar a pose; aqui faltava.
+	if not Progresso.tem_habilidade(HABILIDADE_MACARICO):
 		return
 	if not pode_se_mover or esta_no_knockback or current_health <= 0:
 		return
@@ -452,6 +462,55 @@ func _parar_som_macarico() -> void:
 	if _audio_macarico and is_instance_valid(_audio_macarico):
 		_audio_macarico.queue_free()
 	_audio_macarico = null
+
+
+# --- RECUO PARA ABRIR ESPAÇO A UMA CENA ---
+#
+# Quem chama: as coisas que acontecem GRANDES em cima da personagem e a
+# cobririam se ela apertasse E coladinha nelas — a porta de metal derretendo é
+# a primeira. Ela dá os passos para trás sozinha e a cena só começa depois.
+
+## Anda a personagem até "destino_x" (coordenada do mundo) tocando a corrida, e
+## só devolve quando ela chega. Quem chama pode dar "await".
+##
+## O caminho é conferido com a colisão dela ANTES de andar: se houver parede, a
+## personagem para encostada nela em vez de entrar dentro — o tween mexe na
+## posição direto, sem passar pela física.
+func recuar_ate_x(destino_x: float, velocidade: float = 0.0) -> void:
+	if current_health <= 0:
+		return
+
+	var passo := destino_x - global_position.x
+	if absf(passo) < 1.0:
+		return
+
+	# test_only = só pergunta "esbarraria em quê?", sem sair do lugar.
+	var obstaculo := move_and_collide(Vector2(passo, 0.0), true)
+	if obstaculo:
+		passo = obstaculo.get_travel().x
+		if absf(passo) < 1.0:
+			return
+
+	var duracao := absf(passo) / (velocidade if velocidade > 0.0 else speed)
+
+	velocity = Vector2.ZERO
+	pode_se_mover = false
+	# Sem isto o _physics_process força "idle" todo frame por cima da corrida —
+	# e a gravidade continuaria correndo escondida por baixo do tween.
+	animacao_controlada_externamente = true
+	if _animated_sprite:
+		_animated_sprite.flip_h = passo < 0.0
+		if _animated_sprite.sprite_frames and _animated_sprite.sprite_frames.has_animation("run"):
+			_animated_sprite.play("run")
+
+	var tween := create_tween()
+	tween.tween_property(self, "global_position:x", global_position.x + passo, duracao)
+	await tween.finished
+
+	animacao_controlada_externamente = false
+	pode_se_mover = true
+	if _animated_sprite and _animated_sprite.sprite_frames and _animated_sprite.sprite_frames.has_animation("idle"):
+		_animated_sprite.play("idle")
 
 
 # --- MOMENTO CONTEMPLATIVO: primeira vez que ela vê o foguete ao fundo ---

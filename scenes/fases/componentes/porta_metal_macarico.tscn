@@ -1,0 +1,243 @@
+[gd_scene format=3 uid="uid://x7g0iv3nlm8q"]
+
+[ext_resource type="Script" uid="uid://b1slfvhckckfd" path="res://scripts/fases/porta_metal_macarico.gd" id="1_script"]
+[ext_resource type="Shader" uid="uid://b01w7t5uil722" path="res://shaders/metal_incandescente.gdshader" id="2_shader"]
+[ext_resource type="Texture2D" uid="uid://b7o5t3wc523i" path="res://assets/porta/Porta_metal_maçarico_detalhada.png" id="3_porta"]
+[ext_resource type="Texture2D" uid="uid://cr0vd5gmcvxej" path="res://assets/porta/animação_derretimento_Porta_metal_Sheet.png" id="4_sheet"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/aviso_interacao.tscn" id="5_aviso"]
+[ext_resource type="AudioStream" uid="uid://blipngtdwh2n3" path="res://sounds/metal hit.mp3" id="6_metal"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_incandescente"]
+resource_local_to_scene = true
+shader = ExtResource("2_shader")
+shader_parameter/calor = 0.0
+shader_parameter/gradiente_vertical = 0.35
+shader_parameter/tremor = 0.1
+shader_parameter/velocidade_tremor = 7.0
+shader_parameter/brilho = 1.55
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_0"]
+atlas = ExtResource("4_sheet")
+region = Rect2(0, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_1"]
+atlas = ExtResource("4_sheet")
+region = Rect2(52, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_2"]
+atlas = ExtResource("4_sheet")
+region = Rect2(104, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_3"]
+atlas = ExtResource("4_sheet")
+region = Rect2(156, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_4"]
+atlas = ExtResource("4_sheet")
+region = Rect2(208, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_5"]
+atlas = ExtResource("4_sheet")
+region = Rect2(260, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_6"]
+atlas = ExtResource("4_sheet")
+region = Rect2(312, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_7"]
+atlas = ExtResource("4_sheet")
+region = Rect2(364, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_8"]
+atlas = ExtResource("4_sheet")
+region = Rect2(416, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_9"]
+atlas = ExtResource("4_sheet")
+region = Rect2(468, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_10"]
+atlas = ExtResource("4_sheet")
+region = Rect2(520, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_11"]
+atlas = ExtResource("4_sheet")
+region = Rect2(572, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_12"]
+atlas = ExtResource("4_sheet")
+region = Rect2(624, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_13"]
+atlas = ExtResource("4_sheet")
+region = Rect2(676, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_14"]
+atlas = ExtResource("4_sheet")
+region = Rect2(728, 0, 52, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_derrete_15"]
+atlas = ExtResource("4_sheet")
+region = Rect2(780, 0, 52, 96)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_derretimento"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_9")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_derrete_15")
+}],
+"loop": false,
+"name": &"derretendo",
+"speed": 8.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_folha"]
+size = Vector2(46, 192)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_alcance"]
+size = Vector2(190, 220)
+
+[sub_resource type="Gradient" id="Gradient_luz"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_luz"]
+gradient = SubResource("Gradient_luz")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_fagulha"]
+offsets = PackedFloat32Array(0, 0.35, 1)
+colors = PackedColorArray(1, 0.98, 0.85, 1, 1, 0.6, 0.15, 1, 0.7, 0.15, 0.03, 0)
+
+[sub_resource type="Gradient" id="Gradient_fumaca"]
+offsets = PackedFloat32Array(0, 0.25, 1)
+colors = PackedColorArray(0.55, 0.55, 0.58, 0, 0.42, 0.42, 0.46, 0.45, 0.3, 0.3, 0.34, 0)
+
+[node name="PortaMetalMacarico" type="StaticBody2D" unique_id=894855489]
+script = ExtResource("1_script")
+
+[node name="Porta" type="Sprite2D" parent="." unique_id=534621983]
+material = SubResource("ShaderMaterial_incandescente")
+scale = Vector2(2, 2)
+texture = ExtResource("3_porta")
+offset = Vector2(0, -48)
+
+[node name="Derretimento" type="AnimatedSprite2D" parent="." unique_id=1499333781]
+visible = false
+material = SubResource("ShaderMaterial_incandescente")
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_derretimento")
+animation = &"derretendo"
+offset = Vector2(3, -48)
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=121168330]
+position = Vector2(1, -96)
+shape = SubResource("RectangleShape2D_folha")
+
+[node name="Sucata" type="CollisionPolygon2D" parent="." unique_id=702314886]
+polygon = PackedVector2Array(-73, 10, -29, -22, 39, -22, 77, 10)
+disabled = true
+
+[node name="AreaInteracao" type="Area2D" parent="." unique_id=626190886]
+
+[node name="Colisao" type="CollisionShape2D" parent="AreaInteracao" unique_id=481858748]
+position = Vector2(0, -96)
+shape = SubResource("RectangleShape2D_alcance")
+
+[node name="Luz" type="PointLight2D" parent="." unique_id=1003651728]
+position = Vector2(0, -96)
+enabled = false
+color = Color(1, 0.55, 0.18, 1)
+energy = 0.0
+texture = SubResource("GradientTexture2D_luz")
+texture_scale = 1.8
+
+[node name="Fagulhas" type="CPUParticles2D" parent="." unique_id=1268281772]
+position = Vector2(0, -96)
+emitting = false
+amount = 60
+lifetime = 0.7
+randomness = 0.6
+emission_shape = 3
+emission_rect_extents = Vector2(20, 92)
+direction = Vector2(0, -1)
+spread = 65.0
+gravity = Vector2(0, 520)
+initial_velocity_min = 60.0
+initial_velocity_max = 220.0
+scale_amount_min = 1.5
+scale_amount_max = 3.5
+color_ramp = SubResource("Gradient_fagulha")
+
+[node name="Fumaca" type="CPUParticles2D" parent="." unique_id=504873269]
+position = Vector2(0, -150)
+emitting = false
+amount = 24
+lifetime = 1.8
+randomness = 0.5
+emission_shape = 3
+emission_rect_extents = Vector2(18, 40)
+direction = Vector2(0, -1)
+spread = 22.0
+gravity = Vector2(0, -40)
+initial_velocity_min = 18.0
+initial_velocity_max = 48.0
+scale_amount_min = 4.0
+scale_amount_max = 9.0
+color_ramp = SubResource("Gradient_fumaca")
+
+[node name="SomMetal" type="AudioStreamPlayer2D" parent="." unique_id=783997482]
+stream = ExtResource("6_metal")
+volume_db = -6.0
+
+[node name="ExclamacaoAnimada" parent="." unique_id=289799986 instance=ExtResource("5_aviso")]
+position = Vector2(0, -224)
+scale = Vector2(1.2, 1.2)

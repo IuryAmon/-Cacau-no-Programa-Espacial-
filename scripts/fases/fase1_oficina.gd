@@ -25,6 +25,10 @@ extends FaseBase
 #                mapa, a gaiola do MAÇARICO OXÍDRICO: regular a mistura da
 #                chama (2 volumes de H₂ para 1 de O₂) destranca a ferramenta
 #                que a retorta pede logo ali atrás
+#   ⑤b PORTA DE METAL  logo depois da gaiola, uma folha de aço fecha o resto do
+#                pátio (Patio/PortaMetal). É o primeiro uso "livre" do maçarico
+#                recém-ganho: E na porta, e ela esquenta, derrete e escorre até
+#                virar poça. Sem a ferramenta, o E só devolve um aviso
 #
 # ARMADILHAS SEM CAIXA (ArmadilhasFixas/)
 #
