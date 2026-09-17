@@ -167,6 +167,8 @@ var _percorrido: float = 0.0
 var _espera_apice: float = 0.0
 var _tempo_vida: float = 0.0
 var _giro_sinal: float = 1.0
+## O trecho mão -> ponto de saída já foi checado contra parede (ver _avancar).
+var _saida_conferida: bool = false
 
 var _visual: Sprite2D = null
 var _rastro: Line2D = null
@@ -287,8 +289,18 @@ func _avancar(delta: float) -> void:
 	var passo := _velocidade * delta
 	var destino: Vector2 = global_position + _direcao * passo
 
+	# Primeiro passo: o raio sai da MÃO, e não do ponto em que ele nasceu. Com a
+	# personagem encostada na parede, os 26 px de SAIDA_DA_MAO já caem dentro
+	# dela (a cápsula do corpo tem só 13 de raio) — e começando lá dentro o
+	# trecho do frame nunca cruzava a face, então ele atravessava a parede.
+	var origem := global_position
+	if not _saida_conferida:
+		_saida_conferida = true
+		if is_instance_valid(_dono):
+			origem = _mao()
+
 	# Parede no meio do passo deste frame: a ida morre no ponto da batida.
-	var batida := _parede_ate(destino)
+	var batida := _parede_entre(origem, destino)
 	if not batida.is_empty():
 		var ponto: Vector2 = batida["position"]
 		var normal: Vector2 = batida["normal"]
@@ -306,12 +318,15 @@ func _avancar(delta: float) -> void:
 ## O que o trecho da ida atravessaria neste frame. Só a IDA pergunta isto: na
 ## volta o bumerangue passa por tudo (ver cabeçalho). Devolve o dicionário do
 ## intersect_ray, vazio quando o caminho está livre.
-func _parede_ate(destino: Vector2) -> Dictionary:
+func _parede_entre(origem: Vector2, destino: Vector2) -> Dictionary:
 	var espaco := get_world_2d().direct_space_state
-	var consulta := PhysicsRayQueryParameters2D.create(global_position, destino, MASCARA_PAREDE)
+	var consulta := PhysicsRayQueryParameters2D.create(origem, destino, MASCARA_PAREDE)
 	# Alvos são Area2D e não podem parar o voo; quem arremessou também não,
 	# senão o próprio corpo da personagem devolveria o bumerangue na saída.
 	consulta.collide_with_areas = false
+	# Rede de segurança: se por qualquer caminho ele já estiver dentro de algo
+	# sólido (uma plataforma que andou para cima dele), isso também é batida.
+	consulta.hit_from_inside = true
 	if _dono is CollisionObject2D:
 		consulta.exclude = [(_dono as CollisionObject2D).get_rid()]
 	return espaco.intersect_ray(consulta)

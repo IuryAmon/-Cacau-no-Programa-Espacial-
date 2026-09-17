@@ -49,6 +49,13 @@ var _popup_apagado: bool = true
 # estiver aberta e devolve a visibilidade de antes no fim.
 var _visibilidade_anterior: bool = true
 
+# Mochila emprestada a um puzzle de arrastar (ver "emprestar_mochila").
+var _mochila_emprestada: bool = false
+var _posicao_mochila: Vector2 = Vector2.ZERO
+var _escala_mochila: Vector2 = Vector2.ONE
+var _visibilidade_antes_do_emprestimo: bool = true
+var _tween_mochila: Tween = null
+
 
 func _ready() -> void:
 	Inventario.registrar_tela_inventario(self)
@@ -233,6 +240,83 @@ func exibir_item_na_tela(id_do_item: String, nome_do_item: String,
 func remover_item_da_tela(id_do_item: String) -> void:
 	_mochila.remover(id_do_item)
 	slots_ocupados.erase(id_do_item)
+
+
+# ─────────────────────────────────────────────
+# Mochila emprestada (puzzles de arrastar item)
+# ─────────────────────────────────────────────
+#
+# Num puzzle em que a pessoa entrega um item arrastando-o (o tubo receptor do
+# computador do foguete), a mochila sai do canto e desliza (crescendo) até
+# ficar perto do lugar onde o item deve cair. O caminho do arrasto fica curto
+# e óbvio — ninguém precisa descobrir que dá para pegar coisas lá do canto.
+#
+# Quem pede recebe a própria MochilaHUD, para medir alvéolos e retirar itens;
+# a mochila continua morando aqui, e volta para o canto em "devolver_mochila".
+
+## Leva a mochila para dentro de "area" (coordenadas de tela): o painel fica
+## centrado nela e na maior escala que cabe sem distorcer. É assim que o puzzle
+## decide onde e de que tamanho ela aparece — ver o retângulo AreaMochila da
+## cena do puzzle. A camada acende mesmo em cena que esconde o HUD.
+func emprestar_mochila(area: Rect2, duracao: float = 0.5) -> MochilaHUD:
+	if not _mochila_emprestada:
+		_mochila_emprestada = true
+		# Pedida de novo enquanto ainda voltava para o canto (fechou e reabriu
+		# o puzzle rápido): a casa e a visibilidade continuam as de antes, e
+		# não o ponto do meio do caminho.
+		if _tween_mochila == null or not _tween_mochila.is_valid():
+			_posicao_mochila = _mochila.global_position
+			_escala_mochila = _mochila.scale
+			_visibilidade_antes_do_emprestimo = visible
+	visible = true
+
+	# Painel sem escala, em coordenadas locais da mochila (o pivô é o canto de
+	# cima à esquerda, então escala e posição se compõem direto).
+	var painel := Rect2(Vector2(maxf(_mochila.size.x - MochilaHUD.LARGURA_TOTAL, 0.0), 0.0),
+		Vector2(MochilaHUD.LARGURA_TOTAL, MochilaHUD.ALTURA_TOTAL))
+	var escala := minf(area.size.x / painel.size.x, area.size.y / painel.size.y)
+	if escala <= 0.0:
+		escala = 1.0
+	var canto_do_painel := area.get_center() - painel.size * escala * 0.5
+	_mover_mochila(canto_do_painel - painel.position * escala, Vector2.ONE * escala, duracao)
+	return _mochila
+
+
+## Manda a mochila de volta ao canto. Seguro de chamar mesmo sem empréstimo.
+func devolver_mochila(duracao: float = 0.45) -> void:
+	if not _mochila_emprestada:
+		return
+	_mochila_emprestada = false
+	_mochila.foco = -1
+	var tween := _mover_mochila(_posicao_mochila, _escala_mochila, duracao)
+	var visibilidade := _visibilidade_antes_do_emprestimo
+	if tween == null:
+		visible = visibilidade
+		return
+	tween.finished.connect(func() -> void:
+		# Uma coleta aberta no meio do caminho cuida da própria visibilidade.
+		if not _mochila_emprestada and not Inventario.popup_aberto:
+			visible = visibilidade)
+
+
+func mochila_emprestada() -> bool:
+	return _mochila_emprestada
+
+
+func _mover_mochila(destino: Vector2, escala: Vector2, duracao: float) -> Tween:
+	if _tween_mochila != null and _tween_mochila.is_valid():
+		_tween_mochila.kill()
+	_tween_mochila = null
+	if duracao <= 0.0:
+		_mochila.scale = escala
+		_mochila.global_position = destino
+		return null
+	_tween_mochila = create_tween()
+	_tween_mochila.set_parallel(true)
+	_tween_mochila.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	_tween_mochila.tween_property(_mochila, "global_position", destino, duracao)
+	_tween_mochila.tween_property(_mochila, "scale", escala, duracao)
+	return _tween_mochila
 
 
 func _guardar_no_alveolo(id: String, nome: String, textura: Texture2D, cor: Color) -> void:

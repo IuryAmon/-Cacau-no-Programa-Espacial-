@@ -57,7 +57,7 @@ func _process(_delta):
 
 func verificar_puzzle():
 	# Com uma tela de puzzle própria, o jogador pode interagir mesmo sem os itens —
-	# quem faltar simplesmente não aparece para arrastar dentro do puzzle.
+	# a tela mostra a vaga do que falta, e os itens são arrastados da mochila.
 	if puzzle_ui:
 		puzzle_ui.abrir_puzzle()
 		return

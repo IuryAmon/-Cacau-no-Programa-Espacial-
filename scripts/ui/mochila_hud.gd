@@ -83,6 +83,14 @@ const ALTURA_TOTAL := PADDING.y + ALTURA_CABECALHO + ALTURA_CELULA + ALTURA_ROTU
 
 var _slots: Array[Dictionary] = []
 
+## Alvéolo sob o ponteiro enquanto a mochila está servindo um puzzle de
+## arrastar (-1 = nenhum). Só muda o desenho: quem mede o ponteiro é o puzzle.
+var foco: int = -1:
+	set(valor):
+		if foco != valor:
+			foco = valor
+			queue_redraw()
+
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(LARGURA_TOTAL, ALTURA_TOTAL)
@@ -108,6 +116,9 @@ func _slot_vazio() -> Dictionary:
 		"clarao": 0.0,
 		# 1 logo depois de guardar, cai devagar: acende o nome.
 		"destaque": 0.0,
+		# O item saiu da mão (arrastado para um puzzle) mas ainda é da pessoa:
+		# o alvéolo esvazia na tela e continua reservado para ele voltar.
+		"retirado": false,
 	}
 
 
@@ -135,6 +146,7 @@ func guardar(id: String, nome: String, textura: Texture2D, cor: Color = Color(0,
 	slot["textura"] = textura
 	slot["cor"] = cor if cor.a > 0.0 else EstiloHUD.cor_do_item(id)
 	slot["cheio"] = true
+	slot["retirado"] = false
 	slot["surgir"] = 0.0
 	slot["alvo"] = 1.0
 	slot["clarao"] = 1.0
@@ -158,6 +170,7 @@ func restaurar(id: String, nome: String, textura: Texture2D, cor: Color = Color(
 	slot["textura"] = textura
 	slot["cor"] = cor if cor.a > 0.0 else EstiloHUD.cor_do_item(id)
 	slot["cheio"] = true
+	slot["retirado"] = false
 	slot["surgir"] = 1.0
 	slot["alvo"] = 1.0
 	slot["clarao"] = 0.0
@@ -171,9 +184,70 @@ func remover(id: String) -> void:
 	var i := indice_de(id)
 	if i < 0:
 		return
+	_slots[i]["retirado"] = false
 	_slots[i]["alvo"] = 0.0
 	_slots[i]["destaque"] = 0.0
 	_animar()
+
+
+## Tira o item da mão SEM tirá-lo do inventário: o desenho sai do alvéolo (a
+## pessoa o está arrastando, ou já o entregou a um puzzle que ainda não
+## terminou) e o alvéolo fica reservado, com um contorno fraco na cor do item.
+## Se o puzzle for abandonado, "devolver" põe tudo de volta no mesmo lugar;
+## se ele terminar, "remover" libera o alvéolo de vez.
+func retirar(id: String) -> void:
+	var i := indice_de(id)
+	if i < 0:
+		return
+	_slots[i]["retirado"] = true
+	_slots[i]["alvo"] = 0.0
+	_slots[i]["destaque"] = 0.0
+	_animar()
+
+
+## Devolve ao alvéolo um item retirado, com o anel de chegada.
+func devolver(id: String) -> void:
+	var i := indice_de(id)
+	if i < 0 or not _slots[i]["retirado"]:
+		return
+	_slots[i]["retirado"] = false
+	_slots[i]["alvo"] = 1.0
+	_slots[i]["clarao"] = 1.0
+	_animar()
+
+
+func esta_retirado(id: String) -> bool:
+	var i := indice_de(id)
+	return i >= 0 and _slots[i]["retirado"]
+
+
+## Alvéolo com item à mão sob o ponto (coordenadas de tela), ou -1. O teste é
+## no hexágono de verdade, não no quadrado em volta: as pontas vazias entre
+## dois alvéolos não pegam item nenhum.
+func slot_no_ponto(ponto: Vector2) -> int:
+	var local := get_global_transform().affine_inverse() * ponto
+	for i in _slots.size():
+		var slot := _slots[i]
+		if not slot["cheio"] or slot["retirado"]:
+			continue
+		if Geometry2D.is_point_in_polygon(local, EstiloHUD.hexagono(_centro_local(i), RAIO_CELULA)):
+			return i
+	return -1
+
+
+## O que o alvéolo guarda ({} se estiver vazio) — para quem vai desenhar o
+## item fora da mochila enquanto ele é arrastado.
+func dados_do_slot(indice: int) -> Dictionary:
+	if indice < 0 or indice >= _slots.size() or not _slots[indice]["cheio"]:
+		return {}
+	var slot := _slots[indice]
+	return {"id": slot["id"], "titulo": slot["titulo"], "textura": slot["textura"],
+		"cor": slot["cor"]}
+
+
+## Painel inteiro da mochila em coordenadas de tela.
+func retangulo_do_painel() -> Rect2:
+	return get_global_transform() * Rect2(_origem(), Vector2(LARGURA_TOTAL, ALTURA_TOTAL))
 
 
 ## Pisca o alvéolo e reacende o nome — para quando o jogo quiser lembrar a
@@ -258,8 +332,10 @@ func _process(delta: float) -> void:
 		if slot["destaque"] > 0.0:
 			slot["destaque"] = maxf(slot["destaque"] - delta / TEMPO_DESTAQUE, 0.0)
 			ativo = true
-		# Terminou de encolher: o alvéolo volta a ser um furo vazio.
-		if slot["cheio"] and slot["alvo"] <= 0.0 and slot["surgir"] <= 0.0:
+		# Terminou de encolher: o alvéolo volta a ser um furo vazio. O item
+		# retirado não conta — ele ainda é da pessoa e pode voltar.
+		if slot["cheio"] and slot["alvo"] <= 0.0 and slot["surgir"] <= 0.0 \
+				and not slot["retirado"]:
 			slot["cheio"] = false
 			slot["id"] = ""
 			slot["titulo"] = ""
@@ -329,7 +405,7 @@ func _dados_para_desenho(indice: int) -> Dictionary:
 	return {
 		"id": id, "titulo": id.capitalize(), "textura": textura,
 		"cor": EstiloHUD.cor_do_item(id), "cheio": true,
-		"surgir": 1.0, "alvo": 1.0, "clarao": 0.0, "destaque": 0.0,
+		"surgir": 1.0, "alvo": 1.0, "clarao": 0.0, "destaque": 0.0, "retirado": false,
 	}
 
 
@@ -374,12 +450,22 @@ func _desenhar_slot(indice: int, slot: Dictionary) -> void:
 	EstiloHUD.vidro(self, hexa, 1.0, EstiloHUD.ALVEOLO, Color(0.018, 0.024, 0.046, 0.94))
 
 	if cheio:
+		# Alvéolo sob o ponteiro num puzzle de arrastar: acende mais e o item
+		# cresce um tico — é o "isto aqui dá para pegar".
+		var em_foco: bool = indice == foco and not slot.get("retirado", false)
+		var realce := 1.0 if em_foco else 0.0
 		# Banho da cor do item + halo: o alvéolo ocupado tem temperatura.
-		draw_colored_polygon(hexa, EstiloHUD.com_alfa(cor, 0.10 * surgir))
-		EstiloHUD.halo(self, centro, RAIO_CELULA * 1.15, cor, 6, surgir * 0.8)
-		EstiloHUD.moldura(self, hexa, EstiloHUD.com_alfa(cor, 0.30 + 0.55 * surgir), 2.0)
+		draw_colored_polygon(hexa, EstiloHUD.com_alfa(cor, (0.10 + 0.10 * realce) * surgir))
+		EstiloHUD.halo(self, centro, RAIO_CELULA * 1.15, cor, 6, surgir * (0.8 + 0.7 * realce))
+		EstiloHUD.moldura(self, hexa, EstiloHUD.com_alfa(cor, 0.30 + 0.55 * surgir + 0.15 * realce),
+			2.0 + realce)
 		EstiloHUD.icone(self, slot["textura"], centro, CAIXA_ICONE,
-			EstiloHUD.com_alfa(Color.WHITE, surgir), lerpf(0.6, 1.0, surgir))
+			EstiloHUD.com_alfa(Color.WHITE, surgir), lerpf(0.6, 1.0, surgir) * (1.0 + 0.12 * realce))
+		if slot.get("retirado", false):
+			# Reservado: a mesma marca do furo vazio, só que na cor do item que
+			# vai voltar para cá.
+			EstiloHUD.moldura(self, EstiloHUD.hexagono(centro, RAIO_CELULA * 0.30),
+				EstiloHUD.com_alfa(cor, 0.45 * (1.0 - surgir)), 1.0)
 	else:
 		EstiloHUD.moldura(self, hexa, EstiloHUD.com_alfa(EstiloHUD.BORDA, 0.75), 1.0)
 		# Marca miúda no meio: o furo vazio precisa parecer um encaixe à espera,

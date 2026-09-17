@@ -140,6 +140,55 @@ Selecione o nó e use o Inspetor. As propriedades mais usadas:
   volta pelo alto (chão em y = -928) até x = 7552, onde terminam as
   plataformas do corredor.
 
+**Teleportes e câmera:** qualquer código que mover a personagem de uma vez
+(porta, passagem, volta de uma morte) deve chamar
+`CameraJogador.encaixar(player)` logo depois. Ele esquece o andar/zona/trilho
+de onde ela estava, escolhe o do lugar novo e põe a câmera lá sem deslizar.
+Só `reset_smoothing()` não basta: a câmera ficaria com os limites do lugar
+antigo e escorregaria até a personagem no quadro seguinte.
+
+## Checkpoints: bandeiras e salas
+
+Morrer recarrega a fase e a personagem volta no **último ponto de retorno
+registrado**. O primeiro ponto de cada visita é a **porta por onde ela chegou**:
+morrer antes de qualquer bandeira ou sala faz ela sair pela porta de novo, com
+a mesma animação da entrada. Depois disso há dois jeitos de registrar, e todos
+escrevem no mesmo lugar
+(`PontoDeRetorno`, em `scripts/fases/ponto_de_retorno.gd`). Por isso eles
+nunca entram em conflito: **vale sempre o mais recente**.
+
+- **Bandeira** (`scenes/fases/componentes/checkpoint.tscn`): passar por ela
+  registra o ponto, toca o som e mostra o letreiro. Só uma tremula por vez. Se
+  depois disso a personagem entrar numa sala, o ponto passa a ser a sala (a
+  bandeira continua tremulando). Tocar de novo na bandeira retoma o ponto, em
+  silêncio.
+- **Sala de retorno** (`SalaDeRetorno`: um nó `ReferenceRect` com o script
+  `scripts/fases/sala_de_retorno.gd`, só visível no editor): desenhe o retângulo
+  em volta de uma sala. Quando a personagem **entra** nele, o ponto é gravado
+  sem nenhum aviso na tela.
+  - **Com marcadores:** ponha um ou mais `Marker2D` como filhos do retângulo.
+    Vale o mais perto de onde ela entrou; um em cada porta resolve as salas
+    atravessadas nos dois sentidos. A origem do marcador é o meio da cápsula,
+    ~37 px acima do chão.
+  - **Sem marcadores:** vale o primeiro chão **seguro** que ela pisar lá
+    dentro: tile ou `StaticBody2D`, por 6 quadros seguidos (`quadros_no_chao`)
+    e sem tomar dano. Plataforma que cai, plataforma móvel e caixa não contam.
+  - **Não grava:** a sala onde ela já está quando a cena abre (renascer numa
+    bandeira no meio da sala não é trocado pelo começo dela), atravessar no ar
+    sem pisar em chão seguro, e entrar morrendo ou no recuo de um golpe.
+  - `ativa` desligado desativa a sala sem apagar o nó.
+
+A memória vale **só para mortes**. Sair por uma porta e voltar começa a fase
+do início (o player avisa o `PontoDeRetorno` antes de recarregar por morte;
+qualquer outra abertura de cena é uma visita nova). Não há save em arquivo:
+fechar o jogo esquece tudo.
+
+Teste automático (bandeira, sala, os dois juntos, sair e voltar, câmera):
+
+```
+godot --headless --path . -s res://tools/teste_ponto_de_retorno.gd
+```
+
 ## Plataformas que caem
 
 O nó **`PlataformasQueCaem`** (retângulo de borda vermelha, só visível no

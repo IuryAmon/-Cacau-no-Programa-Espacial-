@@ -140,13 +140,10 @@ func _receber_player() -> void:
 	player.global_position = _ponto_entrada.global_position
 	if "velocity" in player:
 		player.velocity = Vector2.ZERO
-	# A câmera é filha do player e tem amortecimento ligado: sem zerar ele, a
+	# A câmera é filha do player e tem amortecimento ligado: sem o encaixe, a
 	# cena clareia com a câmera ainda no ponto onde o player estava no arquivo
 	# da cena e só depois ela desliza até aqui.
-	var camera := player.get_node_or_null("Camera2D") as Camera2D
-	if camera:
-		camera.reset_smoothing()
-		camera.force_update_scroll()
+	CameraJogador.encaixar(player)
 	# Ele chega de costas para o laser, olhando para dentro do mapa novo.
 	var sprite: AnimatedSprite2D = player.get_node_or_null("AnimatedSprite2D")
 	if sprite:

@@ -8,12 +8,14 @@ extends Area2D
 # tremulando). A personagem passar por ela ativa — e só UMA fica ativa por vez:
 # tocar numa bandeira nova apaga a anterior.
 #
-# Morrer recarrega a fase do zero (reload_current_scene), então quem lembra da
-# bandeira ativa é uma "static var" — mesmo truque do EstadoMundo. No _ready()
-# da FaseBase a personagem é levada até ela em vez de nascer no SpawnPadrao.
+# Para onde ela volta ao morrer quem guarda é o PontoDeRetorno — o MESMO que as
+# salas de retorno (sala_de_retorno.gd) usam. Vale sempre o último registrado:
+# se ela entrou numa sala depois de passar pela bandeira, volta na sala; se
+# voltar a tocar nesta bandeira, ela retoma o posto em silêncio (sem som nem
+# letreiro, que são só da primeira vez).
 #
-# A memória só vale para mortes: sair da fase por uma porta (FadeTela) esquece
-# o checkpoint, e entrar de novo recomeça do começo.
+# A memória só vale para mortes: sair da fase por uma porta esquece o ponto,
+# e entrar de novo recomeça do começo (ver ponto_de_retorno.gd).
 #
 # COMO EDITAR NO EDITOR: arraste o nó para onde quiser. A ORIGEM é a base do
 # mastro — encoste ela no chão. Ctrl+D cria outra bandeira.
@@ -36,10 +38,6 @@ const ANIM_DESATIVADA := &"desativada"
 ## Coluna do mastro dentro do quadro de 96px do spritesheet.
 const COLUNA_MASTRO := 62
 const LARGURA_QUADRO := 96
-
-## Caminho do nó da bandeira ativa ("/root/Fase1Oficina/Checkpoint"). É estável
-## entre recargas e já separa uma fase da outra.
-static var _caminho_ativo: String = ""
 
 var ativada: bool = false
 
@@ -67,10 +65,9 @@ func _ready() -> void:
 		_aviso_y = _aviso.position.y
 		_aviso.visible = false
 	add_to_group(GRUPO)
-	add_to_group(EstadoMundo.GRUPO_SALVAR_AO_SAIR)
 	body_entered.connect(_on_body_entered)
 	# Voltando de uma morte: a bandeira que estava ativa já nasce tremulando.
-	_mostrar_estado(str(get_path()) == _caminho_ativo)
+	_mostrar_estado(PontoDeRetorno.eh_bandeira_ativa(self))
 
 
 ## Espelha o sprite e reposiciona ele para o mastro não pular de lado: sem
@@ -91,13 +88,17 @@ func _aplicar_flip() -> void:
 
 
 func _on_body_entered(body: Node2D) -> void:
-	if ativada or not body.is_in_group("player"):
+	if not body.is_in_group("player"):
 		return
-	ativar()
+	if not ativada:
+		ativar()
+	elif not PontoDeRetorno.eh_origem_atual(self):
+		# Já tremulando, mas uma sala gravou depois: retoma o ponto em silêncio.
+		_registrar_retorno()
 
 
 func ativar() -> void:
-	_caminho_ativo = str(get_path())
+	_registrar_retorno()
 	for bandeira in get_tree().get_nodes_in_group(GRUPO):
 		if bandeira != self and bandeira is Checkpoint:
 			bandeira._mostrar_estado(false)
@@ -139,26 +140,5 @@ func _mostrar_estado(ligada: bool) -> void:
 		_visual.play(ANIM_ATIVADA if ligada else ANIM_DESATIVADA)
 
 
-## Saída por porta/passagem: a próxima entrada na fase começa do início.
-func salvar_ao_sair() -> void:
-	_caminho_ativo = ""
-
-
-## Chamado no _ready() das fases, depois do spawn normal. Se houver uma bandeira
-## ativa nesta cena, leva a personagem até ela. Devolve true se levou.
-static func posicionar_player_no_checkpoint(player: CharacterBody2D) -> bool:
-	if _caminho_ativo.is_empty() or player == null:
-		return false
-	var bandeira := player.get_tree().root.get_node_or_null(NodePath(_caminho_ativo)) as Checkpoint
-	if bandeira == null:
-		return false
-
-	player.global_position = bandeira.global_position + Vector2(0, -bandeira.altura_do_respawn)
-	player.velocity = Vector2.ZERO
-	# Mesmo cuidado da PortaFase: sem isso a câmera nasce no ponto antigo e
-	# desliza até a bandeira na frente do jogador.
-	var camera := player.get_node_or_null("Camera2D") as Camera2D
-	if camera:
-		camera.reset_smoothing()
-		camera.force_update_scroll()
-	return true
+func _registrar_retorno() -> void:
+	PontoDeRetorno.registrar(self, global_position + Vector2(0, -altura_do_respawn), true)

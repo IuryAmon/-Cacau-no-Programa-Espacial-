@@ -1,3 +1,4 @@
+class_name CameraJogador
 extends Camera2D
 
 var shake_amount: float = 0.0
@@ -25,11 +26,66 @@ var _limite_top_fase : int = 0
 var _limite_bottom_fase : int = 0
 var _alvo_y_zona : float = 0.0
 var _primeiro_quadro : bool = true
+## Ligado só durante o encaixar_na_hora(): a personagem acabou de ser
+## teleportada e o is_on_floor() ainda é o do lugar antigo, então as regras que
+## esperam ela pousar valem como se ela já estivesse no chão.
+var _ignorar_piso : bool = false
 
 
 func _ready() -> void:
 	zoom_padrao = zoom
 	posicao_padrao = position
+
+
+# --- TELEPORTE ---
+#
+# Quem move a personagem de uma vez (porta, passagem, checkpoint, volta de uma
+# morte) chama CameraJogador.encaixar(player) logo depois. Só zerar o
+# amortecimento NÃO basta: a câmera continuaria com os limites do enquadramento
+# do lugar antigo (um AndarCamera lá do alto da fase, por exemplo) e, no quadro
+# seguinte, ao trocar para os limites certos, o limit_smoothed faria ela
+# deslizar até a personagem na frente do jogador.
+
+## Move a câmera de "player" direto para o enquadramento final, sem deslizar.
+static func encaixar(player: Node) -> void:
+	if player == null:
+		return
+	var camera := player.get_node_or_null("Camera2D") as Camera2D
+	if camera == null:
+		return
+	if camera is CameraJogador:
+		(camera as CameraJogador).encaixar_na_hora()
+	else:
+		camera.reset_smoothing()
+		camera.force_update_scroll()
+
+
+## Esquece o enquadramento de onde a personagem estava, escolhe o do lugar novo
+## e posiciona a câmera nele sem amortecimento.
+func encaixar_na_hora() -> void:
+	if _limites_guardados:
+		limit_left = _limite_left_fase
+		limit_right = _limite_right_fase
+		limit_top = _limite_top_fase
+		limit_bottom = _limite_bottom_fase
+		_limites_guardados = false
+	_andar_ativo = null
+	_zona_ativa = null
+	_trilho_ativo = null
+
+	_ignorar_piso = true
+	_atualizar_enquadramento()
+	_ignorar_piso = false
+	_primeiro_quadro = false
+
+	reset_smoothing()
+	force_update_scroll()
+
+
+func _pisando(alvo: Node2D) -> bool:
+	if _ignorar_piso:
+		return true
+	return alvo is CharacterBody2D and (alvo as CharacterBody2D).is_on_floor()
 
 
 func _process(delta: float) -> void:
@@ -65,8 +121,7 @@ func _atualizar_enquadramento() -> void:
 			trilho = _primeiro_do_grupo(&"trilho_camera",
 				func(t: Node) -> bool: return t.cobre(alvo.global_position.x))
 
-	if andar == null and zona == null and trilho == null \
-			and not (alvo is CharacterBody2D and (alvo as CharacterBody2D).is_on_floor()):
+	if andar == null and zona == null and trilho == null and not _pisando(alvo):
 		# Saiu de um enquadramento especial NO AR (ex.: subindo do corredor
 		# para o andar, que só assume ao pousar): segura o que estava até ela
 		# pousar. Sem isso a câmera despencava por um instante até os limites
@@ -124,8 +179,7 @@ func _atualizar_enquadramento() -> void:
 func _achar_andar(alvo: Node2D) -> Node:
 	if is_instance_valid(_andar_ativo) and _andar_ativo.contem(alvo.global_position):
 		return _andar_ativo
-	var pisando := alvo is CharacterBody2D and (alvo as CharacterBody2D).is_on_floor()
-	if not pisando:
+	if not _pisando(alvo):
 		return null
 	return _primeiro_do_grupo(&"andar_camera",
 		func(a: Node) -> bool: return a.contem(alvo.global_position))
@@ -199,8 +253,7 @@ func _enquadrar_zona(zona: Node, alvo: Node2D, meia: Vector2) -> void:
 		# Acabou de entrar: parte da altura em que a câmera já está.
 		_alvo_y_zona = get_screen_center_position().y
 
-	var pisando := alvo is CharacterBody2D and (alvo as CharacterBody2D).is_on_floor()
-	if pisando or not zona.subir_so_ao_pousar:
+	if _pisando(alvo) or not zona.subir_so_ao_pousar:
 		_alvo_y_zona = y + zona.altura_do_olhar
 
 	# Teto e chão da câmera dentro da zona.

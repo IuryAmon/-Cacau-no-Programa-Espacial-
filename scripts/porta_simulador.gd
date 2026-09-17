@@ -125,6 +125,12 @@ func _ready() -> void:
 		_receber_jogador()
 		return
 
+	# Morreu antes de qualquer bandeira ou sala: a fase recarrega e ela renasce
+	# nesta porta, repetindo a saída como na primeira entrada.
+	if recebe_chegada and PontoDeRetorno.renasceu_em(self):
+		_renascer_na_porta()
+		return
+
 	if not _spawn_registrado:
 		await get_tree().process_frame
 		_registrar_spawn()
@@ -199,28 +205,16 @@ func _process(_delta: float) -> void:
 # Chamado ainda no _ready(), antes de qualquer coisa ser desenhada, para o
 # player não piscar no ponto de nascimento da cena.
 func _receber_jogador() -> void:
-	# Busca pelo nome também: a porta pode estar ANTES do player na árvore (para
-	# desenhar atrás dele), e aí o _ready() dele — que entra no grupo — ainda
-	# não rodou.
-	var player := get_tree().get_first_node_in_group("player") as Node2D
+	var player := _preparar_player_no_vao()
 	if player == null:
-		player = get_tree().current_scene.get_node_or_null("Player") as Node2D
-	if player == null:
-		push_warning("PortaSimulador: chegada pedida, mas não há player na cena.")
-		return
-	if _ponto_saida == null:
-		push_error("PortaSimulador: 'recebe_chegada' ligado numa porta sem o nó PontoDeSaida.")
 		return
 
-	_ocupada = true
-	player.visible = false
-	if "velocity" in player:
-		player.velocity = Vector2.ZERO
-	if "pode_se_mover" in player:
-		player.pode_se_mover = false
-	# Sem isso a gravidade continua correndo e ele "cai" ao reaparecer.
-	if "animacao_controlada_externamente" in player:
-		player.animacao_controlada_externamente = true
+	# A entrada é o primeiro ponto de retorno da visita: morrer antes de
+	# qualquer bandeira ou sala faz renascer aqui e sair pela porta de novo
+	# (ver _renascer_na_porta), e não no lugar onde o player está salvo no
+	# arquivo da cena. O ponto é o VÃO, onde a animação de saída começa: assim
+	# a fase já renasce com a câmera enquadrada no lugar certo.
+	PontoDeRetorno.registrar(self, _posicao_no_vao())
 
 	# A tela chega apagada da cena anterior: clareia mostrando a porta fechada.
 	#
@@ -234,19 +228,59 @@ func _receber_jogador() -> void:
 		0.15, _encaixar_no_vao.bind(player))
 	await sair_da_porta(player)
 
+# --- RENASCER: MORREU E A FASE RECARREGOU COM O PONTO DE RETORNO NESTA PORTA ---
+# Sem cortina (a morte recarrega de estalo): o player some, fica no vão e sai
+# pela porta. O PontoDeRetorno.aplicar() da fase já o coloca no vão; o
+# sair_da_porta() vai adiado para rodar depois do _ready() da fase inteira.
+func _renascer_na_porta() -> void:
+	var player := _preparar_player_no_vao()
+	if player == null:
+		return
+	_encaixar_no_vao(player)
+	sair_da_porta.call_deferred(player)
+
+
+## Esconde e trava o player para a sequência de saída. Devolve null (e avisa)
+## se falta o player ou o PontoDeSaida.
+func _preparar_player_no_vao() -> Node2D:
+	# Busca pelo nome também: a porta pode estar ANTES do player na árvore (para
+	# desenhar atrás dele), e aí o _ready() dele — que entra no grupo — ainda
+	# não rodou.
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
+		player = get_tree().current_scene.get_node_or_null("Player") as Node2D
+	if player == null:
+		push_warning("PortaSimulador: chegada pedida, mas não há player na cena.")
+		return null
+	if _ponto_saida == null:
+		push_error("PortaSimulador: 'recebe_chegada' ligado numa porta sem o nó PontoDeSaida.")
+		return null
+
+	_ocupada = true
+	player.visible = false
+	if "velocity" in player:
+		player.velocity = Vector2.ZERO
+	if "pode_se_mover" in player:
+		player.pode_se_mover = false
+	# Sem isso a gravidade continua correndo e ele "cai" ao reaparecer.
+	if "animacao_controlada_externamente" in player:
+		player.animacao_controlada_externamente = true
+	return player
+
+
+func _posicao_no_vao() -> Vector2:
+	return _ponto_saida.global_position - Vector2(0.0, subida_ao_entrar)
+
 # --- COLOCA O PLAYER (E A CÂMERA, QUE É FILHA DELE) PARADO DENTRO DO VÃO ---
 func _encaixar_no_vao(player: Node2D) -> void:
 	if not is_instance_valid(player) or _ponto_saida == null:
 		return
-	player.global_position = _ponto_saida.global_position - Vector2(0.0, subida_ao_entrar)
+	player.global_position = _posicao_no_vao()
 	if "velocity" in player:
 		player.velocity = Vector2.ZERO
-	# A câmera tem position_smoothing ligado: sem zerar o amortecimento ela sai
-	# de onde estava e vai andando até aqui, em vez de já nascer no lugar.
-	var camera := player.get_node_or_null("Camera2D") as Camera2D
-	if camera:
-		camera.reset_smoothing()
-		camera.force_update_scroll()
+	# A câmera tem position_smoothing ligado: sem o encaixe ela sai de onde
+	# estava e vai andando até aqui, em vez de já nascer no lugar.
+	CameraJogador.encaixar(player)
 
 # --- SEQUÊNCIA INVERSA: ABRE -> APARECE NO VÃO -> DESCE -> SAI ANDANDO -> FECHA ---
 func sair_da_porta(player: Node2D) -> void:

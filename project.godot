@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Projeto 8.26"
+config/name="Projeto 8.27"
 run/main_scene="uid://bqevk7iunmrs4"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
@@ -33,7 +33,12 @@ directories/dch_directory={
 }
 directories/dtl_directory={
 "cacau_ve_foguete": "res://timelines/cacau_ve_foguete.dtl",
-"cientista_dica_balanceamento": "res://timelines/cientista_dica_balanceamento.dtl",
+"cientista_balanceamento_1": "res://timelines/cientista_balanceamento_1.dtl",
+"cientista_balanceamento_2": "res://timelines/cientista_balanceamento_2.dtl",
+"cientista_balanceamento_3": "res://timelines/cientista_balanceamento_3.dtl",
+"cientista_balanceamento_4": "res://timelines/cientista_balanceamento_4.dtl",
+"cientista_balanceamento_5": "res://timelines/cientista_balanceamento_5.dtl",
+"cientista_balanceamento_6": "res://timelines/cientista_balanceamento_6.dtl",
 "cientista_dica_equacao_dobrada": "res://timelines/cientista_dica_equacao_dobrada.dtl",
 "cientista_dica_sem_itens": "res://timelines/cientista_dica_sem_itens.dtl",
 "cientista_dica_tem_ambos": "res://timelines/cientista_dica_tem_ambos.dtl",

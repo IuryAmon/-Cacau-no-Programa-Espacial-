@@ -6229,7 +6229,7 @@ turbulence_influence_min = 0.02
 shader = ExtResource("51_sol")
 shader_parameter/sol_uv = Vector2(0.7567325, 0.34274194)
 shader_parameter/aspecto = 2.245967741935484
-shader_parameter/visibilidade = 0.9946404583022356
+shader_parameter/visibilidade = 0.9813983789145371
 shader_parameter/cor_luz = Color(1, 0.87, 0.64, 1)
 shader_parameter/cor_sombra = Color(0.6, 0.7, 0.95, 1)
 shader_parameter/forca_rim = 0.65
@@ -6284,11 +6284,11 @@ metadata/_edit_lock_ = true
 motion_scale = Vector2(0, 0)
 
 [node name="Halo" type="Sprite2D" parent="BG/sol" unique_id=91000002]
-self_modulate = Color(1, 0.87, 0.64, 0.26448572)
+self_modulate = Color(1, 0.87, 0.64, 0.25562266)
 texture_filter = 2
 material = SubResource("CanvasItemMaterial_aditivo")
 position = Vector2(843, 170)
-scale = Vector2(0.6395994, 0.6395994)
+scale = Vector2(0.6139084, 0.6139084)
 texture = SubResource("GradientTexture2D_halo")
 
 [node name="Sprite2D" type="Sprite2D" parent="BG/sol" unique_id=580668255]
@@ -6302,7 +6302,7 @@ texture = SubResource("GradientTexture2D_nucleo")
 texture_filter = 2
 position = Vector2(843, 170)
 color = Color(1, 0.87, 0.64, 1)
-energy = 0.24414067
+energy = 0.23595935
 range_layer_min = -512
 range_layer_max = -1
 texture = SubResource("GradientTexture2D_luz")
@@ -6409,7 +6409,7 @@ debug_color = Color(7.508397e-06, 0.58071315, 0.8015938, 0.41960785)
 
 [node name="Player" parent="." unique_id=392803900 instance=ExtResource("7_o24d1")]
 z_index = 2
-position = Vector2(6041, 136)
+position = Vector2(6831, 80)
 max_jumps = 20
 
 [node name="Area2D" type="Area2D" parent="." unique_id=70551546]

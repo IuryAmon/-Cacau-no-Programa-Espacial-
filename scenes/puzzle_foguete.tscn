@@ -2,59 +2,75 @@
 
 [ext_resource type="Script" uid="uid://c2fgt0kx4v3qm" path="res://scripts/puzzle_foguete.gd" id="1_pf"]
 [ext_resource type="Texture2D" uid="uid://dwv3fcytfgyhm" path="res://assets/puzzle combustão do hidrogênio/foguete com combustível e comburente.png" id="2_pf"]
-[ext_resource type="Texture2D" uid="uid://ymxpdi8gph1d" path="res://assets/puzzle combustão do hidrogênio/UI do puzzle.png" id="3_pf"]
+[ext_resource type="Texture2D" uid="uid://b5tnrv64jgifu" path="res://assets/UI/Computador receptor/tubo receptor.png" id="3_tubo"]
 [ext_resource type="Texture2D" uid="uid://ba0ls6ki044nt" path="res://assets/itens/CILINDRO.png" id="4_pf"]
 [ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="5_pf"]
 [ext_resource type="AudioStream" uid="uid://d184o4jmhqq0t" path="res://sounds/PuzzleConcluido2.mp3" id="6_pf"]
 [ext_resource type="AudioStream" uid="uid://0t8yju2oahhm" path="res://sounds/AcessoNegado.mp3" id="7_pf"]
+[ext_resource type="Texture2D" uid="uid://cji6avv68agjd" path="res://assets/UI/Computador receptor/tela_computador.png" id="8_tela"]
 [ext_resource type="AudioStream" uid="uid://ch1uw6x1f3rbv" path="res://sounds/SomFoguete.mp3" id="9_pf"]
 [ext_resource type="AudioStream" uid="uid://bxtvw2yqbqsj6" path="res://sounds/drag.mp3" id="10_pf"]
 [ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="11_pf"]
 [ext_resource type="Texture2D" uid="uid://12prq7vwplys" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes119.png" id="12_seta"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_painelgrande"]
-atlas = ExtResource("3_pf")
-region = Rect2(327, 0, 567, 492)
+[ext_resource type="AudioStream" uid="uid://c86fbcl03hwvb" path="res://sounds/Blip2.wav" id="13_blip"]
+[ext_resource type="Script" uid="uid://dgbwdymuod6b" path="res://scripts/ui/cabo_de_dados.gd" id="14_cabo"]
+[ext_resource type="Shader" path="res://shaders/silhueta_contorno.gdshader" id="15_silhueta"]
+[ext_resource type="Shader" path="res://shaders/tela_crt.gdshader" id="16_crt"]
+[ext_resource type="Script" path="res://scripts/ui/destaque_tutorial.gd" id="17_destaque"]
 
 [sub_resource type="Gradient" id="Gradient_fogo"]
 offsets = PackedFloat32Array(0, 0.25, 0.55, 0.8, 1)
 colors = PackedColorArray(1, 1, 0.85, 1, 1, 0.9, 0.3, 1, 1, 0.45, 0.05, 1, 0.85, 0.15, 0.05, 0.7, 0.35, 0.35, 0.35, 0)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot"]
-bg_color = Color(0.05, 0.07, 0.11, 0.94)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 0.8, 0, 0.85)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+[sub_resource type="AtlasTexture" id="AtlasTexture_foguete"]
+atlas = ExtResource("2_pf")
+region = Rect2(150, 34, 268, 340)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_painelpequeno"]
-atlas = ExtResource("3_pf")
-region = Rect2(7, 261, 319, 230)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vaga_h2"]
+shader = ExtResource("15_silhueta")
+shader_parameter/cor_silhueta = Color(0, 0, 0, 1)
+shader_parameter/cor_contorno = Color(1, 1, 1, 1)
+shader_parameter/cor_acesa = Color(0, 0, 0, 1)
+shader_parameter/aceso = 0.0
+shader_parameter/clarao = 0.0
+shader_parameter/espessura = 1.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pecah2"]
 atlas = ExtResource("4_pf")
 region = Rect2(16, 28, 12, 36)
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vaga_o2"]
+shader = ExtResource("15_silhueta")
+shader_parameter/cor_silhueta = Color(0, 0, 0, 1)
+shader_parameter/cor_contorno = Color(1, 1, 1, 1)
+shader_parameter/cor_acesa = Color(0, 0, 0, 1)
+shader_parameter/aceso = 0.0
+shader_parameter/clarao = 0.0
+shader_parameter/espessura = 1.0
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_pecao2"]
 atlas = ExtResource("4_pf")
 region = Rect2(32, 28, 16, 36)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_eq"]
-bg_color = Color(0.12, 0.14, 0.2, 0.97)
-border_width_left = 6
-border_width_top = 6
-border_width_right = 6
-border_width_bottom = 6
-border_color = Color(0.66, 0.08, 0.08, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_silhueta_h2"]
+shader = ExtResource("15_silhueta")
+shader_parameter/cor_silhueta = Color(0, 0, 0, 1)
+shader_parameter/cor_contorno = Color(1, 1, 1, 1)
+shader_parameter/cor_acesa = Color(1, 0.36, 0.38, 1)
+shader_parameter/aceso = 0.0
+shader_parameter/clarao = 0.0
+shader_parameter/espessura = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_silhueta_o2"]
+shader = ExtResource("15_silhueta")
+shader_parameter/cor_silhueta = Color(0, 0, 0, 1)
+shader_parameter/cor_contorno = Color(1, 1, 1, 1)
+shader_parameter/cor_acesa = Color(0.36, 0.76, 1, 1)
+shader_parameter/aceso = 0.0
+shader_parameter/clarao = 0.0
+shader_parameter/espessura = 1.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_painel"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_stepper"]
 
@@ -99,6 +115,15 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_aura"]
+blend_mode = 1
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("16_crt")
+shader_parameter/forca_linhas = 0.1
+shader_parameter/periodo = 4.0
+shader_parameter/vinheta = 0.45
+
 [node name="PuzzleFoguete" type="CanvasLayer" unique_id=488607263]
 process_mode = 3
 layer = 10
@@ -126,6 +151,10 @@ stream = ExtResource("10_pf")
 [node name="AudioPop" type="AudioStreamPlayer" parent="." unique_id=849371626]
 stream = ExtResource("11_pf")
 
+[node name="AudioAcender" type="AudioStreamPlayer" parent="." unique_id=62883787]
+stream = ExtResource("13_blip")
+volume_db = -2.0
+
 [node name="RootControl" type="Control" parent="." unique_id=339320662]
 layout_mode = 3
 anchors_preset = 15
@@ -133,6 +162,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="Fundo" type="ColorRect" parent="RootControl" unique_id=2091942168]
 layout_mode = 1
@@ -143,123 +173,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.75)
-
-[node name="PainelGrande" type="TextureRect" parent="RootControl" unique_id=363972620]
-layout_mode = 0
-offset_left = 660.0
-offset_top = 80.0
-offset_right = 1234.0
-offset_bottom = 570.0
-scale = Vector2(1.55, 1.55)
-mouse_filter = 2
-texture = SubResource("AtlasTexture_painelgrande")
-
-[node name="FogoFoguete" type="CPUParticles2D" parent="RootControl" unique_id=1664491392]
-position = Vector2(1114, 627)
-amount = 260
-lifetime = 0.4
-speed_scale = 1.3
-emission_shape = 3
-emission_rect_extents = Vector2(60, 4)
-direction = Vector2(0, 1)
-spread = 32.0
-gravity = Vector2(0, 300)
-initial_velocity_min = 200.0
-initial_velocity_max = 320.0
-scale_amount_min = 4.0
-scale_amount_max = 10.0
-color_ramp = SubResource("Gradient_fogo")
-
-[node name="Foguete" type="TextureRect" parent="RootControl" unique_id=1580670291]
-layout_mode = 0
-offset_left = 771.0
-offset_top = 185.0
-offset_right = 1338.0
-offset_bottom = 612.0
-scale = Vector2(1.2, 1.2)
-mouse_filter = 2
-texture = ExtResource("2_pf")
-
-[node name="CoverH2" type="Panel" parent="RootControl" unique_id=1159210023]
-layout_mode = 0
-offset_left = 1146.0
-offset_top = 241.0
-offset_right = 1186.0
-offset_bottom = 371.0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
-
-[node name="LinhaSlot" type="HBoxContainer" parent="RootControl/CoverH2" unique_id=1507572476]
-layout_mode = 0
-offset_top = 53.0
-offset_right = 40.0
-offset_bottom = 77.0
-mouse_filter = 2
-theme_override_constants/separation = 0
-alignment = 1
-
-[node name="LabelBase" type="Label" parent="RootControl/CoverH2/LinhaSlot" unique_id=555100401]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.8, 0, 1)
-theme_override_fonts/font = ExtResource("5_pf")
-theme_override_font_sizes/font_size = 11
-text = "H"
-
-[node name="LabelSub" type="Label" parent="RootControl/CoverH2/LinhaSlot" unique_id=555100402]
-layout_mode = 2
-size_flags_vertical = 8
-theme_override_colors/font_color = Color(1, 0.8, 0, 1)
-theme_override_fonts/font = ExtResource("5_pf")
-theme_override_font_sizes/font_size = 11
-text = "2"
-
-[node name="CoverO2" type="Panel" parent="RootControl" unique_id=748612097]
-layout_mode = 0
-offset_left = 1145.0
-offset_top = 372.0
-offset_right = 1185.0
-offset_bottom = 502.0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
-
-[node name="LinhaSlot" type="HBoxContainer" parent="RootControl/CoverO2" unique_id=1456839576]
-layout_mode = 0
-offset_top = 53.0
-offset_right = 40.0
-offset_bottom = 77.0
-mouse_filter = 2
-theme_override_constants/separation = 0
-alignment = 1
-
-[node name="LabelBase" type="Label" parent="RootControl/CoverO2/LinhaSlot" unique_id=555100403]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.8, 0, 1)
-theme_override_fonts/font = ExtResource("5_pf")
-theme_override_font_sizes/font_size = 11
-text = "O"
-
-[node name="LabelSub" type="Label" parent="RootControl/CoverO2/LinhaSlot" unique_id=555100404]
-layout_mode = 2
-size_flags_vertical = 8
-theme_override_colors/font_color = Color(1, 0.8, 0, 1)
-theme_override_fonts/font = ExtResource("5_pf")
-theme_override_font_sizes/font_size = 11
-text = "2"
-
-[node name="Titulo" type="Label" parent="RootControl" unique_id=187497750]
-layout_mode = 0
-offset_left = 479.0
-offset_top = 707.0
-offset_right = 1759.0
-offset_bottom = 781.0
-theme_override_colors/font_color = Color(0.95, 0.95, 1, 1)
-theme_override_constants/line_spacing = 8
-theme_override_fonts/font = ExtResource("5_pf")
-theme_override_font_sizes/font_size = 22
-text = "PLANTA DO FOGUETE
-INSTALE O COMBUSTÍVEL E O COMBURENTE NOS ENCAIXES"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="Instrucoes" type="Label" parent="RootControl" unique_id=1741848184]
 layout_mode = 0
@@ -272,151 +185,364 @@ theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 11
 text = "ESC para fechar"
 
-[node name="GrupoTray" type="Control" parent="RootControl" unique_id=1691877875]
-visible = false
+[node name="Tubo" type="TextureRect" parent="RootControl" unique_id=1779994786]
+texture_filter = 1
+layout_mode = 0
+offset_left = 7.0
+offset_top = 460.00003
+offset_right = 381.0
+offset_bottom = 754.0
+scale = Vector2(1.5, 1.5)
+mouse_filter = 2
+texture = ExtResource("3_tubo")
+expand_mode = 1
+
+[node name="LuzTubo" type="Control" parent="RootControl/Tubo" unique_id=93927996]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AreaMochila" type="ReferenceRect" parent="RootControl" unique_id=137325308]
+layout_mode = 0
+offset_left = 101.0
+offset_top = 217.0
+offset_right = 481.0
+offset_bottom = 399.0
+mouse_filter = 2
+border_color = Color(0.42, 0.72, 1, 0.9)
+border_width = 2.0
+
+[node name="Etiqueta" type="Label" parent="RootControl/AreaMochila" unique_id=1934087070]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.42, 0.72, 1, 0.9)
+theme_override_fonts/font = ExtResource("5_pf")
+theme_override_font_sizes/font_size = 11
+text = "MOCHILA NO PUZZLE
+(arraste e redimensione)"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Tela" type="TextureRect" parent="RootControl" unique_id=1690907787]
+texture_filter = 1
+layout_mode = 0
+offset_left = 570.0
+offset_top = 128.0
+offset_right = 1440.0
+offset_bottom = 758.0
+scale = Vector2(1.15, 1.15)
+mouse_filter = 2
+texture = ExtResource("8_tela")
+expand_mode = 1
+
+[node name="Display" type="Control" parent="RootControl/Tela" unique_id=677451601]
+clip_contents = true
+layout_mode = 1
 anchors_preset = 0
-offset_left = 50.0
-offset_top = 178.0
-offset_right = 50.0
-offset_bottom = 178.0
+offset_left = 42.0
+offset_top = 42.0
+offset_right = 828.0
+offset_bottom = 567.0
+pivot_offset = Vector2(393, 262.5)
 mouse_filter = 2
 
-[node name="TrayPanel" type="TextureRect" parent="RootControl/GrupoTray" unique_id=1252478075]
+[node name="Cabecalho" type="Label" parent="RootControl/Tela/Display" unique_id=204960460]
 layout_mode = 0
-offset_left = 15.017418
-offset_top = 173.00002
-offset_right = 338.00775
-offset_bottom = 440.22223
-scale = Vector2(1.8, 1.8)
-mouse_filter = 2
-texture = SubResource("AtlasTexture_painelpequeno")
+offset_left = 22.0
+offset_top = 16.0
+offset_right = 764.0
+offset_bottom = 36.0
+theme_override_colors/font_color = Color(0.56, 0.78, 1, 0.9)
+theme_override_fonts/font = ExtResource("5_pf")
+theme_override_font_sizes/font_size = 11
+text = "> RECEPTOR DE COMBUSTÍVEL"
 
-[node name="LabelTray" type="Label" parent="RootControl/GrupoTray" unique_id=1467454834]
+[node name="Rodape" type="Label" parent="RootControl/Tela/Display" unique_id=1389978945]
 layout_mode = 0
-offset_left = 135.0
-offset_top = 292.0
-offset_right = 545.0
-offset_bottom = 320.0
+offset_left = 22.0
+offset_top = 490.0
+offset_right = 764.0
+offset_bottom = 510.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 0.9)
+theme_override_fonts/font = ExtResource("5_pf")
+theme_override_font_sizes/font_size = 11
+text = "INSIRA O COMBUSTÍVEL E O COMBURENTE NO TUBO"
+
+[node name="GrupoMontagem" type="Control" parent="RootControl/Tela/Display" unique_id=589535610]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Foguete" type="Control" parent="RootControl/Tela/Display/GrupoMontagem" unique_id=1580670291]
+anchors_preset = 0
+offset_left = 384.0
+offset_top = 33.0
+offset_right = 652.0
+offset_bottom = 373.0
+scale = Vector2(1.35, 1.35)
+mouse_filter = 2
+
+[node name="FogoFoguete" type="CPUParticles2D" parent="RootControl/Tela/Display/GrupoMontagem/Foguete" unique_id=1664491392]
+position = Vector2(136, 334)
+emitting = false
+amount = 260
+lifetime = 0.4
+speed_scale = 1.3
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(50, 3)
+direction = Vector2(0, 1)
+spread = 32.0
+gravity = Vector2(0, 250)
+initial_velocity_min = 170.0
+initial_velocity_max = 270.0
+scale_amount_min = 3.5
+scale_amount_max = 8.5
+color_ramp = SubResource("Gradient_fogo")
+
+[node name="Arte" type="TextureRect" parent="RootControl/Tela/Display/GrupoMontagem/Foguete" unique_id=1855116524]
+texture_filter = 1
+layout_mode = 0
+offset_right = 268.0
+offset_bottom = 340.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_foguete")
+
+[node name="VagaH2" type="TextureRect" parent="RootControl/Tela/Display/GrupoMontagem/Foguete" unique_id=445322725]
+texture_filter = 1
+material = SubResource("ShaderMaterial_vaga_h2")
+layout_mode = 0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_pecah2")
+expand_mode = 1
+
+[node name="VagaO2" type="TextureRect" parent="RootControl/Tela/Display/GrupoMontagem/Foguete" unique_id=1610382869]
+texture_filter = 1
+material = SubResource("ShaderMaterial_vaga_o2")
+layout_mode = 0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_pecao2")
+expand_mode = 1
+
+[node name="RotuloH2" type="Label" parent="RootControl/Tela/Display/GrupoMontagem/Foguete"]
+layout_mode = 0
+offset_left = 130.5
+offset_top = 63.5
+offset_right = 230.5
+offset_bottom = 79.5
+rotation = -1.5707964
+pivot_offset = Vector2(50, 8)
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_fonts/font = ExtResource("5_pf")
+theme_override_font_sizes/font_size = 9
+text = "COMBUSTÍVEL"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RotuloO2" type="Label" parent="RootControl/Tela/Display/GrupoMontagem/Foguete"]
+layout_mode = 0
+offset_left = 131.5
+offset_top = 168.5
+offset_right = 231.5
+offset_bottom = 184.5
+rotation = -1.5707964
+pivot_offset = Vector2(50, 8)
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_fonts/font = ExtResource("5_pf")
+theme_override_font_sizes/font_size = 9
+text = "COMBURENTE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CartaoH2" type="Control" parent="RootControl/Tela/Display" unique_id=2102308403]
+anchors_preset = 0
+offset_left = 263.0
+offset_top = 235.0
+offset_right = 263.0
+offset_bottom = 235.0
+mouse_filter = 2
+
+[node name="Arte" type="TextureRect" parent="RootControl/Tela/Display/CartaoH2" unique_id=1587313613]
+texture_filter = 1
+material = SubResource("ShaderMaterial_silhueta_h2")
+layout_mode = 0
+offset_left = -40.0
+offset_top = -100.0
+offset_right = 40.0
+offset_bottom = 100.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_pecah2")
+expand_mode = 1
+
+[node name="Formula" type="HBoxContainer" parent="RootControl/Tela/Display/CartaoH2" unique_id=1684809172]
+layout_mode = 0
+offset_left = -90.0
+offset_top = 112.0
+offset_right = 90.0
+offset_bottom = 146.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="LabelBase" type="Label" parent="RootControl/Tela/Display/CartaoH2/Formula" unique_id=543057820]
+layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 22
-text = "CILINDROS COLETADOS"
-horizontal_alignment = 1
+text = "H"
 
-[node name="PecaH2" type="TextureRect" parent="RootControl/GrupoTray" unique_id=1587313613]
-layout_mode = 0
-offset_left = 215.0
-offset_top = 340.0
-offset_right = 227.0
-offset_bottom = 376.0
-scale = Vector2(3.5, 3.5)
-mouse_filter = 2
-texture = SubResource("AtlasTexture_pecah2")
-
-[node name="LabelPecaH2" type="Label" parent="RootControl/GrupoTray" unique_id=230092287]
-layout_mode = 0
-offset_left = 125.0
-offset_top = 476.0
-offset_right = 305.0
-offset_bottom = 530.0
-theme_override_colors/font_color = Color(1, 0.55, 0.55, 1)
+[node name="LabelSub" type="Label" parent="RootControl/Tela/Display/CartaoH2/Formula" unique_id=855785495]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 11
-text = "COMBUSTÍVEL"
+text = "2"
+
+[node name="Status" type="Label" parent="RootControl/Tela/Display/CartaoH2" unique_id=480221445]
+layout_mode = 0
+offset_left = -130.0
+offset_top = 148.0
+offset_right = 130.0
+offset_bottom = 168.0
+theme_override_colors/font_color = Color(0.56, 0.69, 0.88, 0.8)
+theme_override_fonts/font = ExtResource("5_pf")
+theme_override_font_sizes/font_size = 11
+text = "AGUARDANDO"
 horizontal_alignment = 1
 
-[node name="PecaO2" type="TextureRect" parent="RootControl/GrupoTray" unique_id=698166338]
+[node name="CartaoO2" type="Control" parent="RootControl/Tela/Display" unique_id=1460555315]
+anchors_preset = 0
+offset_left = 523.0
+offset_top = 235.0
+offset_right = 523.0
+offset_bottom = 235.0
+mouse_filter = 2
+
+[node name="Arte" type="TextureRect" parent="RootControl/Tela/Display/CartaoO2" unique_id=698166338]
+texture_filter = 1
+material = SubResource("ShaderMaterial_silhueta_o2")
 layout_mode = 0
-offset_left = 395.0
-offset_top = 340.0
-offset_right = 411.0
-offset_bottom = 376.0
-scale = Vector2(3.5, 3.5)
+offset_left = -50.0
+offset_top = -100.0
+offset_right = 50.0
+offset_bottom = 100.0
 mouse_filter = 2
 texture = SubResource("AtlasTexture_pecao2")
+expand_mode = 1
 
-[node name="LabelPecaO2" type="Label" parent="RootControl/GrupoTray" unique_id=1272942907]
+[node name="Formula" type="HBoxContainer" parent="RootControl/Tela/Display/CartaoO2" unique_id=1263585699]
 layout_mode = 0
-offset_left = 315.0
-offset_top = 476.0
-offset_right = 495.0
-offset_bottom = 530.0
-theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
+offset_left = -90.0
+offset_top = 112.0
+offset_right = 90.0
+offset_bottom = 146.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="LabelBase" type="Label" parent="RootControl/Tela/Display/CartaoO2/Formula" unique_id=1894311467]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("5_pf")
+theme_override_font_sizes/font_size = 22
+text = "O"
+
+[node name="LabelSub" type="Label" parent="RootControl/Tela/Display/CartaoO2/Formula" unique_id=526512372]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 11
-text = "COMBURENTE"
-horizontal_alignment = 1
+text = "2"
 
-[node name="LabelInstrucaoTray" type="Label" parent="RootControl/GrupoTray" unique_id=92934167]
+[node name="Status" type="Label" parent="RootControl/Tela/Display/CartaoO2" unique_id=1111034111]
 layout_mode = 0
-offset_left = 80.0
-offset_top = 672.0
-offset_right = 600.0
-offset_bottom = 740.0
-theme_override_colors/font_color = Color(1, 0.85, 0.6, 1)
-theme_override_constants/line_spacing = 8
+offset_left = -130.0
+offset_top = 148.0
+offset_right = 130.0
+offset_bottom = 168.0
+theme_override_colors/font_color = Color(0.56, 0.69, 0.88, 0.8)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 11
-text = "ARRASTE CADA CILINDRO ATÉ O SEU ENCAIXE NA PLANTA DO FOGUETE"
+text = "AGUARDANDO"
 horizontal_alignment = 1
-autowrap_mode = 3
 
-[node name="GrupoEquacao" type="Control" parent="RootControl" unique_id=1922369868]
-anchors_preset = 0
+[node name="GrupoEquacao" type="Control" parent="RootControl/Tela/Display" unique_id=1922369868]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 
-[node name="EquacaoPanel" type="Panel" parent="RootControl/GrupoEquacao" unique_id=1989369816]
+[node name="EquacaoPanel" type="Panel" parent="RootControl/Tela/Display/GrupoEquacao" unique_id=1989369816]
 layout_mode = 0
-offset_left = 20.0
-offset_top = 180.0
-offset_right = 645.0
-offset_bottom = 760.0
+offset_right = 786.0
+offset_bottom = 525.0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_eq")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_painel")
 
-[node name="BotaoMaisH2" type="Panel" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=1298138801]
+[node name="BotaoMaisH2" type="Panel" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=1298138801]
 layout_mode = 0
-offset_left = 43.0
-offset_top = 215.0
-offset_right = 103.0
-offset_bottom = 250.0
+offset_left = 114.0
+offset_top = 178.0
+offset_right = 174.0
+offset_bottom = 213.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_stepper")
 
-[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/GrupoEquacao/EquacaoPanel/BotaoMaisH2" unique_id=1298138802]
+[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/BotaoMaisH2" unique_id=1298138802]
 position = Vector2(30, 17.5)
 scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_seta")
 flip_v = true
 
-[node name="MoleculasH2" type="Control" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=1687221370]
+[node name="MoleculasH2" type="Control" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=1687221370]
 anchors_preset = 0
-offset_left = 30.0
-offset_top = 254.0
-offset_right = 96.0
-offset_bottom = 334.0
+offset_left = 101.0
+offset_top = 217.0
+offset_right = 167.0
+offset_bottom = 297.0
 mouse_filter = 2
 
-[node name="BotaoMenosH2" type="Panel" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=1298138803]
+[node name="BotaoMenosH2" type="Panel" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=1298138803]
 layout_mode = 0
-offset_left = 43.0
-offset_top = 365.0
-offset_right = 103.0
-offset_bottom = 400.0
+offset_left = 114.0
+offset_top = 328.0
+offset_right = 174.0
+offset_bottom = 363.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_stepper")
 
-[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/GrupoEquacao/EquacaoPanel/BotaoMenosH2" unique_id=1298138804]
+[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/BotaoMenosH2" unique_id=1298138804]
 position = Vector2(30, 17.5)
 scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_seta")
 
-[node name="LabelMais" type="Label" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=2120919608]
+[node name="LabelMais" type="Label" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=2120919608]
 layout_mode = 0
-offset_left = 130.0
-offset_top = 291.0
-offset_right = 170.0
-offset_bottom = 341.0
+offset_left = 201.0
+offset_top = 254.0
+offset_right = 241.0
+offset_bottom = 304.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 33
@@ -424,49 +550,49 @@ text = "+"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BotaoMaisO2" type="Panel" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=1957416541]
+[node name="BotaoMaisO2" type="Panel" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=1957416541]
 layout_mode = 0
-offset_left = 197.0
-offset_top = 215.0
-offset_right = 257.0
-offset_bottom = 250.0
+offset_left = 268.0
+offset_top = 178.0
+offset_right = 328.0
+offset_bottom = 213.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_stepper")
 
-[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/GrupoEquacao/EquacaoPanel/BotaoMaisO2" unique_id=1957416542]
+[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/BotaoMaisO2" unique_id=1957416542]
 position = Vector2(30, 17.5)
 scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_seta")
 flip_v = true
 
-[node name="MoleculasO2" type="Control" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=712567296]
+[node name="MoleculasO2" type="Control" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=712567296]
 anchors_preset = 0
-offset_left = 170.0
-offset_top = 238.0
-offset_right = 236.0
-offset_bottom = 318.0
+offset_left = 241.0
+offset_top = 201.0
+offset_right = 307.0
+offset_bottom = 281.0
 mouse_filter = 2
 
-[node name="BotaoMenosO2" type="Panel" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=1957416543]
+[node name="BotaoMenosO2" type="Panel" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=1957416543]
 layout_mode = 0
-offset_left = 197.0
-offset_top = 365.0
-offset_right = 257.0
-offset_bottom = 400.0
+offset_left = 268.0
+offset_top = 328.0
+offset_right = 328.0
+offset_bottom = 363.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_stepper")
 
-[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/GrupoEquacao/EquacaoPanel/BotaoMenosO2" unique_id=1957416544]
+[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/BotaoMenosO2" unique_id=1957416544]
 position = Vector2(30, 17.5)
 scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_seta")
 
-[node name="LabelSeta" type="Label" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=796628397]
+[node name="LabelSeta" type="Label" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=796628397]
 layout_mode = 0
-offset_left = 284.0
-offset_top = 291.0
-offset_right = 334.0
-offset_bottom = 341.0
+offset_left = 355.0
+offset_top = 254.0
+offset_right = 405.0
+offset_bottom = 304.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 33
@@ -474,90 +600,88 @@ text = "->"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BotaoMaisH2O" type="Panel" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=620958467]
+[node name="BotaoMaisH2O" type="Panel" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=620958467]
 layout_mode = 0
-offset_left = 361.0
-offset_top = 215.0
-offset_right = 421.0
-offset_bottom = 250.0
+offset_left = 432.0
+offset_top = 178.0
+offset_right = 492.0
+offset_bottom = 213.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_stepper")
 
-[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/GrupoEquacao/EquacaoPanel/BotaoMaisH2O" unique_id=620958468]
+[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/BotaoMaisH2O" unique_id=620958468]
 position = Vector2(30, 17.5)
 scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_seta")
 flip_v = true
 
-[node name="MoleculasH2O" type="Control" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=869902964]
+[node name="MoleculasH2O" type="Control" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=869902964]
 anchors_preset = 0
-offset_left = 329.0
-offset_top = 246.0
-offset_right = 405.0
-offset_bottom = 326.0
+offset_left = 400.0
+offset_top = 209.0
+offset_right = 476.0
+offset_bottom = 289.0
 mouse_filter = 2
 
-[node name="BotaoMenosH2O" type="Panel" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=620958469]
+[node name="BotaoMenosH2O" type="Panel" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=620958469]
 layout_mode = 0
-offset_left = 361.0
-offset_top = 365.0
-offset_right = 421.0
-offset_bottom = 400.0
+offset_left = 432.0
+offset_top = 328.0
+offset_right = 492.0
+offset_bottom = 363.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_stepper")
 
-[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/GrupoEquacao/EquacaoPanel/BotaoMenosH2O" unique_id=620958470]
+[node name="LabelBotao" type="AnimatedSprite2D" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/BotaoMenosH2O" unique_id=620958470]
 position = Vector2(30, 17.5)
 scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_seta")
 
-[node name="LabelEnergia" type="Label" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=1913809612]
+[node name="LabelEnergia" type="Label" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=1913809612]
 layout_mode = 0
-offset_left = 465.0
-offset_top = 307.0
-offset_right = 615.0
-offset_bottom = 333.0
+offset_left = 536.0
+offset_top = 270.0
+offset_right = 686.0
+offset_bottom = 296.0
 theme_override_colors/font_color = Color(1, 0.55, 0.1, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 22
 text = "+ ENERGIA"
 
-[node name="PainelEquacaoEscrita" type="Control" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=555100201]
+[node name="PainelEquacaoEscrita" type="Control" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=555100201]
 anchors_preset = 0
-offset_left = 12.0
-offset_top = 49.0
-offset_right = 597.0
-offset_bottom = 93.0
+offset_top = 40.0
+offset_right = 786.0
+offset_bottom = 84.0
 mouse_filter = 2
 
-[node name="LinhaEquacao" type="HBoxContainer" parent="RootControl/GrupoEquacao/EquacaoPanel/PainelEquacaoEscrita" unique_id=555100202]
+[node name="LinhaEquacao" type="HBoxContainer" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/PainelEquacaoEscrita" unique_id=555100202]
 layout_mode = 0
-offset_left = -3.0
 offset_top = -10.0
-offset_right = 582.0
+offset_right = 786.0
 offset_bottom = 24.0
 mouse_filter = 2
 theme_override_constants/separation = 0
 alignment = 1
 
-[node name="LabelReagentesTitulo" type="Label" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=555100301]
+[node name="LabelReagentesTitulo" type="Label" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=555100301]
 layout_mode = 0
-offset_left = -9.0
-offset_top = 110.0
-offset_right = 307.0
-offset_bottom = 132.45834
+offset_left = 62.0
+offset_top = 88.0
+offset_right = 378.0
+offset_bottom = 110.45834
 theme_override_colors/font_color = Color(1, 0.85, 0, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 22
 text = "Reagentes"
 horizontal_alignment = 1
 
-[node name="LabelReagentesValor" type="RichTextLabel" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=555100302]
+[node name="LabelReagentesValor" type="RichTextLabel" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=555100302]
 layout_mode = 0
-offset_left = -9.0
-offset_top = 147.0
-offset_right = 307.0
-offset_bottom = 170.0
+offset_left = 62.0
+offset_top = 122.0
+offset_right = 378.0
+offset_bottom = 145.0
 mouse_filter = 2
 theme_override_colors/default_color = Color(1, 0.85, 0, 1)
 theme_override_fonts/normal_font = ExtResource("5_pf")
@@ -568,24 +692,24 @@ fit_content = true
 scroll_active = false
 horizontal_alignment = 1
 
-[node name="LabelProdutosTitulo" type="Label" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=555100303]
+[node name="LabelProdutosTitulo" type="Label" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=555100303]
 layout_mode = 0
-offset_left = 309.0
-offset_top = 110.0
-offset_right = 576.0
-offset_bottom = 132.45834
+offset_left = 380.0
+offset_top = 88.0
+offset_right = 647.0
+offset_bottom = 110.45834
 theme_override_colors/font_color = Color(1, 0.85, 0, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 22
 text = "Produtos"
 horizontal_alignment = 1
 
-[node name="LabelProdutosValor" type="RichTextLabel" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=555100304]
+[node name="LabelProdutosValor" type="RichTextLabel" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=555100304]
 layout_mode = 0
-offset_left = 309.0
-offset_top = 147.0
-offset_right = 576.0
-offset_bottom = 170.0
+offset_left = 380.0
+offset_top = 122.0
+offset_right = 647.0
+offset_bottom = 145.0
 mouse_filter = 2
 theme_override_colors/default_color = Color(1, 0.85, 0, 1)
 theme_override_fonts/normal_font = ExtResource("5_pf")
@@ -596,27 +720,27 @@ fit_content = true
 scroll_active = false
 horizontal_alignment = 1
 
-[node name="LinhaDicaIgnicao" type="HBoxContainer" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=555100501]
+[node name="LinhaDicaIgnicao" type="HBoxContainer" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=555100501]
 visible = false
 layout_mode = 0
-offset_left = 35.0
-offset_top = 395.0
-offset_right = 590.0
-offset_bottom = 425.0
+offset_left = 106.0
+offset_top = 370.0
+offset_right = 661.0
+offset_bottom = 400.0
 mouse_filter = 2
 theme_override_constants/separation = 0
 alignment = 1
 
-[node name="BotaoIgnicao" type="Panel" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=1621331391]
+[node name="BotaoIgnicao" type="Panel" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=1621331391]
 layout_mode = 0
-offset_left = 155.0
-offset_top = 480.0
-offset_right = 455.0
-offset_bottom = 542.0
+offset_left = 243.0
+offset_top = 420.0
+offset_right = 543.0
+offset_bottom = 482.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_botao")
 
-[node name="LabelBotao" type="Label" parent="RootControl/GrupoEquacao/EquacaoPanel/BotaoIgnicao" unique_id=1772771470]
+[node name="LabelBotao" type="Label" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/BotaoIgnicao" unique_id=1772771470]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -630,13 +754,38 @@ text = "INICIAR IGNIÇÃO"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LabelLiberarAcesso" type="Label" parent="RootControl/GrupoEquacao/EquacaoPanel" unique_id=555100901]
+[node name="GrupoIgnicao" type="Control" parent="RootControl/Tela/Display" unique_id=209498108]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LabelIgnicao" type="Label" parent="RootControl/Tela/Display/GrupoIgnicao" unique_id=412067386]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 140.0
+offset_right = 770.0
+offset_bottom = 240.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_constants/line_spacing = 10
+theme_override_fonts/font = ExtResource("5_pf")
+theme_override_font_sizes/font_size = 33
+text = "IGNIÇÃO
+CONFIRMADA"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LabelLiberarAcesso" type="Label" parent="RootControl/Tela/Display/GrupoIgnicao" unique_id=555100901]
 visible = false
 layout_mode = 0
-offset_left = 155.0
-offset_top = 480.0
-offset_right = 455.0
-offset_bottom = 542.0
+offset_left = 400.0
+offset_top = 290.0
+offset_right = 770.0
+offset_bottom = 370.0
 theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
 theme_override_constants/line_spacing = 8
 theme_override_fonts/font = ExtResource("5_pf")
@@ -646,3 +795,79 @@ LIBERAR O ACESSO"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
+
+[node name="Destaque" type="Control" parent="RootControl/Tela/Display"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("17_destaque")
+
+[node name="Aura" type="ColorRect" parent="RootControl/Tela/Display" unique_id=948292525]
+modulate = Color(1, 1, 1, 0)
+material = SubResource("CanvasItemMaterial_aura")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.25, 0.6, 1, 0.14)
+
+[node name="Varredura" type="ColorRect" parent="RootControl/Tela/Display" unique_id=728145166]
+material = SubResource("ShaderMaterial_crt")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Led" type="ColorRect" parent="RootControl/Tela" unique_id=1499574988]
+layout_mode = 0
+offset_left = 762.0
+offset_top = 597.0
+offset_right = 774.0
+offset_bottom = 603.0
+mouse_filter = 2
+color = Color(0.9, 0.12, 0.1, 1)
+
+[node name="Cabo" type="Control" parent="RootControl" unique_id=926107398]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 89.0
+offset_top = 31.0
+offset_right = 89.0
+offset_bottom = 31.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("14_cabo")
+
+[node name="Trajeto" type="Line2D" parent="RootControl/Cabo" unique_id=525423734]
+points = PackedVector2Array(524, 881, 524, 847, 816.41003, 846.99994, 972, 847, 972, 825)
+width = 16.0
+default_color = Color(0.165, 0.188, 0.255, 1)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+
+[node name="Guia" type="Control" parent="RootControl" unique_id=1577516479]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CamadaArrasto" type="CanvasLayer" parent="." unique_id=93677006]
+process_mode = 3
+layer = 96

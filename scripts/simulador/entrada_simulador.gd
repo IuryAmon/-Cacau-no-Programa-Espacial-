@@ -59,13 +59,10 @@ func _reposicionar_apos_simulador() -> void:
 		player.global_position = SimuladorEstado.posicao_de_retorno
 		if "velocity" in player:
 			player.velocity = Vector2.ZERO
-		# A câmera é filha do player e tem amortecimento ligado: sem zerar ele,
+		# A câmera é filha do player e tem amortecimento ligado: sem o encaixe,
 		# a cena clareia com a câmera ainda vindo de onde o player estava no
 		# arquivo da cena, fazendo aquele ajuste rápido no começo.
-		var camera := player.get_node_or_null("Camera2D") as Camera2D
-		if camera:
-			camera.reset_smoothing()
-			camera.force_update_scroll()
+		CameraJogador.encaixar(player)
 
 
 # --- DETECÇÃO ---

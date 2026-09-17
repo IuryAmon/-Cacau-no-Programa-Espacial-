@@ -1,0 +1,4 @@
+join cientista (cientista_serio) leftmost [mirrored="true"]
+cientista (cientista_serio): Opa, agora sobrou oxigênio. São 2 nos reagentes e só 1 nos produtos.
+cientista: E não dá para adicionar só 1. O gás oxigênio não existe como átomo solto, cada átomo está sempre ligado a outro oxigênio.
+cientista (cientista_feliz): Então, para igualar, adicione mais uma molécula de água.

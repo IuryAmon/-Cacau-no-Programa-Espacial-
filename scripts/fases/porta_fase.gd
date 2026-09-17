@@ -141,13 +141,13 @@ static func posicionar_player_no_spawn(raiz: Node) -> void:
 		if porta.tag_aqui == Progresso.spawn_tag:
 			player.global_position = porta.global_position + Vector2(0, -4)
 			player.velocity = Vector2.ZERO
-			# A câmera é filha do player e tem amortecimento ligado: sem zerar
-			# ele, a cena clareia com a câmera ainda no ponto onde o player
+			# A câmera é filha do player e tem amortecimento ligado: sem o
+			# encaixe, a cena clareia com a câmera ainda no ponto onde o player
 			# estava no arquivo da cena e só depois ela desliza até a porta.
-			var camera := player.get_node_or_null("Camera2D") as Camera2D
-			if camera:
-				camera.reset_smoothing()
-				camera.force_update_scroll()
+			CameraJogador.encaixar(player)
+			# Primeiro ponto de retorno da visita: morrer antes de qualquer
+			# bandeira ou sala renasce aqui, na porta por onde ela entrou.
+			PontoDeRetorno.registrar(porta, player.global_position)
 			break
 	Progresso.spawn_tag = ""
 

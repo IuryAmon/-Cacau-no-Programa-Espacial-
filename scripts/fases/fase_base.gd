@@ -33,16 +33,9 @@ func _preparar_fase() -> void:
 	FerramentasPlayer.instalar(player)
 	Lanterna.instalar(player)
 
-	if not testar_a_partir_daqui:
-		var spawn: Marker2D = get_node_or_null("SpawnPadrao")
-		if spawn:
-			player.global_position = spawn.global_position
-		PortaFase.posicionar_player_no_spawn(self)
-
-	# Morreu depois de tocar numa bandeira de checkpoint: volta nela. Fica fora
-	# do "if" acima para valer também testando com "Testar A Partir Daqui".
-	Checkpoint.posicionar_player_no_checkpoint(player)
-
+	# Os limites da fase vêm ANTES de mexer na personagem: o encaixe da câmera
+	# (CameraJogador.encaixar) guarda estes limites como os "da fase" para
+	# voltar a eles ao sair de um andar/zona/trilho.
 	var limites: ReferenceRect = get_node_or_null("LimitesDaCamera")
 	var camera: Camera2D = player.get_node_or_null("Camera2D")
 	if camera and limites:
@@ -50,6 +43,19 @@ func _preparar_fase() -> void:
 		camera.limit_top = int(limites.position.y)
 		camera.limit_right = int(limites.position.x + limites.size.x)
 		camera.limit_bottom = int(limites.position.y + limites.size.y)
-		camera.reset_smoothing()
+
+	if not testar_a_partir_daqui:
+		var spawn: Marker2D = get_node_or_null("SpawnPadrao")
+		if spawn:
+			player.global_position = spawn.global_position
+		PortaFase.posicionar_player_no_spawn(self)
+
+	# Morreu: volta no último ponto de retorno (bandeira ou sala, o que tiver
+	# sido registrado por último). Fica fora do "if" acima para valer também
+	# testando com "Testar A Partir Daqui".
+	PontoDeRetorno.aplicar(player)
+
+	# Seja qual for o lugar em que ela ficou, a câmera já começa enquadrada nele.
+	CameraJogador.encaixar(player)
 
 	FadeTela.clarear_na_chegada(self, 0.5)

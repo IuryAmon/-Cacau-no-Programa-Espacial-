@@ -703,6 +703,9 @@ func _executar_efeito_piscado() -> void:
 		_animated_sprite.modulate.a = 1.0
 
 func _reiniciar_cena_seguro() -> void:
+	# Avisa que esta recarga é uma morte: só assim o ponto de retorno (bandeira
+	# ou sala) continua valendo na cena que abrir.
+	PontoDeRetorno.marcar_morte(get_tree())
 	get_tree().reload_current_scene()
 
 # --- FUNÇÃO DE DANO E KNOCKBACK COM STUN ---
