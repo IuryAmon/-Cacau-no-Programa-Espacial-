@@ -44,6 +44,8 @@ extends CanvasLayer
 #
 # CONTROLES: A/D mudam de 100 em 100, W/S de 10 em 10, ESPAÇO aciona, ESC sai.
 # O mouse também clica nos + / − e no acionador.
+# No controle, sem cursor: direcional (ou analógico) ←→ muda de 100 em 100 e
+# ↑↓ de 10 em 10, ✕ aciona, ○ sai e □ solta a plataforma no fim.
 
 signal puzzle_resolvido
 
@@ -59,6 +61,11 @@ const GRAVIDADE := 10.0
 const PASSO_FINO := 10.0
 const PASSO_GROSSO := 100.0
 const FORCA_MAXIMA := 900.0
+
+## Linha de ajuda do rodapé, em cada dispositivo ({acao} vira tecla ou botão).
+const STATUS_TECLADO := "A/D  ±100 N   ·   W/S  ±10 N   ·   ESPAÇO aciona   ·   ESC sai"
+const STATUS_CONTROLE := "{@direcional_horizontal:} ±100 N   ·   {@direcional_vertical:} ±10 N   ·   {@cruz:} aciona   ·   {ui_cancel} sai"
+const STATUS_LIBERADO := "APERTE {interact} PARA SOLTAR A PLATAFORMA"
 
 const COR_OK := Color(0.5, 0.95, 0.6)
 const COR_ERRO := Color(0.95, 0.6, 0.45)
@@ -89,6 +96,11 @@ var _travado: bool = false
 
 func _ready() -> void:
 	layer = 15
+	# Controle: esta tela ganha a barra de botões (sem cursor, ver usa_cursor) e
+	# o rodapé troca as teclas pelos botões.
+	add_to_group(CursorVirtual.GRUPO)
+	IconesNoTexto.acoplar(_status)
+	Controle.mudou.connect(func(_em_uso: bool) -> void: _escrever_status())
 	_preview.forca_maxima = FORCA_MAXIMA
 	_escrever("Balanca/Valor", "%s kg" % _numero(MASSA))
 	_escrever("Gravidade/Valor", "%s N/kg" % _numero(GRAVIDADE))
@@ -114,8 +126,7 @@ func abrir_puzzle() -> void:
 	_travado = false
 	_preview.resultado = "parada"
 	_fundo_mat.set_shader_parameter("progress", 0.0)
-	_status.text = "A/D  ±100 N   ·   W/S  ±10 N   ·   ESPAÇO aciona   ·   ESC sai"
-	_status.add_theme_color_override("font_color", COR_NEUTRA)
+	_escrever_status()
 	_diagnostico.text = ""
 	_atualizar()
 
@@ -155,6 +166,19 @@ func _input(event: InputEvent) -> void:
 		_clique(event.position)
 		return
 
+	# ○ do controle: o mesmo ESC (o do teclado segue logo abaixo).
+	if event is InputEventJoypadButton and event.is_action_pressed("ui_cancel"):
+		fechar_puzzle(_travado)
+		return
+
+	# ✕ do controle: o mesmo ESPAÇO.
+	if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_A:
+		if _travado:
+			fechar_puzzle(true)
+		else:
+			_acionar()
+		return
+
 	if not (event is InputEventKey and event.pressed):
 		return
 
@@ -179,6 +203,46 @@ func _input(event: InputEvent) -> void:
 		KEY_L:
 			# DEBUG: resolve na hora, para não regular o guincho a cada teste.
 			fechar_puzzle(true)
+
+
+## Direcional (ou analógico) do controle girando o mostrador, com repetição ao
+## segurar — o A/D e o W/S de quem joga de controle.
+func _process(_delta: float) -> void:
+	if not visible or _travado or not Controle.em_uso:
+		return
+	var passo := Controle.passo_navegacao()
+	if passo.x != 0:
+		_regular(PASSO_GROSSO * passo.x)
+	elif passo.y != 0:
+		_regular(-PASSO_FINO * passo.y)
+
+
+## Rodapé com a ajuda do dispositivo em uso (ou o aviso de liberado).
+func _escrever_status() -> void:
+	if _travado:
+		_status.text = Controle.texto(STATUS_LIBERADO)
+		_status.add_theme_color_override("font_color", COR_OK)
+		return
+	_status.text = Controle.texto(STATUS_CONTROLE if Controle.em_uso else STATUS_TECLADO)
+	_status.add_theme_color_override("font_color", COR_NEUTRA)
+
+
+# --- CONTROLE (ver cursor_virtual.gd) ---
+
+## O controle opera o guincho direto: nada de cursor, só a barra de botões.
+func usa_cursor() -> bool:
+	return false
+
+
+func dicas_do_controle() -> Array:
+	if _travado:
+		return [[Interacao.ACAO, "SOLTAR A PLATAFORMA"]]
+	return [
+		["direcional_horizontal", "±100 N"],
+		["direcional_vertical", "±10 N"],
+		["cruz", "ACIONAR"],
+		["ui_cancel", "SAIR"],
+	]
 
 
 func _clique(pos: Vector2) -> void:
@@ -245,8 +309,7 @@ func _vencer() -> void:
 	_diagnostico.text = "%s kg de massa dão %s N de peso. Guincho regulado." % [
 		_numero(MASSA), _numero(_peso())]
 	_diagnostico.add_theme_color_override("font_color", COR_OK)
-	_status.text = "APERTE E PARA SOLTAR A PLATAFORMA"
-	_status.add_theme_color_override("font_color", COR_OK)
+	_escrever_status()
 	var tween := create_tween()
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_method(

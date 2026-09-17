@@ -1,5 +1,16 @@
 extends Node2D
 
+# --- GAIOLA QUE TRANCA UM ITEM ---
+#
+# Duas cenas usam este script:
+#   scenes/gaiola_puzzle.tscn                            a gaiola de grade (prólogo)
+#   scenes/fases/componentes/gaiola_vidro_eletrica.tscn  a de vidro (fase 1)
+#
+# A gaiola desliga o item_alvo (não dá para pegar) e fica na animação
+# "fechada". Perto dela, o E abre o puzzle_cena — ou abre direto, se não houver
+# puzzle. Resolvido: toca "abrindo" uma vez, para em "aberta" e só então solta
+# o item. Aberta uma vez, continua aberta ao recarregar a cena (EstadoMundo).
+
 @export_group("Puzzle")
 # Arraste aqui a cena do puzzle deste item (ex: puzzle_hidrogenio.tscn).
 # Deixe vazio para uma gaiola SEM puzzle: só chegar perto e apertar E já
@@ -10,6 +21,9 @@ extends Node2D
 
 @export_group("Sons")
 @export var som_abertura: AudioStream
+## Espera entre a gaiola começar a abrir e o som tocar. As gaiolas de grade
+## do prólogo esperam 1 s; a de vidro da fase 1 toca junto com a animação.
+@export_range(0.0, 3.0, 0.05, "suffix:s") var atraso_som_abertura: float = 1.0
 
 var jogador_na_area: bool = false
 var puzzle_concluido: bool = false
@@ -71,7 +85,8 @@ func _on_puzzle_resolvido():
 	if audio_player:
 		if som_abertura:
 			audio_player.stream = som_abertura
-		await get_tree().create_timer(1.0).timeout
+		if atraso_som_abertura > 0.0:
+			await get_tree().create_timer(atraso_som_abertura).timeout
 		audio_player.play()
 
 func _on_gaiola_animation_finished():

@@ -49,10 +49,11 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	var direcao := Vector2(
-		Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left"),
-		Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
-	).normalized()
+	# O analógico lido como círculo (ver "O ANALÓGICO NO MUNDO" em controle.gd):
+	# a nave vai no ângulo exato do polegar. Pela força de cada eixo, a zona
+	# morta de 0,5 por eixo entortava a direção — a 30° ela ia reta na
+	# horizontal. Teclado e direcional continuam nas 8 direções.
+	var direcao := Controle.vetor_direcional().normalized()
 
 	if direcao != Vector2.ZERO:
 		velocity = velocity.lerp(direcao * speed, acceleration * delta)

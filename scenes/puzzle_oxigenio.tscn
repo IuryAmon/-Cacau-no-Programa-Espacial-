@@ -127,7 +127,7 @@ offset_bottom = 209.0
 theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
 theme_override_fonts/font = ExtResource("4_po")
 theme_override_font_sizes/font_size = 11
-text = "ESC para fechar"
+text = "{ui_cancel} para fechar"
 horizontal_alignment = 1
 
 [node name="AtomoBG" type="TextureRect" parent="RootControl" unique_id=-1136539932]
@@ -318,5 +318,5 @@ offset_bottom = 850.0
 theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
 theme_override_fonts/font = ExtResource("4_po")
 theme_override_font_sizes/font_size = 22
-text = "APERTE E PARA ABRIR A GAIOLA"
+text = "APERTE {interact} PARA ABRIR A GAIOLA"
 horizontal_alignment = 1

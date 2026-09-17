@@ -31,7 +31,7 @@ var spawn_tag: String = ""
 
 ## O hub já acendeu as células H e O do prólogo no painel?
 ## (O maçarico NÃO vem daqui: ele está trancado na gaiola do pátio da Oficina
-## do Carbono, e sai de lá com o puzzle da mistura da chama.)
+## do Carbono, e sai de lá com o puzzle da queima do acetileno.)
 var hub_ja_apresentou: bool = false
 
 ## Visitou a ala de produção de lítio (world4)? Quem visitou resolve a

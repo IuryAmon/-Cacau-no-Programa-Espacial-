@@ -78,7 +78,8 @@ func _aplicar_cor() -> void:
 
 func _atualizar_rotulo() -> void:
 	if _label:
-		_label.text = rotulo + ("\n(concluído)" if ja_resolvida else "\n[E]")
+		# {interact}: E no teclado, □ desenhado no controle.
+		BotoesControle.rotular(_label, rotulo + ("\n(concluído)" if ja_resolvida else "\n[{interact}]"))
 
 
 func _process(_delta: float) -> void:

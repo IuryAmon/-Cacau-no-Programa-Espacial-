@@ -28,6 +28,10 @@ var texto_vitoria: String = "Resolvido!"
 const TAM_SLOT := Vector2(178, 78)
 const TAM_PECA := Vector2(170, 62)
 
+## Rodapé ({acao} vira tecla no teclado e botão no controle).
+const TXT_STATUS := "Arraste as peças para os encaixes.  [{ui_cancel} desiste]"
+const TXT_CONTINUAR := "   [{interact} para continuar]"
+
 var _painel: Panel = null
 var _status: Label = null
 var _nos_slots: Array = []
@@ -36,6 +40,9 @@ var _arrastando: Panel = null
 var _offset_arrasto: Vector2 = Vector2.ZERO
 var _preenchidos: int = 0
 var _vitoria: bool = false
+## Onde está o ponteiro, lido dos eventos: o mouse de verdade ou o cursor do
+## controle (que não move o mouse do sistema — ver cursor_virtual.gd).
+var _ponteiro: Vector2 = Vector2.ZERO
 
 
 static func nova(dono: Node, config: Dictionary) -> PuzzleOrdenar:
@@ -50,6 +57,9 @@ static func nova(dono: Node, config: Dictionary) -> PuzzleOrdenar:
 
 func _ready() -> void:
 	_montar_ui()
+	# Controle: cursor nesta tela; o rodapé troca as teclas pelos botões.
+	add_to_group(CursorVirtual.GRUPO)
+	Controle.rotular(_status, TXT_STATUS)
 	Interacao.marcar_tela_aberta(self, true)
 	get_tree().paused = true
 	var player := get_tree().get_first_node_in_group("player")
@@ -174,7 +184,6 @@ func _montar_ui() -> void:
 		peca.add_child(texto)
 
 	_status = Label.new()
-	_status.text = "Arraste as peças para os encaixes.  [ESC desiste]"
 	_status.add_theme_font_size_override("font_size", 14)
 	_status.add_theme_color_override("font_color", Color(0.65, 0.68, 0.75))
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -185,7 +194,7 @@ func _montar_ui() -> void:
 
 func _process(_delta: float) -> void:
 	if _arrastando:
-		_arrastando.global_position = get_viewport().get_mouse_position() - _offset_arrasto
+		_arrastando.global_position = _ponteiro - _offset_arrasto
 
 
 func _input(event: InputEvent) -> void:
@@ -196,9 +205,18 @@ func _input(event: InputEvent) -> void:
 			_fechar(true)
 			return
 
-	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE and not _vitoria:
+	# ✕ (ou ENTER/ESPAÇO) também continua depois de resolvido.
+	if _vitoria and event.is_action_pressed("ui_accept"):
+		_fechar(true)
+		return
+
+	if not _vitoria and ((event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE) \
+			or event.is_action_pressed("ui_cancel")):
 		_fechar(false)
 		return
+
+	if event is InputEventMouse:
+		_ponteiro = event.position
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
@@ -233,7 +251,7 @@ func _soltar(pos: Vector2) -> void:
 			if slot.get_meta("aceita") == peca.get_meta("id"):
 				_encaixar(peca, slot)
 			else:
-				_status.text = "Essa peça não encaixa aí. Olhe o rótulo do encaixe."
+				Controle.rotular(_status, "Essa peça não encaixa aí. Olhe o rótulo do encaixe.")
 				_voltar(peca, true)
 			return
 
@@ -251,7 +269,7 @@ func _encaixar(peca: Panel, slot: Panel) -> void:
 	_preenchidos += 1
 	if _preenchidos >= slots.size():
 		_vitoria = true
-		_status.text = texto_vitoria + "   [E para continuar]"
+		Controle.rotular(_status, texto_vitoria + TXT_CONTINUAR)
 		_status.add_theme_color_override("font_color", Color(0.5, 0.95, 0.6))
 		_status.add_theme_font_size_override("font_size", 16)
 
@@ -264,6 +282,35 @@ func _voltar(peca: Panel, tremer: bool) -> void:
 		tween.tween_property(peca, "position", atual + Vector2(7, 0), 0.04)
 		tween.tween_property(peca, "position", atual + Vector2(-7, 0), 0.04)
 	tween.tween_property(peca, "position", origem, 0.18).set_ease(Tween.EASE_OUT)
+
+
+# --- CONTROLE (ver cursor_virtual.gd) ---
+
+## As peças soltas na bandeja; com uma na mão, os encaixes ainda vazios.
+func alvos_do_cursor() -> Array[Rect2]:
+	var alvos: Array[Rect2] = []
+	if _vitoria:
+		return alvos
+	if _arrastando != null:
+		for slot in _nos_slots:
+			if not slot.get_meta("preenchido"):
+				alvos.append(slot.get_global_rect())
+	else:
+		for peca in _nos_pecas:
+			if not peca.get_meta("travada"):
+				alvos.append(peca.get_global_rect())
+	return alvos
+
+
+func dicas_do_controle() -> Array:
+	if _vitoria:
+		return [[Interacao.ACAO, "CONTINUAR"]]
+	return [
+		["analogico_esquerdo", "MOVER"],
+		["direcional", "ESCOLHER"],
+		["cruz", "SOLTE NO ENCAIXE" if _arrastando != null else "SEGURE PARA ARRASTAR"],
+		["ui_cancel", "DESISTIR"],
+	]
 
 
 func _fechar(sucesso: bool) -> void:

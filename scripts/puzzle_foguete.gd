@@ -230,19 +230,16 @@ var _botao_do_passo: Control = null
 func _ready():
 	hide()
 	set_process(false)
-	var folha := load("res://assets/puzzle combustão do hidrogênio/atomos H2 O2 H2O.png")
-	var atlas_h2 := AtlasTexture.new()
-	atlas_h2.atlas = folha
-	atlas_h2.region = Rect2(11, 11, 49, 45)
-	textura_h2 = atlas_h2
-	var atlas_o2 := AtlasTexture.new()
-	atlas_o2.atlas = folha
-	atlas_o2.region = Rect2(74, 1, 73, 75)
-	textura_o2 = atlas_o2
-	var atlas_h2o := AtlasTexture.new()
-	atlas_h2o.atlas = folha
-	atlas_h2o.region = Rect2(31, 86, 71, 60)
-	textura_h2o = atlas_h2o
+	# Controle: cursor nesta tela e as teclas dos textos viram botões. Os textos
+	# moram na cena, com as marcas {ui_cancel}/{interact} (ver BotoesControle).
+	add_to_group(CursorVirtual.GRUPO)
+	Controle.rotular($RootControl/Instrucoes, $RootControl/Instrucoes.text)
+	Controle.rotular(label_liberar_acesso, label_liberar_acesso.text)
+	# Mesma folha de átomos e moléculas do puzzle do maçarico (ver
+	# scripts/ui/folha_moleculas.gd).
+	textura_h2 = FolhaMoleculas.textura("H2")
+	textura_o2 = FolhaMoleculas.textura("O2")
+	textura_h2o = FolhaMoleculas.textura("H2O")
 
 	# A arte do cilindro vem recortada rente ao desenho; a silhueta precisa de
 	# folga em volta para o contorno não ser cortado na borda do retângulo.
@@ -399,7 +396,9 @@ func _resetar():
 	label_liberar_acesso.hide()
 	label_liberar_acesso.scale = Vector2.ONE
 	label_liberar_acesso.modulate = Color(1, 1, 1, 1)
-	aura.modulate.a = 0.0
+	# O brilho da tela (o tom esverdeado do vidro) fica aceso em todas as
+	# etapas, não só na ignição.
+	aura.modulate.a = 1.0
 	led.color = COR_LED_TRAVADO
 
 	tubo.position = _pos_tubo_base
@@ -508,15 +507,78 @@ func _input(event: InputEvent):
 		elif _peca:
 			_soltar_peca(event.position)
 		_atualizar_foco(event.position)
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_L:
-			# DEBUG: resolve o puzzle instantaneamente para agilizar testes
-			fechar_puzzle(true)
-			return
-		if aguardando_fechamento and event.keycode in [KEY_ESCAPE, KEY_E, KEY_SPACE, KEY_ENTER]:
-			fechar_puzzle(true)
-		elif not travado and event.keycode == KEY_ESCAPE:
-			fechar_puzzle(false)
+	if event is InputEventKey and event.pressed and event.keycode == KEY_L:
+		# DEBUG: resolve o puzzle instantaneamente para agilizar testes
+		fechar_puzzle(true)
+		return
+	if aguardando_fechamento and _pediu_fechar(event):
+		fechar_puzzle(true)
+	elif not travado and _pediu_sair(event):
+		fechar_puzzle(false)
+
+## ESC/E/ESPAÇO/ENTER no teclado; ○, □ e ✕ no controle (pelas ações do mapa).
+func _pediu_fechar(event: InputEvent) -> bool:
+	if event is InputEventKey and event.pressed \
+			and event.keycode in [KEY_ESCAPE, KEY_E, KEY_SPACE, KEY_ENTER]:
+		return true
+	return event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_accept") \
+		or event.is_action_pressed(Interacao.ACAO)
+
+## ESC no teclado; ○ no controle.
+func _pediu_sair(event: InputEvent) -> bool:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		return true
+	return event.is_action_pressed("ui_cancel")
+
+# ------------------------- CONTROLE (ver cursor_virtual.gd) -------------------------
+
+## O que dá para pegar ou apertar em cada etapa; com algo na mão, onde soltar.
+func alvos_do_cursor() -> Array[Rect2]:
+	var alvos: Array[Rect2] = []
+	if travado or _em_transicao:
+		return alvos
+	match etapa:
+		Etapa.COLETA:
+			if _mao != null:
+				alvos.append(_boca_global())
+			elif _mochila != null and is_instance_valid(_mochila):
+				# O hexágono do alvéolo, na escala em que a mochila está agora.
+				var lado := MochilaHUD.RAIO_CELULA * 1.6 * _mochila.get_global_transform().get_scale().x
+				for i in MochilaHUD.CAPACIDADE:
+					var centro := _mochila.centro_do_slot(i)
+					if _mochila.slot_no_ponto(centro) == i:
+						alvos.append(Rect2(centro - Vector2(lado, lado) * 0.5, Vector2(lado, lado)))
+		Etapa.MONTAGEM:
+			if _peca != null:
+				alvos.append(vaga_h2.get_global_rect())
+				alvos.append(vaga_o2.get_global_rect())
+			else:
+				for id in ITENS:
+					if not _instalados[id] and _arte(id).is_visible_in_tree():
+						alvos.append(_arte(id).get_global_rect())
+		Etapa.BALANCEAMENTO:
+			if grupo_equacao.visible:
+				for botao in [botao_mais_h2, botao_mais_o2, botao_mais_h2o,
+						botao_menos_h2, botao_menos_o2, botao_menos_h2o, botao_ignicao]:
+					# Num passo guiado só o botão pedido responde.
+					if botao.visible and (_botao_do_passo == null or botao == _botao_do_passo):
+						alvos.append(_retangulo_do_botao(botao))
+	return alvos
+
+func dicas_do_controle() -> Array:
+	if aguardando_fechamento:
+		return [[Interacao.ACAO, "LIBERAR O ACESSO"]]
+	var dicas: Array = [["analogico_esquerdo", "MOVER"], ["direcional", "ESCOLHER"]]
+	match etapa:
+		Etapa.COLETA:
+			dicas.append(["cruz", "SOLTE NO TUBO" if _mao != null else "SEGURE PARA ARRASTAR"])
+		Etapa.MONTAGEM:
+			dicas.append(["cruz", "SOLTE NO ENCAIXE" if _peca != null else "SEGURE PARA ARRASTAR"])
+		_:
+			dicas.append(["cruz", "APERTAR"])
+	if not travado:
+		dicas.append(["ui_cancel", "SAIR"])
+	return dicas
 
 # Cursor de mão sobre o que dá para pegar/clicar; o alvéolo da mochila acende.
 func _atualizar_foco(pos: Vector2):
@@ -1165,7 +1227,6 @@ func _iniciar_ignicao():
 	entra.set_parallel(true)
 	for no in [grupo_montagem, grupo_ignicao, cabecalho]:
 		entra.tween_property(no, "modulate:a", 1.0, 0.3)
-	entra.tween_property(aura, "modulate:a", 1.0, 0.8)
 	led.color = COR_LED_LIBERADO
 
 	fogo.emitting = true

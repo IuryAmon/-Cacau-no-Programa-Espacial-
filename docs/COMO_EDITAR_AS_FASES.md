@@ -9,6 +9,7 @@ Tudo é arrastável, redimensionável e trocável direto no editor.
 | Arquivo | O que é |
 |---|---|
 | `scenes/fases/fase1_oficina.tscn` | Oficina do Carbono |
+| `scenes/fases/fase1_2_exterior.tscn` | Pátio da Oficina (fase 1.2) — tela única, do outro lado do elevador |
 | `scenes/fases/fase2_torre.tscn` | Torre de Gases e Estufa |
 | `scenes/fases/fase3_subsolo.tscn` | Subsolo em blecaute (P + S) |
 | `scenes/fases/fase_final.tscn` | Torre de lançamento |
@@ -139,6 +140,23 @@ Selecione o nó e use o Inspetor. As propriedades mais usadas:
   chão e a base 78 px abaixo. Na Oficina, `AndarDeCima` cobre o caminho de
   volta pelo alto (chão em y = -928) até x = 7552, onde terminam as
   plataformas do corredor.
+
+### Câmera parada (fase de tela única)
+
+A **fase 1.2** (`fase1_2_exterior.tscn`) é uma tela só: a câmera não anda,
+como na casa do Yoshi. Não há script travando nada — o truque é o
+`LimitesDaCamera` ter **exatamente o tamanho de um quadro**: 1067 × 600, que é
+a janela de 1600 × 900 dividida pelo zoom 1,5 da câmera do player. Como a
+Camera2D nunca mostra nada fora dos limites e o retângulo tem o tamanho da
+tela, só existe um enquadramento possível.
+
+- Para deixar QUALQUER fase de tela parada, é só encolher o `LimitesDaCamera`
+  até esse tamanho.
+- No instante em que o retângulo passar de 1067 × 600, a câmera volta a
+  acompanhar a personagem — não há exceção escondida em lugar nenhum.
+- Fase de tela única não tem para onde a personagem andar embora: a 1.2 tem
+  dois `StaticBody2D` invisíveis (`Paredes/`) logo fora do quadro. Se esticar a
+  fase, arraste as paredes junto.
 
 **Teleportes e câmera:** qualquer código que mover a personagem de uma vez
 (porta, passagem, volta de uma morte) deve chamar
@@ -274,24 +292,114 @@ fase percorre sozinho:
 - **Final — guindastes:** `Guindastes/Conjuntos/GuindasteN` com `Alvo` e
   `Lanca`.
 
-### A gaiola do maçarico (fase 1)
+### O elevador entre fases (fase 1 ↔ fase 1.2)
 
-No fim do pátio da Oficina do Carbono, em `Patio/GaiolaMacarico`, está a gaiola
-que guarda o maçarico — a mesma cena das gaiolas de H₂ e O₂ do prólogo. Duas
-propriedades a ligam ao resto:
+`scenes/fases/componentes/elevador_fase.tscn` é uma cabine de carga que liga
+dois andares que são **cenas diferentes**. Ela fica sempre aberta (a rampa
+estendida, o 1º dos 13 quadros do sheet): entre nela, aperte **E** e o resto
+acontece sozinho — a Cacau anda até o meio da cabine, a rampa recolhe, a cabine
+sai de quadro **sem a câmera acompanhar** e a fase de destino abre. Na chegada,
+o elevador do outro lado toca a mesma cena ao contrário: a tela clareia com a
+cabine ainda no poço e fechada, ela entra no lugar, a rampa abre (a mesma
+animação rodada de trás para a frente) e o controle volta.
 
-- `puzzle_cena` → `scenes/puzzle_macarico.tscn` (o puzzle da mistura da chama);
-- `item_alvo` → `../PickupMacarico`, o pickup que ela mantém desligado até o
-  puzzle ser resolvido.
+**É só arrastar.** A origem do nó é o **chão de fora, no meio da cabine**:
+encoste-a na linha do piso da fase e pronto. No editor ele desenha o poço — uma
+linha tracejada até onde a cabine vai parar, com o contorno dela no fim.
 
-Para mover a gaiola de lugar, arraste os **dois** nós juntos (`GaiolaMacarico` e
-`PickupMacarico`) — o pickup fica no centro da gaiola, 24 px acima da origem
-dela. Para trocar o puzzle por outro, basta apontar `puzzle_cena` para qualquer
-cena que tenha o sinal `puzzle_resolvido` e o método `abrir_puzzle()`.
+**A colisão é sua:** `Cabine/Piso/Colisao` é um `CollisionPolygon2D` comum —
+edite os pontos no editor como qualquer polígono. Ele desenha o **estrado** da
+cabine e a **rampinha** que sobe da rua até ele; é por essa rampa que se entra
+andando e é esse polígono que segura a personagem durante a viagem (por isso o
+`Piso` é `AnimatableBody2D`, e não `StaticBody2D`: ele anda). Os pontos ficam em
+pixels da arte, então mudar a `escala_da_arte` leva o polígono junto. A altura
+em que a personagem embarca sai sozinha do **ponto mais alto** do polígono —
+redesenhe a rampa e o embarque acompanha, sem mexer em número nenhum.
 
-A resposta do puzzle e os textos de erro estão em `scripts/puzzle_macarico.gd`;
-a chama desenhada ao vivo está em `scripts/ui/chama_preview.gd`. Durante os
-testes, a tecla **L** resolve o puzzle na hora.
+No Inspetor:
+
+| Propriedade | O que faz |
+|---|---|
+| `escala_da_arte` | Tamanho da cabine. O resto do jogo desenha em 2x, mas em 2x o elevador fica quase da altura da Cacau — o padrão é **1,5x**, que o deixa com cara de carrinho de carga. Mexer aqui reposiciona sozinho a zona do E, o balão e o rascunho do poço. Use números "inteiros de meio" (1 / 1,5 / 2): escala quebrada engorda umas fileiras de pixel |
+| `direcao` | De que lado fica o poço: `SOBE` (parte para cima e chega vindo de cima) ou `DESCE` |
+| `curso` | Quantos pixels a cabine anda. Grande o bastante para ela sair inteira da tela — a câmera fica parada e o que sobrar em quadro fica boiando |
+| `cena_destino` | O `.tscn` do outro andar |
+| `tag_aqui` / `tag_destino` | O par que liga os dois elevadores, igual ao das portas de fase |
+| `recebe_chegada` | Desligue no elevador que só leva e nunca recebe |
+| Tempos | Duração da porta, do percurso, das pausas e dos fades |
+| `requer_habilidade` | Deixa o elevador travado até a habilidade existir |
+
+As duas pontas montadas hoje são `Entrada/ElevadorPatio` (na Oficina, sobe,
+tag `oficina` → `patio`) e `Elevador` (no Pátio, desce, tag `patio` →
+`oficina`).
+
+**Ordem de desenho:** a cena do componente vem em `z_index` 3, na frente da
+personagem (que anda em `z_index` 2), para ela aparecer *atrás* da grade. Para
+a cabine sumir dentro do poço em vez de deslizar por cima do chão, é o
+**cenário** que precisa estar na frente: na fase 1.2 o `TileMapLayer` do
+terreno está em `z_index` 10 só por causa disso. Se você puser um elevador
+numa fase nova, faça o mesmo com o chão dela — ou aceite que a cabine passe
+por cima até sair de quadro.
+
+### As gaiolas de vidro (fase 1)
+
+As duas ferramentas da Oficina do Carbono ficam trancadas na **gaiola de vidro
+elétrica** (`scenes/fases/componentes/gaiola_vidro_eletrica.tscn`), exclusiva
+desta fase — o prólogo continua com a gaiola de grade (`scenes/gaiola_puzzle.tscn`).
+As duas cenas usam o mesmo script, `scripts/gaiola_puzzle.gd`.
+
+- `Entrada/GaiolaBumerangue` — sem puzzle: chegar perto e apertar **E** abre.
+- `Patio/GaiolaMacarico` — abre o puzzle do maçarico. Dentro do domo, encostada
+  e inclinada no maçarico, está a `Patio/MascaraSolda`: um `Sprite2D` e nada
+  mais — **não é item**, não entra no inventário e continua ali depois que a
+  ferramenta é recolhida. É só arrastar/girar para reposicionar.
+
+A arte é `assets/Gaiola/gaiola de vidro eletrica.png` (12 quadros de 504×576,
+em escala 2/9 = o mesmo pixel 2x dos tiles). A gaiola fica parada no 1º quadro;
+ao destravar, toca os 12 quadros e para no último (a cúpula recolhida na base).
+O item só pode ser pego quando a animação termina.
+
+Duas propriedades ligam cada gaiola ao resto:
+
+- `puzzle_cena` → a cena do puzzle (vazio = abre direto com E);
+- `item_alvo` → o pickup que ela mantém desligado até abrir.
+
+A **origem da gaiola é o pé da base**: encoste o nó no chão. O item fica em
+cima da base, dentro da cúpula — 4 px à esquerda e 55 px acima da origem da
+gaiola. Para mover, arraste os **dois** nós juntos (gaiola e pickup). A gaiola
+de vidro não tem colisão: ela é mais alta que o pulo da Cacau e, sólida,
+fecharia o caminho do pátio.
+
+### O puzzle do maçarico (fase 1)
+
+`scenes/puzzle_macarico.tscn`, na tela do computador
+(`assets/UI/Computador receptor/tela_computador.png`). É a mesma interface de
+balanceamento do puzzle do foguete, mas **sem a ajuda do cientista** — quem
+corrige é o rodapé da tela. Duas etapas:
+
+1. `C₂H₂ + O₂ → CO + H₂` — o acetileno reagindo com o oxigênio;
+2. `CO + H₂ + O₂ → CO₂ + H₂O` — os gases da etapa 1 queimando com oxigênio.
+
+**Vale qualquer resposta balanceada** (C, H e O batendo dos dois lados): na
+etapa 1, 1-1-2-1 ou qualquer múltiplo dele; na etapa 2, 1-1-1-1-1, 4-2-3-4-2,
+3-1-2-3-1 etc. Resposta certa que não está na forma mais simples (como
+2-2-4-2) passa do mesmo jeito, e o rodapé mostra a forma simplificada como dica.
+
+As reações e todos os textos ficam na constante `ETAPAS`, no
+topo de `scripts/puzzle_macarico.gd`. A coluna de cada substância (setas e
+tamanho das moléculas) é `scenes/ui/termo_equacao.tscn`. Durante os testes, a
+tecla **L** resolve o puzzle na hora; o teste automático é
+`tools/teste_puzzle_macarico.tscn`.
+
+### A folha de átomos e moléculas
+
+Os dois puzzles de química (foguete e maçarico) desenham as moléculas a partir
+de uma folha só: `assets/UI/Computador receptor/atomos e moleculas.png`. A
+ordem dos desenhos é: 1ª linha H, O, C; 2ª linha H₂, O₂, C₂; 3ª linha H₂O,
+CO₂; 4ª linha C₂H₂. **Os desenhos são achados sozinhos** (ver
+`scripts/ui/folha_moleculas.gd`): pode redesenhar, mudar tamanho e posição,
+desde que mantenha a ordem e um espaço vazio entre um desenho e outro. O CO não
+tem desenho próprio — é recortado do CO₂.
 
 ## O que a fase lembra ao sair e voltar
 
@@ -341,3 +449,11 @@ godot --headless --path . res://tools/teste_fases.tscn
 
 Ele imprime `>>> TUDO OK <<<` ou aponta exatamente qual ligação sumiu — útil
 se você renomear ou apagar um nó que o script da fase procura pelo nome.
+
+O elevador entre a fase 1 e a 1.2 tem um teste só dele, com a mecânica miúda
+(os 13 quadros da porta, o percurso levando a passageira sem levar a câmera, a
+chegada que se encena sozinha):
+
+```
+godot --headless --path . res://tools/teste_elevador.tscn
+```

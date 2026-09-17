@@ -236,6 +236,19 @@ static func tecla(ci: CanvasItem, f: Font, centro: Vector2, txt: String, cor: Co
 	return largura
 
 
+## A tampa de tecla que acompanha o dispositivo: no teclado, a tecla escrita
+## ("E"); de controle na mão, o botão da ação desenhado (□), no mesmo lugar.
+## Ação sem botão no controle continua mostrando a tecla.
+static func tecla_da_acao(ci: CanvasItem, f: Font, centro: Vector2, txt: String,
+		acao: StringName, cor: Color, alfa: float = 1.0, tamanho: int = 15) -> float:
+	if BotoesControle.controle_em_uso():
+		var botao := BotoesControle.nome_da_acao(acao)
+		if botao != "":
+			var escala := BotoesControle.escala_para(float(tamanho) + 11.0)
+			return BotoesControle.desenhar(ci, centro, botao, escala, com_alfa(Color.WHITE, alfa))
+	return tecla(ci, f, centro, txt, cor, alfa, tamanho)
+
+
 # ─────────────────────────────────────────────────────────────
 # ÍCONES (pixel art)
 # ─────────────────────────────────────────────────────────────

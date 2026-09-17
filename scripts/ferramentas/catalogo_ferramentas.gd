@@ -17,6 +17,7 @@ static var FERRAMENTAS := {
 		"nome": "Maçarico Oxídrico (Ferramenta)",
 		"rotulo": "MAÇARICO",
 		"tecla": "Q",
+		"acao": "usar_macarico",
 		"descricao": "Hidrogênio queimando em oxigênio puro: a mesma reação do foguete, agora na mão dela. A chama passa dos 2000 °C e corta o que está soldado.",
 		"icone": "res://assets/itens/maçarico.png",
 		"cor": Color(1.0, 0.62, 0.22),
@@ -30,6 +31,7 @@ static var FERRAMENTAS := {
 		"nome": "Bumerangue",
 		"rotulo": "BUMERANGUE",
 		"tecla": "F",
+		"acao": "arremessar",
 		"descricao": "Vai e volta sozinho...",
 		"icone": "res://assets/itens/Boomerangue.png",
 		# Desenho pequeno (8x17 px), então o pickup no chão precisa de zoom
@@ -43,6 +45,7 @@ static var FERRAMENTAS := {
 		"nome": "Mochila de N₂ (Ferramenta)",
 		"rotulo": "MOCHILA N₂",
 		"tecla": "SHIFT",
+		"acao": "dash",
 		"descricao": "Nitrogênio comprimido em jato curto: empurra a Cacau no ar e apaga chamas, porque N₂ não alimenta combustão.",
 		"icone": "",
 		"cor": Color(0.5, 0.75, 1.0),
@@ -51,6 +54,7 @@ static var FERRAMENTAS := {
 		"nome": "Sinalizador Quimioluminescente (Ferramenta)",
 		"rotulo": "SINALIZADOR",
 		"tecla": "T",
+		"acao": "luz",
 		"descricao": "Luz sem calor: a reação química libera energia direto como fóton. Dura enquanto houver carga.",
 		"icone": "",
 		"cor": Color(0.7, 0.95, 0.5),
@@ -66,6 +70,7 @@ static var FERRAMENTAS := {
 		"nome": "Lanterna de Foco (Ferramenta)",
 		"rotulo": "LANTERNA",
 		"tecla": "R",
+		"acao": "lanterna",
 		"descricao": "Feixe dirigido de luz fria: a Sentinela que ele alcança congela no lugar. A bateria drena — o feixe é recurso, não farol.",
 		"icone": "",
 		"cor": Color(1.0, 0.9, 0.55),
@@ -148,6 +153,15 @@ static func tecla(habilidade: String) -> String:
 	if not FERRAMENTAS.has(habilidade):
 		return ""
 	return FERRAMENTAS[habilidade].get("tecla", "")
+
+
+## Ação do mapa de entrada que usa a ferramenta — é por ela que o cinto mostra
+## o botão do controle (□, ○, △...) no lugar da tecla quando a pessoa joga de
+## controle. Vazia em ferramenta passiva.
+static func acao(habilidade: String) -> String:
+	if not FERRAMENTAS.has(habilidade):
+		return ""
+	return FERRAMENTAS[habilidade].get("acao", "")
 
 
 ## Escala do ícone no Sprite do pickup (chão). 1.0 por padrão — só ferramentas

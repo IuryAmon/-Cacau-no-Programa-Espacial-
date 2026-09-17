@@ -64,7 +64,7 @@ func _process(_delta: float) -> void:
 		"rotulo_dir": "REAGENTE B DEMAIS",
 		"msg_falha_fraca": "Mistura desequilibrada — rendeu pouca luz.",
 		"msg_falha_forte": "Mistura desequilibrada — rendeu pouca luz.",
-		"dica": "A luz química nasce da PROPORÇÃO certa entre os dois reagentes.\nAperte E na faixa verde.  [ESC desiste]",
+		"dica": "A luz química nasce da PROPORÇÃO certa entre os dois reagentes.\nAperte {interact} na faixa verde.  [{ui_cancel} desiste]",
 	})
 	dosagem.terminado.connect(_on_dosagem_terminada)
 

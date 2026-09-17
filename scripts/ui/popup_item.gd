@@ -604,7 +604,8 @@ func _desenhar_rodape(m: Dictionary, quadro: Rect2, acento: Color, alfa: float) 
 	var largura_rotulo := EstiloHUD.largura_texto(f, rotulo, TAM_RODAPE, ESPACO_RODAPE)
 	var pulso := 0.62 + 0.38 * (0.5 + 0.5 * sin(_tempo * 3.0))
 	var centro_tecla := Vector2(x1 - MARGEM - largura_rotulo - 12.0 - 15.0, meio)
-	EstiloHUD.tecla(self, f, centro_tecla, "E",
+	# De controle na mão, o "E" vira o □ (a mesma ação "interact").
+	EstiloHUD.tecla_da_acao(self, f, centro_tecla, "E", &"interact",
 		EstiloHUD.com_alfa(acento, pulso), a_rodape)
 	EstiloHUD.texto(self, f, Vector2(centro_tecla.x + 27.0, base), rotulo, TAM_RODAPE,
 		EstiloHUD.com_alfa(EstiloHUD.TEXTO_FRACO, a_rodape), ESPACO_RODAPE)

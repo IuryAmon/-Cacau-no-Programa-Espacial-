@@ -186,6 +186,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		or (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_W)
 	if not apertou_w:
 		return
+	# No analógico só vale "para cima" de verdade: andar na diagonal perto da
+	# porta (agora em velocidade cheia) não pode entrar nela sem querer.
+	if event is InputEventJoypadMotion and not Controle.aponta_para_cima():
+		return
 
 	# No chão, usa a porta na hora. No ar, guarda o pedido e usa assim que
 	# o player pisar no chão (_process fica de olho nisso).

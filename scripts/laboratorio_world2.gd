@@ -54,8 +54,8 @@ func _montar_conteudo_de_fases() -> void:
 	# as células de H e O, e elas acendem no painel do CHONPS aqui.
 	#
 	# O MAÇARICO NÃO É ENTREGUE AQUI. Ele é a recompensa do pátio da Oficina do
-	# Carbono: está trancado numa gaiola e só sai de lá com a mistura da chama
-	# regulada (ver scripts/puzzle_macarico.gd). O Dr. Chico só aponta o
+	# Carbono: está trancado numa gaiola de vidro e só sai de lá com a queima
+	# do acetileno balanceada (ver scripts/puzzle_macarico.gd). O Dr. Chico só aponta o
 	# caminho — as travas do jogo continuam olhando só o Progresso.
 	if not Progresso.hub_ja_apresentou:
 		Progresso.hub_ja_apresentou = true

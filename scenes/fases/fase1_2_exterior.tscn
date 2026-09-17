@@ -1,0 +1,243 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/fase1_2_exterior.gd" id="1_fase12"]
+[ext_resource type="TileSet" uid="uid://b1re83kqucchr" path="res://assets/tilesets/tileset_fases.tres" id="2_tileset"]
+[ext_resource type="PackedScene" uid="uid://bmgkds67hbool" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/elevador_fase.tscn" id="4_elevador"]
+[ext_resource type="PackedScene" uid="uid://dpxakpbhyd8af" path="res://scenes/fases/componentes/retorta.tscn" id="5_retorta"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/madeira.tscn" id="6_madeira"]
+[ext_resource type="Shader" uid="uid://bvr10ahk3yxc6" path="res://shaders/neblina_aerea.gdshader" id="7_neblina"]
+[ext_resource type="Texture2D" uid="uid://btac4g04sojq4" path="res://assets/Area Aberta/GandalfHardcore Background layers/Autumn BG/GandalfHardcore Background layers_layer 5.png" id="8_bg5"]
+[ext_resource type="Texture2D" uid="uid://dyonppdsygfwk" path="res://assets/Area Aberta/GandalfHardcore Background layers/Autumn BG/GandalfHardcore Background layers_layer 4.png" id="9_bg4"]
+[ext_resource type="Texture2D" uid="uid://cst78juil3if7" path="res://assets/Area Aberta/GandalfHardcore Background layers/Normal BG/GandalfHardcore Background layers_layer 3.png" id="10_bg3"]
+[ext_resource type="Texture2D" uid="uid://b6msrrif1ftd5" path="res://assets/Area Aberta/GandalfHardcore Background layers/Normal BG/GandalfHardcore Background layers_layer 2.png" id="11_bg2"]
+[ext_resource type="Texture2D" uid="uid://cw7dix2pwqqp4" path="res://assets/Area Aberta/GandalfHardcore Background layers/Normal BG/GandalfHardcore Background layers_layer 1.png" id="12_bg1"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ceu"]
+shader = ExtResource("7_neblina")
+shader_parameter/cor_neblina = Color(0.84, 0.87, 0.94, 1)
+shader_parameter/forca = 0.06
+shader_parameter/contraste = 0.97
+shader_parameter/cor_sol = Color(1, 0.87, 0.64, 1)
+shader_parameter/calor = 0.12
+shader_parameter/alcance_calor = 0.9
+shader_parameter/sol_uv = Vector2(0.7567325, 0.34274194)
+shader_parameter/aspecto = 2.245967741935484
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_neblina4"]
+shader = ExtResource("7_neblina")
+shader_parameter/cor_neblina = Color(0.8, 0.84, 0.93, 1)
+shader_parameter/forca = 0.34
+shader_parameter/contraste = 0.86
+shader_parameter/cor_sol = Color(1, 0.87, 0.64, 1)
+shader_parameter/calor = 0.2
+shader_parameter/alcance_calor = 1.0
+shader_parameter/sol_uv = Vector2(0.7567325, 0.34274194)
+shader_parameter/aspecto = 2.245967741935484
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_neblina3"]
+shader = ExtResource("7_neblina")
+shader_parameter/cor_neblina = Color(0.8, 0.84, 0.93, 1)
+shader_parameter/forca = 0.23
+shader_parameter/contraste = 0.91
+shader_parameter/cor_sol = Color(1, 0.87, 0.64, 1)
+shader_parameter/calor = 0.16
+shader_parameter/alcance_calor = 0.95
+shader_parameter/sol_uv = Vector2(0.7567325, 0.34274194)
+shader_parameter/aspecto = 2.245967741935484
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_neblina2"]
+shader = ExtResource("7_neblina")
+shader_parameter/cor_neblina = Color(0.81, 0.84, 0.92, 1)
+shader_parameter/forca = 0.13
+shader_parameter/contraste = 0.96
+shader_parameter/cor_sol = Color(1, 0.87, 0.64, 1)
+shader_parameter/calor = 0.11
+shader_parameter/alcance_calor = 0.9
+shader_parameter/sol_uv = Vector2(0.7567325, 0.34274194)
+shader_parameter/aspecto = 2.245967741935484
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_neblina1"]
+shader = ExtResource("7_neblina")
+shader_parameter/cor_neblina = Color(0.82, 0.85, 0.92, 1)
+shader_parameter/forca = 0.06
+shader_parameter/contraste = 1.0
+shader_parameter/cor_sol = Color(1, 0.87, 0.64, 1)
+shader_parameter/calor = 0.07
+shader_parameter/alcance_calor = 0.85
+shader_parameter/sol_uv = Vector2(0.7567325, 0.34274194)
+shader_parameter/aspecto = 2.245967741935484
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_aditivo"]
+blend_mode = 1
+light_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_halo"]
+offsets = PackedFloat32Array(0, 0.2, 0.44, 1)
+colors = PackedColorArray(1, 0.97, 0.88, 0.3, 1, 0.93, 0.72, 0.42, 1, 0.76, 0.4, 0.2, 1, 0.56, 0.22, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_halo"]
+gradient = SubResource("Gradient_halo")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_nucleo"]
+offsets = PackedFloat32Array(0, 0.22, 0.4, 0.68, 1)
+colors = PackedColorArray(1, 0.98, 0.92, 0.9, 1, 0.94, 0.78, 0.75, 1, 0.88, 0.62, 0.45, 1, 0.8, 0.42, 0.16, 1, 0.74, 0.32, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_nucleo"]
+gradient = SubResource("Gradient_nucleo")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_parede"]
+size = Vector2(40, 1200)
+
+[node name="Fase1_2Exterior" type="Node2D"]
+script = ExtResource("1_fase12")
+
+[node name="BG" type="ParallaxBackground" parent="."]
+
+[node name="Ceu" type="ParallaxLayer" parent="BG"]
+motion_scale = Vector2(0, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="BG/Ceu"]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_ceu")
+position = Vector2(800, 400)
+scale = Vector2(2, 2.6)
+texture = ExtResource("8_bg5")
+region_enabled = true
+region_rect = Rect2(0, 0, 2048, 346)
+
+[node name="Sol" type="ParallaxLayer" parent="BG"]
+motion_scale = Vector2(0, 0)
+
+[node name="Halo" type="Sprite2D" parent="BG/Sol"]
+self_modulate = Color(1, 0.87, 0.64, 0.25574794)
+texture_filter = 2
+material = SubResource("CanvasItemMaterial_aditivo")
+position = Vector2(1211, 308)
+scale = Vector2(0.6142695, 0.6142695)
+texture = SubResource("GradientTexture2D_halo")
+
+[node name="Nucleo" type="Sprite2D" parent="BG/Sol"]
+texture_filter = 2
+material = SubResource("CanvasItemMaterial_aditivo")
+position = Vector2(1211, 308)
+scale = Vector2(0.32, 0.32)
+texture = SubResource("GradientTexture2D_nucleo")
+
+[node name="Serra" type="ParallaxLayer" parent="BG"]
+motion_scale = Vector2(0, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="BG/Serra"]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_neblina4")
+position = Vector2(800, 452)
+scale = Vector2(2, 2)
+texture = ExtResource("9_bg4")
+region_enabled = true
+region_rect = Rect2(0, 0, 2048, 346)
+
+[node name="Morros" type="ParallaxLayer" parent="BG"]
+motion_scale = Vector2(0, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="BG/Morros"]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_neblina3")
+position = Vector2(800, 452)
+scale = Vector2(2, 2)
+texture = ExtResource("10_bg3")
+region_enabled = true
+region_rect = Rect2(0, 0, 2048, 346)
+
+[node name="MataDistante" type="ParallaxLayer" parent="BG"]
+motion_scale = Vector2(0, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="BG/MataDistante"]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_neblina2")
+position = Vector2(800, 452)
+scale = Vector2(2, 2)
+texture = ExtResource("11_bg2")
+region_enabled = true
+region_rect = Rect2(0, 0, 2048, 346)
+
+[node name="Mata" type="ParallaxLayer" parent="BG"]
+motion_scale = Vector2(0, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="BG/Mata"]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_neblina1")
+position = Vector2(800, 452)
+scale = Vector2(2, 2)
+texture = ExtResource("12_bg1")
+region_enabled = true
+region_rect = Rect2(0, 0, 2048, 346)
+
+[node name="AmbienteCeu" type="CanvasModulate" parent="BG"]
+color = Color(0.93, 0.95, 1, 1)
+
+[node name="Terreno" type="TileMapLayer" parent="."]
+z_index = 10
+scale = Vector2(2, 2)
+tile_map_data = PackedByteArray("AAD+/xAADAAEAAAAAAD+/xEADAAEAAEAAAD+/xIADAAKAAQAAAD+/xMADAALAAQAAAD+/xQADAAKAAQAAAD//xAADAAFAAAAAAD//xEADAAFAAEAAAD//xIADAALAAQAAAD//xMADAAKAAQAAAD//xQADAAKAAQAAAAAABAADAACAAAAAAAAABEADAACAAEAAAAAABIADAALAAQAAAAAABMADAALAAQAAAAAABQADAALAAQAAAABABAADAADAAAAAAABABEADAADAAEAAAABABIADAALAAQAAAABABMADAAKAAQAAAABABQADAALAAQAAAACABAADAAEAAAAAAACABEADAAEAAEAAAACABIADAAKAAQAAAACABMADAALAAQAAAACABQADAAKAAQAAAADABAADAAFAAAAAAADABEADAAFAAEAAAADABIADAAKAAQAAAADABMADAALAAQAAAADABQADAALAAQAAAAEABAADAACAAAAAAAEABEADAACAAEAAAAEABIADAAKAAQAAAAEABMADAALAAQAAAAEABQADAALAAQAAAAFABAADAADAAAAAAAFABEADAADAAEAAAAFABIADAAKAAQAAAAFABMADAAKAAQAAAAFABQADAALAAQAAAAGABAADAAEAAAAAAAGABEADAAEAAEAAAAGABIADAAKAAQAAAAGABMADAAKAAQAAAAGABQADAAKAAQAAAAHABAADAAFAAAAAAAHABEADAAFAAEAAAAHABIADAALAAQAAAAHABMADAALAAQAAAAHABQADAALAAQAAAAIABAADAACAAAAAAAIABEADAACAAEAAAAIABIADAALAAQAAAAIABMADAAKAAQAAAAIABQADAAKAAQAAAAJABAADAADAAAAAAAJABEADAADAAEAAAAJABIADAAKAAQAAAAJABMADAALAAQAAAAJABQADAALAAQAAAAKABAADAAEAAAAAAAKABEADAAEAAEAAAAKABIADAAKAAQAAAAKABMADAALAAQAAAAKABQADAALAAQAAAALABAADAAFAAAAAAALABEADAAFAAEAAAALABIADAALAAQAAAALABMADAALAAQAAAALABQADAALAAQAAAAMABAADAACAAAAAAAMABEADAACAAEAAAAMABIADAALAAQAAAAMABMADAAKAAQAAAAMABQADAAKAAQAAAANABAADAADAAAAAAANABEADAADAAEAAAANABIADAAKAAQAAAANABMADAAKAAQAAAANABQADAALAAQAAAAOABAADAAEAAAAAAAOABEADAAEAAEAAAAOABIADAAKAAQAAAAOABMADAAKAAQAAAAOABQADAALAAQAAAAPABAADAAFAAAAAAAPABEADAAFAAEAAAAPABIADAALAAQAAAAPABMADAALAAQAAAAPABQADAAKAAQAAAAQABAADAACAAAAAAAQABEADAACAAEAAAAQABIADAALAAQAAAAQABMADAAKAAQAAAAQABQADAAKAAQAAAARABAADAADAAAAAAARABEADAADAAEAAAARABIADAAKAAQAAAARABMADAALAAQAAAARABQADAALAAQAAAASABAADAAEAAAAAAASABEADAAEAAEAAAASABIADAAKAAQAAAASABMADAAKAAQAAAASABQADAAKAAQAAAATABAADAAFAAAAAAATABEADAAFAAEAAAATABIADAALAAQAAAATABMADAAKAAQAAAATABQADAAKAAQAAAAUABAADAACAAAAAAAUABEADAACAAEAAAAUABIADAAKAAQAAAAUABMADAAKAAQAAAAUABQADAALAAQAAAAVABAADAADAAAAAAAVABEADAADAAEAAAAVABIADAALAAQAAAAVABMADAALAAQAAAAVABQADAALAAQAAAAWABAADAAEAAAAAAAWABEADAAEAAEAAAAWABIADAAKAAQAAAAWABMADAAKAAQAAAAWABQADAAKAAQAAAAXABAADAAFAAAAAAAXABEADAAFAAEAAAAXABIADAALAAQAAAAXABMADAAKAAQAAAAXABQADAALAAQAAAAYABAADAACAAAAAAAYABEADAACAAEAAAAYABIADAAKAAQAAAAYABMADAALAAQAAAAYABQADAALAAQAAAAZABAADAADAAAAAAAZABEADAADAAEAAAAZABIADAAKAAQAAAAZABMADAAKAAQAAAAZABQADAALAAQAAAAaABAADAAEAAAAAAAaABEADAAEAAEAAAAaABIADAAKAAQAAAAaABMADAALAAQAAAAaABQADAALAAQAAAAbABAADAAFAAAAAAAbABEADAAFAAEAAAAbABIADAALAAQAAAAbABMADAAKAAQAAAAbABQADAAKAAQAAAAcABAADAACAAAAAAAcABEADAACAAEAAAAcABIADAAKAAQAAAAcABMADAAKAAQAAAAcABQADAALAAQAAAAdABAADAADAAAAAAAdABEADAADAAEAAAAdABIADAALAAQAAAAdABMADAAKAAQAAAAdABQADAALAAQAAAAeABAADAAEAAAAAAAeABEADAAEAAEAAAAeABIADAALAAQAAAAeABMADAAKAAQAAAAeABQADAAKAAQAAAAfABAADAAFAAAAAAAfABEADAAFAAEAAAAfABIADAAKAAQAAAAfABMADAALAAQAAAAfABQADAALAAQAAAAgABAADAACAAAAAAAgABEADAACAAEAAAAgABIADAAKAAQAAAAgABMADAALAAQAAAAgABQADAAKAAQAAAAhABAADAADAAAAAAAhABEADAADAAEAAAAhABIADAAKAAQAAAAhABMADAAKAAQAAAAhABQADAALAAQAAAAiABAADAAEAAAAAAAiABEADAAEAAEAAAAiABIADAALAAQAAAAiABMADAALAAQAAAAiABQADAAKAAQAAAAjABAADAAFAAAAAAAjABEADAAFAAEAAAAjABIADAAKAAQAAAAjABMADAALAAQAAAAjABQADAALAAQAAAA=")
+tile_set = ExtResource("2_tileset")
+
+[node name="Paredes" type="Node2D" parent="."]
+
+[node name="ParedeEsquerda" type="StaticBody2D" parent="Paredes"]
+position = Vector2(-20, 200)
+
+[node name="Colisao" type="CollisionShape2D" parent="Paredes/ParedeEsquerda"]
+shape = SubResource("RectangleShape2D_parede")
+
+[node name="ParedeDireita" type="StaticBody2D" parent="Paredes"]
+position = Vector2(1090, 200)
+
+[node name="Colisao" type="CollisionShape2D" parent="Paredes/ParedeDireita"]
+shape = SubResource("RectangleShape2D_parede")
+
+[node name="Patio" type="Node2D" parent="."]
+
+[node name="Retorta" parent="Patio" instance=ExtResource("5_retorta")]
+position = Vector2(820, 542)
+
+[node name="Madeira1" parent="Patio" instance=ExtResource("6_madeira")]
+position = Vector2(470, 503)
+
+[node name="Madeira2" parent="Patio" instance=ExtResource("6_madeira")]
+position = Vector2(560, 503)
+
+[node name="Madeira3" parent="Patio" instance=ExtResource("6_madeira")]
+position = Vector2(650, 503)
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+z_index = 2
+position = Vector2(320, 476)
+max_jumps = 10
+
+[node name="Elevador" parent="." instance=ExtResource("4_elevador")]
+position = Vector2(140, 512)
+direcao = 1
+cena_destino = "res://scenes/fases/fase1_oficina.tscn"
+tag_aqui = "patio"
+tag_destino = "oficina"
+
+[node name="SpawnPadrao" type="Marker2D" parent="."]
+position = Vector2(320, 476)
+
+[node name="LimitesDaCamera" type="ReferenceRect" parent="."]
+offset_top = -20.0
+offset_right = 1067.0
+offset_bottom = 580.0
+mouse_filter = 2
+border_color = Color(1, 0.6, 0.2, 0.55)
+metadata/_edit_lock_ = true

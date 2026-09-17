@@ -1,6 +1,7 @@
 [gd_resource type="TileSet" format=3 uid="uid://b1re83kqucchr"]
 
 [ext_resource type="Texture2D" uid="uid://mjgfw5df3d2y" path="res://assets/Lab2/Plataformas.png" id="1_rqd6y"]
+[ext_resource type="Texture2D" uid="uid://dsh2bnr2cwc8a" path="res://assets/Lab/Decor/full decor tiles.png" id="2_4w6v4"]
 [ext_resource type="Texture2D" uid="uid://b7ndeu736oxn4" path="res://assets/Area Aberta/GandalfHardcore Background layers/Pine Trees.png" id="3_2tu7p"]
 [ext_resource type="Texture2D" uid="uid://dal7cbrnhj0at" path="res://assets/assets a frente/Grid_Style_A-32x16-removebg-preview.png" id="4_324wh"]
 [ext_resource type="Texture2D" uid="uid://b5oe3h6ave45h" path="res://assets/Lab/Tileset/level_tileset.png" id="5_qbfhu"]
@@ -49,6 +50,39 @@ texture = ExtResource("1_rqd6y")
 5:1/0 = 0
 5:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 5:1/0/physics_layer_0/polygon_0/one_way = true
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4jfke"]
+texture = ExtResource("2_4w6v4")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+4:2/0 = 0
+5:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dy68o"]
 texture = ExtResource("3_2tu7p")
@@ -1811,3 +1845,4 @@ sources/7 = SubResource("TileSetAtlasSource_3j2qy")
 sources/6 = SubResource("TileSetAtlasSource_vlewo")
 sources/5 = SubResource("TileSetAtlasSource_8e5ql")
 sources/0 = SubResource("TileSetAtlasSource_4w6v4")
+sources/1 = SubResource("TileSetAtlasSource_4jfke")

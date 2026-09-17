@@ -7,16 +7,21 @@ extends Node
 # ao player e ativado por flag do Progresso — nada aqui mexe na física normal
 # do player além do gancho "ferramenta_controla_movimento" (usado no dash).
 #
-#   F           -> arremessa o bumerangue nas 8 direções, lidas do
-#                  teclado/analógico (fase 1 em diante). O arremesso HERDA O
+#   F / □       -> arremessa o bumerangue (fase 1 em diante). No analógico ele
+#                  sai no ÂNGULO EXATO em que o analógico aponta; no teclado e
+#                  no direcional, nas 8 direções que as teclas conseguem dizer
+#                  (ver _mira_do_bumerangue). O arremesso HERDA O
 #                  MOMENTO da personagem: correndo para a frente ele sai mais
 #                  rápido e mais longe, correndo para trás sai fraco (a conta
 #                  está em bumerangue.gd). Com ele já no ar, F de novo não é
 #                  ignorado: chama o bumerangue de volta no meio do voo.
+#                  No controle o □ também é o botão de INTERAGIR: perto de
+#                  alguma coisa que responde ao toque, interagir vence e o
+#                  bumerangue fica na mão (ver _decidir_arremesso_dividido).
 #   Clique esq. -> arremessa o bumerangue mirado NO CURSOR — qualquer ângulo,
 #                  não só as 8 direções. As duas formas convivem: F para quem
 #                  joga só de teclado/controle, clique para mira de precisão.
-#   Shift       -> dash da mochila de N₂ em 8 direções, no chão ou no ar (fase
+#   Shift / ○   -> dash da mochila de N₂ em 8 direções, no chão ou no ar (fase
 #                  2 em diante); o jato apaga chamas no caminho. Enquanto dura,
 #                  a personagem fica INVULNERÁVEL A DANO (esta_invencivel_dash
 #                  no player.gd) — e já atravessa qualquer Sentinela mesmo fora
@@ -41,6 +46,15 @@ extends Node
 const ARREMESSO_COICE_AR := 70.0
 const ARREMESSO_TREMOR_MIN := 1.2
 const ARREMESSO_TREMOR_MAX := 4.5
+
+## Perto da horizontal e da vertical a mira encaixa no reto. Nenhum polegar
+## segura o analógico a 0° exatos, e sem isso o arremesso em corrida sairia
+## torto alguns graus para cima ou para baixo.
+const MIRA_RETO_GRAUS := 5.0
+## Até aqui a faixa do reto é compensada: os ângulos entre MIRA_RETO_GRAUS e
+## este são esticados de volta, então nenhum ângulo fica impossível de mirar e a
+## mira não dá salto ao sair do reto. Ponha os dois em 0 para mira 100% crua.
+const MIRA_TRANSICAO_GRAUS := 15.0
 
 
 # --- AJUSTE FINO DO DASH ---
@@ -84,6 +98,9 @@ var player: CharacterBody2D = null
 
 var _sprite: AnimatedSprite2D = null
 var _bumerangue_no_ar: bool = false
+## Quadro em que o □ pediu arremesso junto com interação (-1 = nenhum pedido);
+## a decisão sai no fim do quadro (ver _decidir_arremesso_dividido).
+var _arremesso_dividido_quadro: int = -1
 ## O bumerangue em voo, para o segundo toque poder chamá-lo de volta. Some em
 ## bumerangue_voltou(), que é chamado no instante da captura — antes do nó
 ## morrer de fato, que ainda vive uns quadros escoando som e rastro.
@@ -230,23 +247,24 @@ func _physics_process(delta: float) -> void:
 	if Interacao.ocupada() or not player.pode_se_mover:
 		return
 
-	# --- BUMERANGUE: F (8 direções) ou clique esquerdo (mirado no cursor) ---
-	var pediu_bumerangue_teclado := Input.is_action_just_pressed("arremessar")
-	var pediu_bumerangue_mouse := Input.is_action_just_pressed("arremessar_mouse")
+	# --- BUMERANGUE: F / □ (8 direções) ou clique esquerdo (mirado no cursor) ---
+	# livre_para: o botão que acabou de fechar uma tela não arremessa nada.
+	var pediu_bumerangue_teclado := Input.is_action_just_pressed("arremessar") \
+		and Interacao.livre_para(&"arremessar")
+	var pediu_bumerangue_mouse := Input.is_action_just_pressed("arremessar_mouse") \
+		and Interacao.livre_para(&"arremessar_mouse")
 	if (pediu_bumerangue_teclado or pediu_bumerangue_mouse) \
 			and Progresso.tem_habilidade("bumerangue"):
-		if _bumerangue_no_ar:
-			# Com ele no ar o mesmo botão vira CHAMADO: o voo dá meia volta na
-			# hora. É o que transforma o alcance de número fixo em decisão —
-			# encurta para pegar de novo antes, ou deixa ir até o fim.
-			if is_instance_valid(_bumerangue):
-				_bumerangue.chamar_de_volta()
+		if pediu_bumerangue_teclado and Input.is_action_just_pressed(Interacao.ACAO):
+			# O mesmo toque também é "interagir" (o □ do controle): a decisão
+			# fica para o fim do quadro — ver _decidir_arremesso_dividido.
+			_arremesso_dividido_quadro = Engine.get_process_frames()
 		else:
-			_arremessar_bumerangue(
-				_mira_do_mouse() if pediu_bumerangue_mouse else _ler_direcao_input())
+			_usar_bumerangue(pediu_bumerangue_mouse and not pediu_bumerangue_teclado)
 
 	# --- DASH DA MOCHILA (Shift + direção, no chão ou no ar) ---
-	if Input.is_action_just_pressed("dash"):
+	# O ○ que acabou de fechar um puzzle é da tela, não vira dash.
+	if Input.is_action_just_pressed("dash") and Interacao.livre_para(&"dash"):
 		_dash_buffer = DASH_BUFFER
 
 	if _dash_buffer > 0.0 and Progresso.tem_habilidade("mochila") \
@@ -255,7 +273,8 @@ func _physics_process(delta: float) -> void:
 		_iniciar_dash(_ler_direcao_input())
 
 	# --- SINALIZADOR (T liga/desliga) ---
-	if Input.is_action_just_pressed("luz") and Progresso.tem_habilidade("sinalizador"):
+	if Input.is_action_just_pressed("luz") and Interacao.livre_para(&"luz") \
+			and Progresso.tem_habilidade("sinalizador"):
 		Progresso.sinalizador_aceso = not Progresso.sinalizador_aceso
 
 
@@ -277,23 +296,53 @@ func _debug_equipar_mochila() -> void:
 	_tecla_m_estava_pressionada = pressionada
 
 
-# --- MIRA COMPARTILHADA (dash e bumerangue) -----------------------------
+# --- MIRA (dash e bumerangue) --------------------------------------------
 
 ## Direção travada nas 8 direções, lida das setas/WASD ou do analógico. Sem
 ## nenhuma tecla apontada, vale o lado para onde a personagem está olhando.
-## Serve para os dois arranques: o dash da mochila e o arremesso do bumerangue.
+## É a do DASH: em 8 direções de propósito (a receita do Celeste), para o
+## arranco sair sempre reto ou na diagonal certinha. No analógico cada direção
+## é uma fatia igual de 45° (ver Controle.direcao_8) — a diagonal não exige
+## mais o polegar cravado nos 45°.
 func _ler_direcao_input() -> Vector2:
-	var bruto := Vector2(
-		Input.get_axis("ui_left", "ui_right"),
-		Input.get_axis("ui_up", "ui_down")
-	)
-	var dir := Vector2(
-		0.0 if absf(bruto.x) < 0.35 else signf(bruto.x),
-		0.0 if absf(bruto.y) < 0.35 else signf(bruto.y)
-	)
+	var dir := Controle.direcao_8()
 	if dir == Vector2.ZERO:
-		dir.x = _facing()
-	return dir.normalized()
+		dir = Vector2(_facing(), 0.0)
+	return dir
+
+
+## Mira do bumerangue pelo F / □ (ver "O ANALÓGICO NO MUNDO" em controle.gd):
+##   analógico           -> o ângulo exato em que ele aponta, qualquer direção
+##   teclado/direcional  -> as 8 direções, que é o que as teclas dizem
+## Sem nada apontado, vale o lado para onde a personagem olha.
+func _mira_do_bumerangue() -> Vector2:
+	var vetor := Controle.vetor_direcional()
+	if vetor.is_zero_approx():
+		return Vector2(_facing(), 0.0)
+	var angulo := _alinhar_ao_reto(vetor.angle())
+	var mira := Vector2.from_angle(angulo)
+	# Reto de verdade tem o outro eixo zerado: cos(90°) sai 6e-17, e o gesto do
+	# braço leria isso como "para a direita" e viraria a personagem à toa.
+	if is_equal_approx(angulo, snappedf(angulo, PI * 0.5)):
+		mira = mira.round()
+	return mira
+
+
+## Encaixa no reto (horizontal/vertical) só a faixa de MIRA_RETO_GRAUS e
+## estica o resto da transição de volta, sem salto: 5° vira 0°, 15° continua
+## 15°, e o que está no meio é repartido entre os dois.
+func _alinhar_ao_reto(angulo: float) -> float:
+	var faixa := deg_to_rad(MIRA_RETO_GRAUS)
+	var transicao := deg_to_rad(MIRA_TRANSICAO_GRAUS)
+	if transicao <= faixa:
+		return angulo
+	var reto := snappedf(angulo, PI * 0.5)
+	var desvio := angle_difference(reto, angulo)
+	if absf(desvio) >= transicao:
+		return angulo
+	if absf(desvio) <= faixa:
+		return reto
+	return reto + signf(desvio) * remap(absf(desvio), faixa, transicao, 0.0, transicao)
 
 
 ## Direção EXATA até o cursor (qualquer ângulo, sem travar nas 8 direções) —
@@ -307,6 +356,18 @@ func _mira_do_mouse() -> Vector2:
 
 
 # --- BUMERANGUE ---------------------------------------------------------
+
+## Arremessa, ou chama de volta se ele já estiver no ar.
+func _usar_bumerangue(mirar_no_mouse: bool) -> void:
+	if _bumerangue_no_ar:
+		# Com ele no ar o mesmo botão vira CHAMADO: o voo dá meia volta na
+		# hora. É o que transforma o alcance de número fixo em decisão —
+		# encurta para pegar de novo antes, ou deixa ir até o fim.
+		if is_instance_valid(_bumerangue):
+			_bumerangue.chamar_de_volta()
+	else:
+		_arremessar_bumerangue(_mira_do_mouse() if mirar_no_mouse else _mira_do_bumerangue())
+
 
 ## O arremesso em si. player.velocity vai inteiro para o Bumerangue, que
 ## projeta no eixo da mira e decide dali a velocidade e o alcance do voo —
@@ -563,6 +624,30 @@ func _descongelar() -> void:
 func _process(_delta: float) -> void:
 	if _congelado_ate_ms > 0 and Time.get_ticks_msec() >= _congelado_ate_ms:
 		_descongelar()
+	if _arremesso_dividido_quadro >= 0:
+		var quadro := _arremesso_dividido_quadro
+		_arremesso_dividido_quadro = -1
+		# Pedido de outro quadro (a árvore pausou no meio) já não vale.
+		if Engine.get_process_frames() - quadro <= 1:
+			_decidir_arremesso_dividido.call_deferred()
+
+
+# --- O □ DIVIDIDO ENTRE INTERAGIR E ARREMESSAR ---
+#
+# No controle o □ é ao mesmo tempo "interact" e "arremessar". Quem responde à
+# interação (gaiola, item, cientista, receptor...) pede o toque no próprio
+# _process, que roda DEPOIS deste _physics_process. Então o arremesso espera: o
+# call_deferred feito no _process só roda depois de todos os _process do
+# quadro. Se alguém usou o toque, interagir venceu e o bumerangue fica na mão;
+# se ninguém quis, ele voa. No teclado são teclas diferentes (E e F) e o
+# arremesso sai na hora, como sempre.
+
+func _decidir_arremesso_dividido() -> void:
+	if player == null or not is_instance_valid(player) or not is_inside_tree():
+		return
+	if Interacao.toque_foi_usado() or Interacao.ocupada() or not player.pode_se_mover:
+		return
+	_usar_bumerangue(false)
 
 
 func _exit_tree() -> void:

@@ -118,7 +118,8 @@ func _atualizar_rotulo() -> void:
 	# O "[E]" só aparece quando a ferramenta realmente pode ser pega. Trancada
 	# na gaiola, o pickup fica com o monitoring desligado (ver gaiola_puzzle) —
 	# e prometer o E ali seria mentira para quem está lendo o rótulo.
-	_label.text = rotulo + "\n[E]" if monitoring else rotulo
+	# {interact}: E no teclado, □ desenhado no controle.
+	BotoesControle.rotular(_label, rotulo + "\n[{interact}]" if monitoring else rotulo)
 
 
 func _process(_delta: float) -> void:

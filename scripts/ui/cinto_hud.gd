@@ -113,6 +113,7 @@ func pendurar(ficha: Dictionary, anunciar: bool = true) -> void:
 		"id": id,
 		"rotulo": String(ficha.get("rotulo", "")),
 		"tecla": String(ficha.get("tecla", "")),
+		"acao": String(ficha.get("acao", "")),
 		"textura": ficha.get("textura", null),
 		"cor": ficha.get("cor", EstiloHUD.ACENTO_PADRAO),
 		"surgir": 0.0 if anunciar else 1.0,
@@ -344,8 +345,9 @@ func _desenhar_tecla(ferramenta: Dictionary, centro: Vector2, surgir: float) -> 
 			TAM_PASSIVA, EstiloHUD.com_alfa(EstiloHUD.TEXTO_FRACO, surgir * 0.8), 1.6)
 		return
 
-	EstiloHUD.tecla(self, f, Vector2(centro.x, y), tecla,
-		ferramenta["cor"], surgir, TAM_TECLA)
+	# De controle na mão a tampa vira o botão da ação (□ no bumerangue...).
+	EstiloHUD.tecla_da_acao(self, f, Vector2(centro.x, y), tecla,
+		String(ferramenta.get("acao", "")), ferramenta["cor"], surgir, TAM_TECLA)
 
 
 # ─────────────────────────────────────────────────────────────

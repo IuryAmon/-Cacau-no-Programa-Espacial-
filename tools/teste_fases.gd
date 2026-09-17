@@ -12,6 +12,7 @@ var _falhas := 0
 
 func _ready() -> void:
 	await _testar_fase1()
+	await _testar_fase1_2()
 	await _testar_fase2()
 	await _testar_dash()
 	await _testar_fase3()
@@ -65,8 +66,10 @@ func _testar_fase1() -> void:
 	_checar(player != null, "player na cena")
 	_checar(player.get_node_or_null("Ferramentas") != null, "componente de ferramentas instalado")
 
-	var grade := f.get_node("Corredores/GradeDupla")
-	_checar(grade.solido, "grade dupla comeca fechada")
+	# A grade dupla saiu do mapa no editor; o teste dela só roda se ela voltar.
+	var grade := f.get_node_or_null("Corredores/GradeDupla")
+	if grade:
+		_checar(grade.solido, "grade dupla comeca fechada")
 
 	# O treino (escola do arremesso) fica agora por conta do editor — só a
 	# caixa elétrica de placeholder continua de pé.
@@ -87,24 +90,46 @@ func _testar_fase1() -> void:
 		Input.action_release("interact")
 		await get_tree().process_frame
 		_checar(gaiola_bumerangue.puzzle_concluido, "E sem puzzle abriu a gaiola direto")
-		# A animação "abrindo" (9 quadros a 5 fps, ~1.8s) precisa terminar
-		# antes do pickup destravar — dá a folga pra isso acontecer.
+		# A animação "abrindo" da gaiola de vidro (12 quadros a 10 fps, 1.2s)
+		# precisa terminar antes do pickup destravar — dá a folga pra isso.
 		await get_tree().create_timer(2.2).timeout
 		await get_tree().process_frame
 		_checar(pickup_bumerangue.monitoring, "bumerangue liberado para coleta depois da gaiola abrir")
 
 	# Alvo duplo: os dois acesos ao mesmo tempo abrem a grade.
-	f.get_node("Corredores/AlvoDuploA").atingir_bumerangue()
-	f.get_node("Corredores/AlvoDuploB").atingir_bumerangue()
-	await get_tree().process_frame
-	await get_tree().process_frame
-	_checar(not grade.solido, "alvo duplo abriu a grade")
+	if grade:
+		f.get_node("Corredores/AlvoDuploA").atingir_bumerangue()
+		f.get_node("Corredores/AlvoDuploB").atingir_bumerangue()
+		await get_tree().process_frame
+		await get_tree().process_frame
+		_checar(not grade.solido, "alvo duplo abriu a grade")
 
-	# Retorta: as tres juntas e os pontos de cascas.
-	var retorta := f.get_node("Patio/Retorta")
-	_checar(retorta.get_node_or_null("JuntaEsquerda") != null, "retorta tem junta esquerda")
-	_checar(retorta.get_node_or_null("JuntaAlta") != null, "retorta tem junta alta (bumerangue)")
-	_checar(f.get_node_or_null("Patio/Casca0") != null, "cascas de babacu no deposito")
+	# A carbonização mudou de endereço: a fornalha e a lenha moraram no pátio
+	# desta fase até virarem a fase1.2, lá em cima, do outro lado do elevador.
+	_checar(f.get_node_or_null("Patio/Retorta") == null, "fornalha nao esta mais na oficina")
+	var elevador := f.get_node_or_null("Entrada/ElevadorPatio")
+	_checar(elevador != null, "elevador de carga na entrada")
+	if elevador:
+		_checar(elevador.cena_destino == "res://scenes/fases/fase1_2_exterior.tscn",
+			"o elevador leva para o patio (fase1.2)")
+
+	await _fechar(f)
+
+
+func _testar_fase1_2() -> void:
+	print("\n--- FASE 1.2: PATIO DA OFICINA (tela unica) ---")
+	var f := await _abrir("res://scenes/fases/fase1_2_exterior.tscn")
+
+	_checar(f.get_node_or_null("Player") != null, "player na cena")
+	_checar(f.get_node_or_null("Patio/Retorta") != null, "fornalha mudou para o patio")
+	_checar(get_tree().get_nodes_in_group("madeira").size() == 3, "as tres toras vieram junto")
+	_checar(f.get_node_or_null("Elevador") != null, "elevador de volta para a oficina")
+
+	# A câmera parada é o LimitesDaCamera do tamanho de um quadro; a mecânica
+	# miúda do elevador tem teste próprio (tools/teste_elevador.tscn).
+	var camera: Camera2D = f.get_node("Player/Camera2D")
+	_checar(camera.limit_right - camera.limit_left <= ceili(1600.0 / camera.zoom.x) + 1,
+		"camera travada em uma tela so")
 
 	await _fechar(f)
 

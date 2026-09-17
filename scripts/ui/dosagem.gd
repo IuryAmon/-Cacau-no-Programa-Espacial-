@@ -72,6 +72,8 @@ static func abrir(dono: Node, config: Dictionary) -> Dosagem:
 
 func _ready() -> void:
 	_montar_ui()
+	# Controle: a barra de botões aparece (sem cursor — ver usa_cursor).
+	add_to_group(CursorVirtual.GRUPO)
 	Interacao.marcar_tela_aberta(self, true)
 	# O mundo NÃO pausa: a fornalha continua animando atrás do painel. Só a
 	# personagem é travada, para o A/D irem todos para a dosagem.
@@ -172,26 +174,41 @@ func _montar_ui() -> void:
 	_painel.add_child(_status)
 
 	var lbl_dica := Label.new()
-	lbl_dica.text = dica if dica != "" else _dica_padrao()
 	lbl_dica.add_theme_font_size_override("font_size", 13)
 	lbl_dica.add_theme_color_override("font_color", Color(0.65, 0.68, 0.75))
 	lbl_dica.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_dica.position = Vector2(0, 288)
 	lbl_dica.size = Vector2(760, 40)
 	_painel.add_child(lbl_dica)
+	# A dica pode trazer marcas {acao}: vira tecla no teclado e botão no controle.
+	Controle.rotular(lbl_dica, dica if dica != "" else _dica_padrao())
 
 
 func _dica_padrao() -> String:
 	if modo == "segurar":
-		return "Segure D para aquecer e A para esfriar. Mantenha a agulha na faixa verde.  [ESC desiste]"
-	return "Aperte E para travar a agulha dentro da faixa verde (%d acertos).  [ESC desiste]" % acertos_necessarios
+		return "Segure {ui_right:D} para aquecer e {ui_left:A} para esfriar. Mantenha a agulha na faixa verde.  [{ui_cancel} desiste]"
+	return "Aperte {interact} para travar a agulha dentro da faixa verde (%d acertos).  [{ui_cancel} desiste]" % acertos_necessarios
+
+
+# --- CONTROLE (ver cursor_virtual.gd) ---
+
+## O controle opera a dosagem direto: nada de cursor, só a barra de botões.
+func usa_cursor() -> bool:
+	return false
+
+
+func dicas_do_controle() -> Array:
+	if modo == "segurar":
+		return [["ui_right", "AQUECER"], ["ui_left", "ESFRIAR"], ["ui_cancel", "DESISTIR"]]
+	return [[Interacao.ACAO, "TRAVAR A AGULHA"], ["ui_cancel", "DESISTIR"]]
 
 
 func _process(delta: float) -> void:
 	if _encerrando:
 		return
 
-	if Input.is_key_pressed(KEY_ESCAPE):
+	# ESC no teclado, ○ no controle.
+	if Input.is_key_pressed(KEY_ESCAPE) or Input.is_action_pressed("ui_cancel"):
 		_fechar(false, true)
 		return
 

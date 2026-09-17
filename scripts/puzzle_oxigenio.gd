@@ -28,6 +28,9 @@ var travado:       bool        = false
 
 var painel_mat: ShaderMaterial
 var _tween_prompt_gaiola: Tween = null
+## Onde está o ponteiro, lido dos eventos: o mouse de verdade ou o cursor do
+## controle (que não move o mouse do sistema — ver cursor_virtual.gd).
+var _ponteiro: Vector2 = Vector2.ZERO
 
 @onready var root_control: Control            = $RootControl
 @onready var zona_nucleo: Control             = $RootControl/ZonaNucleo
@@ -43,6 +46,11 @@ var _tween_prompt_gaiola: Tween = null
 func _ready():
 	hide()
 	set_process(false)
+	# Controle: cursor nesta tela e as teclas dos textos viram botões. Os textos
+	# moram na cena, com as marcas {ui_cancel}/{interact} (ver BotoesControle).
+	add_to_group(CursorVirtual.GRUPO)
+	Controle.rotular($RootControl/Instrucoes, $RootControl/Instrucoes.text)
+	Controle.rotular(label_abrir_gaiola, label_abrir_gaiola.text)
 	painel_mat = ShaderMaterial.new()
 	painel_mat.shader = load("res://shaders/painel_red_to_green.gdshader")
 	painel.material = painel_mat
@@ -105,7 +113,7 @@ func _mostrar_spawn():
 
 func _process(delta: float):
 	if peca_arrastando:
-		peca_arrastando.global_position = get_viewport().get_mouse_position() - offset_arrasto
+		peca_arrastando.global_position = _ponteiro - offset_arrasto
 
 	for i in range(electrons_k.size()):
 		angles_k[i] += ORBIT_SPEED_K * delta
@@ -129,20 +137,64 @@ func _input(event: InputEvent):
 	# a gaiola/receptor que está logo atrás dela.
 	if event.is_action_pressed(Interacao.ACAO):
 		Interacao.consumir()
+	if event is InputEventMouse:
+		_ponteiro = event.position
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			_iniciar_arrasto(event.position)
 		else:
 			_soltar_peca(event.position)
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_L:
-			# DEBUG: resolve o puzzle instantaneamente para agilizar testes
-			fechar_puzzle(true)
-			return
-		if travado and event.keycode in [KEY_ESCAPE, KEY_E, KEY_SPACE, KEY_ENTER]:
-			fechar_puzzle(true)
-		elif not travado and event.keycode == KEY_ESCAPE:
-			fechar_puzzle(false)
+	if event is InputEventKey and event.pressed and event.keycode == KEY_L:
+		# DEBUG: resolve o puzzle instantaneamente para agilizar testes
+		fechar_puzzle(true)
+		return
+	if travado and _pediu_fechar(event):
+		fechar_puzzle(true)
+	elif not travado and _pediu_sair(event):
+		fechar_puzzle(false)
+
+## ESC/E/ESPAÇO/ENTER no teclado; ○, □ e ✕ no controle (pelas ações do mapa).
+func _pediu_fechar(event: InputEvent) -> bool:
+	if event is InputEventKey and event.pressed \
+			and event.keycode in [KEY_ESCAPE, KEY_E, KEY_SPACE, KEY_ENTER]:
+		return true
+	return event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_accept") \
+		or event.is_action_pressed(Interacao.ACAO)
+
+## ESC no teclado; ○ no controle.
+func _pediu_sair(event: InputEvent) -> bool:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		return true
+	return event.is_action_pressed("ui_cancel")
+
+# ------------------------- CONTROLE (ver cursor_virtual.gd) -------------------------
+
+## Os elétrons que dá para pegar (o da vez e os que já orbitam, para
+## corrigir); com um na mão, um ponto de cada camada para soltar.
+func alvos_do_cursor() -> Array[Rect2]:
+	var alvos: Array[Rect2] = []
+	if travado:
+		return alvos
+	if peca_arrastando:
+		for raio in [ORBIT_RADIUS_K, ORBIT_RADIUS_L]:
+			var ponto: Vector2 = nucleus_center + Vector2(0.0, -raio)
+			alvos.append(Rect2(ponto - Vector2(36.0, 36.0), Vector2(72.0, 72.0)))
+		return alvos
+	if electrons_disponiveis.size() > 0 and electrons_disponiveis[0].visible:
+		alvos.append(electrons_disponiveis[0].get_global_rect())
+	for peca in electrons_k + electrons_l:
+		alvos.append(peca.get_global_rect())
+	return alvos
+
+func dicas_do_controle() -> Array:
+	if travado:
+		return [[Interacao.ACAO, "ABRIR A GAIOLA"]]
+	return [
+		["analogico_esquerdo", "MOVER"],
+		["direcional", "ESCOLHER"],
+		["cruz", "SOLTE PARA COLOCAR" if peca_arrastando else "SEGURE PARA ARRASTAR"],
+		["ui_cancel", "SAIR"],
+	]
 
 func _iniciar_arrasto(mouse_pos: Vector2):
 	if travado:

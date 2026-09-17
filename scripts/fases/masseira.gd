@@ -60,7 +60,7 @@ func _process(_delta: float) -> void:
 			"rotulo_dir": "MUITO S (estilhaça)",
 			"msg_falha_fraca": "Pouco enxofre — a amostra afundou, mole.",
 			"msg_falha_forte": "Enxofre demais — a amostra estilhaçou!",
-			"dica": "No ponto certo, a amostra QUICA alto.\n3 acertos na faixa viram as botas da personagem.  [ESC desiste]",
+			"dica": "No ponto certo, a amostra QUICA alto.\n3 acertos na faixa viram as botas da personagem.  [{ui_cancel} desiste]",
 		})
 		dosagem.terminado.connect(_on_dosagem_terminada)
 

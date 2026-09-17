@@ -133,9 +133,11 @@ func _physics_process(delta: float) -> void:
 	var tem := Progresso.tem_habilidade(HABILIDADE)
 
 	if tem and not Interacao.ocupada():
-		if Input.is_action_just_pressed(_acao_toggle):
+		# livre_para: o botão apertado para fechar uma tela não liga a lanterna.
+		if Input.is_action_just_pressed(_acao_toggle) and Interacao.livre_para(_acao_toggle):
 			ligada = not ligada
-		if InputMap.has_action(_ACAO_ALTERNAR_MIRA) and Input.is_action_just_pressed(_ACAO_ALTERNAR_MIRA):
+		if InputMap.has_action(_ACAO_ALTERNAR_MIRA) and Input.is_action_just_pressed(_ACAO_ALTERNAR_MIRA) \
+				and Interacao.livre_para(_ACAO_ALTERNAR_MIRA):
 			mira_livre = not mira_livre
 
 	if acesa():
@@ -191,12 +193,16 @@ func _atualizar_mira() -> void:
 	if mira_livre:
 		# Analógico direito empurrado vence; senão vale o mouse. Sem os dois,
 		# mantém a última direção válida em vez de saltar para a origem.
+		# Do controle que está em uso — não necessariamente o de número 0.
 		var stick := Vector2(
-			Input.get_joy_axis(0, JOY_AXIS_RIGHT_X),
-			Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
+			Input.get_joy_axis(Controle.dispositivo, JOY_AXIS_RIGHT_X),
+			Input.get_joy_axis(Controle.dispositivo, JOY_AXIS_RIGHT_Y))
 		if stick.length() > 0.4:
 			dir = stick.normalized()
-		else:
+		elif not Controle.em_uso:
+			# De controle na mão o mouse está escondido e parado num canto
+			# qualquer: soltar o analógico mantém a última mira, e não pula
+			# para o lado dele.
 			var ate_mouse := get_global_mouse_position() - global_position
 			if ate_mouse.length_squared() > 1.0:
 				dir = ate_mouse.normalized()

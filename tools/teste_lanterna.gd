@@ -261,6 +261,10 @@ func _testar_cena_completa() -> void:
 	eixo_cima.axis = JOY_AXIS_RIGHT_Y
 	eixo_cima.axis_value = -1.0
 	Input.parse_input_event(eixo_cima)
+	# O evento só chega no Input no próximo quadro de processo; dois quadros de
+	# física podem cair antes disso (e a mira leria o analógico ainda parado).
+	await get_tree().process_frame
+	await get_tree().process_frame
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	_checar(lanterna.direcao_atual().dot(Vector2.UP) > 0.9,

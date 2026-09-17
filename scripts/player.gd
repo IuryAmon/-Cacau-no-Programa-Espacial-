@@ -73,6 +73,10 @@ var maior_velocidade_queda: float = 0.0
 var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
 var estava_no_chao: bool = false
+## Para que lado o controle manda andar neste quadro: -1, 0 ou 1 (ver
+## Controle.lado_de_andar). Guarda o valor do quadro anterior, que é o que dá
+## folga nas divisas do analógico.
+var _lado_de_andar: float = 0.0
 
 var current_health: int = 3
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
@@ -244,13 +248,22 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# --- CONTROLE DE INPUTS NORMAL ---
-	
-	# PULO PARA BAIXO: S + ESPAÇO
-	if Input.is_action_pressed("ui_down") and Input.is_action_just_pressed("jump"):
+
+	# O ✕ (ou ESPAÇO) que acabou de passar a última fala ou de fechar um puzzle
+	# pertence àquela tela, não ao mundo: sem isto a Cacau pulava ao sair dela.
+	var apertou_pulo := Input.is_action_just_pressed("jump") and Interacao.livre_para(&"jump")
+
+	# Lado de andar lido do analógico como círculo, em velocidade cheia até na
+	# diagonal (ver "O ANALÓGICO NO MUNDO" em controle.gd). Uma leitura por
+	# quadro serve ao andar, à animação e ao empurrão das caixas.
+	_lado_de_andar = Controle.lado_de_andar(_lado_de_andar)
+
+	# PULO PARA BAIXO: S + ESPAÇO (analógico apontado para baixo + ✕)
+	if Controle.aponta_para_baixo() and apertou_pulo:
 		position.y += 5.0 # Empurra o personagem levemente para baixo da plataforma
 		return # Interrompe para não disparar o pulo normal
 
-	if Input.is_action_just_pressed("jump"):
+	if apertou_pulo:
 		jump_buffer_timer = jump_buffer_duration
 
 	if jump_buffer_timer > 0.0:
@@ -274,7 +287,7 @@ func _physics_process(delta: float) -> void:
 				_animated_sprite.stop()
 				_animated_sprite.play("jump")
 
-	var direction = Input.get_axis("ui_left", "ui_right")
+	var direction := _lado_de_andar
 	if direction:
 		_animated_sprite.flip_h = direction < 0
 		# Acima da velocidade normal (só dá pra chegar lá saindo de um dash)
@@ -295,8 +308,7 @@ func _physics_process(delta: float) -> void:
 		_verificar_colisoes_estaticas()
 		_empurrar_caixas()
 		
-		var direcao_atual = Input.get_axis("ui_left", "ui_right")
-		_atualizar_animacoes(direcao_atual)
+		_atualizar_animacoes(_lado_de_andar)
 
 	if Input.is_key_pressed(KEY_K) and Input.is_action_just_pressed("jump"):
 		take_damage(1, Vector2.ZERO)
@@ -380,13 +392,15 @@ func _rebobinar_macarico() -> void:
 	_animated_sprite.play("idle")
 
 
-## Segurar Q acende o maçarico em qualquer lugar; soltar guarda de volta.
+## Segurar Q (△ no controle) acende o maçarico em qualquer lugar; soltar guarda
+## de volta.
 ## Só começa COM A FERRAMENTA NO CINTO e com a personagem livre — no meio de um
 ## diálogo, de um knockback ou de uma cena scriptada a tecla não faz nada.
 ## Soltar, ao contrário, sempre vale: se ela levar dano de maçarico na mão, a
 ## pose sai junto.
 func _processar_tecla_macarico() -> void:
-	var segurando := Input.is_action_pressed(ACAO_MACARICO)
+	# O △ que saiu de uma tela segurado não acende a chama ao voltar ao mundo.
+	var segurando := Input.is_action_pressed(ACAO_MACARICO) and not Interacao.toque_preso(ACAO_MACARICO)
 
 	if _macarico_por_tecla:
 		if not segurando or esta_no_knockback or current_health <= 0:
@@ -825,7 +839,7 @@ func _on_area_2d_body_exited(body: Node2D) -> void:
 @export var limite_queda: float = 900.0
 
 func _empurrar_caixas() -> void:
-	var input_dir = Input.get_axis("ui_left", "ui_right")
+	var input_dir := _lado_de_andar
 	if input_dir == 0:
 		return
 

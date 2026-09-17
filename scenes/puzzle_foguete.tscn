@@ -183,7 +183,7 @@ offset_bottom = 52.0
 theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 11
-text = "ESC para fechar"
+text = "{ui_cancel} para fechar"
 
 [node name="Tubo" type="TextureRect" parent="RootControl" unique_id=1779994786]
 texture_filter = 1
@@ -790,7 +790,7 @@ theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
 theme_override_constants/line_spacing = 8
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 22
-text = "APERTE E PARA
+text = "APERTE {interact} PARA
 LIBERAR O ACESSO"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -807,7 +807,6 @@ mouse_filter = 2
 script = ExtResource("17_destaque")
 
 [node name="Aura" type="ColorRect" parent="RootControl/Tela/Display" unique_id=948292525]
-modulate = Color(1, 1, 1, 0)
 material = SubResource("CanvasItemMaterial_aura")
 layout_mode = 1
 anchors_preset = 15

@@ -1,0 +1,187 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/elevador_fase.gd" id="1_elev"]
+[ext_resource type="Texture2D" uid="uid://c7vto2geegj08" path="res://assets/Lab/Barrier_Control_Panel/elevador.png" id="2_arte"]
+[ext_resource type="Texture2D" uid="uid://buqko3wmshd30" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes001.png" id="3_exclam"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev0"]
+atlas = ExtResource("2_arte")
+region = Rect2(0, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev1"]
+atlas = ExtResource("2_arte")
+region = Rect2(104, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev2"]
+atlas = ExtResource("2_arte")
+region = Rect2(208, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev3"]
+atlas = ExtResource("2_arte")
+region = Rect2(312, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev4"]
+atlas = ExtResource("2_arte")
+region = Rect2(416, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev5"]
+atlas = ExtResource("2_arte")
+region = Rect2(520, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev6"]
+atlas = ExtResource("2_arte")
+region = Rect2(624, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev7"]
+atlas = ExtResource("2_arte")
+region = Rect2(728, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev8"]
+atlas = ExtResource("2_arte")
+region = Rect2(832, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev9"]
+atlas = ExtResource("2_arte")
+region = Rect2(936, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev10"]
+atlas = ExtResource("2_arte")
+region = Rect2(1040, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev11"]
+atlas = ExtResource("2_arte")
+region = Rect2(1144, 0, 104, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elev12"]
+atlas = ExtResource("2_arte")
+region = Rect2(1248, 0, 104, 44)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_elevador"]
+animations = [{
+"frames": [
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev0")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev1")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev2")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev3")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev4")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev5")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev6")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev7")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev8")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev9")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev10")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev11")
+}, 
+{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elev12")
+}
+],
+"loop": false,
+"name": &"portas",
+"speed": 13.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exclam0"]
+atlas = ExtResource("3_exclam")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exclam1"]
+atlas = ExtResource("3_exclam")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exclam2"]
+atlas = ExtResource("3_exclam")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_exclamacao"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exclam0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exclam1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exclam2")
+}],
+"loop": true,
+"name": &"default",
+"speed": 3.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_embarque"]
+resource_local_to_scene = true
+size = Vector2(87, 76)
+
+[node name="ElevadorFase" type="Node2D"]
+z_index = 3
+script = ExtResource("1_elev")
+
+[node name="Cabine" type="Node2D" parent="."]
+scale = Vector2(1.5, 1.5)
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Cabine"]
+offset = Vector2(18, -19)
+sprite_frames = SubResource("SpriteFrames_elevador")
+animation = &"portas"
+
+[node name="Piso" type="AnimatableBody2D" parent="Cabine"]
+sync_to_physics = false
+
+[node name="Colisao" type="CollisionPolygon2D" parent="Cabine/Piso"]
+polygon = PackedVector2Array(-33, -17, 30, -17, 67, 0, 67, 4, -33, 4)
+
+[node name="AreaEmbarque" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+
+[node name="Colisao" type="CollisionShape2D" parent="AreaEmbarque"]
+position = Vector2(0, -57.5)
+shape = SubResource("RectangleShape2D_embarque")
+
+[node name="ExclamacaoAnimada" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = 1
+position = Vector2(0, -87.5)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_exclamacao")
+
+[node name="SomElevador" type="AudioStreamPlayer2D" parent="."]

@@ -1,0 +1,176 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://bn38egkh7gy16" path="res://scripts/gaiola_puzzle.gd" id="1_gaiola"]
+[ext_resource type="Texture2D" uid="uid://caqss5856xhl6" path="res://assets/Gaiola/gaiola de vidro eletrica.png" id="2_arte"]
+[ext_resource type="Texture2D" uid="uid://buqko3wmshd30" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes001.png" id="3_emote"]
+[ext_resource type="AudioStream" uid="uid://b5uqmxdrs4cnu" path="res://sounds/somPorta_abrindo.wav" id="4_som"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e1"]
+atlas = ExtResource("3_emote")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e2"]
+atlas = ExtResource("3_emote")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e3"]
+atlas = ExtResource("3_emote")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_exclamacao"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e3")
+}],
+"loop": true,
+"name": &"default",
+"speed": 3.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q0"]
+atlas = ExtResource("2_arte")
+region = Rect2(0, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q1"]
+atlas = ExtResource("2_arte")
+region = Rect2(504, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q2"]
+atlas = ExtResource("2_arte")
+region = Rect2(1008, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q3"]
+atlas = ExtResource("2_arte")
+region = Rect2(1512, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q4"]
+atlas = ExtResource("2_arte")
+region = Rect2(2016, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q5"]
+atlas = ExtResource("2_arte")
+region = Rect2(2520, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q6"]
+atlas = ExtResource("2_arte")
+region = Rect2(3024, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q7"]
+atlas = ExtResource("2_arte")
+region = Rect2(3528, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q8"]
+atlas = ExtResource("2_arte")
+region = Rect2(4032, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q9"]
+atlas = ExtResource("2_arte")
+region = Rect2(4536, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q10"]
+atlas = ExtResource("2_arte")
+region = Rect2(5040, 0, 504, 576)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q11"]
+atlas = ExtResource("2_arte")
+region = Rect2(5544, 0, 504, 576)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_gaiola"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q11")
+}],
+"loop": true,
+"name": &"aberta",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q9")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q11")
+}],
+"loop": false,
+"name": &"abrindo",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q0")
+}],
+"loop": true,
+"name": &"fechada",
+"speed": 10.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_deteccao"]
+size = Vector2(196, 164)
+
+[node name="GaiolaVidroEletrica" type="Node2D"]
+script = ExtResource("1_gaiola")
+atraso_som_abertura = 0.0
+
+[node name="GaiolaAnimada" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -64)
+scale = Vector2(0.22222222, 0.22222222)
+sprite_frames = SubResource("SpriteFrames_gaiola")
+animation = &"fechada"
+
+[node name="ExclamacaoAnimada" type="AnimatedSprite2D" parent="."]
+z_index = 1
+position = Vector2(-4, -162)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_exclamacao")
+
+[node name="ZonaDeteccao" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaDeteccao"]
+visible = false
+position = Vector2(-4, -64)
+shape = SubResource("RectangleShape2D_deteccao")
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -40)
+stream = ExtResource("4_som")
+
+[connection signal="body_entered" from="ZonaDeteccao" to="." method="_on_zona_deteccao_body_entered"]
+[connection signal="body_exited" from="ZonaDeteccao" to="." method="_on_zona_deteccao_body_exited"]

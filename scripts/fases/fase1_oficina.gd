@@ -3,7 +3,11 @@ extends FaseBase
 # --- FASE 1: OFICINA DO CARBONO (Mapa 2 do plano) ---
 #
 # Fluxo horizontal, side-scroller:
-#   ① ENTRADA    bancada do Dr. Chico — monta o BUMERANGUE
+#   ① ENTRADA    bancada do Dr. Chico — monta o BUMERANGUE. É aqui também que
+#                fica o ELEVADOR DE CARGA (Entrada/ElevadorPatio): entre nele e
+#                aperte E para subir ao PÁTIO, que é a fase1.2
+#                (scenes/fases/fase1_2_exterior.tscn) — a parte de fora do
+#                laboratório, onde a FORNALHA de carbonização passou a morar
 #   ② TREINO     escola do arremesso — em construção manual no editor; só a
 #                caixa elétrica AlvoFixo1 ficou de placeholder
 #   ②b PORTÃO    no meio do mapa, uma BARREIRA fecha a passagem e só cai com os
@@ -21,10 +25,15 @@ extends FaseBase
 #                ligação terminal -> plataforma é o export "alvo" do
 #                TerminalGuincho
 #   ④ DEPÓSITO   coleta de cascas de babaçu
-#   ⑤ PÁTIO      a retorta (vedar -> acender -> temperatura) e, no fim do
-#                mapa, a gaiola do MAÇARICO OXÍDRICO: regular a mistura da
-#                chama (2 volumes de H₂ para 1 de O₂) destranca a ferramenta
-#                que a retorta pede logo ali atrás
+#   ⑤ PÁTIO      no fim do mapa, a gaiola de vidro do MAÇARICO: balancear a
+#                queima do acetileno em duas etapas (puzzle_macarico) destranca
+#                a ferramenta que a fornalha lá de cima vai pedir
+#
+#                A FORNALHA NÃO MORA MAIS AQUI: a pirólise (encher de lenha ->
+#                acender -> segurar a temperatura) virou o clímax da fase1.2,
+#                lá fora, junto com as três toras. Queimar madeira é coisa de
+#                área aberta, não de galpão fechado — e a lenha vai no
+#                inventário, então ela sobe no elevador com a Cacau
 #   ⑤b PORTA DE METAL  logo depois da gaiola, uma folha de aço fecha o resto do
 #                pátio (Patio/PortaMetal). É o primeiro uso "livre" do maçarico
 #                recém-ganho: E na porta, e ela esquenta, derrete e escorre até

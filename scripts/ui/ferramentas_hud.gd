@@ -41,6 +41,9 @@ func _ready() -> void:
 	raiz.add_child(_cinto)
 
 	Progresso.habilidade_conquistada.connect(_on_habilidade_conquistada)
+	# Trocou de teclado para controle (ou o contrário): as tampas embaixo das
+	# ferramentas trocam a tecla pelo botão.
+	Controle.mudou.connect(func(_em_uso: bool) -> void: _cinto.queue_redraw())
 
 	# Rede de segurança: se por algum caminho a personagem já tiver ferramenta
 	# antes deste nó existir, o cinto nasce pronto, sem apresentação.
@@ -88,6 +91,7 @@ func _pendurar(habilidade: String, anunciar: bool) -> void:
 	if ficha.is_empty():
 		return
 	ficha["tecla"] = CatalogoFerramentas.tecla(habilidade)
+	ficha["acao"] = CatalogoFerramentas.acao(habilidade)
 	_cinto.pendurar(ficha, anunciar)
 
 

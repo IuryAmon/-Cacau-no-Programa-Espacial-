@@ -18,6 +18,8 @@ func _ready() -> void:
 	visible = false
 	_botao_continuar.pressed.connect(_on_continuar_pressionado)
 	_botao_sair.pressed.connect(_on_sair_pressionado)
+	# ESC no teclado, ○ no controle (os dois abrem e fecham este menu).
+	Controle.rotular($Centro/Opcoes/Dica, "{ui_cancel} volta para a simulação")
 
 
 func _unhandled_input(evento: InputEvent) -> void:
