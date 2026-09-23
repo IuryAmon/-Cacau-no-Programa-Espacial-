@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Projeto 8.27"
+config/name="Projeto 8.27 (Copy)"
 run/main_scene="uid://bqevk7iunmrs4"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
@@ -23,9 +23,9 @@ DialogicBridge="*res://scripts/dialogic_bridge.gd"
 Interacao="*res://scripts/interacao.gd"
 Progresso="*res://scripts/progresso.gd"
 FerramentasHUD="*res://scripts/ui/ferramentas_hud.gd"
-Dialogic="*uid://c3b5clqd5sgir"
 Controle="*res://scripts/controle.gd"
 CursorVirtual="*res://scripts/ui/cursor_virtual.gd"
+Dialogic="*uid://c3b5clqd5sgir"
 
 [dialogic]
 
@@ -34,6 +34,7 @@ directories/dch_directory={
 "cientista": "res://timelines/cientista.dch"
 }
 directories/dtl_directory={
+"cacau_metal_bloqueado": "res://timelines/cacau_metal_bloqueado.dtl",
 "cacau_ve_foguete": "res://timelines/cacau_ve_foguete.dtl",
 "cientista_balanceamento_1": "res://timelines/cientista_balanceamento_1.dtl",
 "cientista_balanceamento_2": "res://timelines/cientista_balanceamento_2.dtl",

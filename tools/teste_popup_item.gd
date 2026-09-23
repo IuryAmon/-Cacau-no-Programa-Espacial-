@@ -306,10 +306,12 @@ func _testar_cinto() -> void:
 
 	# A tecla que USA a ferramenta vem do catalogo e bate com o mapa de entrada.
 	_checar(CatalogoFerramentas.tecla("bumerangue") == "F", "bumerangue anuncia F")
-	_checar(CatalogoFerramentas.tecla("macarico") == "Q", "macarico anuncia Q")
+	# O maçarico não tem botão próprio: ele acende no mesmo E/□ da interação,
+	# encostado na chapa soldada ou na porta de metal.
+	_checar(CatalogoFerramentas.tecla("macarico") == "E", "macarico anuncia E")
 	_checar(CatalogoFerramentas.tecla("botas") == "",
 		"ferramenta passiva (botas) nao promete tecla nenhuma")
-	var acoes := {"bumerangue": "arremessar", "macarico": "usar_macarico",
+	var acoes := {"bumerangue": "arremessar", "macarico": "interact",
 		"mochila": "dash", "sinalizador": "luz", "lanterna": "lanterna"}
 	for h in acoes:
 		var acao: String = acoes[h]

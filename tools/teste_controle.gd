@@ -7,7 +7,7 @@ extends Node
 # Input.parse_input_event, do mesmo jeito que o controle físico chega:
 #
 #   * o mapa: ✕ pula, □ interage e arremessa, ○ dá dash e é "sair" (ui_cancel),
-#     △ acende o maçarico, ✕ e □ passam a fala do Dialogic;
+#     ✕ e □ passam a fala do Dialogic, e o maçarico NÃO tem botão próprio;
 #   * o Controle percebe o controle e o teclado, e os textos com {acao} viram
 #     "E" no teclado e o desenho do □ no controle;
 #   * o toque que nasce com tela aberta fica preso a ela até ser solto;
@@ -79,8 +79,10 @@ func _testar_mapa() -> void:
 	_checar(_tem_botao("interact", JOY_BUTTON_X), "□ interage")
 	_checar(_tem_botao("arremessar", JOY_BUTTON_X), "□ arremessa o bumerangue")
 	_checar(_tem_botao("dash", JOY_BUTTON_B), "○ dá o dash")
-	_checar(_tem_botao("usar_macarico", JOY_BUTTON_Y) and not _tem_botao("usar_macarico", JOY_BUTTON_B),
-		"△ acende o maçarico (e ○ ficou só para o dash)")
+	# O maçarico perdeu o botão solto: ele só acende encostado no metal, pelo
+	# mesmo □ da interação. Um △ de maçarico de volta no mapa é regressão.
+	_checar(not InputMap.has_action("usar_macarico"),
+		"o maçarico não tem botão próprio (acende no □ da interação)")
 	_checar(_tem_botao("ui_cancel", JOY_BUTTON_B), "○ é sair (ui_cancel)")
 	_checar(_tem_tecla("ui_cancel", KEY_ESCAPE), "ESC continua sendo sair")
 	_checar(_tem_botao("ui_accept", JOY_BUTTON_A), "✕ confirma (ui_accept)")

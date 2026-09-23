@@ -1,0 +1,82 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/icone_interagir.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cfiut0eh7ggs8" path="res://assets/UI/gdb-keyboard-2.png" id="2_teclado"]
+[ext_resource type="Texture2D" uid="uid://8fynctyjqpl5" path="res://assets/UI/gdb-playstation-2.png" id="3_controle"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e0"]
+atlas = ExtResource("2_teclado")
+region = Rect2(96, 48, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e1"]
+atlas = ExtResource("2_teclado")
+region = Rect2(96, 160, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e2"]
+atlas = ExtResource("2_teclado")
+region = Rect2(96, 272, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e3"]
+atlas = ExtResource("2_teclado")
+region = Rect2(96, 384, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q0"]
+atlas = ExtResource("3_controle")
+region = Rect2(480, 80, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q1"]
+atlas = ExtResource("3_controle")
+region = Rect2(496, 80, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q2"]
+atlas = ExtResource("3_controle")
+region = Rect2(512, 80, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q3"]
+atlas = ExtResource("3_controle")
+region = Rect2(528, 80, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_interagir"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q3")
+}],
+"loop": true,
+"name": &"controle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e3")
+}],
+"loop": true,
+"name": &"teclado",
+"speed": 5.0
+}]
+
+[node name="IconeInteragir" type="AnimatedSprite2D"]
+visible = false
+scale = Vector2(2.625, 2.625)
+sprite_frames = SubResource("SpriteFrames_interagir")
+animation = &"teclado"
+autoplay = "teclado"
+script = ExtResource("1_script")

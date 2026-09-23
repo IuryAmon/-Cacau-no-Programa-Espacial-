@@ -95,10 +95,14 @@ var animacao_controlada_externamente : bool = false
 var ferramenta_controla_movimento : bool = false
 
 # --- POSE DO MAÇARICO OXÍDRICO ---
-# Cortar uma chapa soldada ou acender a retorta tem animação própria. Enquanto
-# ela roda, a personagem fica parada mas a física continua normal (ela não
-# flutua se estiver caindo) — só o "volta pro idle" da trava de movimento é
-# que fica suspenso, por isso a flag separada.
+# Cortar uma chapa soldada, derreter a porta de metal ou acender a retorta tem
+# animação própria. Enquanto ela roda, a personagem fica parada mas a física
+# continua normal (ela não flutua se estiver caindo) — só o "volta pro idle" da
+# trava de movimento é que fica suspenso, por isso a flag separada.
+#
+# NÃO EXISTE BOTÃO SOLTO DE MAÇARICO. A chama não acende no ar: ela só aparece
+# encostada no que precisa ser cortado, e quem a acende é o próprio obstáculo
+# (chapa soldada, porta de metal, retorta) quando a Cacau aperta o E ali.
 const ANIM_MACARICO := "usando_macarico"
 var usando_ferramenta : bool = false
 # Duas coisas acesas ao mesmo tempo não podem desligar a pose uma da outra.
@@ -108,12 +112,6 @@ var _audio_macarico : AudioStreamPlayer = null
 # recomeçar no meio dela, a espera velha não pode mais mexer na animação nova
 # — cada pose ganha um número e a espera só age se o dela ainda for o atual.
 var _macarico_geracao : int = 0
-# Tecla livre (Q): a pose que ela liga precisa se lembrar de que foi ela, para
-# não desligar as poses que a chapa soldada e a retorta acendem sozinhas.
-const ACAO_MACARICO := "usar_macarico"
-## Habilidade do Progresso que a tecla exige — sem ela no cinto, Q não acende.
-const HABILIDADE_MACARICO := "macarico"
-var _macarico_por_tecla : bool = false
 ## Ponta do maçarico em coordenadas do Player, com a personagem virada para a
 ## direita — é daqui que sai a luz azul. Espelha sozinho quando ela vira.
 @export var luz_macarico_offset := Vector2(54, -21)
@@ -192,9 +190,6 @@ func _physics_process(delta: float) -> void:
 		call_deferred("_reiniciar_cena_seguro")
 		return
 
-	# Antes da trava de movimento: a própria pose zera "pode_se_mover", então
-	# se isto ficasse lá embaixo o soltar da tecla nunca seria lido.
-	_processar_tecla_macarico()
 	_atualizar_luz_macarico()
 
 	# --- APLICAÇÃO DA GRAVIDADE ---
@@ -390,40 +385,6 @@ func _rebobinar_macarico() -> void:
 
 	usando_ferramenta = false
 	_animated_sprite.play("idle")
-
-
-## Segurar Q (△ no controle) acende o maçarico em qualquer lugar; soltar guarda
-## de volta.
-## Só começa COM A FERRAMENTA NO CINTO e com a personagem livre — no meio de um
-## diálogo, de um knockback ou de uma cena scriptada a tecla não faz nada.
-## Soltar, ao contrário, sempre vale: se ela levar dano de maçarico na mão, a
-## pose sai junto.
-func _processar_tecla_macarico() -> void:
-	# O △ que saiu de uma tela segurado não acende a chama ao voltar ao mundo.
-	var segurando := Input.is_action_pressed(ACAO_MACARICO) and not Interacao.toque_preso(ACAO_MACARICO)
-
-	if _macarico_por_tecla:
-		if not segurando or esta_no_knockback or current_health <= 0:
-			_macarico_por_tecla = false
-			encerrar_uso_macarico()
-		return
-
-	if not segurando:
-		return
-	# A tecla era o único caminho que acendia a chama sem perguntar se ela já
-	# tinha sido conquistada: dava para sair queimando o mapa desde o começo do
-	# jogo, com o maçarico ainda trancado na gaiola do pátio. Quem usa a chama
-	# por conta própria (chapa soldada, retorta, porta de metal) sempre checou
-	# isto antes de chamar a pose; aqui faltava.
-	if not Progresso.tem_habilidade(HABILIDADE_MACARICO):
-		return
-	if not pode_se_mover or esta_no_knockback or current_health <= 0:
-		return
-	if animacao_controlada_externamente or ferramenta_controla_movimento:
-		return
-
-	_macarico_por_tecla = true
-	iniciar_uso_macarico()
 
 
 ## A luz azul da ponta. Fica acesa enquanto a pose durar (inclusive na

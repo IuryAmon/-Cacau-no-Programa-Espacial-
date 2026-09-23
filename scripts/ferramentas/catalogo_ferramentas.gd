@@ -16,8 +16,10 @@ static var FERRAMENTAS := {
 	"macarico": {
 		"nome": "Maçarico Oxídrico (Ferramenta)",
 		"rotulo": "MAÇARICO",
-		"tecla": "Q",
-		"acao": "usar_macarico",
+		# Não tem botão próprio: a chama só acende encostada no que ela corta
+		# (chapa soldada, porta de metal, retorta), no mesmo E da interação.
+		"tecla": "E",
+		"acao": "interact",
 		"descricao": "Hidrogênio queimando em oxigênio puro: a mesma reação do foguete, agora na mão dela. A chama passa dos 2000 °C e corta o que está soldado.",
 		"icone": "res://assets/itens/maçarico.png",
 		"cor": Color(1.0, 0.62, 0.22),
@@ -147,8 +149,9 @@ static func cor(habilidade: String) -> Color:
 ## em ferramenta passiva (as botas isolantes, que não têm botão: o piso
 ## eletrificado simplesmente para de machucar).
 ##
-## Confere com o mapa de entrada do projeto: "usar_macarico" (Q),
-## "arremessar" (F), "dash" (Shift), "luz" (T), "lanterna" (R).
+## Confere com o mapa de entrada do projeto: "interact" (E, e é assim que o
+## maçarico é usado — encostado no metal), "arremessar" (F), "dash" (Shift),
+## "luz" (T), "lanterna" (R).
 static func tecla(habilidade: String) -> String:
 	if not FERRAMENTAS.has(habilidade):
 		return ""

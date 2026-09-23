@@ -57,6 +57,7 @@
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/painel_chonps.tscn" id="55_painel"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_fase.tscn" id="56_portafase"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_ala_eletrolise.tscn" id="57_portaelet"]
+[ext_resource type="Texture2D" uid="uid://c2finb307gm3i" path="res://assets/Lab2/TESTE PAINEL CHONPS.png" id="58_0cdel"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_p4rl3"]
 texture = ExtResource("1_gv4uw")
@@ -4918,6 +4919,7 @@ scale = Vector2(2, 2)
 [node name="Player" parent="." unique_id=512037344 instance=ExtResource("19_fgauf")]
 z_index = 2
 position = Vector2(1466, 127)
+max_jumps = 1
 
 [node name="PortaSimulador" type="Area2D" parent="." unique_id=1391327891]
 position = Vector2(1023, -2)
@@ -5037,3 +5039,8 @@ cena_destino = "res://scenes/fases/fase_final.tscn"
 tag_aqui = "volta_do_lancamento"
 tag_destino = "entrada"
 cor_porta = Color(0.7, 0.45, 0.5, 1)
+
+[node name="TestePainelChonps" type="Sprite2D" parent="." unique_id=843613098]
+position = Vector2(2160, -82)
+scale = Vector2(2, 2)
+texture = ExtResource("58_0cdel")

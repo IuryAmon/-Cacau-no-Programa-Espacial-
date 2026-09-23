@@ -15,8 +15,10 @@ extends Node
 #
 # O MAPA DO CONTROLE (PlayStation) mora no mapa de entrada do projeto:
 #   ✕  pular              □  interagir / bumerangue (interagir tem prioridade)
-#   ○  dash / sair        △  maçarico (segurar)
+#   ○  dash / sair
 #   L1 sinalizador        R1 lanterna        L3 alterna a mira da lanterna
+# O maçarico não tem botão próprio: ele acende no □ da interação, e só
+# encostado no que precisa ser cortado.
 # Nos puzzles o analógico vira cursor (ver scripts/ui/cursor_virtual.gd).
 #
 # Também é aqui que o ponteiro do mouse some enquanto o controle está em uso:

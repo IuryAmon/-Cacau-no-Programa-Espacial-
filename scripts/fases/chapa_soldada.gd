@@ -5,11 +5,18 @@ extends StaticBody2D
 # --- CHAPA METÁLICA SOLDADA ---
 #
 # A fechadura do maçarico oxídrico: bloqueia o caminho até alguém com a chama
-# de H₂ + O₂ chegar perto e apertar E.
+# de H₂ + O₂ chegar perto e apertar E (□ no controle). O maçarico não tem botão
+# solto — aqui, encostada no metal, é um dos poucos lugares em que ele acende.
+#
+# Chegando perto, o desenho do botão acende em cima dela — a tecla E, ou o □ de
+# controle (a cena componentes/icone_interagir.tscn, a mesma da porta de metal
+# e da samambaia). Sem o maçarico no cinto, a Cacau comenta o obstáculo numa
+# fala do Dialogic (com o retrato dela), SEM entregar o que abre a passagem.
 #
 # COMO EDITAR NO EDITOR:
 #   Sprite   -> PNG da chapa (o placeholder cinza some sozinho)
 #   tamanho  -> redimensiona colisão, placeholder e área de interação
+#   Rotulo   -> o nome em cima da chapa (o desenho do botão é o nó Dica)
 #   Fagulhas -> partículas do corte; troque cor/quantidade à vontade
 
 const CENA := "res://scenes/fases/componentes/chapa_soldada.tscn"
@@ -24,8 +31,13 @@ const CENA := "res://scenes/fases/componentes/chapa_soldada.tscn"
 		rotulo = valor
 		if is_inside_tree():
 			_atualizar_rotulo()
+## Timeline do Dialogic que a Cacau fala ao apertar E sem ter o maçarico no
+## cinto. Ela constata o obstáculo e NÃO entrega a solução.
+@export var fala_sem_macarico: String = "cacau_metal_bloqueado"
 
 var _jogador_perto: bool = false
+# Estado do aviso, para o ícone só ser religado na virada.
+var _dica_visivel: bool = false
 
 @onready var _sprite: Sprite2D = $Sprite
 @onready var _placeholder: ColorRect = $Placeholder
@@ -33,6 +45,8 @@ var _jogador_perto: bool = false
 @onready var _area: Area2D = $AreaInteracao
 @onready var _area_colisao: CollisionShape2D = $AreaInteracao/Colisao
 @onready var _label: Label = $Rotulo
+## O desenho do botão que acende quando ela chega perto (ver IconeInteragir).
+@onready var _dica: AnimatedSprite2D = get_node_or_null("Dica")
 @onready var _fagulhas: CPUParticles2D = $Fagulhas
 @onready var _soldas: Node2D = $Placeholder/Soldas
 
@@ -50,6 +64,8 @@ static func criar(pai: Node, nome: String, pos_centro: Vector2, config: Dictiona
 func _ready() -> void:
 	_aplicar_tamanho()
 	_atualizar_rotulo()
+	if _dica:
+		_dica.visible = false
 	Blockout.aplicar_arte(_sprite, _placeholder)
 	if Engine.is_editor_hint():
 		return
@@ -72,6 +88,9 @@ func _aplicar_tamanho() -> void:
 		(_area_colisao.shape as RectangleShape2D).size = tamanho + Vector2(120, 60)
 	if _label:
 		_label.position = Vector2(-_label.size.x / 2.0, -tamanho.y / 2.0 - 34)
+	# O botão fica acima do nome da chapa, e sobe junto quando ela cresce.
+	if _dica:
+		_dica.position = Vector2(0, -tamanho.y / 2.0 - 74)
 	_desenhar_soldas()
 
 
@@ -96,19 +115,41 @@ func _desenhar_soldas() -> void:
 
 
 func _atualizar_rotulo() -> void:
-	if _label:
-		_label.text = rotulo
-		_label.visible = rotulo != ""
+	if _label == null:
+		return
+	_label.text = rotulo
+	_label.visible = rotulo != ""
+
+
+## O botão só é prometido quando ela está por perto — pedir o E de longe, com a
+## chapa fora de alcance, seria mentira.
+func _atualizar_dica() -> void:
+	if _dica == null:
+		return
+	_dica.visible = _jogador_perto
+	if _jogador_perto and _dica.has_method("reiniciar"):
+		_dica.reiniciar()
 
 
 func _process(_delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+
+	if _jogador_perto != _dica_visivel:
+		_dica_visivel = _jogador_perto
+		_atualizar_dica()
+
 	if _jogador_perto and Interacao.pediu():
 		if Progresso.tem_habilidade("macarico"):
 			_cortar()
 		else:
-			Blockout.aviso_flutuante(get_parent(), global_position, "Soldada. Só um maçarico corta isto.")
+			_reclamar()
+
+
+## Não é um aviso do cenário: é a própria Cacau, na caixa de fala do jogo,
+## constatando que não tem como passar por aqui ainda.
+func _reclamar() -> void:
+	DialogicBridge.falar_cacau(fala_sem_macarico)
 
 
 func _cortar() -> void:

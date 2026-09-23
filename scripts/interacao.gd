@@ -37,7 +37,7 @@ const GRUPO_TELA := "tela_usa_tecla_e"
 ## Ações do mundo que um toque feito em cima de uma tela não pode disparar
 ## depois que ela fecha (ver "livre_para").
 const ACOES_DO_MUNDO: Array[StringName] = [&"jump", &"arremessar", &"arremessar_mouse",
-	&"dash", &"usar_macarico", &"luz", &"lanterna", &"alternar_mira"]
+	&"dash", &"luz", &"lanterna", &"alternar_mira"]
 
 # O toque atual já virou ação? Os dois zeram sozinhos quando a tecla é solta.
 var _toque_usado: bool = false

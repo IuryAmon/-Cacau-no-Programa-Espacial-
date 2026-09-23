@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/fases/chapa_soldada.gd" id="1_3lvc7"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/icone_interagir.tscn" id="2_tecla"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_xp4wt"]
 size = Vector2(28, 120)
@@ -59,3 +60,6 @@ initial_velocity_max = 320.0
 scale_amount_min = 2.0
 scale_amount_max = 4.0
 color = Color(1, 0.75, 0.3, 1)
+
+[node name="Dica" parent="." unique_id=1704551203 instance=ExtResource("2_tecla")]
+position = Vector2(0, -134)

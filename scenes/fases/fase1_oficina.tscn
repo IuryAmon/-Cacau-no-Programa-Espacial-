@@ -831,6 +831,224 @@ animations = [{
 "speed": 8.0
 }]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0dc15"]
+resource_local_to_scene = true
+size = Vector2(114, 26)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tkgci"]
+atlas = ExtResource("35_0dc15")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sis0h"]
+atlas = ExtResource("35_0dc15")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_odkdv"]
+atlas = ExtResource("35_0dc15")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ipcei"]
+atlas = ExtResource("35_0dc15")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d1l6t"]
+atlas = ExtResource("35_0dc15")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mg6n4"]
+atlas = ExtResource("35_0dc15")
+region = Rect2(160, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_un8rn"]
+atlas = ExtResource("35_0dc15")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fxo1x"]
+atlas = ExtResource("35_0dc15")
+region = Rect2(224, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_436mf"]
+atlas = ExtResource("35_0dc15")
+region = Rect2(256, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5bb7c"]
+atlas = ExtResource("35_0dc15")
+region = Rect2(288, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8ht6f"]
+atlas = ExtResource("36_tkgci")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vswbb"]
+atlas = ExtResource("36_tkgci")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4qrlh"]
+atlas = ExtResource("36_tkgci")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gx170"]
+atlas = ExtResource("36_tkgci")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lts0w"]
+atlas = ExtResource("36_tkgci")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_686wa"]
+atlas = ExtResource("36_tkgci")
+region = Rect2(160, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_notyd"]
+atlas = ExtResource("36_tkgci")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aa5rq"]
+atlas = ExtResource("36_tkgci")
+region = Rect2(224, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sbqh8"]
+atlas = ExtResource("36_tkgci")
+region = Rect2(256, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2wlm1"]
+atlas = ExtResource("36_tkgci")
+region = Rect2(288, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ugob0"]
+atlas = ExtResource("37_sis0h")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jr0g6"]
+atlas = ExtResource("37_sis0h")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2gpnd"]
+atlas = ExtResource("37_sis0h")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_33o1l"]
+atlas = ExtResource("37_sis0h")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_op3pd"]
+atlas = ExtResource("37_sis0h")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bgjnm"]
+atlas = ExtResource("37_sis0h")
+region = Rect2(160, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0q4ar"]
+atlas = ExtResource("37_sis0h")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3p7cc"]
+atlas = ExtResource("37_sis0h")
+region = Rect2(224, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_2g7vy"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tkgci")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sis0h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_odkdv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ipcei")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d1l6t")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mg6n4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_un8rn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fxo1x")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_436mf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5bb7c")
+}],
+"loop": true,
+"name": &"armado",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8ht6f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vswbb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4qrlh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gx170")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lts0w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_686wa")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_notyd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aa5rq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sbqh8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2wlm1")
+}],
+"loop": false,
+"name": &"ativando",
+"speed": 18.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ugob0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jr0g6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2gpnd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_33o1l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_op3pd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bgjnm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0q4ar")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3p7cc")
+}],
+"loop": false,
+"name": &"desativando",
+"speed": 8.0
+}]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ipcei"]
 resource_local_to_scene = true
 size = Vector2(118, 26)
@@ -964,17 +1182,20 @@ color = Color(0.6, 0.372, 0.132, 1)
 [node name="Miolo" parent="Patio/PickupMacarico/Placeholder" index="0" unique_id=1181187712]
 color = Color(1, 0.62, 0.22, 1)
 
+[node name="Colisao" parent="Patio/PickupMacarico" index="2" unique_id=1760954513]
+position = Vector2(14, 1)
+
 [node name="Rotulo" parent="Patio/PickupMacarico" index="3" unique_id=502084797]
 text = "FERRAMENTA
 []"
 
 [node name="MascaraSolda" type="Sprite2D" parent="Patio" unique_id=629026889]
-position = Vector2(190, -915)
-rotation = 0.35
+position = Vector2(231, -921)
+scale = Vector2(1.5, 1.5)
 texture = ExtResource("40_mascara")
 
 [node name="GaiolaMacarico" parent="Patio" unique_id=1451513222 instance=ExtResource("14_gaiola")]
-position = Vector2(193, -866)
+position = Vector2(210, -865)
 scale = Vector2(-1, 1)
 puzzle_cena = ExtResource("15_puzmac")
 item_alvo = NodePath("../PickupMacarico")
@@ -989,7 +1210,6 @@ shape = SubResource("RectangleShape2D_o5jaj")
 debug_color = Color(0.98955435, 0, 0.2945345, 0.41960785)
 
 [node name="PortaMetal2" parent="Patio" unique_id=894855489 instance=ExtResource("33_portametal")]
-visible = false
 position = Vector2(-2081, 514)
 recuo_do_jogador = 30.0
 
@@ -1164,18 +1384,22 @@ caixa_eletrica = NodePath("../CaixaSerra")
 [node name="TorretaMeio" parent="Torretas" unique_id=1188207744 instance=ExtResource("22_torreta")]
 position = Vector2(2784, 190)
 rotation = 1.5707964
+quebravel = true
 
 [node name="TorretaMeio2" parent="Torretas" unique_id=2012571275 instance=ExtResource("22_torreta")]
 position = Vector2(5694, 224)
 rotation = 1.5707964
+quebravel = true
 
 [node name="TorretaMeio3" parent="Torretas" unique_id=1826896262 instance=ExtResource("22_torreta")]
 position = Vector2(2655, -800)
 rotation = 1.5707964
+quebravel = true
 
 [node name="TorretaMeio4" parent="Torretas" unique_id=1923052075 instance=ExtResource("22_torreta")]
 position = Vector2(2845, -546)
 rotation = 1.5707964
+quebravel = true
 
 [node name="ElevadorCarga" type="Node2D" parent="." unique_id=19896033]
 
@@ -1197,16 +1421,16 @@ alvo = NodePath("../PlataformaCarga")
 position = Vector2(3683, 518)
 
 [node name="SerraFixa1" parent="ArmadilhasFixas" unique_id=1689383121 instance=ExtResource("21_serra")]
-position = Vector2(-112, -2)
+position = Vector2(-103, -2)
 
 [node name="SerraFixa2" parent="ArmadilhasFixas" unique_id=729849351 instance=ExtResource("21_serra")]
-position = Vector2(-46, -2)
+position = Vector2(-37, -2)
 
 [node name="SerraFixa3" parent="ArmadilhasFixas" unique_id=1916938507 instance=ExtResource("21_serra")]
-position = Vector2(255, -2)
+position = Vector2(242, -1)
 
 [node name="SerraFixa4" parent="ArmadilhasFixas" unique_id=750756849 instance=ExtResource("21_serra")]
-position = Vector2(320, -2)
+position = Vector2(307, -1)
 
 [node name="SerraFixa5" parent="ArmadilhasFixas" unique_id=836959766 instance=ExtResource("21_serra")]
 position = Vector2(1981, -32)
@@ -1228,9 +1452,34 @@ rotation = 4.712389
 position = Vector2(-278, -165)
 scale = Vector2(1, -1)
 
-[node name="EspinhosTeto2" parent="ArmadilhasFixas" unique_id=127127878 instance=ExtResource("18_espinhos")]
+[node name="EspinhosTeto2" type="Area2D" parent="ArmadilhasFixas" unique_id=127127878 groups=["espinhos_laser"]]
 position = Vector2(107, -165)
 scale = Vector2(1, -1)
+script = ExtResource("34_qd33y")
+segmentos = 2
+
+[node name="Visual" type="AnimatedSprite2D" parent="ArmadilhasFixas/EspinhosTeto2" unique_id=983438214]
+position = Vector2(-32, -32)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_espinhos")
+animation = &"desativando"
+autoplay = "armado"
+
+[node name="Segmentos" type="Node2D" parent="ArmadilhasFixas/EspinhosTeto2" unique_id=1310200316]
+
+[node name="Colisao" type="CollisionShape2D" parent="ArmadilhasFixas/EspinhosTeto2" unique_id=848629312]
+position = Vector2(-1, -15)
+shape = SubResource("RectangleShape2D_0dc15")
+debug_color = Color(1, 0.25, 0.28, 0.32)
+
+[node name="SomLaser" type="AudioStreamPlayer2D" parent="ArmadilhasFixas/EspinhosTeto2" unique_id=1471209663]
+position = Vector2(0, -16)
+stream = ExtResource("38_odkdv")
+volume_db = 2.0
+max_distance = 1400.0
+
+[node name="AtrasoDesligar" type="Timer" parent="ArmadilhasFixas/EspinhosTeto2" unique_id=1902336541]
+one_shot = true
 
 [node name="EspinhosTeto3" parent="ArmadilhasFixas" unique_id=1132577889 instance=ExtResource("18_espinhos")]
 position = Vector2(491, -165)
@@ -1243,27 +1492,27 @@ scale = Vector2(1, -1)
 script = ExtResource("34_qd33y")
 segmentos = 2
 
-[node name="Visual" type="AnimatedSprite2D" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=983438214]
+[node name="Visual" type="AnimatedSprite2D" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=209862472]
 position = Vector2(-32, -32)
 scale = Vector2(2, 2)
-sprite_frames = SubResource("SpriteFrames_espinhos")
+sprite_frames = SubResource("SpriteFrames_2g7vy")
 animation = &"desativando"
 autoplay = "armado"
 
-[node name="Segmentos" type="Node2D" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=1310200316]
+[node name="Segmentos" type="Node2D" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=1361253522]
 
-[node name="Colisao" type="CollisionShape2D" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=848629312]
+[node name="Colisao" type="CollisionShape2D" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=800426454]
 position = Vector2(0, -15)
 shape = SubResource("RectangleShape2D_ipcei")
 debug_color = Color(1, 0.25, 0.28, 0.32)
 
-[node name="SomLaser" type="AudioStreamPlayer2D" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=1471209663]
+[node name="SomLaser" type="AudioStreamPlayer2D" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=1395768625]
 position = Vector2(0, -16)
 stream = ExtResource("38_odkdv")
 volume_db = 2.0
 max_distance = 1400.0
 
-[node name="AtrasoDesligar" type="Timer" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=1902336541]
+[node name="AtrasoDesligar" type="Timer" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=1057078559]
 one_shot = true
 
 [editable path="Entrada/PickupBumerangue"]

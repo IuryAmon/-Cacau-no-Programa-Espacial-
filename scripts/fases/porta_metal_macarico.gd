@@ -8,10 +8,15 @@ extends StaticBody2D
 # tem chave: a única forma de passar é DERRETER a porta, e para isso a Cacau
 # precisa já estar com o maçarico oxídrico no cinto.
 #
-# COMO SE USA NO JOGO: chegue perto e aperte E. Sem o maçarico, o E só devolve
-# um aviso; com ele, a personagem primeiro RECUA para fora do vão (senão a
-# folha derretendo desceria por cima dela), trava na pose da chama e a porta
-# faz o caminho inteiro sozinha.
+# COMO SE USA NO JOGO: chegue perto e aperte E (□ no controle) — é o ÚNICO
+# lugar em que o maçarico acende, porque ele não tem botão solto. Chegando
+# perto, a porta pede o botão sozinha: o balão de "!" acende e o desenho da
+# tecla E (ou do □, de controle) aparece em cima dela — o mesmo aviso da
+# samambaia do world1. Sem o maçarico no cinto, a Cacau comenta o
+# obstáculo numa fala do Dialogic (com o retrato dela), SEM dizer o que abre a
+# porta — descobrir isso é do jogo; com ele, a personagem
+# primeiro RECUA para fora do vão (senão a folha derretendo desceria por cima
+# dela), trava na pose da chama e a porta faz o caminho inteiro sozinha.
 #
 # A CENA DO DERRETIMENTO, em três atos:
 #   1. PRÉ-AQUECIMENTO  a folha ainda inteira passa de metal frio a brasa —
@@ -42,6 +47,10 @@ extends StaticBody2D
 #   (colisões suas) -> qualquer forma com OUTRO nome fica sólida PARA SEMPRE,
 #                    antes e depois do corte
 #   AreaInteracao -> de quão longe o E funciona
+#   ExclamacaoAnimada/Dica -> o balão de "!" e o desenho do botão (a cena
+#                    componentes/icone_interagir.tscn, que troca E <-> □
+#                    sozinha). Os dois acendem juntos quando ela entra na
+#                    AreaInteracao
 #   Luz/Fagulhas/Fumaca -> o efeito em volta; mexa à vontade
 #   Tempos (Inspector)  -> a duração de cada um dos três atos
 #   Encenação (Inspector) -> quanto ela recua da margem da porta antes do corte
@@ -96,7 +105,9 @@ enum Estado { FRIA, DERRETENDO, ABERTA }
 @export var recuo_do_jogador: float = 26.0
 
 @export_group("Texto")
-@export var mensagem_sem_macarico: String = "Aço maciço. Só a chama do maçarico oxídrico passa daqui."
+## Timeline do Dialogic que a Cacau fala ao apertar E sem ter o maçarico no
+## cinto. Ela constata o obstáculo e NÃO entrega a solução.
+@export var fala_sem_macarico: String = "cacau_metal_bloqueado"
 
 var _estado: int = Estado.FRIA
 var _jogador_perto: bool = false
@@ -126,6 +137,9 @@ var calor: float = 0.0:
 @onready var _fumaca: CPUParticles2D = $Fumaca
 @onready var _som_metal: AudioStreamPlayer2D = $SomMetal
 @onready var _exclamacao: AnimatedSprite2D = get_node_or_null("ExclamacaoAnimada")
+## O desenho do botão, acima do balão de "!". Aparece e some junto com ele, e
+## sabe sozinho se mostra a tecla E ou o □ (ver IconeInteragir).
+@onready var _dica: AnimatedSprite2D = get_node_or_null("Dica")
 @onready var _tinta: ShaderMaterial = $Porta.material as ShaderMaterial
 
 
@@ -147,6 +161,8 @@ func _ready() -> void:
 	_aplicar_calor()
 	if _exclamacao:
 		_exclamacao.visible = false
+	if _dica:
+		_dica.visible = false
 
 	# A porta começa inteira: folha sólida, sucata sem corpo. Vale mesmo que
 	# alguém esqueça de marcar "disabled" na forma nova do monte — a porta em
@@ -179,8 +195,9 @@ func _process(_delta: float) -> void:
 
 func _tentar_derreter() -> void:
 	if not Progresso.tem_habilidade(HABILIDADE):
-		Blockout.aviso_flutuante(get_parent(), global_position + Vector2(0, -230),
-			mensagem_sem_macarico)
+		# Não é um aviso do cenário: é a própria Cacau, na caixa de fala do
+		# jogo, constatando que não tem como passar por aqui ainda.
+		DialogicBridge.falar_cacau(fala_sem_macarico)
 		return
 	_derreter()
 
@@ -399,9 +416,15 @@ func _velocidade_da_animacao() -> float:
 # --- BALÃO DE "DÁ PARA INTERAGIR" ---
 
 func _atualizar_aviso() -> void:
-	if _exclamacao == null or _jogador_perto == _aviso_visivel:
+	if _jogador_perto == _aviso_visivel:
 		return
 	_aviso_visivel = _jogador_perto
+	if _dica:
+		_dica.visible = _jogador_perto
+		if _jogador_perto and _dica.has_method("reiniciar"):
+			_dica.reiniciar()
+	if _exclamacao == null:
+		return
 	if _jogador_perto:
 		PopupFX.mostrar(_exclamacao)
 	else:
@@ -409,8 +432,12 @@ func _atualizar_aviso() -> void:
 
 
 func _esconder_aviso() -> void:
-	if _exclamacao and _aviso_visivel:
-		_aviso_visivel = false
+	if not _aviso_visivel:
+		return
+	_aviso_visivel = false
+	if _dica:
+		_dica.visible = false
+	if _exclamacao:
 		PopupFX.esconder(_exclamacao)
 
 
