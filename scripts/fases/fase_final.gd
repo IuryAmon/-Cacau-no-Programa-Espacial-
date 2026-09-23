@@ -55,8 +55,6 @@ func _ready() -> void:
 
 func _on_purificador_resolvido() -> void:
 	_capsula.visible = true
-	Blockout.aviso_flutuante(self, _capsula.global_position + Vector2(0, -180),
-		"Checagem de suporte de vida CONCLUÍDA.\nA cápsula está liberada para embarque!", Color(0.5, 1.0, 0.6))
 
 
 func _process(_delta: float) -> void:

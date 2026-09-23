@@ -179,7 +179,19 @@ func _testar_entrega_da_cacau() -> void:
 	_checar(receptor.get_node("Boca").get_child_count() == 1, "amostra no ar, dentro da mascara")
 	_checar(bau.frame == ultimo, "bau segue aberto com a amostra no ar")
 
+	var som_madeira := receptor.get_node("SomMadeira") as AudioStreamPlayer2D
+	var som_acende := receptor.get_node("SomAcende") as AudioStreamPlayer2D
+	_checar(som_madeira.stream.resource_path == "res://sounds/ColocandoMadeira.mp3",
+		"amostra caindo usa o som da lenha na fornalha")
+	_checar(som_acende.stream.resource_path == "res://sounds/marimba.mp3",
+		"letra acendendo usa a marimba")
+	while receptor.get_node("Boca").get_child_count() > 0:
+		await get_tree().process_frame
+	await get_tree().process_frame
+	_checar(som_madeira.playing and not som_acende.playing, "som da lenha quando a amostra cai dentro")
+
 	await receptor.amostra_recebida
+	_checar(som_acende.playing, "marimba quando a letra acende")
 	_checar(Progresso.tem_celula("N") and not Progresso.carrega_celula("N"), "letra N acesa")
 	var sprite_n := painel.get_node("Letras/N") as Sprite2D
 	await _esperar(receptor.segurar_aberto + 0.6)

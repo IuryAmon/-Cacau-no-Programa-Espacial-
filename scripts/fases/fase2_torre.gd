@@ -75,5 +75,3 @@ func _abrir_armario() -> void:
 		"mensagem": "Mochila equipada!\nShift + direção: dash em 8 direções com jato de N₂ (no chão ou no ar).",
 		"cor": Color(0.3, 0.6, 0.9),
 	})
-	Blockout.aviso_flutuante(self, _ponto_mochila.global_position + Vector2(0, -170),
-		"As duas travas cederam — o armário abriu!", Color(0.5, 1.0, 0.6))

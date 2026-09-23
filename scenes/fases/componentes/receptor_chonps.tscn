@@ -3,9 +3,8 @@
 [ext_resource type="Script" path="res://scripts/fases/receptor_chonps.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://jd8r15kg0so7" path="res://assets/Lab2/Pixel Chest Pack/Retro Chest/Retro Chest - SpriteSheet.png" id="2_bau"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/icone_interagir.tscn" id="4_tecla"]
-[ext_resource type="AudioStream" path="res://sounds/POP.mp3" id="5_pop"]
-[ext_resource type="AudioStream" path="res://sounds/metal hit.mp3" id="6_tampa"]
-[ext_resource type="AudioStream" path="res://sounds/Blip2.wav" id="7_acende"]
+[ext_resource type="AudioStream" uid="uid://bwnlfw8eax788" path="res://sounds/ColocandoMadeira.mp3" id="5_madeira"]
+[ext_resource type="AudioStream" uid="uid://bwj83fvtesgat" path="res://sounds/marimba.mp3" id="6_acende"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bau0"]
 atlas = ExtResource("2_bau")
@@ -96,15 +95,12 @@ shape = SubResource("RectangleShape2D_alcance")
 position = Vector2(0, -100)
 escala_do_icone = 2.2
 
-[node name="SomPop" type="AudioStreamPlayer2D" parent="."]
+[node name="SomMadeira" type="AudioStreamPlayer2D" parent="."]
 position = Vector2(0, -60)
-stream = ExtResource("5_pop")
-
-[node name="SomTampa" type="AudioStreamPlayer2D" parent="."]
-position = Vector2(0, -60)
-stream = ExtResource("6_tampa")
-volume_db = -8.0
+stream = ExtResource("5_madeira")
+volume_db = 12.0
 
 [node name="SomAcende" type="AudioStreamPlayer2D" parent="."]
 position = Vector2(0, -60)
-stream = ExtResource("7_acende")
+stream = ExtResource("6_acende")
+max_polyphony = 2

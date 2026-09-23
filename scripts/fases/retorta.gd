@@ -273,16 +273,11 @@ func _process(_delta: float) -> void:
 
 func _abastecer() -> void:
 	if not Madeira.consumir_do_inventario():
-		Blockout.aviso_flutuante(get_parent(), global_position + Vector2(0, -120),
-			"Sem lenha na mochila. Recolha as toras no depósito.")
 		return
 	_madeiras_no_forno += 1
 	_guardar_carga()
 	_atualizar_sprite()
 	_tocar_som_madeira()
-	if _cheia():
-		Blockout.aviso_flutuante(get_parent(), global_position + Vector2(0, -120),
-			"Fornalha cheia. Agora é acender com o maçarico.", Color(0.95, 0.8, 0.45))
 
 
 ## Recorte de ColocandoMadeira.mp3 (ver SOM_MADEIRA_INICIO/FIM) — uma tora
@@ -312,8 +307,6 @@ func _parar_som_fogo() -> void:
 
 func _tentar_acender() -> void:
 	if not Progresso.tem_habilidade("macarico"):
-		Blockout.aviso_flutuante(get_parent(), global_position + Vector2(0, -120),
-			"O forno precisa da chama do maçarico oxídrico.")
 		return
 
 	_dosagem_aberta = true
@@ -380,8 +373,6 @@ func _on_dosagem_terminada(sucesso: bool, cancelado: bool) -> void:
 		_guardar_carga()
 		_atualizar_sprite()
 		_repor_toras()
-		Blockout.aviso_flutuante(get_parent(), global_position + Vector2(0, -120),
-			"Só sobrou cinza e CO₂...\nO Dr. Chico suspira. Há mais lenha no depósito.", Color(0.9, 0.6, 0.5))
 
 
 func _concluir() -> void:
@@ -390,8 +381,6 @@ func _concluir() -> void:
 	# volta com o carvão esperando para ser retirado.
 	EstadoMundo.guardar(self, "madeiras_no_forno", 0)
 	EstadoMundo.guardar(self, "carbono_pronto", true)
-	Blockout.aviso_flutuante(get_parent(), _ponto_celula.global_position,
-		"Dentro da fornalha: uma amostra sólida de CARBONO.\nPirólise: calor sem oxigênio.", Color(0.5, 1.0, 0.6))
 
 	# A célula só pode ser retirada depois que a brasa apaga: a fornalha
 	# continua queimando um tempo antes de o sprite voltar ao forno frio.
@@ -437,7 +426,3 @@ func _retirar_carbono() -> void:
 	if Inventario.tela_hud_referencia != null:
 		Inventario.tela_hud_referencia.exibir_popup(
 			NOME_CARVAO, TEXTURA_CARVAO, DESCRICAO_CARVAO, ID_CARVAO)
-	else:
-		Blockout.aviso_flutuante(get_parent(), _ponto_celula.global_position,
-			"AMOSTRA DE CARBONO COLETADA!\n" + AmostraChonps.RECADO_ENTREGA,
-			AmostraChonps.cor("C"))

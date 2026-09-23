@@ -100,8 +100,10 @@ static var _textura_brilho: GradientTexture2D = null
 @onready var _area: Area2D = $AreaInteracao
 @onready var _exclamacao: AnimatedSprite2D = get_node_or_null("ExclamacaoAnimada")
 @onready var _dica: AnimatedSprite2D = get_node_or_null("Dica")
-@onready var _som_pop: AudioStreamPlayer2D = $SomPop
-@onready var _som_tampa: AudioStreamPlayer2D = $SomTampa
+## O "toc" da amostra caindo lá dentro: o mesmo recorte do ColocandoMadeira.mp3
+## que a fornalha da retorta toca a cada tora.
+@onready var _som_madeira: AudioStreamPlayer2D = $SomMadeira
+## A letra acendendo no painel (marimba.mp3).
 @onready var _som_acende: AudioStreamPlayer2D = $SomAcende
 
 
@@ -132,7 +134,6 @@ func _ready() -> void:
 	_sprite.animation = ANIM_ABRIR
 	_sprite.stop()
 	_sprite.frame = 0
-	_sprite.animation_finished.connect(_ao_terminar_animacao)
 
 	# Pergunta pelo E antes de quem estiver em volta (o Dr. Chico patrulha
 	# aqui do lado): com uma amostra na mão, o toque é da entrega. Sem amostra
@@ -185,16 +186,17 @@ func _entregar_da_cacau() -> void:
 	if sprite:
 		sprite.flip_h = global_position.x < _player.global_position.x
 
-	await receber(letra, _player.global_position + saida_da_cacau, true)
+	await receber(letra, _player.global_position + saida_da_cacau)
 
 
 ## Faz a amostra de "letra" pular de "origem" (posição no mundo) para dentro
 ## do baú e acende a letra no painel. Quem chama pode dar "await": devolve
 ## quando a letra já acendeu.
 ##
-## "com_aviso" liga o letreiro flutuante com a contagem ("3/6") — a entrega da
-## Cacau usa; a do Dr. Chico na cutscene, que ele mesmo narra, não.
-func receber(letra: String, origem: Vector2, com_aviso: bool = false) -> void:
+## "tom" é o pitch do som da letra acendendo, só nesta entrega (1 = normal).
+## A cutscene usa para a segunda amostra do Dr. Chico soar um pouco mais aguda
+## que a primeira, como uma escala subindo.
+func receber(letra: String, origem: Vector2, tom: float = 1.0) -> void:
 	_ocupado = true
 	_convidando = false
 	_mostrar_aviso(false)
@@ -208,8 +210,6 @@ func receber(letra: String, origem: Vector2, com_aviso: bool = false) -> void:
 	_boca.add_child(amostra)
 	amostra.global_position = origem
 	amostra.scale = Vector2.ZERO
-	if _som_pop.stream:
-		_som_pop.play()
 
 	# 1. PULA DA MÃO: surge crescendo com um estalo e dá um impulso para cima.
 	var pulo := create_tween().set_parallel(true)
@@ -251,15 +251,10 @@ func receber(letra: String, origem: Vector2, com_aviso: bool = false) -> void:
 	_caiu_dentro(letra)
 
 	# 5. O BRILHO SOBE até a letra do painel, e ela acende.
-	await _subir_brilho(letra)
+	await _subir_brilho(letra, tom)
 	if not is_inside_tree():
 		return
 	Progresso.dar_celula(letra)
-	if com_aviso:
-		Blockout.aviso_flutuante(get_parent(), global_position + Vector2(0, -40),
-			"%s NO PAINEL · %d/%d" % [AmostraChonps.nome(letra).to_upper(),
-				Progresso.contar_celulas(), Progresso.CELULAS.size()],
-			AmostraChonps.cor(letra))
 
 	# O baú segue aberto mais um pouco (pode vir outra logo atrás) e só fecha
 	# depois, sozinho, se ninguém mais entregar nada.
@@ -276,9 +271,7 @@ func _posicionar_no_arco(t: float, amostra: Sprite2D, de: Vector2, ate: Vector2,
 ## A amostra bateu no fundo: o baú dá um tranco e volta, com faíscas na cor
 ## do elemento saindo pela boca.
 func _caiu_dentro(letra: String) -> void:
-	if _som_tampa.stream:
-		_som_tampa.pitch_scale = 1.15
-		_som_tampa.play()
+	_tocar_som_madeira()
 
 	_faiscas.color = AmostraChonps.cor(letra)
 	_faiscas.restart()
@@ -291,7 +284,7 @@ func _caiu_dentro(letra: String) -> void:
 
 ## O brilho sai da boca do baú e sobe, fazendo uma curva, até a letra no
 ## painel. Devolve quando chega (é aí que a letra acende).
-func _subir_brilho(letra: String) -> void:
+func _subir_brilho(letra: String, tom: float = 1.0) -> void:
 	var no_painel := get_node_or_null(painel) as PainelChonps
 	if no_painel == null:
 		return
@@ -311,6 +304,7 @@ func _subir_brilho(letra: String) -> void:
 
 	# Estoura em cima da letra e some.
 	if _som_acende.stream:
+		_som_acende.pitch_scale = tom
 		_som_acende.play()
 	var rastro := orbe.get_node_or_null("Rastro") as CPUParticles2D
 	if rastro:
@@ -417,11 +411,16 @@ func _fechar() -> void:
 	_sprite.play_backwards(ANIM_ABRIR)
 
 
-## Fechou de vez (chegou ao primeiro quadro tocando para trás): a tampa bate.
-func _ao_terminar_animacao() -> void:
-	if not _aberto and _sprite.frame == 0 and _som_tampa.stream:
-		_som_tampa.pitch_scale = 0.85
-		_som_tampa.play()
+## Só o trecho da lenha entrando, como na retorta (as constantes são as dela,
+## para os dois sons serem sempre o mesmo).
+func _tocar_som_madeira() -> void:
+	if _som_madeira.stream == null:
+		return
+	_som_madeira.play(RetortaCarbonizacao.SOM_MADEIRA_INICIO)
+	await get_tree().create_timer(
+		RetortaCarbonizacao.SOM_MADEIRA_FIM - RetortaCarbonizacao.SOM_MADEIRA_INICIO).timeout
+	if is_instance_valid(_som_madeira) and _som_madeira.playing:
+		_som_madeira.stop()
 
 
 # ─────────────────────────────────────────────

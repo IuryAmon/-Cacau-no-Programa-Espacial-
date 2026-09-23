@@ -78,5 +78,5 @@ func _on_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
 	set_deferred("monitoring", false)
-	AmostraChonps.coletar(letra, get_parent(), global_position)
+	AmostraChonps.coletar(letra)
 	queue_free()

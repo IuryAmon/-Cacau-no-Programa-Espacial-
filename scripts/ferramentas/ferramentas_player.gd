@@ -290,9 +290,6 @@ func _debug_equipar_mochila() -> void:
 			and not Progresso.tem_habilidade("mochila"):
 		Progresso.dar_habilidade("mochila")
 		print("DEBUG [Ferramentas]: mochila de N₂ equipada pela tecla M.")
-		Blockout.aviso_flutuante(player.get_parent(),
-			player.global_position + Vector2(0, -120),
-			"DEBUG: mochila de N₂ equipada — Shift + direção", Color(0.5, 0.85, 1.0))
 	_tecla_m_estava_pressionada = pressionada
 
 

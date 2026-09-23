@@ -50,7 +50,6 @@ func _process(_delta: float) -> void:
 	if not _jogador_perto or _aberta or not Interacao.pediu():
 		return
 	if not Progresso.tem_habilidade("sinalizador"):
-		Blockout.aviso_flutuante(get_parent(), global_position, "Você ainda não tem o sinalizador.")
 		return
 
 	_aberta = true
@@ -75,6 +74,5 @@ func _on_dosagem_terminada(sucesso: bool, cancelado: bool) -> void:
 		return
 	if sucesso:
 		Progresso.carga_sinalizador = 1.0
-		Blockout.aviso_flutuante(get_parent(), global_position, "Proporção perfeita — carga cheia!", Color(0.5, 1.0, 0.6))
 	else:
 		Progresso.carga_sinalizador = maxf(Progresso.carga_sinalizador, 0.5)

@@ -91,9 +91,6 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		_jogador = body
-		if Progresso.tem_habilidade("botas"):
-			Blockout.aviso_flutuante(get_parent(), body.global_position,
-				"As botas vulcanizadas isolam a corrente.", Color(0.6, 0.95, 0.7))
 
 
 func _on_body_exited(body: Node2D) -> void:

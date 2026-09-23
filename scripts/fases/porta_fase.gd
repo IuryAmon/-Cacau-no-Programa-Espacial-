@@ -118,13 +118,10 @@ func _process(_delta: float) -> void:
 
 func _tentar_entrar() -> void:
 	if requer_habilidade != "" and not Progresso.tem_habilidade(requer_habilidade):
-		Blockout.aviso_flutuante(get_parent(), global_position, mensagem_trancada)
 		return
 	if requer_todas_celulas and not Progresso.todas_as_celulas():
-		Blockout.aviso_flutuante(get_parent(), global_position, mensagem_trancada)
 		return
 	if cena_destino == "":
-		Blockout.aviso_flutuante(get_parent(), global_position, "(Ainda em construção)")
 		return
 
 	Progresso.spawn_tag = tag_destino

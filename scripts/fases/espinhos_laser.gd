@@ -84,8 +84,6 @@ const GOLPE_LETAL := 9999
 @export_range(0.0, 3.0, 0.05) var atraso_desligar: float = 0.0
 ## Estado inicial. Desligado = a fileira já nasce recolhida.
 @export var armado_no_inicio: bool = true
-## Aviso que sobe na tela quando a corrente cai. Vazio = nenhum aviso.
-@export var aviso: String = ""
 
 ## True enquanto os espinhos estão fora E machucando. Vira FALSO já no começo
 ## do recolhimento: assim que a corrente cai o jogador não leva mais dano,
@@ -263,9 +261,6 @@ func desarmar(com_animacao: bool = true) -> void:
 		# O zumbido acompanha a descida INTEIRA e só se apaga no finalzinho: o
 		# fade é calculado para terminar junto com o último quadro.
 		_desligar_som(_duracao(ANIM_DESATIVANDO) - FADE_SOM)
-		if aviso != "" and is_inside_tree():
-			Blockout.aviso_flutuante(get_parent(), global_position + Vector2(0, -60),
-				aviso, Color(0.5, 1.0, 0.6))
 		return
 	_desligar_som()
 	_pose_recolhida()

@@ -268,10 +268,8 @@ func _process(_delta: float) -> void:
 
 func _partir() -> void:
 	if requer_habilidade != "" and not Progresso.tem_habilidade(requer_habilidade):
-		_avisar(mensagem_trancada)
 		return
 	if cena_destino == "":
-		_avisar(mensagem_sem_destino)
 		return
 
 	var passageira := _passageira()
@@ -569,10 +567,6 @@ func _esconder_aviso() -> void:
 	if _aviso_visivel and _exclamacao:
 		PopupFX.esconder(_exclamacao)
 	_aviso_visivel = false
-
-
-func _avisar(texto: String) -> void:
-	Blockout.aviso_flutuante(get_parent(), global_position + Vector2(0.0, -120.0), texto)
 
 
 func _tocar_som() -> void:

@@ -122,17 +122,12 @@ static func textura(letra: String) -> Texture2D:
 
 
 ## A Cacau pegou a amostra no cenário: anota no Progresso e passa pela mesma
-## ficha de coleta dos outros itens, que a guarda na mochila. Sem a ficha na
-## cena (teste, cena aberta solta), o aviso flutuante faz as vezes dela.
-static func coletar(letra: String, pai: Node, posicao: Vector2) -> void:
+## ficha de coleta dos outros itens, que a guarda na mochila.
+static func coletar(letra: String) -> void:
 	Progresso.coletar_celula(letra)
 	if Inventario.tela_hud_referencia != null:
 		Inventario.tela_hud_referencia.exibir_popup(
 			nome_do_item(letra), textura(letra), descricao(letra), id_no_inventario(letra))
-	else:
-		Blockout.aviso_flutuante(pai, posicao,
-			"AMOSTRA DE %s COLETADA!\n%s" % [nome(letra).to_upper(), RECADO_ENTREGA],
-			cor(letra))
 
 
 # ─────────────────────────────────────────────

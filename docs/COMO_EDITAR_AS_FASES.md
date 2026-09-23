@@ -51,7 +51,7 @@ ficam o nome, a descrição do popup e a cor do anel do selo. O maçarico já es
 preenchido — as outras quatro estão com `icone` vazio esperando a arte.
 
 Enquanto o `icone` estiver vazio, a ferramenta funciona normalmente, só sem
-popup e sem selo (segue valendo o aviso flutuante do pickup). Preencheu o
+popup e sem selo. Preencheu o
 `icone`, os três lugares acendem de uma vez, sem mexer em cena nenhuma.
 
 Se você preferir uma arte diferente só para o pickup do chão, arraste ela para

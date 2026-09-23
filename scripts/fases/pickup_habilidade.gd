@@ -135,10 +135,6 @@ func _process(_delta: float) -> void:
 
 	if _jogador_perto and Interacao.pediu():
 		Progresso.dar_habilidade(habilidade)
-		# Ferramenta com arte já ganha o popup de apresentação (nome, descrição
-		# e o selo indo para o canto): o aviso flutuante seria feedback dobrado.
-		if mensagem != "" and CatalogoFerramentas.dados(habilidade).is_empty():
-			Blockout.aviso_flutuante(get_parent(), global_position, mensagem, Color(0.5, 1.0, 0.6))
 		queue_free()
 
 

@@ -129,8 +129,7 @@ func _debug_coletar_tudo() -> void:
 	var texto := "[TESTE] Madeira recolhida."
 	if not liberadas.is_empty():
 		texto = "[TESTE] Madeira recolhida e %s liberado(s)." % ", ".join(liberadas)
-	Blockout.aviso_flutuante(self, player.global_position + Vector2(0, -120),
-		texto, Color(0.6, 0.9, 1.0))
+	print(texto)
 
 
 ## Dá a habilidade e limpa a gaiola/pickup correspondentes.

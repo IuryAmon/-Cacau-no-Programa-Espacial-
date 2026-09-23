@@ -39,7 +39,7 @@ const VELOCIDADE_NATURAL := 120.0
 @export var espera_apos_texto : float = 1.4   # segundos que o balão fica parado (já digitado) antes de sumir sozinho
 ## Onde o balão do "ESPERA AÍ!!!" aparece: x a partir do ponto em que o
 ## cientista vai surgir, y a partir da altura da personagem.
-@export var posicao_grito : Vector2 = Vector2(140.0, -130.0)
+@export var posicao_grito : Vector2 = Vector2(120.0, -130.0)
 ## O Dr. Chico do laboratório, que entra em cena aqui.
 @export var cientista : NodePath
 
@@ -58,6 +58,9 @@ const VELOCIDADE_NATURAL := 120.0
 @export var enquadramento_painel : Vector2 = Vector2(0.0, -108.0)
 ## Respiro entre uma amostra e outra quando ele joga o H e o O.
 @export var pausa_entre_amostras : float = 0.35
+## Pitch do som da letra acendendo na segunda amostra dele (o O): um pouco
+## mais agudo que o da primeira. 1.122 = um tom acima.
+@export var tom_segunda_amostra : float = 1.122
 @export_group("")
 
 var ja_aconteceu : bool = false
@@ -274,10 +277,13 @@ func entregar_h_e_o() -> void:
 		# O desenho dele olha para a esquerda: flip_h = virado para a direita.
 		sprite_cientista.flip_h = lado > 0.0
 
+	# O som da letra acendendo sobe um pouco na segunda amostra; as entregas
+	# seguintes (as da Cacau) voltam ao tom normal.
+	var tons := {"H": 1.0, "O": tom_segunda_amostra}
 	for letra in ["H", "O"]:
 		await _gesto_de_arremesso(sprite_cientista)
 		var mao := cientista_ator.global_position + Vector2(14.0 * lado, -22.0)
-		await caixa.receber(letra, mao)
+		await caixa.receber(letra, mao, tons[letra])
 		await get_tree().create_timer(pausa_entre_amostras).timeout
 
 	# Volta a olhar para ela para continuar a conversa.

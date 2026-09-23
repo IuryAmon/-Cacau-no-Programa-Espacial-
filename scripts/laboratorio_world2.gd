@@ -19,7 +19,6 @@ extends Node2D
 @onready var _health_hud: CanvasLayer = $Player/CanvasLayer/HealthHUD
 @onready var _inventario_hud: CanvasLayer = $Player/InventarioHud
 @onready var _cutscene_revelacao: Node = get_node_or_null("ColisaoFinalFase")
-@onready var _painel_chonps: Node2D = get_node_or_null("PainelChonps")
 
 func _ready() -> void:
 	_camera.limit_left = 142
@@ -52,11 +51,10 @@ func _montar_conteudo_de_fases() -> void:
 	#
 	# O MAÇARICO NÃO É ENTREGUE AQUI. Ele é a recompensa do pátio da Oficina do
 	# Carbono: está trancado numa gaiola de vidro e só sai de lá com a queima
-	# do acetileno balanceada (ver scripts/puzzle_macarico.gd). O Dr. Chico só aponta o
-	# caminho — as travas do jogo continuam olhando só o Progresso.
+	# do acetileno balanceada (ver scripts/puzzle_macarico.gd).
 	#
-	# Isso só acontece depois da revelação: o recado do maçarico é do Dr. Chico,
-	# e na primeira entrada ele ainda nem chegou (a cutscene é que o traz).
+	# Na primeira entrada isso espera a cutscene acabar: quem entrega o H e o O
+	# é o Dr. Chico, e ele ainda nem chegou (a cutscene é que o traz).
 	if not Progresso.hub_ja_apresentou:
 		if EstadoMundo.revelou_dr_chico or _cutscene_revelacao == null:
 			_apresentar_hub()
@@ -72,11 +70,3 @@ func _apresentar_hub() -> void:
 	Progresso.hub_ja_apresentou = true
 	Progresso.dar_celula("H")
 	Progresso.dar_celula("O")
-	# Sai em cima do painel, onde quer que ele esteja: a posição vem do nó,
-	# para o aviso continuar certo depois de você arrastar o painel.
-	var onde_avisar := Vector2(1080, 40)
-	if _painel_chonps:
-		onde_avisar = _painel_chonps.global_position + Vector2(0, 20)
-	Blockout.aviso_flutuante(self, onde_avisar,
-		"\"Deixei o maçarico oxídrico trancado no pátio da oficina.\nSe você já controla essa reação, sabe destravar.\"",
-		Color(0.5, 1.0, 0.6))

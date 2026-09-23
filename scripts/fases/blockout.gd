@@ -10,7 +10,6 @@ extends RefCounted
 #   - o par Sprite2D + Placeholder, que deixa cada componente mostrar um
 #     retângulo colorido enquanto a arte não chegou e sumir sozinho assim que
 #     você arrasta uma textura para o slot;
-#   - o aviso flutuante, usado como feedback de trava/coleta;
 #   - alguns helpers de construção, usados pelo gerador de blockout
 #     (tools/gerar_cenas_fases.gd) e por objetos criados em runtime.
 
@@ -19,7 +18,6 @@ const COR_PAREDE := Color(0.24, 0.26, 0.30)
 const COR_FUNDO := Color(0.15, 0.16, 0.19)
 const COR_FUNDO_2 := Color(0.18, 0.19, 0.22)
 const COR_PLACA := Color(0.85, 0.87, 0.90)
-const COR_DESTAQUE := Color(0.95, 0.75, 0.25)
 
 
 ## O contrato de arte de todo componente: enquanto o Sprite2D estiver sem
@@ -48,31 +46,6 @@ static func adicionar(pai: Node, no: Node) -> void:
 		pai.add_child.call_deferred(no)
 	else:
 		pai.add_child(no)
-
-
-## Aviso rápido que sobe e some acima de uma posição do mundo (feedback de
-## trava, coleta, erro).
-static func aviso_flutuante(pai: Node, pos: Vector2, texto: String, cor: Color = COR_DESTAQUE) -> void:
-	if pai == null or not pai.is_inside_tree():
-		return
-	var lbl := Label.new()
-	lbl.text = texto
-	lbl.add_theme_font_size_override("font_size", 17)
-	lbl.add_theme_color_override("font_color", cor)
-	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
-	lbl.add_theme_constant_override("outline_size", 6)
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl.size = Vector2(380, 80)
-	lbl.position = pos - Vector2(190, 110)
-	lbl.z_index = 50
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pai.add_child(lbl)
-
-	var tween := pai.get_tree().create_tween()
-	tween.tween_property(lbl, "position:y", lbl.position.y - 40.0, 1.8)
-	tween.parallel().tween_property(lbl, "modulate:a", 0.0, 1.8).set_ease(Tween.EASE_IN)
-	tween.tween_callback(lbl.queue_free)
 
 
 # --- HELPERS DE CONSTRUÇÃO (gerador de blockout e objetos de runtime) ---

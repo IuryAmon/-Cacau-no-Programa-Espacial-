@@ -70,7 +70,4 @@ func _on_dosagem_terminada(sucesso: bool, cancelado: bool) -> void:
 	if cancelado or not sucesso:
 		return
 	Progresso.dar_habilidade("botas")
-	Blockout.aviso_flutuante(get_parent(), global_position + Vector2(0, -180),
-		"A amostra quicou alto — BOTAS VULCANIZADAS equipadas!\nBorracha isolante: o corredor eletrificado agora tem travessia.",
-		Color(0.5, 1.0, 0.6))
 	botas_conquistadas.emit()
