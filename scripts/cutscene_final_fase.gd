@@ -17,8 +17,9 @@ extends Area2D
 # eventos "do" (DialogicBridge.levar_ao_painel / entregar_h_e_o), e o Dialogic
 # espera cada um acabar antes da próxima fala.
 #
-# O ponto em que o Dr. Chico para no painel é a própria posição dele na cena:
-# arraste o nó Cientista para mudar onde ele fica (e patrulha) depois.
+# Onde os dois param no painel sai do receptor (parada_cacau e
+# parada_cientista, no Inspector). A ronda do Dr. Chico depois da conversa é
+# em volta da posição do nó Cientista na cena: arraste o nó para mudá-la.
 
 signal terminou
 
@@ -29,6 +30,9 @@ const DIALOG_BOX_SCENE = preload("res://scenes/dialog_box.tscn")
 # speed_scale 1.0. Mexer em `velocidade` acelera a animação junto, então os
 # pés continuam sem patinar.
 const VELOCIDADE_NATURAL := 120.0
+
+# Quanto o retrato do Dr. Chico leva para sumir/voltar nos trechos sem fala.
+const DURACAO_FADE_RETRATO := 0.25
 
 @export var distancia_spawn : float = 650.0   # distância (à esquerda do player) onde o cientista aparece
 @export var distancia_parada : float = 90.0   # distância do player em que ele para
@@ -52,33 +56,25 @@ const VELOCIDADE_NATURAL := 120.0
 @export var atraso_cacau : float = 0.9
 ## Onde ela para, contado do receptor (negativo = à esquerda dele).
 @export var parada_cacau : float = -78.0
+## Onde ele para, contado do receptor: colado no caixote, do outro lado dela.
+@export var parada_cientista : float = 89.0
 ## Zoom da câmera enquadrando o painel, o receptor e os dois.
 @export var zoom_no_painel : float = 2.5
 ## Ponto que a câmera enquadra, contado do receptor (sobe para o painel caber).
 @export var enquadramento_painel : Vector2 = Vector2(0.0, -108.0)
 ## Respiro entre uma amostra e outra quando ele joga o H e o O.
 @export var pausa_entre_amostras : float = 0.35
-## Pitch do som da letra acendendo na segunda amostra dele (o O): um pouco
-## mais agudo que o da primeira. 1.122 = um tom acima.
-@export var tom_segunda_amostra : float = 1.122
 @export_group("")
 
 var ja_aconteceu : bool = false
 var player_ref : Node = null
 var cientista_ator : Node2D = null
 var caixa_grito : Node2D = null
-# Onde o Dr. Chico foi posto na cena: é onde ele para ao chegar no painel.
-var _posto_cientista : Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
 	# Os eventos "do" da timeline chegam por aqui (ver dialogic_bridge.gd).
 	add_to_group("cutscene_revelacao")
-
-	# Lido antes de a cutscene mexer nele: é o lugar dele na cena.
-	var no_cientista := get_node_or_null(cientista) as Node2D
-	if no_cientista:
-		_posto_cientista = no_cientista.global_position
 
 	# Voltando ao laboratório depois, a revelação já aconteceu: a cutscene não
 	# pode acontecer de novo.
@@ -208,8 +204,8 @@ func _iniciar_dialogo() -> void:
 #  No meio da conversa (eventos "do" da timeline)
 # ─────────────────────────────────────────────
 
-## "Vem comigo!": ele sai andando na frente até o posto dele, ao lado do
-## painel, e ela vai atrás até parar do outro lado do receptor. Chegando, a
+## "Vem comigo!": ele sai andando na frente até parar colado no receptor, e
+## ela vai atrás até parar do outro lado dele. Chegando, a
 ## câmera abre no painel e os dois se viram um para o outro.
 func levar_ao_painel() -> void:
 	var caixa := get_node_or_null(receptor) as Node2D
@@ -218,14 +214,14 @@ func levar_ao_painel() -> void:
 		return
 
 	# A caminhada é sem caixa de fala: só os dois atravessando o laboratório.
-	await Dialogic.Text.hide_textbox()
+	await _esconder_dialogo()
 	var camera := get_viewport().get_camera_2d()
 	if camera and camera.has_method("restaurar"):
 		camera.restaurar()
 
 	var sprite_cientista := cientista_ator.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	var sprite_player := player_ref.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
-	var destino_dele := _posto_cientista.x
+	var destino_dele := caixa.global_position.x + parada_cientista
 	var destino_dela := caixa.global_position.x + parada_cacau
 	var tempo_dele := absf(destino_dele - cientista_ator.global_position.x) / velocidade_ida
 	var tempo_dela := absf(destino_dela - player_ref.global_position.x) / velocidade_ida
@@ -259,6 +255,8 @@ func levar_ao_painel() -> void:
 		camera.enquadrar(caixa.global_position + enquadramento_painel, zoom_no_painel)
 		await get_tree().create_timer(0.8).timeout
 
+	await _mostrar_dialogo()
+
 
 ## "Olha só!": ele joga no receptor os cilindros de H e O que sobraram da
 ## máquina do laser, um de cada vez, e as duas letras acendem no painel.
@@ -269,7 +267,7 @@ func entregar_h_e_o() -> void:
 		Progresso.dar_celula("O")
 		return
 
-	await Dialogic.Text.hide_textbox()
+	await _esconder_dialogo()
 
 	var sprite_cientista := cientista_ator.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	var lado := 1.0 if caixa.global_position.x > cientista_ator.global_position.x else -1.0
@@ -277,18 +275,54 @@ func entregar_h_e_o() -> void:
 		# O desenho dele olha para a esquerda: flip_h = virado para a direita.
 		sprite_cientista.flip_h = lado > 0.0
 
-	# O som da letra acendendo sobe um pouco na segunda amostra; as entregas
-	# seguintes (as da Cacau) voltam ao tom normal.
-	var tons := {"H": 1.0, "O": tom_segunda_amostra}
 	for letra in ["H", "O"]:
 		await _gesto_de_arremesso(sprite_cientista)
 		var mao := cientista_ator.global_position + Vector2(14.0 * lado, -22.0)
-		await caixa.receber(letra, mao, tons[letra])
+		await caixa.receber(letra, mao)
 		await get_tree().create_timer(pausa_entre_amostras).timeout
 
 	# Volta a olhar para ela para continuar a conversa.
 	if sprite_cientista and player_ref:
 		sprite_cientista.flip_h = player_ref.global_position.x > cientista_ator.global_position.x
+
+	await _mostrar_dialogo()
+
+
+## Some com a caixa de fala e o retrato durante a caminhada e o arremesso,
+## sem tirar o Dr. Chico da conversa. Tirar e pôr de volta na timeline
+## ("leave" + "join") cria um retrato novo, que nasce escurecido: o Dialogic
+## só acende o retrato de quem fala quando o falante MUDA, e aqui ele continua
+## sendo o mesmo — o retrato ficava apagado até o fim da conversa.
+func _esconder_dialogo() -> void:
+	await _esmaecer_retratos(0.0)
+	await Dialogic.Text.hide_textbox()
+
+
+## O retrato volta (a caixa de fala volta sozinha na próxima fala).
+func _mostrar_dialogo() -> void:
+	await _esmaecer_retratos(1.0)
+
+
+## Rede de segurança: os contêineres de retrato são do Dialogic e servem às
+## próximas conversas também — não podem ficar transparentes se a cena trocar
+## no meio de um trecho escondido.
+func _restaurar_retratos() -> void:
+	for retrato: CanvasItem in get_tree().get_nodes_in_group("dialogic_portrait_con_position"):
+		retrato.modulate.a = 1.0
+
+
+func _exit_tree() -> void:
+	_restaurar_retratos()
+
+
+func _esmaecer_retratos(alfa: float) -> void:
+	var retratos := get_tree().get_nodes_in_group("dialogic_portrait_con_position")
+	if retratos.is_empty():
+		return
+	var fade := create_tween().set_parallel(true)
+	for retrato: CanvasItem in retratos:
+		fade.tween_property(retrato, "modulate:a", alfa, DURACAO_FADE_RETRATO)
+	await fade.finished
 
 
 ## Começa a animação de andar virada para o lado do passo, com os pés no ritmo
@@ -331,6 +365,7 @@ func _gesto_de_arremesso(sprite: AnimatedSprite2D) -> void:
 func _on_dialogo_terminou() -> void:
 	# "Bem-vinda à seleção!" — daqui em diante o Dr. Chico é o do laboratório.
 	EstadoMundo.registrar_revelacao()
+	_restaurar_retratos()
 
 	var camera = get_viewport().get_camera_2d()
 	if camera and camera.has_method("restaurar"):

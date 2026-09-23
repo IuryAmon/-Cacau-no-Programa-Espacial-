@@ -192,6 +192,11 @@ func _testar_entrega_da_cacau() -> void:
 
 	await receptor.amostra_recebida
 	_checar(som_acende.playing, "marimba quando a letra acende")
+	_checar(is_equal_approx(som_acende.pitch_scale, 1.0), "primeira letra do painel no tom normal")
+	_checar(ReceptorChonps.tom_da_letra(2) > ReceptorChonps.tom_da_letra(1)
+		and ReceptorChonps.tom_da_letra(3) > ReceptorChonps.tom_da_letra(2)
+		and ReceptorChonps.tom_da_letra(6) > ReceptorChonps.tom_da_letra(5),
+		"cada letra seguinte soa mais aguda")
 	_checar(Progresso.tem_celula("N") and not Progresso.carrega_celula("N"), "letra N acesa")
 	var sprite_n := painel.get_node("Letras/N") as Sprite2D
 	await _esperar(receptor.segurar_aberto + 0.6)
@@ -206,11 +211,15 @@ func _testar_entrega_da_cacau() -> void:
 	await _apertar_e()
 	await receptor.amostra_recebida
 	_checar(Progresso.tem_celula("P") and Progresso.carrega_celula("S"), "primeiro toque entrega o P")
+	_checar(is_equal_approx(som_acende.pitch_scale, ReceptorChonps.tom_da_letra(2)),
+		"segunda letra do painel (P) um degrau acima")
 	await _esperar(receptor.segurar_aberto + 0.3)
 	_checar(bau.frame == ultimo, "ainda com o S, o bau segue aberto")
 	await _apertar_e()
 	await receptor.amostra_recebida
 	_checar(Progresso.tem_celula("S"), "segundo toque entrega o S")
+	_checar(is_equal_approx(som_acende.pitch_scale, ReceptorChonps.tom_da_letra(3)),
+		"terceira letra do painel (S) mais um degrau acima")
 
 	await _fechar(lab)
 	_zerar_progresso()
@@ -227,10 +236,14 @@ func _testar_cutscene() -> void:
 	var cientista := lab.get_node("Cientista")
 	var receptor := lab.get_node("ReceptorChonps") as ReceptorChonps
 	var player: CharacterBody2D = lab.get_node("Player")
-	var posto: Vector2 = cutscene._posto_cientista
+	# A ronda dele é em volta da posição do nó na cena; a parada da conversa
+	# é colada no receptor, à esquerda da ronda.
+	var ronda_x: float = cientista.global_position.x
+	var parada_dele: float = receptor.global_position.x + cutscene.parada_cientista
 
 	_checar(not cientista.visible, "Dr. Chico fora do mapa antes da revelacao")
-	_checar(absf(posto.x - receptor.global_position.x) < 200.0, "posto dele fica ao lado do painel")
+	_checar(ronda_x > parada_dele and ronda_x - receptor.global_position.x < 500.0,
+		"ronda dele fica a direita do painel, alem da parada da conversa")
 	_checar(cutscene.get_node_or_null(cutscene.receptor) == receptor, "cutscene aponta o receptor")
 
 	# Como no fim da queda: ele parado à esquerda dela, os dois travados.
@@ -245,7 +258,7 @@ func _testar_cutscene() -> void:
 	var y_player := player.global_position.y
 
 	await DialogicBridge.levar_ao_painel()
-	_checar(absf(cientista.global_position.x - posto.x) < 1.0, "ele para no posto dele")
+	_checar(absf(cientista.global_position.x - parada_dele) < 1.0, "ele para colado no receptor")
 	var parada: float = receptor.global_position.x + cutscene.parada_cacau
 	_checar(absf(player.global_position.x - parada) < 1.0, "ela para do outro lado do receptor")
 	_checar(absf(player.global_position.y - y_player) < 1.0, "ela anda no chao, sem cair")
@@ -268,7 +281,8 @@ func _testar_cutscene() -> void:
 	cutscene._on_dialogo_terminou()
 	await get_tree().process_frame
 	_checar(EstadoMundo.revelou_dr_chico, "revelacao registrada")
-	_checar(absf(cientista._origem_x - posto.x) < 1.0, "patrulha em volta do painel")
+	_checar(absf(cientista._origem_x - ronda_x) < 1.0, "ronda em volta do ponto dele na cena")
+	_checar(cientista._direcao == 1, "sai andando para a direita, rumo a ronda")
 	_checar(player.pode_se_mover, "Cacau livre no fim")
 
 	await _fechar(lab)

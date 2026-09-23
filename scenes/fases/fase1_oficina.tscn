@@ -1189,8 +1189,8 @@ position = Vector2(14, 1)
 text = "FERRAMENTA
 []"
 
-[node name="MascaraSolda" type="Sprite2D" parent="Patio" unique_id=629026889]
-position = Vector2(231, -921)
+[node name="MascaraSolda" type="Sprite2D" parent="Patio/PickupMacarico" unique_id=629026889]
+position = Vector2(29, -1)
 scale = Vector2(1.5, 1.5)
 texture = ExtResource("40_mascara")
 

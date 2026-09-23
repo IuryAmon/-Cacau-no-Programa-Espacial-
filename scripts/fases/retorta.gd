@@ -22,9 +22,11 @@ extends Node2D
 #   Sprite            -> AnimatedSprite2D da fornalha, com as animações
 #                        "desligada", "madeira1", "madeira2", "madeira3" e
 #                        "ligada" (o placeholder some sozinho)
-#   PontoDaCelula     -> Marker2D usado como referência para os avisos do
-#                        carvão pronto (a célula não é mais um objeto solto:
-#                        ela é retirada com E, direto na fornalha)
+#   PosicaoDoMacarico -> onde a Cacau fica para acender a fornalha. Como na
+#                        porta de metal, ao apertar E com a fornalha cheia ela
+#                        anda sozinha até aqui e só então acende o maçarico,
+#                        virada para o forno. Arraste o marcador para mudar o
+#                        lugar (o x é o que vale; ela anda no chão)
 #
 # As toras NÃO ficam dentro desta cena: são instâncias de madeira.tscn soltas
 # na fase (grupo "madeira"), para você arrastar cada uma no editor. A fornalha
@@ -86,7 +88,7 @@ var _pai_das_toras: Node = null
 @onready var _sprite: AnimatedSprite2D = $Sprite
 @onready var _placeholder: Node2D = $Placeholder
 @onready var _area: Area2D = $AreaInteracao
-@onready var _ponto_celula: Marker2D = $PontoDaCelula
+@onready var _posicao_macarico: Marker2D = $PosicaoDoMacarico
 @onready var _exclamacao: AnimatedSprite2D = $ExclamacaoAnimada
 @onready var _popup_madeira: AnimatedSprite2D = $PopupMadeira
 @onready var _som_madeira: AudioStreamPlayer2D = $SomColocarMadeira
@@ -310,6 +312,16 @@ func _tentar_acender() -> void:
 		return
 
 	_dosagem_aberta = true
+
+	# Como na porta de metal: ela vai sozinha até o lugar de acender (o
+	# marcador PosicaoDoMacarico) e só então a chama sai. O _dosagem_aberta
+	# já ligado segura o E enquanto ela anda.
+	var player := get_tree().get_first_node_in_group("player")
+	if player and player.has_method("recuar_ate_x"):
+		await player.recuar_ate_x(_posicao_macarico.global_position.x)
+		if not is_instance_valid(self) or not is_inside_tree():
+			return
+
 	_acesa = true
 	_atualizar_sprite()
 	# Acendendo: a chama fica na mão dela até o painel abrir. Dali em diante a

@@ -156,10 +156,10 @@ func entrar_em_cena() -> void:
 
 
 ## Fim da cutscene da revelação: volta a ser o NPC da sala (patrulha, conversa
-## no E) a partir de onde a conversa terminou — ao lado do painel CHONPS, para
-## onde ele levou a Cacau. A patrulha passa a ser em volta desse ponto. (Na
-## cena ele já fica posto ali, então voltando ao laboratório depois ele nasce
-## no mesmo lugar.)
+## no E) a partir de onde a conversa terminou, colado no receptor do painel
+## CHONPS. A patrulha continua sendo em volta do ponto dele na cena (um pouco
+## à direita do painel), então ele sai andando dali até lá — e voltando ao
+## laboratório depois ele já nasce nesse ponto.
 func assumir_o_posto() -> void:
 	set_physics_process(true)
 	set_process(true)
@@ -167,8 +167,10 @@ func assumir_o_posto() -> void:
 	$CollisionShape2D.set_deferred("disabled", false)
 	raio_chao.enabled = patrulha
 	raio_parede.enabled = patrulha
-	_origem_x = global_position.x
 	_x_anterior = global_position.x
+	# Sai andando para o lado da ronda dele.
+	_direcao = 1 if _origem_x >= global_position.x else -1
+	_posicionar_sensores()
 	# Um respiro antes de sair andando: ele acabou de chegar.
 	_espera = patrulha_pausa_max
 

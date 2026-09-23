@@ -53,6 +53,12 @@ const CENA := "res://scenes/fases/componentes/receptor_chonps.tscn"
 ## A animação do Corpo/Sprite que vai do baú fechado ao aberto.
 const ANIM_ABRIR := &"abrir"
 
+## O som de cada letra acendendo sobe um degrau: a primeira letra do painel
+## toca no tom normal, a segunda um pouco mais aguda, e assim por diante. Os
+## degraus são os da escala maior (dó ré mi fá sol lá), em semitons, para as
+## seis letras juntas soarem como uma melodia subindo.
+const ESCALA_DO_PAINEL := [0, 2, 4, 5, 7, 9]
+
 ## O PainelChonps cuja letra acende a cada entrega.
 @export var painel: NodePath
 
@@ -192,11 +198,7 @@ func _entregar_da_cacau() -> void:
 ## Faz a amostra de "letra" pular de "origem" (posição no mundo) para dentro
 ## do baú e acende a letra no painel. Quem chama pode dar "await": devolve
 ## quando a letra já acendeu.
-##
-## "tom" é o pitch do som da letra acendendo, só nesta entrega (1 = normal).
-## A cutscene usa para a segunda amostra do Dr. Chico soar um pouco mais aguda
-## que a primeira, como uma escala subindo.
-func receber(letra: String, origem: Vector2, tom: float = 1.0) -> void:
+func receber(letra: String, origem: Vector2) -> void:
 	_ocupado = true
 	_convidando = false
 	_mostrar_aviso(false)
@@ -251,7 +253,7 @@ func receber(letra: String, origem: Vector2, tom: float = 1.0) -> void:
 	_caiu_dentro(letra)
 
 	# 5. O BRILHO SOBE até a letra do painel, e ela acende.
-	await _subir_brilho(letra, tom)
+	await _subir_brilho(letra)
 	if not is_inside_tree():
 		return
 	Progresso.dar_celula(letra)
@@ -284,7 +286,7 @@ func _caiu_dentro(letra: String) -> void:
 
 ## O brilho sai da boca do baú e sobe, fazendo uma curva, até a letra no
 ## painel. Devolve quando chega (é aí que a letra acende).
-func _subir_brilho(letra: String, tom: float = 1.0) -> void:
+func _subir_brilho(letra: String) -> void:
 	var no_painel := get_node_or_null(painel) as PainelChonps
 	if no_painel == null:
 		return
@@ -304,7 +306,8 @@ func _subir_brilho(letra: String, tom: float = 1.0) -> void:
 
 	# Estoura em cima da letra e some.
 	if _som_acende.stream:
-		_som_acende.pitch_scale = tom
+		_som_acende.pitch_scale = tom_da_letra(Progresso.contar_celulas()
+			+ (0 if Progresso.tem_celula(letra) else 1))
 		_som_acende.play()
 	var rastro := orbe.get_node_or_null("Rastro") as CPUParticles2D
 	if rastro:
@@ -314,6 +317,13 @@ func _subir_brilho(letra: String, tom: float = 1.0) -> void:
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	estouro.tween_property(orbe, "modulate:a", 0.0, 0.3)
 	estouro.chain().tween_callback(orbe.queue_free)
+
+
+## Pitch do som da "ordem"-ésima letra acesa no painel (1 = a primeira, tom
+## normal). Depois da sexta fica no último degrau.
+static func tom_da_letra(ordem: int) -> float:
+	var degrau: int = ESCALA_DO_PAINEL[clampi(ordem - 1, 0, ESCALA_DO_PAINEL.size() - 1)]
+	return pow(2.0, degrau / 12.0)
 
 
 func _posicionar_orbe(t: float, orbe: Node2D, de: Vector2, ate: Vector2) -> void:

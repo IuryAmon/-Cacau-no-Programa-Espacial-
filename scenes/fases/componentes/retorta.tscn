@@ -213,8 +213,8 @@ color = Color(0.22, 0.2, 0.24, 1)
 position = Vector2(0, -80)
 shape = SubResource("RectangleShape2D_mjhgn")
 
-[node name="PontoDaCelula" type="Marker2D" parent="." unique_id=296517409]
-position = Vector2(0, -360)
+[node name="PosicaoDoMacarico" type="Marker2D" parent="." unique_id=296517409]
+position = Vector2(-115, 0)
 
 [node name="ExclamacaoAnimada" type="AnimatedSprite2D" parent="." unique_id=3820941157]
 visible = false

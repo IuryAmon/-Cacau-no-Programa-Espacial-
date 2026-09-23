@@ -4996,11 +4996,11 @@ barreira = NodePath("../TileMap/Barreira")
 position = Vector2(61, 29)
 
 [node name="Cientista" parent="." unique_id=760279611 instance=ExtResource("54_cientista")]
-position = Vector2(2200, 100)
+position = Vector2(2375, 100)
 apos_revelacao = true
 timeline_fixa = "cientista_laser_aberto"
 patrulha = true
-patrulha_alcance = 85.0
+patrulha_alcance = 90.0
 
 [node name="ColisaoFinalFase" type="Area2D" parent="." unique_id=1417041945]
 position = Vector2(854, 20)
