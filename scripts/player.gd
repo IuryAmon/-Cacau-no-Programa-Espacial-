@@ -40,9 +40,6 @@ var esta_invencivel: bool = false
 # terminar. As duas se somam em OU nas checagens de dano abaixo.
 var esta_invencivel_dash: bool = false
 
-# --- DEBUG: TECLA K (coleta automática dos cilindros H2/O2 para testar o puzzle) ---
-var _tecla_k_estava_pressionada: bool = false
-
 # --- CUTSCENE CONTEMPLATIVA DO FOGUETE (disparada pela Area2D "ColisaoCenaFoguete") ---
 const TIMELINE_FOGUETE := "cacau_ve_foguete"
 var _fala_foguete_feita: bool = false
@@ -308,9 +305,13 @@ func _physics_process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_K) and Input.is_action_just_pressed("jump"):
 		take_damage(1, Vector2.ZERO)
 
-	if Input.is_key_pressed(KEY_K) and not _tecla_k_estava_pressionada:
-		_debug_coletar_cilindros_puzzle()
-	_tecla_k_estava_pressionada = Input.is_key_pressed(KEY_K)
+# A tecla K vem pelo evento, e não pela checagem no fim do _physics_process:
+# lá ela seria ignorada sempre que a personagem está travada (diálogo,
+# cutscene, entrada da cena), porque o _physics_process retorna antes.
+func _input(event: InputEvent) -> void:
+	var tecla := event as InputEventKey
+	if tecla and tecla.pressed and not tecla.echo and tecla.keycode == KEY_K:
+		_debug_resolver_puzzle_combustao()
 
 # --- POSE DO MAÇARICO ---
 #
@@ -781,6 +782,25 @@ func _debug_coletar_cilindros_puzzle() -> void:
 			EstadoMundo.marcar_feito(item)
 			item.queue_free()
 			print("DEBUG [Player]: Coletado via tecla K -> ", item.nome_do_item)
+
+# --- DEBUG: RESOLVE O PUZZLE DA COMBUSTÃO DO H2 (tecla K) ---
+# Faz o caminho que o jogador faria: pega os cilindros de H2 e O2 e resolve o
+# painel do laser (o ReceptorItemGeral do world). O painel consome os
+# cilindros, fica azul e emite "puzzle_resolvido", que desliga a Barreira e
+# avisa o Cientista, igual a resolver na mão. Fora de build de debug não faz nada.
+func _debug_resolver_puzzle_combustao() -> void:
+	if not OS.is_debug_build():
+		return
+	for receptor in get_tree().get_nodes_in_group("receptor_item"):
+		var itens := [receptor.item_necessario, receptor.item_necessario_2]
+		if not ("Cilindro_de_Hidrogenio" in itens and "Cilindro_Oxigenio" in itens):
+			continue
+		if receptor.ja_foi_resolvido:
+			return
+		_debug_coletar_cilindros_puzzle()
+		receptor.sucesso_no_puzzle()
+		print("DEBUG [Player]: puzzle da combustão resolvido via tecla K, laser liberado")
+		return
 
 func _on_area_2d_body_entered(body: Node2D) -> void:
 	if body == self:

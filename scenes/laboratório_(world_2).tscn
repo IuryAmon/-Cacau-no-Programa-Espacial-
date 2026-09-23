@@ -5001,7 +5001,7 @@ patrulha_alcance = 120.0
 position = Vector2(854, 118)
 
 [node name="PainelChonps" parent="." unique_id=75985465 instance=ExtResource("55_painel")]
-position = Vector2(2164.5, -96.75)
+position = Vector2(2079, -6)
 scale = Vector2(1.5, 1.5)
 
 [node name="PortaOficina" parent="." unique_id=850020829 instance=ExtResource("57_portaelet")]

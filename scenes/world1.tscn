@@ -60,8 +60,8 @@ shader_parameter/contraste = 0.97
 shader_parameter/cor_sol = Color(1, 0.87, 0.64, 1)
 shader_parameter/calor = 0.12
 shader_parameter/alcance_calor = 0.9
-shader_parameter/sol_uv = Vector2(0.7567325, 0.3207547)
-shader_parameter/aspecto = 2.1018867924528304
+shader_parameter/sol_uv = Vector2(0.7567325, 0.33932135)
+shader_parameter/aspecto = 2.223552894211577
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_aditivo"]
 blend_mode = 1
@@ -111,8 +111,8 @@ shader_parameter/contraste = 0.86
 shader_parameter/cor_sol = Color(1, 0.87, 0.64, 1)
 shader_parameter/calor = 0.2
 shader_parameter/alcance_calor = 1.0
-shader_parameter/sol_uv = Vector2(0.7567325, 0.3207547)
-shader_parameter/aspecto = 2.1018867924528304
+shader_parameter/sol_uv = Vector2(0.7567325, 0.33932135)
+shader_parameter/aspecto = 2.223552894211577
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_neblina3"]
 shader = ExtResource("53_neblina")
@@ -122,8 +122,8 @@ shader_parameter/contraste = 0.91
 shader_parameter/cor_sol = Color(1, 0.87, 0.64, 1)
 shader_parameter/calor = 0.16
 shader_parameter/alcance_calor = 0.95
-shader_parameter/sol_uv = Vector2(0.7567325, 0.3207547)
-shader_parameter/aspecto = 2.1018867924528304
+shader_parameter/sol_uv = Vector2(0.7567325, 0.33932135)
+shader_parameter/aspecto = 2.223552894211577
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_neblina2"]
 shader = ExtResource("53_neblina")
@@ -133,8 +133,8 @@ shader_parameter/contraste = 0.96
 shader_parameter/cor_sol = Color(1, 0.87, 0.64, 1)
 shader_parameter/calor = 0.11
 shader_parameter/alcance_calor = 0.9
-shader_parameter/sol_uv = Vector2(0.7567325, 0.3207547)
-shader_parameter/aspecto = 2.1018867924528304
+shader_parameter/sol_uv = Vector2(0.7567325, 0.33932135)
+shader_parameter/aspecto = 2.223552894211577
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_neblina1"]
 shader = ExtResource("53_neblina")
@@ -144,8 +144,8 @@ shader_parameter/contraste = 1.0
 shader_parameter/cor_sol = Color(1, 0.87, 0.64, 1)
 shader_parameter/calor = 0.07
 shader_parameter/alcance_calor = 0.85
-shader_parameter/sol_uv = Vector2(0.7567325, 0.3207547)
-shader_parameter/aspecto = 2.1018867924528304
+shader_parameter/sol_uv = Vector2(0.7567325, 0.33932135)
+shader_parameter/aspecto = 2.223552894211577
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qx5da"]
 texture = ExtResource("6_o24d1")
@@ -6210,8 +6210,8 @@ curve = SubResource("Curve_poeira")
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_poeira"]
 lifetime_randomness = 0.6
 emission_shape = 3
-emission_box_extents = Vector3(690.68, 328.6, 1)
-direction = Vector3(-0.9490146, 0.3152321, 0)
+emission_box_extents = Vector3(690.68, 310.62, 1)
+direction = Vector3(-0.96259606, 0.27094048, 0)
 spread = 40.0
 initial_velocity_min = 5.0
 initial_velocity_max = 20.0
@@ -6227,9 +6227,9 @@ turbulence_influence_min = 0.02
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sol"]
 shader = ExtResource("51_sol")
-shader_parameter/sol_uv = Vector2(0.7567325, 0.3207547)
-shader_parameter/aspecto = 2.1018867924528304
-shader_parameter/visibilidade = 0.9804613669802992
+shader_parameter/sol_uv = Vector2(0.7567325, 0.33932135)
+shader_parameter/aspecto = 2.223552894211577
+shader_parameter/visibilidade = 0.9855245142583069
 shader_parameter/cor_luz = Color(1, 0.87, 0.64, 1)
 shader_parameter/cor_sombra = Color(0.6, 0.7, 0.95, 1)
 shader_parameter/forca_rim = 0.65
@@ -6284,11 +6284,11 @@ metadata/_edit_lock_ = true
 motion_scale = Vector2(0, 0)
 
 [node name="Halo" type="Sprite2D" parent="BG/sol" unique_id=91000002]
-self_modulate = Color(1, 0.87, 0.64, 0.2487144)
+self_modulate = Color(1, 0.87, 0.64, 0.24511415)
 texture_filter = 2
 material = SubResource("CanvasItemMaterial_aditivo")
 position = Vector2(843, 170)
-scale = Vector2(0.59402066, 0.59402066)
+scale = Vector2(0.5837022, 0.5837022)
 texture = SubResource("GradientTexture2D_halo")
 
 [node name="Sprite2D" type="Sprite2D" parent="BG/sol" unique_id=580668255]
@@ -6302,7 +6302,7 @@ texture = SubResource("GradientTexture2D_nucleo")
 texture_filter = 2
 position = Vector2(843, 170)
 color = Color(1, 0.87, 0.64, 1)
-energy = 0.22958252
+energy = 0.2262592
 range_layer_min = -512
 range_layer_max = -1
 texture = SubResource("GradientTexture2D_luz")
@@ -6409,7 +6409,7 @@ debug_color = Color(7.508397e-06, 0.58071315, 0.8015938, 0.41960785)
 
 [node name="Player" parent="." unique_id=392803900 instance=ExtResource("7_o24d1")]
 z_index = 2
-position = Vector2(5605, 95)
+position = Vector2(6043, 115)
 max_jumps = 20
 
 [node name="Area2D" type="Area2D" parent="." unique_id=70551546]
@@ -6717,7 +6717,7 @@ script = ExtResource("50_ilumin")
 [node name="LuzDoCeu" type="PointLight2D" parent="IluminacaoSolar" unique_id=91000007]
 top_level = true
 texture_filter = 2
-position = Vector2(557, 26.5)
+position = Vector2(557, 25.05)
 color = Color(0.6, 0.7, 0.95, 1)
 energy = 0.44
 texture = SubResource("GradientTexture2D_luz")
@@ -6730,7 +6730,7 @@ z_index = 90
 z_as_relative = false
 texture_filter = 2
 material = SubResource("CanvasItemMaterial_aditivo")
-position = Vector2(557, 265)
+position = Vector2(557, 250.5)
 amount = 60
 texture = SubResource("GradientTexture2D_poeira")
 lifetime = 11.0
@@ -6747,7 +6747,7 @@ metadata/_edit_lock_ = true
 [node name="PosSolar" type="ColorRect" parent="IluminacaoSolar/Overlay" unique_id=91000010]
 material = SubResource("ShaderMaterial_sol")
 offset_right = 1114.0
-offset_bottom = 530.0
+offset_bottom = 501.0
 mouse_filter = 2
 metadata/_edit_lock_ = true
 

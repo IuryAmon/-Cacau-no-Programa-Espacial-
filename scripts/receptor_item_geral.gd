@@ -33,6 +33,10 @@ var puzzle_ui: CanvasLayer = null
 
 # --- Garante que o computador comece em vermelho e a exclamação escondida ---
 func _ready():
+	# Quem precisa achar um receptor sem saber o caminho dele na cena (ex: o
+	# atalho de debug da tecla K no player) procura por este grupo.
+	add_to_group("receptor_item")
+
 	# Painel já resolvido antes: nasce azul e trancado no estado final, sem
 	# puzzle para abrir de novo quando a cena recarrega.
 	ja_foi_resolvido = EstadoMundo.ja_feito(self)
