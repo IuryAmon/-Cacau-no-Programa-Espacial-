@@ -178,12 +178,14 @@ color = Color(0, 0, 0, 0.75)
 layout_mode = 0
 offset_left = 30.0
 offset_top = 20.0
-offset_right = 220.0
+offset_right = 154.0
 offset_bottom = 52.0
 theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 11
-text = "{fechar} para fechar"
+text = "{fechar}
+para fechar"
+horizontal_alignment = 1
 
 [node name="Tubo" type="TextureRect" parent="RootControl" unique_id=1779994786]
 texture_filter = 1

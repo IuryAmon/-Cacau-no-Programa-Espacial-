@@ -74,12 +74,15 @@ color = Color(0, 0, 0, 0.75)
 layout_mode = 0
 offset_left = 30.0
 offset_top = 20.0
-offset_right = 400.0
+offset_right = 154.0
 offset_bottom = 52.0
 theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
 theme_override_fonts/font = ExtResource("7_fonte")
 theme_override_font_sizes/font_size = 11
-text = "{fechar} para fechar{teclado:   ·   ENTER confirma}"
+text = "{fechar}
+para fechar{teclado:
+ENTER confirma}"
+horizontal_alignment = 1
 
 [node name="Tela" type="TextureRect" parent="RootControl"]
 texture_filter = 1

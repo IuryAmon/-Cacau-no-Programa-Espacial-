@@ -233,6 +233,24 @@ func _testar_caminho_completo() -> void:
 		var alvo: Control = roteiro[i][0]
 		var meta: Array = roteiro[i][1]
 		_checar(await _esperar_fala(puzzle), "passo %d: o cientista fala" % (i + 1))
+		if i == 0:
+			# "...acertar a estequiometria da combustão": ainda sem holofote. Ele
+			# acende na fala seguinte, a que cita os reagentes e os produtos.
+			_checar(await _esperar_texto("estequiometria da combustão"),
+				"passo 1: a primeira fala fala de estequiometria")
+			await _esperar(0.3)
+			_checar(not puzzle.destaque.esta_ativo(),
+				"passo 1: e começa sem holofote")
+			await _capturar("5_passo1_sem_holofote")
+			# Avança como quem joga: o primeiro toque termina de escrever, o
+			# segundo passa para a próxima fala.
+			while not _texto_da_fala().contains("reagentes e produtos"):
+				Dialogic.Inputs.handle_input()
+				await _esperar(0.2)
+			await _esperar(0.3)
+			_checar(puzzle.destaque.esta_ativo(),
+				"passo 1: acende na fala que cita os reagentes e os produtos")
+			await _capturar("5_passo1_com_holofote")
 		_checar(puzzle.destaque.esta_ativo() or alvo == null,
 			"passo %d: o holofote acende no que ele comenta" % (i + 1))
 		if roteiro[i][2] != "":
@@ -385,6 +403,23 @@ func _esperar_fala(puzzle: CanvasLayer) -> bool:
 		await _esperar(0.05)
 		espera += 0.05
 	return puzzle.mostrando_dialogo_cientista
+
+
+## O texto da fala na tela agora ("" sem fala).
+func _texto_da_fala() -> String:
+	var evento = Dialogic.current_timeline_events[Dialogic.current_event_idx] \
+		if Dialogic.current_timeline != null and Dialogic.current_event_idx >= 0 \
+			and Dialogic.current_event_idx < Dialogic.current_timeline_events.size() else null
+	return evento.text if evento is DialogicTextEvent else ""
+
+
+## Espera a fala com esse trecho aparecer (true se apareceu).
+func _esperar_texto(trecho: String) -> bool:
+	var espera := 0.0
+	while not _texto_da_fala().contains(trecho) and espera < 4.0:
+		await _esperar(0.05)
+		espera += 0.05
+	return _texto_da_fala().contains(trecho)
 
 
 ## Pula a fala aberta (o Dialogic encerra de forma assíncrona).

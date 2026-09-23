@@ -90,6 +90,13 @@ var _spawn_global: Vector2 = Vector2.ZERO
 var _spawn_registrado: bool = false
 # True quando apertou W no ar: assim que o player tocar o chão, usa a porta
 var _pedido_pendente: bool = false
+# O "aperte W" foi pedido (qual dos dois desenhos aparece depende do
+# dispositivo em uso — ver _mostrar_indicadores)
+var _indicadores_ligados: bool = false
+
+## Quanto (px do quadro, antes da escala) o desenho do direcional fica à
+## direita do centro do quadro dele na folha.
+const DESLOCAMENTO_DIRECIONAL := 4.0
 
 @onready var _sprite: AnimatedSprite2D = $SpritePorta
 @onready var _som_abrindo: AudioStreamPlayer2D = $SomAbrindo
@@ -103,9 +110,13 @@ var _pedido_pendente: bool = false
 func _ready() -> void:
 	z_index = z_index_porta_normal
 	_sprite.play("fechada")
+	_centralizar_indicadores()
 	# Garante que os indicadores começam escondidos, mesmo se alguém deixou
 	# "visible = true" marcado sem querer no editor
 	_mostrar_indicadores(false)
+	var controle := get_node_or_null(^"/root/Controle")
+	if controle:
+		controle.mudou.connect(_ao_trocar_dispositivo)
 
 	if not body_entered.is_connected(_on_body_entered):
 		body_entered.connect(_on_body_entered)
@@ -167,13 +178,31 @@ func _mostrar_indicadores(mostrar: bool) -> void:
 	# Porta não-interativa (a que só recebe o player) nunca pisca o "aperte W".
 	if not interativa:
 		mostrar = false
-	_icone_w.visible = mostrar
-	_direcional_controle.visible = mostrar
-	if mostrar:
+	if mostrar and not _indicadores_ligados:
 		_icone_w.reiniciar()
 		for filho in _direcional_controle.get_children():
 			if filho.has_method("reiniciar"):
 				filho.reiniciar()
+	_indicadores_ligados = mostrar
+	# Só o desenho de quem está jogando: W no teclado, direcional no controle.
+	IndicadorEntrada.escolher(_icone_w, _direcional_controle, mostrar)
+
+
+func _ao_trocar_dispositivo(_em_uso: bool) -> void:
+	IndicadorEntrada.escolher(_icone_w, _direcional_controle, _indicadores_ligados)
+
+
+# Os dois desenhos moravam lado a lado ("W ou ↑"); como agora aparece um só,
+# os dois vão para o meio da porta, na altura em que já estavam. O "ou" some.
+# O direcional da folha fica um pouco à direita do centro do quadro dele: o
+# desconto é para o DESENHO ficar no meio, não o quadro.
+func _centralizar_indicadores() -> void:
+	var meio := _sprite.position.x
+	_icone_w.position.x = meio
+	_direcional_controle.position.x = meio - DESLOCAMENTO_DIRECIONAL * _direcional_controle.scale.x
+	var ou := _icone_w.get_node_or_null(^"Label")
+	if ou:
+		ou.visible = false
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not interativa or _ocupada or not _player_dentro or _player == null:

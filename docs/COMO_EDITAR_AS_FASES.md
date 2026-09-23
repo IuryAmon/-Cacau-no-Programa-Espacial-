@@ -84,7 +84,9 @@ Selecione o nó e use o Inspetor. As propriedades mais usadas:
   **`janela`** em segundos (alvo temporizado).
 - `PortaFase`: **`cena_destino`**, **`requer_habilidade`** e o par
   **`tag_aqui` / `tag_destino`**, que decide em qual porta o jogador nasce ao
-  chegar de outra fase.
+  chegar de outra fase. Entra-se como nas portas da oficina: **W** no teclado,
+  **direcional para cima** no controle — e o desenho do botão só aparece com a
+  Cacau perto (e só se a porta estiver destrancada).
 - `MesaPuzzle`: **`puzzle_config`** guarda os slots, as peças e os textos do
   puzzle de arrastar.
 
@@ -401,10 +403,10 @@ CO₂; 4ª linha C₂H₂. **Os desenhos são achados sozinhos** (ver
 desde que mantenha a ordem e um espaço vazio entre um desenho e outro. O CO não
 tem desenho próprio — é recortado do CO₂.
 
-### As setas "GO!" (estilo Metal Slug)
+### As setas "POR AQUI" (estilo Metal Slug)
 
 `SetaGuia` (`scripts/fases/seta_guia.gd`) é um `Node2D` que aponta o caminho: a
-seta amarela pisca na tela com um "GO!", como a do Metal Slug. **O próprio nó é
+seta amarela pisca na tela com um "POR AQUI", como o "GO!" do Metal Slug. **O próprio nó é
 o alvo** — arraste-o para onde a ponta deve apontar. Com o alvo na tela, a seta
 fica em cima dele; fora da tela, ela gruda na borda, na direção dele, e escorrega
 até ele quando a câmera chega perto. No editor aparece uma prévia da seta.
@@ -446,8 +448,11 @@ objeto do cenário sabe que objetivo existe.
 
 - O roteiro é dividido em **trilhas**, uma por ala (prólogo, Carbono,
   Nitrogênio, Enxofre e Fósforo, Torre de Lançamento). Dentro de uma fase
-  aparece a etapa atual da trilha dela; no laboratório, a da primeira trilha não
-  terminada. O nome da trilha é o cabeçalho da lista.
+  aparece só a etapa atual da trilha dela; no laboratório, a da primeira trilha
+  não terminada — e, a partir do Carbono, as três trilhas dos elementos
+  (Carbono, Nitrogênio, Enxofre e Fósforo) aparecem juntas, porque podem ser
+  feitas em qualquer ordem (elas são marcadas com `PARALELA` no roteiro). Cada
+  trilha na tela ganha o seu cabeçalho com o nome dela.
 - Objetivos da mesma etapa aparecem juntos (o H₂ e o O₂ do prólogo). Etapa sem
   objetivo é um portão: segura a lista vazia (é assim que nada aparece antes da
   primeira conversa com o cientista).
@@ -522,7 +527,7 @@ chegada que se encena sozinha):
 godot --headless --path . res://tools/teste_elevador.tscn
 ```
 
-A lista de objetivos e as setas "GO!" também têm o seu (os caminhos de nó que o
+A lista de objetivos e as setas "POR AQUI" também têm o seu (os caminhos de nó que o
 roteiro consulta, o check que espera a tela fechar, a volta da etapa quando a
 queima da fornalha dá errado, e as duas setas da Oficina):
 

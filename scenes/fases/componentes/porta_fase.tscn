@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/fases/porta_fase.gd" id="1_i530p"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/indicador_entrada.tscn" id="2_indicador"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ck7jv"]
 size = Vector2(110, 140)
@@ -32,15 +33,17 @@ shape = SubResource("RectangleShape2D_ck7jv")
 
 [node name="Rotulo" type="Label" parent="." unique_id=266691245]
 offset_left = -150.0
-offset_top = -214.5
+offset_top = -222.0
 offset_right = 150.0
-offset_bottom = -165.5
+offset_bottom = -173.0
 theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
 theme_override_constants/outline_size = 5
-text = "PORTA
-[E]"
+text = "PORTA"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
+
+[node name="IndicadorEntrada" parent="." unique_id=1402583117 instance=ExtResource("2_indicador")]
+position = Vector2(0, -142)

@@ -1,5 +1,7 @@
 join cientista (cientista_feliz) leftmost [mirrored="true"]
-cientista (cientista_feliz): Cilindros instalados! Agora falta acertar a receita da combustão.
+cientista (cientista_feliz): Cilindros instalados! Agora falta acertar a estequiometria da combustão.
+[signal arg="mostrar_reagentes_e_produtos"]
+cientista: Estequiometria é o nome que damos ao cálculo das quantidades de reagentes e produtos envolvidos em uma reação química.
 cientista (cientista_mto_feliz): Lavoisier mostrou que, numa reação química, nada se cria, nada se perde, tudo se transforma.
 cientista: Ou seja, cada átomo dos reagentes precisa aparecer nos produtos, na mesma quantidade.
 cientista (cientista_feliz): Vamos montar juntos. Adicione uma molécula de hidrogênio.

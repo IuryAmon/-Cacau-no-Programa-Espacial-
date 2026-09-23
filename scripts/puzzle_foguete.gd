@@ -42,7 +42,10 @@ const TIMELINE_DICA_EQUACAO_DOBRADA := "cientista_dica_equacao_dobrada"
 # Em vez de explicar tudo e depois soltar a pessoa, o Dr. Chico monta a
 # equação JUNTO com ela, uma molécula por vez. Cada passo:
 #   1. acende o que ele vai comentar ("mostrar"), com a contagem exata que
-#      ele cita em evidência ("enfase"), e fala ("fala");
+#      ele cita em evidência ("enfase"), e fala ("fala"). Com
+#      "acender_no_sinal", o holofote espera a fala chegar no [signal] de
+#      mesmo nome da timeline — a primeira fala só acende os painéis quando
+#      ele cita os reagentes e os produtos;
 #   2. leva o holofote e a seta para o botão que ele pede ("botao") — só esse
 #      botão responde; vazio = a pessoa decide sozinha;
 #   3. espera os coeficientes [H2, O2, H2O] chegarem em "meta" e passa ao
@@ -52,7 +55,7 @@ const TIMELINE_DICA_EQUACAO_DOBRADA := "cientista_dica_equacao_dobrada"
 const PASTA_FALAS := "res://timelines/"
 const ROTEIRO := [
 	{"fala": "cientista_balanceamento_1", "mostrar": ["reagentes", "produtos"], "enfase": [],
-		"botao": "mais_h2", "meta": [1, 0, 0]},
+		"acender_no_sinal": "mostrar_reagentes_e_produtos", "botao": "mais_h2", "meta": [1, 0, 0]},
 	{"fala": "cientista_balanceamento_2", "mostrar": ["reagentes"], "enfase": ["reagentes_h"],
 		"botao": "mais_h2o", "meta": [1, 0, 1]},
 	{"fala": "cientista_balanceamento_3", "mostrar": ["produtos"], "enfase": ["produtos_o"],
@@ -70,6 +73,9 @@ const ROTEIRO := [
 const PAUSA_ENTRE_PASSOS := 0.25
 ## Do holofote acendendo no lugar novo até a fala abrir.
 const ESPERA_ANTES_DA_FALA := 0.1
+## Quanto (px de tela) a moldura do "H = x" / "O = y" sobe em relação à caixa
+## do texto.
+const SUBIDA_CAIXA_CONTAGEM := 3.0
 
 # Rodapé da tela do computador na coleta (as instruções moram só dentro da tela).
 const TXT_RODAPE_COLETA := "INSIRA O COMBUSTÍVEL E O COMBURENTE NO TUBO"
@@ -1046,13 +1052,26 @@ func _executar_passo(indice: int):
 		if sessao != _sessao:
 			return
 
-	# O holofote acende ANTES da fala, para a pessoa já estar olhando para o
-	# lugar certo quando o texto chegar nele.
-	destaque.focar(_retangulos_para(passo["mostrar"]), false, _retangulos_para(passo["enfase"]))
-	await get_tree().create_timer(ESPERA_ANTES_DA_FALA).timeout
-	if sessao != _sessao:
-		return
+	var acender := func() -> void:
+		destaque.focar(_retangulos_para(passo["mostrar"]), false, _retangulos_para(passo["enfase"]))
+	var sinal: String = passo.get("acender_no_sinal", "")
+	var ao_sinal := func(argumento: Variant) -> void:
+		if argumento is String and argumento == sinal and sessao == _sessao:
+			acender.call()
+	if sinal.is_empty():
+		# O holofote acende ANTES da fala, para a pessoa já estar olhando para
+		# o lugar certo quando o texto chegar nele.
+		acender.call()
+		await get_tree().create_timer(ESPERA_ANTES_DA_FALA).timeout
+		if sessao != _sessao:
+			return
+	else:
+		# A fala começa sem holofote: ele só acende quando o cientista cita o
+		# que está nele (o [signal] no meio da timeline).
+		Dialogic.signal_event.connect(ao_sinal)
 	await _falar_cientista(PASTA_FALAS + passo["fala"] + ".dtl")
+	if Dialogic.signal_event.is_connected(ao_sinal):
+		Dialogic.signal_event.disconnect(ao_sinal)
 	if sessao != _sessao:
 		return
 
@@ -1126,7 +1145,8 @@ func _retangulo_da_contagem(valor: RichTextLabel, elemento: String) -> Rect2:
 	var escala := valor.get_global_transform().get_scale()
 	var esquerda := caixa.get_center().x - largura_total * escala.x * 0.5 + x0 * escala.x
 	var folga := Vector2(10.0, 4.0) * escala
-	return Rect2(esquerda - folga.x, caixa.position.y - folga.y,
+	# Sem a subida, a moldura ficava baixa em volta do "H = x".
+	return Rect2(esquerda - folga.x, caixa.position.y - folga.y - SUBIDA_CAIXA_CONTAGEM,
 		largura * escala.x + folga.x * 2.0, float(tamanho) * 1.25 * escala.y + folga.y * 2.0)
 
 # O painel de contagem, justo em volta do TEXTO (título + "H = x  O = y"). As

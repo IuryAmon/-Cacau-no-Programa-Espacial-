@@ -25,6 +25,10 @@ extends RefCounted
 # tecla do teclado também sai desenhada — ESC, E, W, A, S e D, da folha
 # gdb-keyboard-2.png, a mesma do WASD e do E do world1. Tecla sem desenho
 # (ESPAÇO, ENTER, CLIQUE) continua escrita.
+#
+# APERTANDO: as teclas e os botões ✕ ○ □ △ têm os 4 quadros da animação de
+# apertar nas folhas; desenhados num texto, eles afundam em loop como o E da
+# samambaia e o W das portas (ver "quadro_atual").
 
 const FOLHA := preload("res://assets/UI/gdb-playstation-2.png")
 const FOLHA_TECLADO := preload("res://assets/UI/gdb-keyboard-2.png")
@@ -58,6 +62,17 @@ const REGIOES := {
 	"direcional": Rect2(16, 504, 32, 32),
 	"options": Rect2(336, 48, 16, 16),
 }
+
+## A animação de apertar: 4 quadros, no ritmo do E do IconeInteragir. Na folha
+## do teclado os quadros descem 112 px (a folha repete o teclado inteiro 4
+## vezes); na do controle, os botões apertando ficam logo à direita do
+## "flat", a partir de x = 48, um quadro a cada 16 px.
+const QUADROS_APERTANDO := 4
+const QUADROS_POR_SEGUNDO := 5.0
+const PASSO_QUADRO_TECLADO := Vector2(0, 112)
+const PASSO_QUADRO_CONTROLE := Vector2(16, 0)
+const X_APERTANDO_CONTROLE := 48.0
+const BOTOES_APERTANDO := ["cruz", "bolinha", "quadrado", "triangulo"]
 
 ## Direcional com o(s) braço(s) apertado(s) aceso(s). A folha não tem esses
 ## desenhos: eles são montados a partir do direcional (ver _direcional_aceso).
@@ -93,22 +108,49 @@ static var _marca: RegEx = null
 # DESENHO
 # ─────────────────────────────────────────────────────────────
 
-## O desenho do botão (null para nome desconhecido).
-static func icone(nome: String) -> Texture2D:
-	if _texturas.has(nome):
-		return _texturas[nome]
+## O desenho do botão (null para nome desconhecido). "quadro": o quadro da
+## animação de apertar (0 = solto), para quem tem animação (ver "anima").
+static func icone(nome: String, quadro: int = 0) -> Texture2D:
+	if not anima(nome):
+		quadro = 0
+	var chave := nome if quadro == 0 else "%s#%d" % [nome, quadro]
+	if _texturas.has(chave):
+		return _texturas[chave]
 	var textura: Texture2D = null
 	if REGIOES.has(nome) or TECLAS.has(nome):
 		var recorte := AtlasTexture.new()
 		recorte.atlas = FOLHA if REGIOES.has(nome) else FOLHA_TECLADO
-		recorte.region = REGIOES[nome] if REGIOES.has(nome) else TECLAS[nome]
+		recorte.region = _regiao(nome, quadro)
 		textura = recorte
 	elif DIRECOES.has(nome):
 		textura = _direcional_aceso(DIRECOES[nome])
 	else:
 		return null
-	_texturas[nome] = textura
+	_texturas[chave] = textura
 	return textura
+
+
+## O botão tem os quadros de apertar na folha?
+static func anima(nome: String) -> bool:
+	return TECLAS.has(nome) or nome in BOTOES_APERTANDO
+
+
+## Quadro da animação de apertar agora. Sai do relógio, e não de um contador
+## de cada texto: todos os botões da tela afundam juntos.
+static func quadro_atual() -> int:
+	return int(Time.get_ticks_msec() * 0.001 * QUADROS_POR_SEGUNDO) % QUADROS_APERTANDO
+
+
+static func _regiao(nome: String, quadro: int) -> Rect2:
+	if TECLAS.has(nome):
+		var tecla: Rect2 = TECLAS[nome]
+		return Rect2(tecla.position + PASSO_QUADRO_TECLADO * quadro, tecla.size)
+	var regiao: Rect2 = REGIOES[nome]
+	if quadro == 0 or not nome in BOTOES_APERTANDO:
+		return regiao
+	# O quadro 0 é o "flat" solto; os apertando começam logo ao lado dele.
+	return Rect2(Vector2(X_APERTANDO_CONTROLE, regiao.position.y) + PASSO_QUADRO_CONTROLE * quadro,
+		regiao.size)
 
 
 static func existe(nome: String) -> bool:
@@ -154,8 +196,8 @@ static func _direcional_aceso(lados: Array) -> Texture2D:
 ## Botão desenhado centrado em "centro", no tamanho de um quadro de 16 px vezes
 ## a escala (o direcional grande encolhe para o mesmo lugar). Devolve a largura.
 static func desenhar(ci: CanvasItem, centro: Vector2, nome: String, escala: float,
-		cor: Color = Color.WHITE) -> float:
-	var textura := icone(nome)
+		cor: Color = Color.WHITE, quadro: int = 0) -> float:
+	var textura := icone(nome, quadro)
 	if textura == null:
 		return 0.0
 	var lado := 16.0 * escala

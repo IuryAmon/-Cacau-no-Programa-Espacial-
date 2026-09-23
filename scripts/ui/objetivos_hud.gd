@@ -27,6 +27,11 @@ extends Control
 # menor e com um fio em "└" ligando os dois — é a dica que detalha o objetivo
 # de cima ("Use a caixa arrastável" sob "Pegue o cilindro de O₂").
 #
+# GRUPOS: cada objetivo pertence a uma trilha (o "grupo", que é a ordem dela no
+# roteiro) e cada trilha na tela ganha o seu cabeçalho (CARBONO, NITROGÊNIO...).
+# As linhas ficam juntas por grupo, na ordem do jogo; quando o último objetivo
+# de uma trilha sai, o cabeçalho dela se apaga junto.
+#
 # Texto branco com contorno preto, sem painel atrás: é o pedido de leitura em
 # qualquer fundo (céu claro do world1, subsolo escuro) sem tampar o cenário.
 # Os índices químicos (H₂, CO₂) são desenhados menores e abaixo da linha — a
@@ -58,6 +63,8 @@ const ESPACO_ENTRE_OBJETIVOS := 9.0
 ## Entre um objetivo e o subitem logo abaixo dele.
 const ESPACO_ANTES_DO_SUBITEM := 3.0
 const ALTURA_TITULO := 30.0
+## Entre o último objetivo de uma trilha e o cabeçalho da seguinte.
+const ESPACO_ENTRE_GRUPOS := 14.0
 
 # --- Caixinha ---
 const CAIXA := 15.0
@@ -90,6 +97,8 @@ const ESPACO_ENTRE_CHECKS := 0.32
 const ESCALONAR_ENTRADA := 0.14
 const DESLIZE_ENTRADA := 26.0
 const DESLIZE_SAIDA := 20.0
+## Quanto o cabeçalho leva para acender ou apagar.
+const T_CABECALHO := 0.3
 
 enum Estado { ESPERANDO, ENTRANDO, ATIVA, CUMPRIDA, SAINDO }
 
@@ -100,6 +109,8 @@ class Linha:
 	## Cabeçalho da ala a que o objetivo pertence (e a cor do losango).
 	var titulo: String = ""
 	var cor_titulo: Color = Color.WHITE
+	## A trilha do objetivo (ordem no roteiro): a lista fica agrupada por ela.
+	var grupo: int = 0
 	## id do objetivo pai ("" = objetivo comum).
 	var pai: String = ""
 	## Tamanho do texto (o subitem é menor).
@@ -130,20 +141,24 @@ class Linha:
 		return RECUO_SUBITEM if pai != "" else 0.0
 
 
+## O nome de uma trilha em cima dos objetivos dela.
+class Cabecalho:
+	var titulo: String = ""
+	var cor: Color = Color.WHITE
+	var y: float = 0.0
+	var posicionado: bool = false
+	var alfa: float = 0.0
+	## Ainda tem objetivo da trilha valendo (os que estão saindo não contam).
+	var vivo: bool = false
+
+
 var _linhas: Array[Linha] = []
+var _cabecalhos: Array[Cabecalho] = []
 var _visivel: bool = false
 var _alfa_lista: float = 0.0
 ## Topo pedido pelo autoload e o topo animado (a lista escorrega até ele).
 var _topo_alvo: float = TOPO_LIVRE
 var _topo: float = -1.0
-## Cabeçalho: o nome da ala do primeiro objetivo da lista.
-var _titulo: String = ""
-var _cor_titulo: Color = BRANCO
-## Troca de ala com a lista na tela: o título velho some, o novo entra.
-var _titulo_novo: String = ""
-var _cor_titulo_nova: Color = BRANCO
-var _troca_titulo: float = 0.0
-var _alfa_titulo: float = 0.0
 ## Tempo desde o último check (para espaçar checks e entradas).
 var _desde_ultimo_check: float = 999.0
 var _som: AudioStreamPlayer
@@ -180,8 +195,9 @@ func ids() -> PackedStringArray:
 
 
 ## "pai": id do objetivo de que este é subitem ("" = objetivo comum).
+## "grupo": a trilha do objetivo (ver GRUPOS no topo).
 func adicionar(id: String, texto: String, contagem: Vector2i, titulo: String, cor_titulo: Color,
-		pai: String = "") -> void:
+		pai: String = "", grupo: int = 0) -> void:
 	if tem(id):
 		return
 	var linha := Linha.new()
@@ -190,6 +206,7 @@ func adicionar(id: String, texto: String, contagem: Vector2i, titulo: String, co
 	linha.titulo = titulo
 	linha.cor_titulo = cor_titulo
 	linha.pai = pai
+	linha.grupo = grupo
 	linha.tam = TAM_SUBITEM if pai != "" else TAM_TEXTO
 	linha.contagem = contagem
 	linha.quebras = _quebrar(linha)
@@ -199,22 +216,38 @@ func adicionar(id: String, texto: String, contagem: Vector2i, titulo: String, co
 		if outra.estado == Estado.ESPERANDO:
 			esperando += 1
 	linha.atraso = esperando * ESCALONAR_ENTRADA
-	_linhas.insert(_lugar_na_lista(pai), linha)
+	_linhas.insert(_lugar_na_lista(pai, grupo), linha)
 
 
-## Onde a linha nova entra: no fim da lista, ou — subitem — logo depois do pai
-## e dos outros subitens dele.
-func _lugar_na_lista(pai: String) -> int:
-	if pai == "":
-		return _linhas.size()
+## Onde a linha nova entra: no fim do grupo dela, ou — subitem — logo depois do
+## pai e dos outros subitens dele.
+func _lugar_na_lista(pai: String, grupo: int) -> int:
 	var lugar := -1
+	if pai != "":
+		for i in _linhas.size():
+			var linha := _linhas[i]
+			if linha.estado == Estado.SAINDO:
+				continue
+			if linha.id == pai or (lugar >= 0 and linha.pai == pai):
+				lugar = i + 1
+	if lugar >= 0:
+		return lugar
 	for i in _linhas.size():
-		var linha := _linhas[i]
-		if linha.estado == Estado.SAINDO:
+		if _linhas[i].grupo > grupo:
+			return i
+	return _linhas.size()
+
+
+## Os cabeçalhos na tela, de cima para baixo (os que estão apagando não contam).
+func titulos() -> PackedStringArray:
+	var lista := PackedStringArray()
+	for linha in _linhas:
+		if linha.estado == Estado.ESPERANDO or linha.titulo in lista:
 			continue
-		if linha.id == pai or (lugar >= 0 and linha.pai == pai):
-			lugar = i + 1
-	return lugar if lugar >= 0 else _linhas.size()
+		var cabecalho := _achar_cabecalho(linha.titulo)
+		if cabecalho != null and cabecalho.vivo:
+			lista.append(linha.titulo)
+	return lista
 
 
 func atualizar(id: String, texto: String, contagem: Vector2i) -> void:
@@ -276,7 +309,7 @@ func _process(delta: float) -> void:
 	if _alfa_lista >= 1.0:
 		_andar(delta)
 
-	_andar_cabecalho(delta)
+	_andar_cabecalhos(delta)
 	_posicionar(delta)
 	queue_redraw()
 
@@ -339,42 +372,29 @@ func _tem_check_na_fila() -> bool:
 	return false
 
 
-## O cabeçalho é o nome da ala do primeiro objetivo na tela. Some junto com a
-## última linha; troca (apagando e acendendo) quando a lista passa de uma ala
-## para outra.
-func _andar_cabecalho(delta: float) -> void:
-	var primeira: Linha = null
+## Cada trilha com objetivo na tela tem o seu cabeçalho. Ele acende quando o
+## primeiro objetivo dela aparece e apaga quando o último sai. Um objetivo
+## esperando para entrar segura o cabeçalho aceso (o próximo passo da trilha
+## chegando logo depois do check do anterior), mas não acende um novo.
+func _andar_cabecalhos(delta: float) -> void:
+	for cabecalho in _cabecalhos:
+		cabecalho.vivo = false
 	for linha in _linhas:
-		if linha.estado != Estado.ESPERANDO and linha.estado != Estado.SAINDO:
-			primeira = linha
-			break
-	var tem_linhas := false
-	for linha in _linhas:
-		if linha.estado != Estado.ESPERANDO:
-			tem_linhas = true
-			break
-	_alfa_titulo = move_toward(_alfa_titulo, 1.0 if tem_linhas else 0.0, delta / 0.3)
-
-	if primeira != null:
-		var destino := _titulo_novo if not _titulo_novo.is_empty() else _titulo
-		if primeira.titulo != destino:
-			if _titulo.is_empty() or _alfa_titulo <= 0.01:
-				_titulo = primeira.titulo
-				_cor_titulo = primeira.cor_titulo
-				_titulo_novo = ""
-			else:
-				_titulo_novo = primeira.titulo
-				_cor_titulo_nova = primeira.cor_titulo
-				_troca_titulo = 0.0
-
-	if not _titulo_novo.is_empty() and _alfa_lista >= 1.0:
-		_troca_titulo += delta / 0.5
-		if _troca_titulo >= 0.5 and _titulo != _titulo_novo:
-			_titulo = _titulo_novo
-			_cor_titulo = _cor_titulo_nova
-		if _troca_titulo >= 1.0:
-			_titulo_novo = ""
-			_troca_titulo = 0.0
+		if linha.estado == Estado.SAINDO:
+			continue
+		var cabecalho := _achar_cabecalho(linha.titulo)
+		if cabecalho == null:
+			if linha.estado == Estado.ESPERANDO:
+				continue
+			cabecalho = Cabecalho.new()
+			cabecalho.titulo = linha.titulo
+			cabecalho.cor = linha.cor_titulo
+			_cabecalhos.append(cabecalho)
+		cabecalho.vivo = true
+	for cabecalho in _cabecalhos.duplicate():
+		cabecalho.alfa = move_toward(cabecalho.alfa, 1.0 if cabecalho.vivo else 0.0, delta / T_CABECALHO)
+		if not cabecalho.vivo and cabecalho.alfa <= 0.0:
+			_cabecalhos.erase(cabecalho)
 
 
 ## As linhas escorregam para o lugar novo quando uma sai (ou quando a barra de
@@ -382,12 +402,23 @@ func _andar_cabecalho(delta: float) -> void:
 func _posicionar(delta: float) -> void:
 	var suave := 1.0 - exp(-13.0 * delta)
 	_topo = _topo_alvo if _topo < 0.0 else lerpf(_topo, _topo_alvo, suave)
-	var y := _topo + ALTURA_TITULO
+	var y := _topo
+	var titulo := ""
 	var primeira := true
 	for linha in _linhas:
 		if linha.estado == Estado.ESPERANDO:
 			continue
-		if not primeira:
+		# Começo de uma trilha: o cabeçalho dela vem antes.
+		if primeira or linha.titulo != titulo:
+			if not primeira:
+				y += ESPACO_ENTRE_GRUPOS
+			var cabecalho := _achar_cabecalho(linha.titulo)
+			if cabecalho != null:
+				cabecalho.y = y if not cabecalho.posicionado else lerpf(cabecalho.y, y, suave)
+				cabecalho.posicionado = true
+			y += ALTURA_TITULO
+			titulo = linha.titulo
+		else:
 			y += ESPACO_ANTES_DO_SUBITEM if linha.pai != "" else ESPACO_ENTRE_OBJETIVOS
 		primeira = false
 		if not linha.posicionada:
@@ -405,35 +436,33 @@ func _posicionar(delta: float) -> void:
 func _draw() -> void:
 	if _alfa_lista <= 0.0:
 		return
-	_desenhar_cabecalho()
+	for cabecalho in _cabecalhos:
+		_desenhar_cabecalho(cabecalho)
 	for linha in _linhas:
 		if linha.estado != Estado.ESPERANDO:
 			_desenhar_linha(linha)
 
 
-func _desenhar_cabecalho() -> void:
-	var alfa := _alfa_lista * _alfa_titulo
-	if _titulo_novo != "":
-		# Some o título velho, entra o novo.
-		alfa *= absf(1.0 - _troca_titulo * 2.0)
-	if alfa <= 0.0 or _titulo.is_empty():
+func _desenhar_cabecalho(cabecalho: Cabecalho) -> void:
+	var alfa := _alfa_lista * cabecalho.alfa
+	if alfa <= 0.0 or not cabecalho.posicionado:
 		return
 
-	var base := Vector2(MARGEM_ESQ, _topo + 16.0)
+	var base := Vector2(MARGEM_ESQ, cabecalho.y + 16.0)
 	# Losango na cor da ala.
 	var centro := base + Vector2(6.0, -5.0)
 	var losango := PackedVector2Array([
 		centro + Vector2(0, -7), centro + Vector2(7, 0),
 		centro + Vector2(0, 7), centro + Vector2(-7, 0)])
 	draw_colored_polygon(_inflar(losango, 3.0), _com_alfa(PRETO, alfa))
-	draw_colored_polygon(losango, _com_alfa(_cor_titulo, alfa))
+	draw_colored_polygon(losango, _com_alfa(cabecalho.cor, alfa))
 
 	var x_texto := base.x + RECUO_TEXTO - 4.0
-	_texto_espacado(Vector2(x_texto, base.y), _titulo, TAM_TITULO, ESPACO_TITULO,
+	_texto_espacado(Vector2(x_texto, base.y), cabecalho.titulo, TAM_TITULO, ESPACO_TITULO,
 		_com_alfa(BRANCO, alfa), CONTORNO_TITULO, alfa)
 
 	# Fio que sai do título e se apaga para a direita.
-	var fim_texto := x_texto + _largura_espacada(_titulo, TAM_TITULO, ESPACO_TITULO)
+	var fim_texto := x_texto + _largura_espacada(cabecalho.titulo, TAM_TITULO, ESPACO_TITULO)
 	var y_fio := base.y - 5.0
 	var ini := fim_texto + 12.0
 	var fim := ini + 90.0
@@ -691,6 +720,13 @@ func _achar(id: String) -> Linha:
 	for linha in _linhas:
 		if linha.id == id and linha.estado != Estado.SAINDO:
 			return linha
+	return null
+
+
+func _achar_cabecalho(titulo: String) -> Cabecalho:
+	for cabecalho in _cabecalhos:
+		if cabecalho.titulo == titulo:
+			return cabecalho
 	return null
 
 

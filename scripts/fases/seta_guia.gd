@@ -2,7 +2,7 @@
 class_name SetaGuia
 extends Node2D
 
-# --- SETA DE CAMINHO ("GO!" do Metal Slug) ---
+# --- SETA DE CAMINHO ("POR AQUI", no estilo do "GO!" do Metal Slug) ---
 #
 # Um ponto do mapa para onde a Cacau precisa ir, e a regra de quando apontar
 # para ele. A seta em si é a SetaGo (scripts/ui/seta_go.gd), desenhada na tela.
@@ -39,7 +39,7 @@ extends Node2D
 	set(valor):
 		direcao = valor
 		queue_redraw()
-@export var texto: String = "GO!":
+@export var texto: String = "POR AQUI":
 	set(valor):
 		texto = valor
 		queue_redraw()

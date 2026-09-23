@@ -1,0 +1,98 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/indicador_entrada.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cfiut0eh7ggs8" path="res://assets/UI/gdb-keyboard-2.png" id="2_teclado"]
+[ext_resource type="Texture2D" uid="uid://8fynctyjqpl5" path="res://assets/UI/gdb-playstation-2.png" id="3_controle"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w1"]
+atlas = ExtResource("2_teclado")
+region = Rect2(80, 48, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w2"]
+atlas = ExtResource("2_teclado")
+region = Rect2(80, 160, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w3"]
+atlas = ExtResource("2_teclado")
+region = Rect2(80, 272, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w4"]
+atlas = ExtResource("2_teclado")
+region = Rect2(80, 384, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_tecla_w"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w4")
+}],
+"loop": true,
+"name": &"default",
+"speed": 9.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_direcional_bg"]
+atlas = ExtResource("3_controle")
+region = Rect2(5, 495, 46, 45)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_direcional_bg"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_direcional_bg")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cima1"]
+atlas = ExtResource("3_controle")
+region = Rect2(16, 544, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cima2"]
+atlas = ExtResource("3_controle")
+region = Rect2(32, 544, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_seta_cima"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cima1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cima2")
+}],
+"loop": true,
+"name": &"default",
+"speed": 4.0
+}]
+
+[node name="IndicadorEntrada" type="Node2D"]
+texture_filter = 1
+script = ExtResource("1_script")
+
+[node name="TeclaW" type="AnimatedSprite2D" parent="."]
+scale = Vector2(3.25, 3.25)
+sprite_frames = SubResource("SpriteFrames_tecla_w")
+autoplay = "default"
+
+[node name="Direcional" type="AnimatedSprite2D" parent="."]
+visible = false
+position = Vector2(-10.866667, -8)
+scale = Vector2(2.7166667, 2.7166667)
+sprite_frames = SubResource("SpriteFrames_direcional_bg")
+
+[node name="Cima" type="AnimatedSprite2D" parent="Direcional"]
+position = Vector2(4, -5.2)
+sprite_frames = SubResource("SpriteFrames_seta_cima")
+autoplay = "default"

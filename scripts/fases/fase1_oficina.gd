@@ -41,7 +41,7 @@ extends FaseBase
 #   ⑥ A VOLTA    passada a porta, o corredor das torretas desce até o chão lá
 #                de baixo, e o caminho é voltar ao começo do mapa: a outra
 #                porta de metal (Patio/PortaMetal2) tranca o elevador do
-#                pátio. As setas "GO!" de GuiasDeCaminho/ (SetaGuia) guiam essa
+#                pátio. As setas "POR AQUI" de GuiasDeCaminho/ (SetaGuia) guiam essa
 #                volta: uma manda cair do último pilar, a outra aponta a porta
 #
 # ARMADILHAS SEM CAIXA (ArmadilhasFixas/)

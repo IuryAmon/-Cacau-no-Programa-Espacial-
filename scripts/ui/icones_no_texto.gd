@@ -10,7 +10,8 @@ extends Control
 # Label e o redesenha com o botão no meio, na mesma fonte, cor, contorno e
 # alinhamento. No teclado vale o mesmo para as teclas que têm desenho (ESC, E,
 # WASD — ver BotoesControle.TECLAS). Sem botão nem tecla desenhada no texto,
-# ele some e o Label volta a se desenhar sozinho.
+# ele some e o Label volta a se desenhar sozinho. As teclas e os botões ✕ ○ □ △
+# ficam afundando em loop, como o E do cenário (BotoesControle.quadro_atual).
 #
 # Como o nó é filho do Label, tudo o que o puzzle já faz com o Label continua
 # valendo: mostrar/esconder, piscar com "modulate", pulsar com "scale".
@@ -101,12 +102,21 @@ func _draw() -> void:
 		+ float(_label.get_theme_constant(&"paragraph_spacing"))
 
 	var altura_linha := fonte.get_height(tamanho)
-	var escala := maxf(escala_minima, BotoesControle.escala_para(altura_linha))
+	var escala_natural := BotoesControle.escala_para(altura_linha)
+	var escala := maxf(escala_minima, escala_natural)
 	var lado := 16.0 * escala
 	var folga := roundf(lado * FOLGA)
+	var quadro := BotoesControle.quadro_atual()
+	# Botão ampliado pela escala mínima (o ESC do "para fechar"): a linha dele
+	# cresce até caber o desenho, para a linha de baixo não passar por cima.
+	var altura_linha_icone := maxf(altura_linha, lado) if escala > escala_natural else altura_linha
 
 	var linhas := _label.text.split("\n")
-	var altura_total := linhas.size() * altura_linha + (linhas.size() - 1) * entrelinha
+	var alturas: Array[float] = []
+	var altura_total := (linhas.size() - 1) * entrelinha
+	for linha in linhas:
+		alturas.append(altura_linha_icone if BotoesControle.tem_icone(linha) else altura_linha)
+		altura_total += alturas[-1]
 	var y := 0.0
 	match _label.vertical_alignment:
 		VERTICAL_ALIGNMENT_CENTER:
@@ -114,7 +124,9 @@ func _draw() -> void:
 		VERTICAL_ALIGNMENT_BOTTOM:
 			y = size.y - altura_total
 
-	for linha in linhas:
+	for n in linhas.size():
+		var linha := linhas[n]
+		var altura_desta := alturas[n]
 		var pedacos := _pedacos(linha)
 		var largura := 0.0
 		for pedaco in pedacos:
@@ -129,13 +141,15 @@ func _draw() -> void:
 				x = (size.x - largura) * 0.5
 			HORIZONTAL_ALIGNMENT_RIGHT:
 				x = size.x - largura
-		var base := y + fonte.get_ascent(tamanho)
+		# O texto fica no meio da linha (que só é mais alta que ele quando tem
+		# um botão ampliado).
+		var base := y + (altura_desta - altura_linha) * 0.5 + fonte.get_ascent(tamanho)
 
 		for pedaco in pedacos:
 			if pedaco is int:
 				var nome := BotoesControle.nome_do_caractere(pedaco)
-				var centro := Vector2(x + folga + lado * 0.5, y + altura_linha * 0.5)
-				BotoesControle.desenhar(self, centro, nome, escala, Color(1, 1, 1, cor.a))
+				var centro := Vector2(x + folga + lado * 0.5, y + altura_desta * 0.5)
+				BotoesControle.desenhar(self, centro, nome, escala, Color(1, 1, 1, cor.a), quadro)
 				x += lado + folga * 2.0
 				continue
 			var ponto := Vector2(x, base)
@@ -148,7 +162,7 @@ func _draw() -> void:
 			draw_string(fonte, ponto, pedaco, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho, cor)
 			x += fonte.get_string_size(pedaco, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho).x
 
-		y += altura_linha + entrelinha
+		y += altura_desta + entrelinha
 
 
 ## "APERTE  PARA" -> ["APERTE ", 0xE002, " PARA"]: texto e códigos de botão.

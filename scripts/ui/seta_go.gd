@@ -2,12 +2,12 @@
 class_name SetaGo
 extends Control
 
-# --- A SETA "GO!" (estilo Metal Slug) ---
+# --- A SETA "POR AQUI" (o "GO!" do Metal Slug) ---
 #
 # A placa que pisca na beirada da tela mandando seguir em frente: seta gorda
 # amarela em degradê até o laranja, contorno preto grosso, um relevo laranja-
 # escuro embaixo (dá o volume de letreiro de fliperama), brilho no alto e o
-# "GO!" em fonte de pixel ao lado. Pisca no ritmo do Metal Slug — acesa, apaga,
+# "POR AQUI" em fonte de pixel ao lado. Pisca no ritmo do Metal Slug — acesa, apaga,
 # acesa — e a cada piscada dá um empurrão na direção para onde aponta.
 #
 # Este nó só DESENHA. Onde a ponta fica e quando a seta aparece é decidido por
@@ -58,7 +58,7 @@ var direcao: int = Direcao.DIREITA:
 	set(valor):
 		direcao = valor
 		queue_redraw()
-var texto: String = "GO!"
+var texto: String = "POR AQUI"
 ## O ponto (na tela) que a seta indica. A ponta fica logo antes dele.
 var ponta: Vector2 = Vector2.ZERO
 var escala: float = 1.0
@@ -182,10 +182,14 @@ func _desenhar_texto(forma: PackedVector2Array, tamanho: float, alfa: float) -> 
 		var y_cauda := caixa.position.y + ascendente * 0.9 if direcao == Direcao.BAIXO \
 			else caixa.end.y - ascendente * 0.1
 		pos = Vector2(caixa.position.x - DISTANCIA_TEXTO * tamanho - largura, y_cauda)
+	# "POR AQUI" é mais largo que a seta: com ela grudada na borda da tela, o
+	# texto não pode sair pela beirada.
+	var contorno := int(round(CONTORNO_TEXTO * tamanho))
+	if size.x > largura + contorno * 2.0:
+		pos.x = clampf(pos.x, contorno, size.x - largura - contorno)
 	pos = pos.round()
 
 	var relevo := Vector2(0.0, RELEVO * tamanho).round()
-	var contorno := int(round(CONTORNO_TEXTO * tamanho))
 	for p in [pos + relevo, pos]:
 		draw_string_outline(FONTE, p, texto, HORIZONTAL_ALIGNMENT_LEFT, -1, tam, contorno,
 			_com_alfa(PRETO, alfa))

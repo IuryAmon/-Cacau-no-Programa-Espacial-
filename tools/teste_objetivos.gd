@@ -1,7 +1,7 @@
 extends SceneTree
 
 # Teste da lista de objetivos (Objetivos + RoteiroObjetivos + ObjetivosHUD) e
-# das setas "GO!" da Oficina do Carbono (SetaGuia).
+# das setas "POR AQUI" da Oficina do Carbono (SetaGuia).
 #
 #   godot --headless --fixed-fps 60 --path . -s res://tools/teste_objetivos.gd
 #
@@ -15,8 +15,10 @@ extends SceneTree
 #   * "Entre no laboratório" é cumprido na cena seguinte;
 #   * apertar E na porta de metal sem o maçarico adianta "Pegue o maçarico",
 #     e a linha continua a mesma quando a etapa dele chega;
+#   * no laboratório, depois da revelação, as três trilhas dos elementos
+#     aparecem juntas, cada uma com o seu cabeçalho;
 #   * visitar a Torre antes de terminar a oficina não pula a oficina no
-#     laboratório — mas dentro da Torre vale a trilha da Torre;
+#     laboratório — mas dentro da Torre vale só a trilha da Torre;
 #   * a seta de descer só aparece depois de um tempo parada em cima do pilar;
 #   * depois da queda, a seta de voltar aponta para a esquerda, some perto da
 #     porta e se aposenta quando a porta derrete.
@@ -83,7 +85,8 @@ func _testar_prologo() -> void:
 	_marcar(R.CIENTISTA_WORLD1, "plataforma")
 	await _segundos(1.0)
 	_checar(_ids() == PackedStringArray(["h2", "o2"]), "missão aceita: H₂ e O₂ aparecem juntos (%s)" % [_ids()])
-	_checar(_hud()._titulo == "SISTEMA DE SEGURANÇA", "cabeçalho é o da trilha")
+	_checar(_hud().titulos() == PackedStringArray(["COMBUSTÃO DO HIDROGÊNIO"]),
+		"cabeçalho é o da trilha (%s)" % [_hud().titulos()])
 
 	# Encostou na caixa: a dica entra como subitem do O₂.
 	_marcar(R.CAIXA_WORLD1, MARCA_EMPURRADA)
@@ -136,9 +139,17 @@ func _testar_prologo() -> void:
 
 	EstadoMundo.revelou_dr_chico = true
 	await _segundos(1.0)
-	_checar(_pendentes() == PackedStringArray(["entrar_oficina"]), "depois da revelação: 'Entre na Ala de Pirólise'")
-	_checar(_linha("entrar_oficina").texto == "Entre na Ala de Pirólise", "com esse texto")
-	_checar(_hud()._titulo == "CARBONO", "cabeçalho troca para CARBONO")
+	_checar(_pendentes() == PackedStringArray(["entrar_oficina", "entrar_torre", "entrar_subsolo"]),
+		"depois da revelação: as três alas juntas (%s)" % [_pendentes()])
+	_checar(_linha("entrar_oficina").texto == "Entre na Ala de Pirólise", "carbono: entrar na Ala de Pirólise")
+	_checar(_linha("entrar_torre").texto == "Entre na Torre de Gases e Estufa", "nitrogênio: entrar na Torre")
+	_checar(_linha("entrar_subsolo").texto == "Entre no subsolo pelo fosso de ventilação",
+		"enxofre e fósforo: entrar no subsolo")
+	await _segundos(1.0)
+	_checar(_hud().titulos() == PackedStringArray(["CARBONO", "NITROGÊNIO", "ENXOFRE E FÓSFORO"]),
+		"um cabeçalho por ala, na ordem do jogo (%s)" % [_hud().titulos()])
+	_checar(_linha("entrar_oficina").y < _linha("entrar_torre").y \
+		and _linha("entrar_torre").y < _linha("entrar_subsolo").y, "e as linhas na mesma ordem")
 
 
 func _testar_oficina() -> void:
@@ -147,6 +158,7 @@ func _testar_oficina() -> void:
 	await _abrir(FASE1)
 	await _segundos(1.0)
 	_checar(_pendentes() == PackedStringArray(["bumerangue"]), "entrou na oficina: pegar o bumerangue (%s)" % [_pendentes()])
+	_checar(_hud().titulos() == PackedStringArray(["CARBONO"]), "dentro da oficina, só o CARBONO (%s)" % [_hud().titulos()])
 
 	# E na porta de metal sem o maçarico: o maçarico entra adiantado.
 	_marcar(R.PORTA_METAL_ELEVADOR, MARCA_TENTOU)
@@ -180,7 +192,7 @@ func _testar_oficina() -> void:
 	await _abrir(FASE1_2)
 	await _segundos(2.5)
 	_checar(_pendentes() == PackedStringArray(["carvao"]), "no pátio: um objetivo só para o carvão (%s)" % [_pendentes()])
-	_checar(_linha("carvao").texto == "Faça carvão a partir das madeiras de babaçu", "com esse texto")
+	_checar(_linha("carvao").texto == "Faça carvão a partir das madeiras", "com esse texto (sem 'babaçu')")
 	progresso._amostras["C"] = true
 	await _segundos(2.0)
 	_checar(_hud().tem("entregar_c"), "carvão na mão: levar ao receptor")
@@ -192,11 +204,14 @@ func _testar_quebra_de_sequencia() -> void:
 	await _abrir(FASE2)
 	await _segundos(2.5)
 	_checar(_hud().tem("alavanca") and _hud().tem("chapa"), "dentro da Torre vale a trilha da Torre (%s)" % [_ids()])
-	_checar(_hud()._titulo == "NITROGÊNIO", "com o cabeçalho NITROGÊNIO")
+	_checar(_hud().titulos() == PackedStringArray(["NITROGÊNIO"]), "só com o cabeçalho NITROGÊNIO (%s)" % [_hud().titulos()])
+	_checar(not _hud().tem("entregar_c") and not _hud().tem("entrar_subsolo"), "sem as outras alas")
 	await _abrir(LAB)
 	await _segundos(2.5)
 	_checar(_hud().tem("entregar_c"), "no laboratório volta a valer a oficina (%s)" % [_ids()])
-	_checar(_hud()._titulo == "CARBONO", "com o cabeçalho CARBONO")
+	_checar(_hud().tem("alavanca") and _hud().tem("entrar_subsolo"), "junto com a Torre e o subsolo (%s)" % [_ids()])
+	_checar(_hud().titulos() == PackedStringArray(["CARBONO", "NITROGÊNIO", "ENXOFRE E FÓSFORO"]),
+		"com os três cabeçalhos (%s)" % [_hud().titulos()])
 
 
 func _testar_setas() -> void:
@@ -261,6 +276,7 @@ func _zerar_estado() -> void:
 	objetivos._visitadas.clear()
 	objetivos._cena_atual = ""
 	_hud()._linhas.clear()
+	_hud()._cabecalhos.clear()
 
 
 func _hud() -> ObjetivosHUD:
