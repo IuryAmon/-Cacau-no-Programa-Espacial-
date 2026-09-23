@@ -278,7 +278,8 @@ func entregar_h_e_o() -> void:
 	for letra in ["H", "O"]:
 		await _gesto_de_arremesso(sprite_cientista)
 		var mao := cientista_ator.global_position + Vector2(14.0 * lado, -22.0)
-		await caixa.receber(letra, mao)
+		# Cilindro vai em pé, sem cambalhota no ar.
+		await caixa.receber(letra, mao, false)
 		await get_tree().create_timer(pausa_entre_amostras).timeout
 
 	# Volta a olhar para ela para continuar a conversa.

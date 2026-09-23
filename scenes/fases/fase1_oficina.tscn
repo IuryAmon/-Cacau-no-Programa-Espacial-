@@ -39,6 +39,7 @@
 [ext_resource type="AudioStream" uid="uid://lexfp0pkvoej" path="res://sounds/laserpulsando.mp3" id="38_odkdv"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/elevador_fase.tscn" id="39_elevador"]
 [ext_resource type="Texture2D" uid="uid://dnep3shesagdh" path="res://assets/itens/mascara de solda.png" id="40_mascara"]
+[ext_resource type="Script" path="res://scripts/fases/seta_guia.gd" id="41_setaguia"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_q4hxp"]
 texture = ExtResource("2_g6wav")
@@ -1514,6 +1515,46 @@ max_distance = 1400.0
 
 [node name="AtrasoDesligar" type="Timer" parent="ArmadilhasFixas/Espinhosplataforma" unique_id=1057078559]
 one_shot = true
+
+[node name="GuiasDeCaminho" type="Node2D" parent="." unique_id=1843209771]
+
+[node name="SetaDescer" type="Node2D" parent="GuiasDeCaminho" unique_id=1843209772]
+position = Vector2(2686, 4)
+script = ExtResource("41_setaguia")
+direcao = 3
+requer_habilidade = "macarico"
+depois_de = NodePath("../../Patio/PortaMetal")
+ate = NodePath("../../Patio/PortaMetal2")
+espera = 2.0
+
+[node name="Gatilho" type="ReferenceRect" parent="GuiasDeCaminho/SetaDescer" unique_id=1843209773]
+offset_left = 22.0
+offset_top = -154.0
+offset_right = 174.0
+offset_bottom = -64.0
+mouse_filter = 2
+border_color = Color(1, 0.85, 0.2, 0.85)
+border_width = 2.0
+
+[node name="SetaVoltarAoInicio" type="Node2D" parent="GuiasDeCaminho" unique_id=1843209774]
+position = Vector2(272, 452)
+script = ExtResource("41_setaguia")
+direcao = 1
+requer_habilidade = "macarico"
+depois_de = NodePath("../../Patio/PortaMetal")
+ate = NodePath("../../Patio/PortaMetal2")
+espera = 0.35
+manter_fora_do_gatilho = true
+raio_de_chegada = 150.0
+
+[node name="Gatilho" type="ReferenceRect" parent="GuiasDeCaminho/SetaVoltarAoInicio" unique_id=1843209775]
+offset_left = 378.0
+offset_top = -202.0
+offset_right = 5928.0
+offset_bottom = 108.0
+mouse_filter = 2
+border_color = Color(1, 0.85, 0.2, 0.85)
+border_width = 2.0
 
 [editable path="Entrada/PickupBumerangue"]
 [editable path="Patio/PickupMacarico"]

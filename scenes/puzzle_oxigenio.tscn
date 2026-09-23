@@ -114,21 +114,20 @@ theme_override_colors/font_color = Color(0.29945153, 0, 0.0070019774, 1)
 theme_override_constants/line_spacing = 8
 theme_override_fonts/font = ExtResource("4_po")
 theme_override_font_sizes/font_size = 33
-text = "ARRASTE O ELETRON PARA COMPLETAR
-A ELETROSFERA DO ATOMO DE OXIGÊNIO"
+text = "Arraste o elétron para completar
+a eletrosfera do átomo de oxigênio"
 horizontal_alignment = 1
 
 [node name="Instrucoes" type="Label" parent="RootControl" unique_id=-719099383]
 layout_mode = 0
-offset_left = 426.0
-offset_top = 177.0
+offset_left = 408.0
+offset_top = 188.0
 offset_right = 532.0
-offset_bottom = 209.0
+offset_bottom = 220.0
 theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
 theme_override_fonts/font = ExtResource("4_po")
 theme_override_font_sizes/font_size = 11
-text = "{ui_cancel} para fechar"
-horizontal_alignment = 1
+text = "{fechar} para fechar"
 
 [node name="AtomoBG" type="TextureRect" parent="RootControl" unique_id=-1136539932]
 layout_mode = 0

@@ -56,11 +56,22 @@ static func ja_feito(no: Node, marca: String = "") -> bool:
 ## repostas depois de uma queima perdida na retorta). Recebe o caminho, e não o
 ## nó, porque o original pode já ter sido apagado.
 static func desmarcar_caminho(caminho: String, marca: String = "") -> void:
-	_feitos.erase(caminho if marca.is_empty() else caminho + ":" + marca)
+	_feitos.erase(_chave_do_caminho(caminho, marca))
+
+
+## O ja_feito() de quem não tem o nó na mão: os objetivos (roteiro_objetivos.gd)
+## perguntam por coisas de cenas que nem estão abertas — a porta de metal da
+## oficina, com a personagem no laboratório. O caminho é o da árvore, com a
+## raiz da cena: "/root/Fase1Oficina/Patio/PortaMetal".
+static func ja_feito_caminho(caminho: String, marca: String = "") -> bool:
+	return _feitos.has(_chave_do_caminho(caminho, marca))
 
 
 static func _chave(no: Node, marca: String) -> String:
-	var caminho := str(no.get_path())
+	return _chave_do_caminho(str(no.get_path()), marca)
+
+
+static func _chave_do_caminho(caminho: String, marca: String) -> String:
 	return caminho if marca.is_empty() else caminho + ":" + marca
 
 
@@ -82,3 +93,8 @@ static func guardar(no: Node, marca: String, valor: Variant) -> void:
 
 static func ler(no: Node, marca: String, padrao: Variant = null) -> Variant:
 	return _valores.get(_chave(no, marca), padrao)
+
+
+## O ler() pelo caminho, como o ja_feito_caminho().
+static func ler_caminho(caminho: String, marca: String, padrao: Variant = null) -> Variant:
+	return _valores.get(_chave_do_caminho(caminho, marca), padrao)

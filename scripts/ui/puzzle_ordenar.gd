@@ -29,7 +29,7 @@ const TAM_SLOT := Vector2(178, 78)
 const TAM_PECA := Vector2(170, 62)
 
 ## Rodapé ({acao} vira tecla no teclado e botão no controle).
-const TXT_STATUS := "Arraste as peças para os encaixes.  [{ui_cancel} desiste]"
+const TXT_STATUS := "Arraste as peças para os encaixes.  [{fechar} desiste]"
 const TXT_CONTINUAR := "   [{interact} para continuar]"
 
 var _painel: Panel = null
@@ -211,7 +211,7 @@ func _input(event: InputEvent) -> void:
 		return
 
 	if not _vitoria and ((event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE) \
-			or event.is_action_pressed("ui_cancel")):
+			or event.is_action_pressed("fechar")):
 		_fechar(false)
 		return
 
@@ -309,7 +309,7 @@ func dicas_do_controle() -> Array:
 		["analogico_esquerdo", "MOVER"],
 		["direcional", "ESCOLHER"],
 		["cruz", "SOLTE NO ENCAIXE" if _arrastando != null else "SEGURE PARA ARRASTAR"],
-		["ui_cancel", "DESISTIR"],
+		["fechar", "DESISTIR"],
 	]
 
 

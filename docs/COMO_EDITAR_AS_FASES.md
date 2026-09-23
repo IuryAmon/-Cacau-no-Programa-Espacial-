@@ -401,6 +401,70 @@ CO₂; 4ª linha C₂H₂. **Os desenhos são achados sozinhos** (ver
 desde que mantenha a ordem e um espaço vazio entre um desenho e outro. O CO não
 tem desenho próprio — é recortado do CO₂.
 
+### As setas "GO!" (estilo Metal Slug)
+
+`SetaGuia` (`scripts/fases/seta_guia.gd`) é um `Node2D` que aponta o caminho: a
+seta amarela pisca na tela com um "GO!", como a do Metal Slug. **O próprio nó é
+o alvo** — arraste-o para onde a ponta deve apontar. Com o alvo na tela, a seta
+fica em cima dele; fora da tela, ela gruda na borda, na direção dele, e escorrega
+até ele quando a câmera chega perto. No editor aparece uma prévia da seta.
+
+A filha `Gatilho` (ReferenceRect amarelo, só no editor) é a área em que a Cacau
+precisa estar para a seta acordar. No Inspetor:
+
+| Propriedade | O que faz |
+|---|---|
+| `direcao` | Para onde a seta aponta |
+| `texto` | O que vai escrito ao lado (vazio = só a seta) |
+| `requer_habilidade` | Ferramenta que ela já precisa ter |
+| `depois_de` | Nó que já precisa ter sido feito (uma porta derretida...) |
+| `ate` | Nó que, feito, aposenta a seta de vez |
+| `espera` | Segundos dentro do Gatilho antes de a seta aparecer |
+| `so_no_chao` | A espera só corre com os pés no chão |
+| `manter_fora_do_gatilho` | Depois de acender, continua valendo fora do Gatilho |
+| `raio_de_chegada` | Chegou a essa distância do alvo, a seta some |
+
+Na Oficina elas moram em `GuiasDeCaminho/`, as duas valendo depois que a porta de
+metal de cima (`Patio/PortaMetal`) derrete e até a do elevador
+(`Patio/PortaMetal2`) derreter:
+
+- `SetaDescer` — o Gatilho cobre o topo do pilar do corredor das torretas
+  (y = -64, x de 2720 a 2848). Parada 2 s em cima dele, aparece a seta para
+  baixo, na borda esquerda do pilar: é por ali que se cai.
+- `SetaVoltarAoInicio` — o Gatilho cobre o chão lá de baixo. Logo depois da
+  queda, a seta aponta para a esquerda, até a porta de metal que tranca o
+  elevador do pátio; some quando a Cacau chega perto da porta.
+
+## Os objetivos (canto superior esquerdo)
+
+A lista de objetivos do jogo inteiro mora num arquivo só:
+**`scripts/roteiro_objetivos.gd`**. Cada objetivo é um texto e uma pergunta de
+"já foi feito?", que lê o que o jogo já guarda (ferramentas e células no
+`Progresso`, itens no `Inventario`, portas e painéis no `EstadoMundo`). Para
+mudar um texto ou a ordem, é só mexer na lista do `_init()` de lá — nenhum
+objeto do cenário sabe que objetivo existe.
+
+- O roteiro é dividido em **trilhas**, uma por ala (prólogo, Carbono,
+  Nitrogênio, Enxofre e Fósforo, Torre de Lançamento). Dentro de uma fase
+  aparece a etapa atual da trilha dela; no laboratório, a da primeira trilha não
+  terminada. O nome da trilha é o cabeçalho da lista.
+- Objetivos da mesma etapa aparecem juntos (o H₂ e o O₂ do prólogo). Etapa sem
+  objetivo é um portão: segura a lista vazia (é assim que nada aparece antes da
+  primeira conversa com o cientista).
+- Objetivo com **`aparece`** só entra quando a pergunta dele diz que sim e não
+  segura a etapa: "Use a caixa arrastável" (quando a Cacau empurra a caixa ou
+  pega o H₂) e o "Pegue o maçarico" adiantado (quando ela aperta E numa porta
+  de metal sem o maçarico). Com **`_sub("pai", ...)`** o objetivo vira
+  **subitem**: entra recuado, menor, logo abaixo do pai.
+- Escreva os índices químicos direto no texto (H₂, CO₂): a lista desenha o
+  número menor e abaixo da linha.
+- Cumpriu: toca `sounds/check.mp3`, a caixinha fica verde com o check e o
+  objetivo sai sozinho logo depois. Se isso acontecer atrás de uma fala, ficha
+  de item ou puzzle, o check espera a tela fechar.
+- As perguntas usam o **caminho do nó** na cena (`/root/Fase1Oficina/Patio/
+  PortaMetal`). Renomeou ou moveu um nó que o roteiro consulta? Rode
+  `tools/teste_objetivos.gd` (abaixo) — ele confere todos os caminhos.
+
 ## O que a fase lembra ao sair e voltar
 
 Não existe save em arquivo: tudo abaixo vale enquanto o jogo estiver aberto
@@ -456,4 +520,12 @@ chegada que se encena sozinha):
 
 ```
 godot --headless --path . res://tools/teste_elevador.tscn
+```
+
+A lista de objetivos e as setas "GO!" também têm o seu (os caminhos de nó que o
+roteiro consulta, o check que espera a tela fechar, a volta da etapa quando a
+queima da fornalha dá errado, e as duas setas da Oficina):
+
+```
+godot --headless --fixed-fps 60 --path . -s res://tools/teste_objetivos.gd
 ```

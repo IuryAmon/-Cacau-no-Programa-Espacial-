@@ -15,7 +15,8 @@ extends Node
 #
 # O MAPA DO CONTROLE (PlayStation) mora no mapa de entrada do projeto:
 #   ✕  pular              □  interagir / bumerangue (interagir tem prioridade)
-#   ○  dash / sair
+#   ○  dash / sair (menu do simulador)
+#   △  fechar os puzzles (ação "fechar", que é o ESC no teclado)
 #   L1 sinalizador        R1 lanterna        L3 alterna a mira da lanterna
 # O maçarico não tem botão próprio: ele acende no □ da interação, e só
 # encostado no que precisa ser cortado.
@@ -106,15 +107,16 @@ func _process(delta: float) -> void:
 # ─────────────────────────────────────────────────────────────
 
 ## Troca as marcas {acao} do texto pela tecla (teclado) ou pelo botão
-## (controle) — ver as marcas em BotoesControle.
-func texto(modelo: String) -> String:
-	return BotoesControle.traduzir(modelo, em_uso)
+## (controle) — ver as marcas em BotoesControle. "teclas_desenhadas" só para
+## texto que vai parar num Label com IconesNoTexto.
+func texto(modelo: String, teclas_desenhadas: bool = false) -> String:
+	return BotoesControle.traduzir(modelo, em_uso, teclas_desenhadas)
 
 
 ## Escreve o modelo no Label e o mantém certo sozinho: trocou de teclado para
 ## controle, o Label se reescreve. O botão aparece desenhado (IconesNoTexto).
-func rotular(label: Label, modelo: String) -> void:
-	BotoesControle.rotular(label, modelo)
+func rotular(label: Label, modelo: String, escala_minima: float = 1.0) -> void:
+	BotoesControle.rotular(label, modelo, escala_minima)
 
 
 ## Passo do DIRECIONAL neste quadro (com repetição ao segurar), ou zero.

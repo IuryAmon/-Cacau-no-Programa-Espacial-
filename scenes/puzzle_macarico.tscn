@@ -79,7 +79,7 @@ offset_bottom = 52.0
 theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
 theme_override_fonts/font = ExtResource("7_fonte")
 theme_override_font_sizes/font_size = 11
-text = "{ui_cancel} para fechar{teclado:   ·   ENTER confirma}"
+text = "{fechar} para fechar{teclado:   ·   ENTER confirma}"
 
 [node name="Tela" type="TextureRect" parent="RootControl"]
 texture_filter = 1

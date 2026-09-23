@@ -197,8 +197,9 @@ func _entregar_da_cacau() -> void:
 
 ## Faz a amostra de "letra" pular de "origem" (posição no mundo) para dentro
 ## do baú e acende a letra no painel. Quem chama pode dar "await": devolve
-## quando a letra já acendeu.
-func receber(letra: String, origem: Vector2) -> void:
+## quando a letra já acendeu. "girar" = false faz o arco sem a cambalhota (os
+## cilindros de H e O que o Dr. Chico joga na cutscene).
+func receber(letra: String, origem: Vector2, girar: bool = true) -> void:
 	_ocupado = true
 	_convidando = false
 	_mostrar_aviso(false)
@@ -223,12 +224,14 @@ func receber(letra: String, origem: Vector2) -> void:
 	if not _ainda_na_cena(amostra):
 		return
 
-	# 2. O ARCO: dá uma volta no ar, no sentido em que está indo.
+	# 2. O ARCO: dá uma volta no ar, no sentido em que está indo (ou vai reto,
+	# em pé, quando "girar" está desligado).
 	var de := amostra.global_position
 	var ate := _boca.global_position + Vector2(0.0, -altura_sobre_a_boca)
 	var sentido := 1.0 if ate.x >= de.x else -1.0
+	var giro := TAU * sentido if girar else 0.0
 	var voo := create_tween()
-	voo.tween_method(_posicionar_no_arco.bind(amostra, de, ate, TAU * sentido),
+	voo.tween_method(_posicionar_no_arco.bind(amostra, de, ate, giro),
 		0.0, 1.0, duracao_voo)
 	await voo.finished
 	if not _ainda_na_cena(amostra):

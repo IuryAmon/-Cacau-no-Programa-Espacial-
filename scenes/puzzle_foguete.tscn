@@ -183,7 +183,7 @@ offset_bottom = 52.0
 theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 11
-text = "{ui_cancel} para fechar"
+text = "{fechar} para fechar"
 
 [node name="Tubo" type="TextureRect" parent="RootControl" unique_id=1779994786]
 texture_filter = 1
@@ -646,7 +646,7 @@ offset_bottom = 296.0
 theme_override_colors/font_color = Color(1, 0.55, 0.1, 1)
 theme_override_fonts/font = ExtResource("5_pf")
 theme_override_font_sizes/font_size = 22
-text = "+ ENERGIA"
+text = "+ Energia"
 
 [node name="PainelEquacaoEscrita" type="Control" parent="RootControl/Tela/Display/GrupoEquacao/EquacaoPanel" unique_id=555100201]
 anchors_preset = 0

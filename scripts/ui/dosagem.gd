@@ -186,8 +186,8 @@ func _montar_ui() -> void:
 
 func _dica_padrao() -> String:
 	if modo == "segurar":
-		return "Segure {ui_right:D} para aquecer e {ui_left:A} para esfriar. Mantenha a agulha na faixa verde.  [{ui_cancel} desiste]"
-	return "Aperte {interact} para travar a agulha dentro da faixa verde (%d acertos).  [{ui_cancel} desiste]" % acertos_necessarios
+		return "Segure {ui_right:D} para aquecer e {ui_left:A} para esfriar. Mantenha a agulha na faixa verde.  [{fechar} desiste]"
+	return "Aperte {interact} para travar a agulha dentro da faixa verde (%d acertos).  [{fechar} desiste]" % acertos_necessarios
 
 
 # --- CONTROLE (ver cursor_virtual.gd) ---
@@ -199,16 +199,16 @@ func usa_cursor() -> bool:
 
 func dicas_do_controle() -> Array:
 	if modo == "segurar":
-		return [["ui_right", "AQUECER"], ["ui_left", "ESFRIAR"], ["ui_cancel", "DESISTIR"]]
-	return [[Interacao.ACAO, "TRAVAR A AGULHA"], ["ui_cancel", "DESISTIR"]]
+		return [["ui_right", "AQUECER"], ["ui_left", "ESFRIAR"], ["fechar", "DESISTIR"]]
+	return [[Interacao.ACAO, "TRAVAR A AGULHA"], ["fechar", "DESISTIR"]]
 
 
 func _process(delta: float) -> void:
 	if _encerrando:
 		return
 
-	# ESC no teclado, ○ no controle.
-	if Input.is_key_pressed(KEY_ESCAPE) or Input.is_action_pressed("ui_cancel"):
+	# ESC no teclado, △ no controle (a ação "fechar").
+	if Input.is_key_pressed(KEY_ESCAPE) or Input.is_action_pressed("fechar"):
 		_fechar(false, true)
 		return
 

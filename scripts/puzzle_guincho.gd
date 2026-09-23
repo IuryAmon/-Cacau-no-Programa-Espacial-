@@ -62,9 +62,10 @@ const PASSO_FINO := 10.0
 const PASSO_GROSSO := 100.0
 const FORCA_MAXIMA := 900.0
 
-## Linha de ajuda do rodapé, em cada dispositivo ({acao} vira tecla ou botão).
-const STATUS_TECLADO := "A/D  ±100 N   ·   W/S  ±10 N   ·   ESPAÇO aciona   ·   ESC sai"
-const STATUS_CONTROLE := "{@direcional_horizontal:} ±100 N   ·   {@direcional_vertical:} ±10 N   ·   {@cruz:} aciona   ·   {ui_cancel} sai"
+## Linha de ajuda do rodapé, em cada dispositivo ({acao} vira tecla ou botão;
+## A, D, W, S e ESC saem desenhadas).
+const STATUS_TECLADO := "{ui_left:A}/{ui_right:D}  ±100 N   ·   {ui_up:W}/{ui_down:S}  ±10 N   ·   ESPAÇO aciona   ·   {fechar} sai"
+const STATUS_CONTROLE := "{@direcional_horizontal:} ±100 N   ·   {@direcional_vertical:} ±10 N   ·   {@cruz:} aciona   ·   {fechar} sai"
 const STATUS_LIBERADO := "APERTE {interact} PARA SOLTAR A PLATAFORMA"
 
 const COR_OK := Color(0.5, 0.95, 0.6)
@@ -166,8 +167,8 @@ func _input(event: InputEvent) -> void:
 		_clique(event.position)
 		return
 
-	# ○ do controle: o mesmo ESC (o do teclado segue logo abaixo).
-	if event is InputEventJoypadButton and event.is_action_pressed("ui_cancel"):
+	# △ do controle: o mesmo ESC (o do teclado segue logo abaixo).
+	if event is InputEventJoypadButton and event.is_action_pressed("fechar"):
 		fechar_puzzle(_travado)
 		return
 
@@ -220,10 +221,10 @@ func _process(_delta: float) -> void:
 ## Rodapé com a ajuda do dispositivo em uso (ou o aviso de liberado).
 func _escrever_status() -> void:
 	if _travado:
-		_status.text = Controle.texto(STATUS_LIBERADO)
+		_status.text = Controle.texto(STATUS_LIBERADO, true)
 		_status.add_theme_color_override("font_color", COR_OK)
 		return
-	_status.text = Controle.texto(STATUS_CONTROLE if Controle.em_uso else STATUS_TECLADO)
+	_status.text = Controle.texto(STATUS_CONTROLE if Controle.em_uso else STATUS_TECLADO, true)
 	_status.add_theme_color_override("font_color", COR_NEUTRA)
 
 
@@ -241,7 +242,7 @@ func dicas_do_controle() -> Array:
 		["direcional_horizontal", "±100 N"],
 		["direcional_vertical", "±10 N"],
 		["cruz", "ACIONAR"],
-		["ui_cancel", "SAIR"],
+		["fechar", "SAIR"],
 	]
 
 

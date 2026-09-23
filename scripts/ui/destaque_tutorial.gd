@@ -24,10 +24,13 @@ extends Control
 
 const COR := Color(1.0, 0.82, 0.25)
 const VEU := Color(0.0, 0.0, 0.0, 0.62)
-const DURACAO_MOVIMENTO := 0.35
-const DURACAO_FADE := 0.25
-## Chanfro dos cantos da moldura (mesma linguagem das peças do HUD).
-const CORTE := 9.0
+const DURACAO_MOVIMENTO := 0.25
+const DURACAO_FADE := 0.12
+## Chanfro dos cantos da moldura: o MESMO nos quatro cantos, para a moldura ler
+## como um retângulo de pontas aparadas (pixel art), e não como um hexágono.
+const CORTE := 7.0
+## Chanfro da caixa de ênfase (o detalhe dentro de um painel).
+const CORTE_ENFASE := 5.0
 
 var _furos: Array[Rect2] = []
 var _furos_de: Array[Rect2] = []
@@ -186,10 +189,15 @@ func _desenhar_moldura(furo: Rect2, forca: float = 1.0) -> void:
 	# Brilho: contornos cada vez maiores e mais fracos por fora da moldura.
 	for camada in 3:
 		var folga := 3.0 + camada * 3.5 + respiro * 2.0
-		EstiloHUD.moldura(self, EstiloHUD.chanfro(furo.grow(folga), CORTE + folga),
+		EstiloHUD.moldura(self, _cantos_iguais(furo.grow(folga), CORTE + folga * 0.5),
 			EstiloHUD.com_alfa(COR, (0.28 - camada * 0.08) * _forca * forca), 3.0)
-	EstiloHUD.moldura(self, EstiloHUD.chanfro(furo, CORTE),
+	EstiloHUD.moldura(self, _cantos_iguais(furo, CORTE),
 		EstiloHUD.com_alfa(COR, (0.75 + 0.25 * respiro) * _forca * forca), 3.0)
+
+
+## Retângulo com os quatro cantos aparados por igual.
+func _cantos_iguais(caixa: Rect2, corte: float) -> PackedVector2Array:
+	return EstiloHUD.chanfro(caixa, corte, corte)
 
 
 # Caixa do detalhe: moldura cheia, um banho leve de cor por dentro e um pulso
@@ -197,9 +205,9 @@ func _desenhar_moldura(furo: Rect2, forca: float = 1.0) -> void:
 func _desenhar_enfase(caixa: Rect2) -> void:
 	var pulso := fmod(_tempo * 1.4, 1.0)
 	draw_rect(caixa, EstiloHUD.com_alfa(COR, 0.12 * _forca))
-	EstiloHUD.moldura(self, EstiloHUD.chanfro(caixa.grow(pulso * 10.0), 6.0 + pulso * 10.0),
+	EstiloHUD.moldura(self, _cantos_iguais(caixa.grow(pulso * 10.0), CORTE_ENFASE + pulso * 5.0),
 		EstiloHUD.com_alfa(COR, (1.0 - pulso) * 0.6 * _forca), 2.0)
-	EstiloHUD.moldura(self, EstiloHUD.chanfro(caixa, 6.0), EstiloHUD.com_alfa(COR, _forca), 3.0)
+	EstiloHUD.moldura(self, _cantos_iguais(caixa, CORTE_ENFASE), EstiloHUD.com_alfa(COR, _forca), 3.0)
 
 
 # Seta âmbar à ESQUERDA do alvo, apontando para ele e indo e voltando na

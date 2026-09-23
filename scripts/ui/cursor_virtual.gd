@@ -15,8 +15,8 @@ extends CanvasLayer
 #                       apertada.
 #   ✕                   é o botão do mouse: toque clica, SEGURAR arrasta e
 #                       soltar larga.
-#   ○ / □               continuam "sair" e "interagir" — cada puzzle os lê pelo
-#                       mapa de entrada (ui_cancel e interact).
+#   △ / □               continuam "fechar" e "interagir" — cada puzzle os lê
+#                       pelo mapa de entrada (fechar e interact).
 #
 # Em cima de um alvo o cursor fica pegajoso (anda mais devagar) e, largado o
 # analógico, escorrega sozinho para o centro dele: é isso que torna fácil
@@ -41,7 +41,7 @@ extends CanvasLayer
 #       e os pulos do direcional.
 #   dicas_do_controle() -> Array
 #       [[botão, "TEXTO"], ...] para a barra. "botão" é uma ação do mapa de
-#       entrada ("ui_cancel") ou um nome de BotoesControle ("cruz").
+#       entrada ("fechar") ou um nome de BotoesControle ("cruz").
 #   usa_cursor() -> bool
 #       false nas telas que o controle opera direto (guincho, dosagem): elas
 #       ganham só a barra.
@@ -583,10 +583,10 @@ func _dicas() -> Array:
 	if is_instance_valid(_tela) and _tela.has_method("dicas_do_controle"):
 		return _tela.dicas_do_controle()
 	if not _com_cursor:
-		return [["ui_cancel", "SAIR"]]
+		return [["fechar", "SAIR"]]
 	var dicas: Array = [["analogico_esquerdo", "MOVER"]]
 	if not _alvos.is_empty():
 		dicas.append(["direcional", "ESCOLHER"])
 	dicas.append(["cruz", "SOLTE PARA COLOCAR" if _segurando else "SELECIONAR"])
-	dicas.append(["ui_cancel", "SAIR"])
+	dicas.append(["fechar", "SAIR"])
 	return dicas

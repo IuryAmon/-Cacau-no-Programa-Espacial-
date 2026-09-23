@@ -344,7 +344,7 @@ func _tentar_acender() -> void:
 		"faixa_largura": 0.17,
 		"duracao_alvo": 4.0,
 		"msg_falha_forte": "A fornalha rachou com o calor!",
-		"dica": "Sem oxigênio, o calor expulsa os voláteis e sobra carvão.\nSegure {ui_right:D} para aquecer, {ui_left:A} para esfriar — 4 segundos na faixa.  [{ui_cancel} desiste]",
+		"dica": "Sem oxigênio, o calor expulsa os voláteis e sobra carvão.\nSegure {ui_right:D} para aquecer, {ui_left:A} para esfriar — 4 segundos na faixa.  [{fechar} desiste]",
 	})
 	_tela_dosagem.terminado.connect(_on_dosagem_terminada)
 

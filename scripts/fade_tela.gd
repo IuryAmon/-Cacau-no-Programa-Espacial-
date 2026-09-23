@@ -15,6 +15,10 @@ extends CanvasLayer
 
 const COR_CORTINA := Color(0, 0, 0, 1)
 
+## HUDs que são autoload (vivem FORA da cena) e desenham por cima da cortina:
+## o cinto de ferramentas e a lista de objetivos. Ver esconder_huds().
+const HUDS_AUTOLOAD: Array[String] = ["FerramentasHUD", "Objetivos"]
+
 ## Marcado por quem troca de cena com a tela já apagada. A cena que abrir em
 ## seguida consome isso (via "clarear_na_chegada") para nascer preta e clarear,
 ## em vez de aparecer de estalo. Static var sobrevive à troca de cena.
@@ -123,21 +127,23 @@ func esconder_huds(raiz: Node) -> void:
 		_camadas_escondidas.append(camada)
 		camada.visible = false
 
-	# O cinto de ferramentas (selo do maçarico etc.) é autoload — vive FORA da
-	# cena, então não aparece na varredura acima, mas desenha por cima da
-	# cortina igual aos outros HUDs, então também precisa sumir aqui.
+	# O cinto de ferramentas (selo do maçarico etc.) e a lista de objetivos são
+	# autoload — vivem FORA da cena, então não aparecem na varredura acima,
+	# mas desenham por cima da cortina igual aos outros HUDs, então também
+	# precisam sumir aqui.
 	#
-	# Ele NÃO entra na lista comum de propósito: ao contrário dos CanvasLayer
-	# da cena (que morrem junto com ela), ele sobrevive à troca — e quem o
+	# Eles NÃO entram na lista comum de propósito: ao contrário dos CanvasLayer
+	# da cena (que morrem junto com ela), eles sobrevivem à troca — e quem os
 	# escondeu é o FadeTela da cena ANTIGA, que é destruído no meio do
 	# change_scene_to_file antes de poder restaurar. O FadeTela da cena NOVA
-	# nunca esconderia esse HUD de novo (já estava invisível), e por isso
-	# nunca o devolveria — ele sumia para sempre depois da primeira porta.
+	# nunca esconderia esses HUDs de novo (já estavam invisíveis), e por isso
+	# nunca os devolveria — eles sumiam para sempre depois da primeira porta.
 	# É por isso que quem religa é sempre restaurar_huds(), incondicionalmente,
 	# e não este método.
-	var ferramentas := raiz.get_tree().root.get_node_or_null("FerramentasHUD")
-	if ferramentas is CanvasLayer:
-		ferramentas.visible = false
+	for nome in HUDS_AUTOLOAD:
+		var hud := raiz.get_tree().root.get_node_or_null(nome)
+		if hud is CanvasLayer:
+			hud.visible = false
 
 
 func restaurar_huds() -> void:
@@ -146,12 +152,14 @@ func restaurar_huds() -> void:
 			camada.visible = true
 	_camadas_escondidas.clear()
 
-	# Sempre religa o cinto de ferramentas, mesmo que quem o escondeu tenha
-	# sido outra instância de FadeTela (a da cena anterior — ver esconder_huds).
+	# Sempre religa o cinto e a lista de objetivos, mesmo que quem os escondeu
+	# tenha sido outra instância de FadeTela (a da cena anterior — ver
+	# esconder_huds).
 	if is_inside_tree():
-		var ferramentas := get_tree().root.get_node_or_null("FerramentasHUD")
-		if ferramentas is CanvasLayer:
-			ferramentas.visible = true
+		for nome in HUDS_AUTOLOAD:
+			var hud := get_tree().root.get_node_or_null(nome)
+			if hud is CanvasLayer:
+				hud.visible = true
 
 
 func _listar_camadas(no: Node) -> Array[CanvasLayer]:

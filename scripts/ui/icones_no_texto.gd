@@ -8,8 +8,9 @@ extends Control
 # um Label: quando o texto dele traz um botão (os caracteres especiais que o
 # Controle.texto() põe no lugar de "{interact}"), ele apaga o texto do próprio
 # Label e o redesenha com o botão no meio, na mesma fonte, cor, contorno e
-# alinhamento. Sem botão no texto (teclado), ele some e o Label volta a se
-# desenhar sozinho — nada muda para quem joga de teclado.
+# alinhamento. No teclado vale o mesmo para as teclas que têm desenho (ESC, E,
+# WASD — ver BotoesControle.TECLAS). Sem botão nem tecla desenhada no texto,
+# ele some e o Label volta a se desenhar sozinho.
 #
 # Como o nó é filho do Label, tudo o que o puzzle já faz com o Label continua
 # valendo: mostrar/esconder, piscar com "modulate", pulsar com "scale".
@@ -19,6 +20,11 @@ extends Control
 
 ## Folga dos dois lados do botão, em frações do tamanho dele.
 const FOLGA := 0.2
+
+## Escala mínima do botão. Normalmente ele acompanha a altura do texto; num
+## texto miúdo (o "ESC para fechar" do canto dos puzzles), 2 deixa o desenho
+## da tecla legível.
+var escala_minima: float = 1.0
 
 ## Texto com marcas ({interact}...). Preenchido pelo Controle.rotular(): quando
 ## a pessoa troca de teclado para controle, o Label é reescrito a partir daqui.
@@ -55,9 +61,9 @@ func _ready() -> void:
 	_sincronizar()
 
 
-func _ao_trocar_dispositivo(_em_uso: bool) -> void:
+func _ao_trocar_dispositivo(em_uso: bool) -> void:
 	if modelo != "" and _label != null:
-		_label.text = get_node("/root/Controle").texto(modelo)
+		_label.text = BotoesControle.traduzir(modelo, em_uso, true)
 	_sincronizar()
 
 
@@ -95,7 +101,7 @@ func _draw() -> void:
 		+ float(_label.get_theme_constant(&"paragraph_spacing"))
 
 	var altura_linha := fonte.get_height(tamanho)
-	var escala := BotoesControle.escala_para(altura_linha)
+	var escala := maxf(escala_minima, BotoesControle.escala_para(altura_linha))
 	var lado := 16.0 * escala
 	var folga := roundf(lado * FOLGA)
 

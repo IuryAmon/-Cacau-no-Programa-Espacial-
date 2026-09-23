@@ -74,6 +74,10 @@ const ANIM := &"derretendo"
 ## Habilidade do Progresso que destranca a porta.
 const HABILIDADE := "macarico"
 
+## Anotada no EstadoMundo quando a Cacau aperta E sem o maçarico: adianta o
+## objetivo "Pegue o maçarico" na lista (ver roteiro_objetivos.gd).
+const MARCA_TENTOU := "tentou_sem_macarico"
+
 ## Começo do nome das colisões que formam o monte de metal frio no chão.
 ## Toda filha que comece assim só ganha corpo depois do corte — ver
 ## _travar_passagem().
@@ -198,6 +202,7 @@ func _tentar_derreter() -> void:
 		# Não é um aviso do cenário: é a própria Cacau, na caixa de fala do
 		# jogo, constatando que não tem como passar por aqui ainda.
 		DialogicBridge.falar_cacau(fala_sem_macarico)
+		EstadoMundo.marcar_feito(self, MARCA_TENTOU)
 		return
 	_derreter()
 

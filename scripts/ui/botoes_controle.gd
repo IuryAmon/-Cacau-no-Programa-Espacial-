@@ -20,8 +20,24 @@ extends RefCounted
 #   {@cruz:CLIQUE}       botão pelo nome (sem ação), com o texto do teclado
 #   {teclado:...}        trecho que só aparece no teclado
 #   {controle:...}       trecho que só aparece no controle
+#
+# TECLAS DESENHADAS: num Label com IconesNoTexto (o "rotular" já põe um), a
+# tecla do teclado também sai desenhada — ESC, E, W, A, S e D, da folha
+# gdb-keyboard-2.png, a mesma do WASD e do E do world1. Tecla sem desenho
+# (ESPAÇO, ENTER, CLIQUE) continua escrita.
 
 const FOLHA := preload("res://assets/UI/gdb-playstation-2.png")
+const FOLHA_TECLADO := preload("res://assets/UI/gdb-keyboard-2.png")
+
+## As teclas desenhadas (primeiro quadro da animação de 4 da folha).
+const TECLAS := {
+	"tecla_esc": Rect2(32, 16, 16, 16),
+	"tecla_e": Rect2(96, 48, 16, 16),
+	"tecla_w": Rect2(80, 48, 16, 16),
+	"tecla_a": Rect2(64, 64, 16, 16),
+	"tecla_s": Rect2(80, 64, 16, 16),
+	"tecla_d": Rect2(96, 64, 16, 16),
+}
 
 ## Onde cada botão está na folha (a versão "flat": aro escuro e símbolo
 ## colorido, que lê bem por cima de qualquer tela). Todos são quadros de 16 px,
@@ -65,7 +81,8 @@ const COR_BRACO_ACESO := Color(0.95, 0.97, 1.0)
 const NOMES := ["cruz", "bolinha", "quadrado", "triangulo", "l1", "r1", "l2", "r2",
 	"l3", "r3", "analogico_esquerdo", "analogico_direito", "direcional", "options",
 	"direcional_cima", "direcional_baixo", "direcional_esquerda", "direcional_direita",
-	"direcional_horizontal", "direcional_vertical"]
+	"direcional_horizontal", "direcional_vertical",
+	"tecla_esc", "tecla_e", "tecla_w", "tecla_a", "tecla_s", "tecla_d"]
 const PRIMEIRO_CODIGO := 0xE000
 
 static var _texturas := {}
@@ -81,10 +98,10 @@ static func icone(nome: String) -> Texture2D:
 	if _texturas.has(nome):
 		return _texturas[nome]
 	var textura: Texture2D = null
-	if REGIOES.has(nome):
+	if REGIOES.has(nome) or TECLAS.has(nome):
 		var recorte := AtlasTexture.new()
-		recorte.atlas = FOLHA
-		recorte.region = REGIOES[nome]
+		recorte.atlas = FOLHA if REGIOES.has(nome) else FOLHA_TECLADO
+		recorte.region = REGIOES[nome] if REGIOES.has(nome) else TECLAS[nome]
 		textura = recorte
 	elif DIRECOES.has(nome):
 		textura = _direcional_aceso(DIRECOES[nome])
@@ -95,7 +112,7 @@ static func icone(nome: String) -> Texture2D:
 
 
 static func existe(nome: String) -> bool:
-	return REGIOES.has(nome) or DIRECOES.has(nome)
+	return REGIOES.has(nome) or DIRECOES.has(nome) or TECLAS.has(nome)
 
 
 ## Escala inteira para o botão acompanhar uma altura de texto (o botão fica um
@@ -274,14 +291,17 @@ static func controle_em_uso() -> bool:
 ## Escreve o modelo com marcas {acao} no Label e o mantém certo sozinho: trocou
 ## de teclado para controle, o Label se reescreve e o botão aparece desenhado.
 ## Seguro de chamar de script @tool — no editor fica o texto do teclado.
-static func rotular(label: Label, modelo: String) -> void:
+## "escala_minima": ver IconesNoTexto.
+static func rotular(label: Label, modelo: String, escala_minima: float = 1.0) -> void:
 	if label == null:
 		return
 	if Engine.is_editor_hint():
 		label.text = traduzir(modelo, false)
 		return
-	IconesNoTexto.acoplar(label).modelo = modelo
-	label.text = traduzir(modelo, controle_em_uso())
+	var icones := IconesNoTexto.acoplar(label)
+	icones.modelo = modelo
+	icones.escala_minima = escala_minima
+	label.text = traduzir(modelo, controle_em_uso(), true)
 
 
 static func caractere(nome: String) -> String:
@@ -310,8 +330,10 @@ static func tem_icone(texto: String) -> bool:
 
 ## Troca as marcas do texto pelo que o dispositivo mostra (ver o topo do
 ## arquivo). No controle o botão vira um caractere especial que só aparece
-## desenhado num Label com IconesNoTexto.
-static func traduzir(modelo: String, controle: bool) -> String:
+## desenhado num Label com IconesNoTexto. "teclas_desenhadas" faz o mesmo com
+## as teclas do teclado que têm desenho — só para quem vai parar num Label
+## desses.
+static func traduzir(modelo: String, controle: bool, teclas_desenhadas: bool = false) -> String:
 	if not modelo.contains("{"):
 		return modelo
 	if _marca == null:
@@ -330,19 +352,27 @@ static func traduzir(modelo: String, controle: bool) -> String:
 			"controle":
 				saida += resto if controle else ""
 			_:
-				saida += _marca_traduzida(nome, resto, tem_resto, controle)
+				saida += _marca_traduzida(nome, resto, tem_resto, controle, teclas_desenhadas)
 	return saida + modelo.substr(inicio)
 
 
 static func _marca_traduzida(nome: String, texto_teclado: String, tem_texto: bool,
-		controle: bool) -> String:
+		controle: bool, teclas_desenhadas: bool) -> String:
 	if nome.begins_with("@"):
 		var botao := nome.substr(1)
 		if controle and existe(botao):
 			return caractere(botao)
-		return texto_teclado
+		return _tecla(texto_teclado, teclas_desenhadas)
 	if controle:
 		var botao := nome_da_acao(nome)
 		if botao != "":
 			return caractere(botao)
-	return texto_teclado if tem_texto else tecla_da_acao(nome)
+	return _tecla(texto_teclado if tem_texto else tecla_da_acao(nome), teclas_desenhadas)
+
+
+## A tecla escrita ("ESC") vira a tecla desenhada, quando existe o desenho.
+static func _tecla(texto: String, desenhada: bool) -> String:
+	var nome := "tecla_" + texto.to_lower()
+	if desenhada and TECLAS.has(nome):
+		return caractere(nome)
+	return texto

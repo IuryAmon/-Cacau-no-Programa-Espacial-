@@ -255,6 +255,9 @@ func desarmar(com_animacao: bool = true) -> void:
 		_atraso.stop()
 	if desligar_para_sempre:
 		_travado = true
+		# Só uma anotação para a lista de objetivos ("Desative os espinhos de
+		# laser"): os espinhos em si não leem isto de volta.
+		EstadoMundo.marcar_feito(self)
 
 	if com_animacao and _tem_animacao(ANIM_DESATIVANDO):
 		_tocar(ANIM_DESATIVANDO)

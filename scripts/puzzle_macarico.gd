@@ -44,7 +44,7 @@ extends CanvasLayer
 #   sinal "puzzle_resolvido" e método "abrir_puzzle()".
 # CONTROLES: mouse nas setas e no botão; ENTER confirma; ESC fecha.
 #   No controle: o analógico leva o cursor, o direcional pula de seta em seta,
-#   ✕ aperta, ○ fecha e □ abre a gaiola no fim (ver cursor_virtual.gd).
+#   ✕ aperta, △ fecha e □ abre o domo no fim (ver cursor_virtual.gd).
 # DEBUG: a tecla L resolve o puzzle na hora.
 
 signal puzzle_resolvido
@@ -73,7 +73,7 @@ const ETAPAS := [
 
 const COEF_MAX := 4
 ## Rodapé da tela final. {interact} vira "E" no teclado e □ no controle.
-const TXT_ABRIR_GAIOLA := "APERTE {interact} PARA ABRIR A GAIOLA"
+const TXT_ABRIR_DOMO := "APERTE {interact} PARA ABRIR O DOMO"
 ## Ordem dos elementos na contagem de átomos.
 const ORDEM_ELEMENTOS := ["C", "H", "O"]
 
@@ -142,10 +142,12 @@ func _ready() -> void:
 	hide()
 	set_process(false)
 	# Controle: cursor nesta tela e as teclas dos textos viram botões. O texto do
-	# canto mora na cena, com as marcas {ui_cancel}/{teclado:...}; o do rodapé é
+	# canto mora na cena, com as marcas {fechar}/{teclado:...}; o do rodapé é
 	# escrito aqui (ver _mostrar_liberado).
 	add_to_group(CursorVirtual.GRUPO)
-	Controle.rotular($RootControl/Instrucoes, $RootControl/Instrucoes.text)
+	# A tecla do "para fechar" sai em escala 2: no texto miúdo do canto, o
+	# desenho em escala 1 ficava ilegível.
+	Controle.rotular($RootControl/Instrucoes, $RootControl/Instrucoes.text, 2.0)
 	IconesNoTexto.acoplar(rodape)
 	Controle.mudou.connect(_ao_trocar_controle)
 	var modelo := TERMO.instantiate() as Control
@@ -373,14 +375,14 @@ func _input(event: InputEvent) -> void:
 		# DEBUG: resolve o puzzle na hora, para não balancear a cada teste.
 		fechar_puzzle(true)
 		return
-	# As teclas de sempre e, pelas ações do mapa, ○/□/✕ do controle.
+	# As teclas de sempre e, pelas ações do mapa, △/□/✕ do controle.
 	if aguardando_fechamento:
 		if (tecla and event.keycode in [KEY_ESCAPE, KEY_E, KEY_SPACE, KEY_ENTER, KEY_KP_ENTER]) \
-				or event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_accept") \
+				or event.is_action_pressed("fechar") or event.is_action_pressed("ui_accept") \
 				or event.is_action_pressed(Interacao.ACAO):
 			fechar_puzzle(true)
 		return
-	if (tecla and event.keycode == KEY_ESCAPE) or event.is_action_pressed("ui_cancel"):
+	if (tecla and event.keycode == KEY_ESCAPE) or event.is_action_pressed("fechar"):
 		if not travado:
 			fechar_puzzle(false)
 	elif tecla and event.keycode in [KEY_ENTER, KEY_KP_ENTER] and _pode_mexer():
@@ -407,20 +409,20 @@ func alvos_do_cursor() -> Array[Rect2]:
 
 func dicas_do_controle() -> Array:
 	if aguardando_fechamento:
-		return [[Interacao.ACAO, "ABRIR A GAIOLA"]]
+		return [[Interacao.ACAO, "ABRIR O DOMO"]]
 	return [
 		["analogico_esquerdo", "MOVER"],
 		["direcional", "ESCOLHER"],
 		["cruz", "APERTAR"],
-		["ui_cancel", "SAIR"],
+		["fechar", "SAIR"],
 	]
 
 
-## O rodapé final diz a tecla (ou o botão) que abre a gaiola: trocou de
+## O rodapé final diz a tecla (ou o botão) que abre o domo: trocou de
 ## teclado para controle com ele na tela, ele se reescreve.
 func _ao_trocar_controle(_em_uso: bool) -> void:
 	if aguardando_fechamento:
-		_definir_rodape(Controle.texto(TXT_ABRIR_GAIOLA), true)
+		_definir_rodape(Controle.texto(TXT_ABRIR_DOMO, true), true)
 
 
 func _clicar(pos: Vector2) -> void:
@@ -765,7 +767,7 @@ func _trocar_para_etapa(indice: int) -> void:
 # ------------------------- MAÇARICO LIBERADO -------------------------
 
 ## Tela final: só "MAÇARICO LIBERADO!" e a foto do maçarico, parada. O rodapé
-## diz como abrir a gaiola.
+## diz como abrir o domo.
 func _mostrar_liberado() -> void:
 	var sessao := _sessao
 	var sai := _tween()
@@ -780,7 +782,7 @@ func _mostrar_liberado() -> void:
 	led.color = COR_LED_LIBERADO
 	var entra := _tween()
 	entra.tween_property(grupo_liberado, "modulate:a", 1.0, 0.3)
-	_definir_rodape(Controle.texto(TXT_ABRIR_GAIOLA), true)
+	_definir_rodape(Controle.texto(TXT_ABRIR_DOMO, true), true)
 	aguardando_fechamento = true
 
 

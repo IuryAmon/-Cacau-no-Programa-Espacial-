@@ -195,8 +195,9 @@ func _testar_puzzle() -> void:
 	_checar(puzzle.macarico.texture.resource_path.ends_with("maçaricoDesligado.png")
 		and puzzle.grupo_liberado.get_children().filter(func(n): return n is CPUParticles2D).is_empty(),
 		"só a foto do maçarico, sem chama acendendo")
-	_checar(puzzle.aguardando_fechamento and puzzle._rodape_texto == "APERTE E PARA ABRIR A GAIOLA",
-		"o rodapé pede o E para abrir a gaiola")
+	_checar(puzzle.aguardando_fechamento
+		and puzzle._rodape_texto == "APERTE %s PARA ABRIR O DOMO" % BotoesControle.caractere("tecla_e"),
+		"o rodapé pede o E (desenhado) para abrir o domo")
 	await _capturar("6_macarico_liberado")
 
 	puzzle._input(_tecla(KEY_E))

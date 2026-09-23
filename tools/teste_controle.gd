@@ -7,16 +7,18 @@ extends Node
 # Input.parse_input_event, do mesmo jeito que o controle físico chega:
 #
 #   * o mapa: ✕ pula, □ interage e arremessa, ○ dá dash e é "sair" (ui_cancel),
-#     ✕ e □ passam a fala do Dialogic, e o maçarico NÃO tem botão próprio;
+#     △ fecha os puzzles (fechar, o ESC do teclado), ✕ e □ passam a fala do
+#     Dialogic, e o maçarico NÃO tem botão próprio;
 #   * o Controle percebe o controle e o teclado, e os textos com {acao} viram
-#     "E" no teclado e o desenho do □ no controle;
+#     "E" no teclado (a tecla desenhada, num Label com IconesNoTexto) e o
+#     desenho do □ no controle;
 #   * o toque que nasce com tela aberta fica preso a ela até ser solto;
 #   * puzzle do maçarico resolvido SÓ com o controle (cursor, direcional, ✕) e
 #     a gaiola aberta com □;
 #   * puzzle do hidrogênio: segurar ✕ arrasta, soltar larga;
-#   * puzzle de ordenar: arrastar até o encaixe, e ○ desiste;
+#   * puzzle de ordenar: arrastar até o encaixe, e △ desiste (○ não);
 #   * guincho sem cursor: direcional gira o mostrador, ✕ aciona, □ solta;
-#   * dosagem: ○ desiste;
+#   * dosagem: △ desiste;
 #   * □ perto de algo que responde: interagir vence, o bumerangue fica na mão;
 #     longe de tudo: o bumerangue voa;
 #   * o bumerangue sai no ângulo exato do analógico (não só nas 8 direções),
@@ -85,10 +87,13 @@ func _testar_mapa() -> void:
 		"o maçarico não tem botão próprio (acende no □ da interação)")
 	_checar(_tem_botao("ui_cancel", JOY_BUTTON_B), "○ é sair (ui_cancel)")
 	_checar(_tem_tecla("ui_cancel", KEY_ESCAPE), "ESC continua sendo sair")
+	_checar(_tem_botao("fechar", JOY_BUTTON_Y) and not _tem_botao("fechar", JOY_BUTTON_B),
+		"△ (e não o ○) fecha os puzzles")
+	_checar(_tem_tecla("fechar", KEY_ESCAPE), "ESC fecha os puzzles")
 	_checar(_tem_botao("ui_accept", JOY_BUTTON_A), "✕ confirma (ui_accept)")
 	_checar(_tem_botao("dialogic_default_action", JOY_BUTTON_A)
 		and _tem_botao("dialogic_default_action", JOY_BUTTON_X), "✕ e □ passam a fala")
-	for acao in ["ui_accept", "dialogic_default_action", "ui_cancel"]:
+	for acao in ["ui_accept", "dialogic_default_action", "ui_cancel", "fechar"]:
 		var qualquer := true
 		for evento in InputMap.action_get_events(acao):
 			if evento is InputEventJoypadButton and evento.device != -1:
@@ -143,6 +148,14 @@ func _testar_troca_de_dispositivo() -> void:
 	_checar(BotoesControle.traduzir("{ui_cancel}", false) == "ESC", "teclado: {ui_cancel} vira ESC")
 	_checar(BotoesControle.traduzir("{ui_cancel}", true) == BotoesControle.caractere("bolinha"),
 		"controle: {ui_cancel} vira o ○")
+	_checar(BotoesControle.traduzir("{fechar}", true) == BotoesControle.caractere("triangulo"),
+		"controle: {fechar} vira o △")
+	_checar(BotoesControle.traduzir("{fechar} para fechar", false, true)
+		== BotoesControle.caractere("tecla_esc") + " para fechar", "teclado desenhado: {fechar} vira a tecla ESC")
+	_checar(BotoesControle.traduzir("APERTE {interact} PARA", false, true)
+		== "APERTE %s PARA" % BotoesControle.caractere("tecla_e"), "teclado desenhado: {interact} vira a tecla E")
+	_checar(BotoesControle.traduzir("{@cruz:CLIQUE} e ESPAÇO", false, true) == "CLIQUE e ESPAÇO",
+		"tecla sem desenho continua escrita")
 	_checar(BotoesControle.traduzir("{ui_right:D}", false) == "D", "teclado: a tecla depois do ':' vale")
 	_checar(BotoesControle.traduzir("{ui_right:D}", true) == BotoesControle.caractere("direcional_direita"),
 		"controle: o direcional com o lado apertado aceso")
@@ -159,8 +172,13 @@ func _testar_troca_de_dispositivo() -> void:
 		"no controle o Label some e o desenhista de botões assume")
 	_tecla(KEY_F10)
 	await _quadros(3)
-	_checar(label.text == "APERTE E PARA ABRIR" and label.self_modulate.a == 1.0 and not icones[0].visible,
-		"voltou ao teclado: o Label se reescreve e volta a se desenhar")
+	_checar(label.text == "APERTE %s PARA ABRIR" % BotoesControle.caractere("tecla_e")
+		and label.self_modulate.a == 0.0 and icones[0].visible,
+		"voltou ao teclado: o Label se reescreve com a tecla E desenhada")
+	Controle.rotular(label, "ESPAÇO PARA ABRIR")
+	await _quadros(2)
+	_checar(label.self_modulate.a == 1.0 and not icones[0].visible,
+		"sem tecla desenhada, o Label volta a se desenhar sozinho")
 	label.queue_free()
 
 
@@ -203,7 +221,7 @@ func _testar_macarico() -> void:
 	_checar(CursorVirtual.ativo() and CursorVirtual._com_cursor, "o cursor aparece no puzzle")
 	_checar(CursorVirtual._alvos.size() == 9, "alvos: as 8 setas da etapa 1 e o botão (%d)" % CursorVirtual._alvos.size())
 	_checar(BotoesControle.tem_icone(puzzle.get_node("RootControl/Instrucoes").text),
-		"o '{ui_cancel} para fechar' do canto virou botão")
+		"o '{fechar} para fechar' do canto virou botão")
 
 	# O analógico move o cursor.
 	CursorVirtual._pos = Vector2(300, 450)
@@ -334,7 +352,7 @@ func _testar_ordenar() -> void:
 	puzzle.resolvido.connect(func() -> void: resolvido[0] = true)
 	await _esperar(0.3)
 	_checar(CursorVirtual.ativo(), "cursor ligado no puzzle de ordenar")
-	_checar(BotoesControle.tem_icone(puzzle._status.text), "o rodapé mostra o ○ para desistir")
+	_checar(puzzle._status.text.contains(BotoesControle.caractere("triangulo")), "o rodapé mostra o △ para desistir")
 	var peca_a: Panel = puzzle._nos_pecas.filter(func(p): return p.get_meta("id") == "a")[0]
 	await _arrastar(peca_a.get_global_rect().get_center(), puzzle._nos_slots[0].get_global_rect().get_center())
 	_checar(puzzle._vitoria, "peça arrastada com o controle encaixa")
@@ -346,10 +364,12 @@ func _testar_ordenar() -> void:
 	await _esperar(0.2)
 	_botao(JOY_BUTTON_B, true)
 	await _quadros(4)
-	_checar(not is_instance_valid(outro), "○ desiste do puzzle")
+	_checar(is_instance_valid(outro), "○ não fecha mais o puzzle")
 	_checar(Interacao.toque_preso(&"dash"), "e esse ○ não vira dash")
 	_botao(JOY_BUTTON_B, false)
 	await _quadros(4)
+	await _tocar(JOY_BUTTON_Y)
+	_checar(not is_instance_valid(outro), "△ desiste do puzzle")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -381,7 +401,7 @@ func _testar_guincho() -> void:
 # ─────────────────────────────────────────────────────────────
 
 func _testar_dosagem() -> void:
-	print("\n--- DOSAGEM: ○ DESISTE ---")
+	print("\n--- DOSAGEM: △ DESISTE ---")
 	var fim := [false, false]
 	var dosagem := Dosagem.abrir(self, {"modo": "parar", "titulo": "TESTE"})
 	dosagem.terminado.connect(func(sucesso: bool, cancelado: bool) -> void:
@@ -389,9 +409,9 @@ func _testar_dosagem() -> void:
 		fim[1] = cancelado and not sucesso)
 	await _esperar(0.2)
 	_checar(CursorVirtual.ativo() and not CursorVirtual._com_cursor, "dosagem ganha a barra, sem cursor")
-	await _tocar(JOY_BUTTON_B)
+	await _tocar(JOY_BUTTON_Y)
 	await _quadros(3)
-	_checar(fim[0] and fim[1], "○ cancela a dosagem")
+	_checar(fim[0] and fim[1], "△ cancela a dosagem")
 
 
 # ─────────────────────────────────────────────────────────────

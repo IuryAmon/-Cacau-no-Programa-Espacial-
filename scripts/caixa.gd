@@ -1,3 +1,4 @@
+class_name Caixa
 extends CharacterBody2D
 
 # Caixa empurrável. Lembra onde ficou quando a personagem SAI da fase por uma
@@ -5,6 +6,10 @@ extends CharacterBody2D
 # Morrer não conta — a fase recarrega com a caixa onde ela estava na última
 # saída (ou no lugar original), o que também desencalha uma caixa empurrada
 # para onde não devia.
+
+## Anotada no EstadoMundo no primeiro empurrão: é o que acende a dica "Use a
+## caixa arrastável" na lista de objetivos (ver roteiro_objetivos.gd).
+const MARCA_EMPURRADA := "empurrada"
 
 const ATRITO := 800.0
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
@@ -29,6 +34,8 @@ func _physics_process(delta: float) -> void:
 func empurrar(vel_x: float) -> void:
 	velocity.x = vel_x
 	_sendo_empurrado = true
+	if not EstadoMundo.ja_feito(self, MARCA_EMPURRADA):
+		EstadoMundo.marcar_feito(self, MARCA_EMPURRADA)
 
 ## Chamado pelo FadeTela logo antes de trocar de cena (ver EstadoMundo).
 func salvar_ao_sair() -> void:

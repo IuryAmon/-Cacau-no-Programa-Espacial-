@@ -66,7 +66,10 @@ const ROTEIRO := [
 ]
 ## Respiro entre o clique certo e a próxima fala: o tempo de as moléculas
 ## pularem na tela e a contagem mudar — é isso que o cientista vai comentar.
-const PAUSA_ENTRE_PASSOS := 0.7
+## Curto de propósito: parado mais que isso, a tela parecia travada.
+const PAUSA_ENTRE_PASSOS := 0.25
+## Do holofote acendendo no lugar novo até a fala abrir.
+const ESPERA_ANTES_DA_FALA := 0.1
 
 # Rodapé da tela do computador na coleta (as instruções moram só dentro da tela).
 const TXT_RODAPE_COLETA := "INSIRA O COMBUSTÍVEL E O COMBURENTE NO TUBO"
@@ -231,9 +234,11 @@ func _ready():
 	hide()
 	set_process(false)
 	# Controle: cursor nesta tela e as teclas dos textos viram botões. Os textos
-	# moram na cena, com as marcas {ui_cancel}/{interact} (ver BotoesControle).
+	# moram na cena, com as marcas {fechar}/{interact} (ver BotoesControle).
 	add_to_group(CursorVirtual.GRUPO)
-	Controle.rotular($RootControl/Instrucoes, $RootControl/Instrucoes.text)
+	# A tecla do "para fechar" sai em escala 2: no texto miúdo do canto, o
+	# desenho em escala 1 ficava ilegível.
+	Controle.rotular($RootControl/Instrucoes, $RootControl/Instrucoes.text, 2.0)
 	Controle.rotular(label_liberar_acesso, label_liberar_acesso.text)
 	# Mesma folha de átomos e moléculas do puzzle do maçarico (ver
 	# scripts/ui/folha_moleculas.gd).
@@ -516,19 +521,19 @@ func _input(event: InputEvent):
 	elif not travado and _pediu_sair(event):
 		fechar_puzzle(false)
 
-## ESC/E/ESPAÇO/ENTER no teclado; ○, □ e ✕ no controle (pelas ações do mapa).
+## ESC/E/ESPAÇO/ENTER no teclado; △, □ e ✕ no controle (pelas ações do mapa).
 func _pediu_fechar(event: InputEvent) -> bool:
 	if event is InputEventKey and event.pressed \
 			and event.keycode in [KEY_ESCAPE, KEY_E, KEY_SPACE, KEY_ENTER]:
 		return true
-	return event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_accept") \
+	return event.is_action_pressed("fechar") or event.is_action_pressed("ui_accept") \
 		or event.is_action_pressed(Interacao.ACAO)
 
-## ESC no teclado; ○ no controle.
+## ESC no teclado; △ no controle (a ação "fechar").
 func _pediu_sair(event: InputEvent) -> bool:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		return true
-	return event.is_action_pressed("ui_cancel")
+	return event.is_action_pressed("fechar")
 
 # ------------------------- CONTROLE (ver cursor_virtual.gd) -------------------------
 
@@ -577,7 +582,7 @@ func dicas_do_controle() -> Array:
 		_:
 			dicas.append(["cruz", "APERTAR"])
 	if not travado:
-		dicas.append(["ui_cancel", "SAIR"])
+		dicas.append(["fechar", "SAIR"])
 	return dicas
 
 # Cursor de mão sobre o que dá para pegar/clicar; o alvéolo da mochila acende.
@@ -979,7 +984,7 @@ func _bbcode_valor_atomos(h_txt: String, cor_h: Color, o_txt: String, cor_o: Col
 		cor_h.to_html(false), h_txt, cor_o.to_html(false), o_txt,
 	]
 
-# Monta "N H2 + N O2 -> N H2O + ENERGIA" com os números "2" em subscrito de verdade
+# Monta "N H2 + N O2 -> N H2O + Energia" com os números "2" em subscrito de verdade
 # (menores e rebaixados), já que o BBCode do RichTextLabel não tem tag de subscrito.
 func _reconstruir_equacao_escrita(coef_h2_txt: String, coef_o2_txt: String, coef_h2o_txt: String, cor: Color):
 	for filho in linha_equacao.get_children():
@@ -990,7 +995,7 @@ func _reconstruir_equacao_escrita(coef_h2_txt: String, coef_o2_txt: String, coef
 	_add_texto_sub(linha_equacao, "2", true, cor, 33, 11)
 	_add_texto_sub(linha_equacao, "   →   " + coef_h2o_txt + " H", false, cor, 33, 11)
 	_add_texto_sub(linha_equacao, "2", true, cor, 33, 11)
-	_add_texto_sub(linha_equacao, "O  +  ENERGIA", false, cor, 33, 11)
+	_add_texto_sub(linha_equacao, "O  +  Energia", false, cor, 33, 11)
 
 func _add_texto_sub(container: Control, texto: String, subscrito: bool, cor: Color, tamanho_normal: int, tamanho_sub: int):
 	var lbl := Label.new()
@@ -1044,7 +1049,7 @@ func _executar_passo(indice: int):
 	# O holofote acende ANTES da fala, para a pessoa já estar olhando para o
 	# lugar certo quando o texto chegar nele.
 	destaque.focar(_retangulos_para(passo["mostrar"]), false, _retangulos_para(passo["enfase"]))
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(ESPERA_ANTES_DA_FALA).timeout
 	if sessao != _sessao:
 		return
 	await _falar_cientista(PASTA_FALAS + passo["fala"] + ".dtl")

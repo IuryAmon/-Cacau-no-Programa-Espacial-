@@ -47,9 +47,11 @@ func _ready():
 	hide()
 	set_process(false)
 	# Controle: cursor nesta tela e as teclas dos textos viram botões. Os textos
-	# moram na cena, com as marcas {ui_cancel}/{interact} (ver BotoesControle).
+	# moram na cena, com as marcas {fechar}/{interact} (ver BotoesControle).
 	add_to_group(CursorVirtual.GRUPO)
-	Controle.rotular($RootControl/Instrucoes, $RootControl/Instrucoes.text)
+	# A tecla do "para fechar" sai em escala 2: no texto miúdo do canto, o
+	# desenho em escala 1 ficava ilegível.
+	Controle.rotular($RootControl/Instrucoes, $RootControl/Instrucoes.text, 2.0)
 	Controle.rotular(label_abrir_gaiola, label_abrir_gaiola.text)
 	painel_mat = ShaderMaterial.new()
 	painel_mat.shader = load("res://shaders/painel_red_to_green.gdshader")
@@ -133,19 +135,19 @@ func _input(event: InputEvent):
 	elif not travado and _pediu_sair(event):
 		fechar_puzzle(false)
 
-## ESC/E/ESPAÇO/ENTER no teclado; ○, □ e ✕ no controle (pelas ações do mapa).
+## ESC/E/ESPAÇO/ENTER no teclado; △, □ e ✕ no controle (pelas ações do mapa).
 func _pediu_fechar(event: InputEvent) -> bool:
 	if event is InputEventKey and event.pressed \
 			and event.keycode in [KEY_ESCAPE, KEY_E, KEY_SPACE, KEY_ENTER]:
 		return true
-	return event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_accept") \
+	return event.is_action_pressed("fechar") or event.is_action_pressed("ui_accept") \
 		or event.is_action_pressed(Interacao.ACAO)
 
-## ESC no teclado; ○ no controle.
+## ESC no teclado; △ no controle (a ação "fechar").
 func _pediu_sair(event: InputEvent) -> bool:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		return true
-	return event.is_action_pressed("ui_cancel")
+	return event.is_action_pressed("fechar")
 
 # ------------------------- CONTROLE (ver cursor_virtual.gd) -------------------------
 
@@ -169,7 +171,7 @@ func dicas_do_controle() -> Array:
 		["analogico_esquerdo", "MOVER"],
 		["direcional", "ESCOLHER"],
 		["cruz", "SOLTE PARA COLOCAR" if peca_arrastando else "SEGURE PARA ARRASTAR"],
-		["ui_cancel", "SAIR"],
+		["fechar", "SAIR"],
 	]
 
 func _iniciar_arrasto(mouse_pos: Vector2):
