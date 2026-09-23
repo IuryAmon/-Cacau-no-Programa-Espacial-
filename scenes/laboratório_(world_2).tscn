@@ -57,7 +57,6 @@
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/painel_chonps.tscn" id="55_painel"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_fase.tscn" id="56_portafase"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_ala_eletrolise.tscn" id="57_portaelet"]
-[ext_resource type="Texture2D" uid="uid://c2finb307gm3i" path="res://assets/Lab2/TESTE PAINEL CHONPS.png" id="58_0cdel"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_p4rl3"]
 texture = ExtResource("1_gv4uw")
@@ -5002,7 +5001,8 @@ patrulha_alcance = 120.0
 position = Vector2(854, 118)
 
 [node name="PainelChonps" parent="." unique_id=75985465 instance=ExtResource("55_painel")]
-position = Vector2(2090, -67)
+position = Vector2(2164.5, -96.75)
+scale = Vector2(1.5, 1.5)
 
 [node name="PortaOficina" parent="." unique_id=850020829 instance=ExtResource("57_portaelet")]
 position = Vector2(1210, 60)
@@ -5039,8 +5039,3 @@ cena_destino = "res://scenes/fases/fase_final.tscn"
 tag_aqui = "volta_do_lancamento"
 tag_destino = "entrada"
 cor_porta = Color(0.7, 0.45, 0.5, 1)
-
-[node name="TestePainelChonps" type="Sprite2D" parent="." unique_id=843613098]
-position = Vector2(2160, -82)
-scale = Vector2(2, 2)
-texture = ExtResource("58_0cdel")

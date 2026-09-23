@@ -210,7 +210,8 @@ func _testar_final() -> void:
 	_checar(f.get_node("Plataforma/Capsula").visible == false, "capsula escondida antes da checagem de LiOH")
 
 	var painel := f.get_node("Portao/PainelChonps")
-	_checar(painel.get_node_or_null("SlotC/Sprite") != null, "painel tem slot de sprite por elemento")
+	for letra in Progresso.CELULAS:
+		_checar(painel.get_node_or_null("Letras/" + letra) is Sprite2D, "painel tem a letra " + letra)
 
 	await _fechar(f)
 

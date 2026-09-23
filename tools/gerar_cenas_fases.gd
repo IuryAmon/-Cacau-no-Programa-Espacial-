@@ -242,7 +242,6 @@ func _gerar_componentes() -> void:
 	_comp_valvula_purga()
 	_comp_pickup_habilidade()
 	_comp_celula_chonps()
-	_comp_painel_chonps()
 	_comp_porta_fase()
 	_comp_mesa_puzzle()
 	_comp_estacao_recarga()
@@ -410,28 +409,9 @@ func _comp_celula_chonps() -> void:
 	_salvar(raiz, DIR_COMPONENTES + "celula_chonps.tscn")
 
 
-func _comp_painel_chonps() -> void:
-	var raiz := Node2D.new()
-	raiz.name = "PainelChonps"
-	raiz.set_script(load("res://scripts/fases/painel_chonps.gd"))
-	_rect(raiz, "Moldura", Vector2(340, 110), Color(0.10, 0.11, 0.14), Vector2.ZERO, -3)
-	_rect(raiz, "Fundo", Vector2(330, 100), Color(0.16, 0.18, 0.22), Vector2.ZERO, -2)
-	_label(raiz, "Titulo", "PAINEL CHONPS", Vector2(0, -68), 340, 13)
-
-	var cores := {
-		"C": Color(0.35, 0.35, 0.38), "H": Color(0.90, 0.35, 0.35),
-		"O": Color(0.35, 0.65, 0.95), "N": Color(0.40, 0.80, 0.45),
-		"P": Color(0.95, 0.65, 0.25), "S": Color(0.95, 0.85, 0.30),
-	}
-	var letras := ["C", "H", "O", "N", "P", "S"]
-	for i in letras.size():
-		var letra: String = letras[i]
-		var slot := _no(raiz, Node2D, "Slot" + letra, Vector2(-125 + i * 50.0, 0))
-		_no(slot, Sprite2D, "Sprite")
-		var ph := _rect(slot, "Placeholder", Vector2(42, 42), Color(0.08, 0.08, 0.10))
-		_rect(ph, "Miolo", Vector2(34, 34), cores[letra], Vector2(21, 21))
-		_label(slot, "Letra", letra, Vector2.ZERO, 42, 20)
-	_salvar(raiz, DIR_COMPONENTES + "painel_chonps.tscn")
+# O painel do CHONPS saiu do gerador: ele já tem a arte final (tela animada,
+# título e as letras acesas/apagadas), montada à mão em
+# scenes/fases/componentes/painel_chonps.tscn. As fases só o instanciam.
 
 
 func _comp_porta_fase() -> void:
