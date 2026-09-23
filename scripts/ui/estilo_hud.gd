@@ -59,6 +59,9 @@ static func cor_do_item(id: String) -> Color:
 			return Color(0.36, 0.76, 1.0)
 		"carvao_vegetal":
 			return Color(0.98, 0.60, 0.28)
+	# Amostras do CHONPS (N, P, S): a cor do próprio elemento.
+	if AmostraChonps.e_amostra(id):
+		return AmostraChonps.cor(id.trim_prefix(AmostraChonps.PREFIXO_ID))
 	return ACENTO_PADRAO
 
 
@@ -66,6 +69,8 @@ static func cor_do_item(id: String) -> Color:
 static func chapeu_do_item(id: String) -> String:
 	if CatalogoFerramentas.FERRAMENTAS.has(id):
 		return "FERRAMENTA ADQUIRIDA"
+	if id != AmostraChonps.ID_CARVAO and AmostraChonps.e_amostra(id):
+		return "AMOSTRA DO CHONPS"
 	return "ITEM COLETADO"
 
 

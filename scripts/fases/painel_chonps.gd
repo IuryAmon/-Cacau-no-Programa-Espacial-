@@ -58,6 +58,13 @@ func _ready() -> void:
 	Progresso.celula_entregue.connect(_on_celula_entregue)
 
 
+## Onde a letra do elemento está no mundo — é para lá que o brilho sobe do
+## receptor quando uma amostra é entregue (ver receptor_chonps.gd).
+func posicao_da_letra(letra: String) -> Vector2:
+	var sprite := get_node_or_null("Letras/" + letra) as Node2D
+	return sprite.global_position if sprite else global_position
+
+
 func _atualizar() -> void:
 	for letra in _letras:
 		if not _piscando.has(letra):

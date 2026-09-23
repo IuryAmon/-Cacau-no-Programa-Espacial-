@@ -4,8 +4,9 @@ extends Area2D
 
 # --- CÉLULA DO PAINEL CHONPS ---
 #
-# A recompensa química de cada fase. Encostar entrega a célula ao Progresso —
-# o painel do laboratório acende o símbolo na próxima visita.
+# A recompensa química de cada fase. Encostar pega a AMOSTRA do elemento: ela
+# vai para a mochila e só acende o símbolo no painel quando a Cacau a joga no
+# receptor do laboratório (ver amostra_chonps.gd e receptor_chonps.gd).
 #
 # COMO EDITAR NO EDITOR:
 #   Sprite -> PNG da célula (o placeholder colorido some sozinho)
@@ -49,8 +50,8 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 
-	# Já entregue nesta sessão: não volta para o cenário.
-	if Progresso.tem_celula(letra):
+	# Já pega nesta sessão (na mochila ou no painel): não volta para o cenário.
+	if Progresso.conquistou_celula(letra):
 		queue_free()
 		return
 
@@ -77,8 +78,5 @@ func _on_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
 	set_deferred("monitoring", false)
-	Progresso.dar_celula(letra)
-	Blockout.aviso_flutuante(get_parent(), global_position,
-		"CÉLULA %s CONQUISTADA!\nO painel CHONPS acendeu mais um símbolo." % letra,
-		Color(0.5, 1.0, 0.6))
+	AmostraChonps.coletar(letra, get_parent(), global_position)
 	queue_free()

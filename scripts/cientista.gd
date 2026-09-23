@@ -11,9 +11,10 @@ const TIMELINE_TEM_O2       = "cientista_dica_tem_o2"
 const TIMELINE_TEM_AMBOS    = "cientista_dica_tem_ambos"
 const TIMELINE_LASER_ABERTO = "cientista_laser_aberto"
 
-## Marque na instância que já é o Dr. Chico revelado (a do laboratório): ela
-## não some quando a revelação acontece — é justamente onde ele passa a morar —
-## e garante o nome certo mesmo se a cena for aberta direto no editor.
+## Marque na instância que é o Dr. Chico do laboratório: ela não some quando a
+## revelação acontece — é justamente onde ele passa a morar. Antes da revelação
+## ele ainda está lá fora: fica fora do mapa até a cutscene da revelação
+## (cutscene_final_fase.gd) trazê-lo.
 @export var apos_revelacao: bool = false
 ## Timeline única desta instância. Vazio = ele escolhe pela situação da fase 1
 ## (dicas de H2/O2, laser aberto, etc), que é o comportamento do world1.
@@ -92,9 +93,12 @@ func _ready() -> void:
 		plataforma_acionada.emit()
 
 	if apos_revelacao:
-		# Ele já é o Dr. Chico aqui, mesmo se a cena for aberta direto no editor
-		# sem passar pela cutscene do world1.
-		Dialogic.VAR.set_variable("reveal_name", "Dr. Chico")
+		if EstadoMundo.revelou_dr_chico:
+			Dialogic.VAR.set_variable("reveal_name", "Dr. Chico")
+		else:
+			# Ainda não chegou: quem o traz para dentro é a cutscene, e o nome
+			# continua segredo até a timeline dela trocar.
+			_sumir()
 	elif EstadoMundo.revelou_dr_chico:
 		# Voltando ao world1 depois da revelação, o "variable_was_set" não
 		# dispara de novo — este placeholder já não deveria estar no mapa.
@@ -143,6 +147,30 @@ func _sumir() -> void:
 	$CollisionShape2D.set_deferred("disabled", true)
 	raio_chao.enabled = false
 	raio_parede.enabled = false
+
+
+## Chamado pela cutscene da revelação quando ele entra em cena: aparece, mas
+## ainda sem física nem conversa — quem o move é a cutscene.
+func entrar_em_cena() -> void:
+	visible = true
+
+
+## Fim da cutscene da revelação: volta a ser o NPC da sala (patrulha, conversa
+## no E) a partir de onde a conversa terminou — ao lado do painel CHONPS, para
+## onde ele levou a Cacau. A patrulha passa a ser em volta desse ponto. (Na
+## cena ele já fica posto ali, então voltando ao laboratório depois ele nasce
+## no mesmo lugar.)
+func assumir_o_posto() -> void:
+	set_physics_process(true)
+	set_process(true)
+	$Area2D.set_deferred("monitoring", true)
+	$CollisionShape2D.set_deferred("disabled", false)
+	raio_chao.enabled = patrulha
+	raio_parede.enabled = patrulha
+	_origem_x = global_position.x
+	_x_anterior = global_position.x
+	# Um respiro antes de sair andando: ele acabou de chegar.
+	_espera = patrulha_pausa_max
 
 
 

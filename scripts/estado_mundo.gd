@@ -7,28 +7,26 @@ extends RefCounted
 #
 # Hoje guarda só o que a passagem do laser precisa saber. Como não existe
 # sistema de save, isso vale enquanto o jogo estiver aberto: fechar e abrir
-# recomeça com o Dr. Chico ainda não revelado.
+# recomeça com o laser fechado e o Dr. Chico ainda não revelado.
 
 const CENA_WORLD1: String = "res://scenes/world1.tscn"
 const CENA_WORLD2: String = "res://scenes/laboratório_(world_2).tscn"
 
-## True depois que o cientista se revela como Dr. Chico, no fim do world1.
-## É o que liga a passagem livre entre o world1 e o laboratório — antes disso
-## os dois lasers são só o obstáculo normal da fase.
+## True depois que o puzzle da combustão desliga o laser do world1. É o que
+## liga a passagem livre entre o world1 e o laboratório — antes disso os dois
+## lasers são só o obstáculo normal da fase.
+static var passagem_laser_aberta: bool = false
+
+## True depois que o cientista se revela como Dr. Chico, na cutscene que
+## acontece quando a Cacau entra no laboratório pela primeira vez.
 static var revelou_dr_chico: bool = false
 
 ## True enquanto a chegada pela passagem não foi processada. A cena que abrir
 ## consome isso para nascer com o player na saída do próprio laser.
 static var chegando_pelo_laser: bool = false
 
-## True no corte que acontece logo depois da revelação, no fim do world1. O
-## laboratório consome isso para abrir com a Cacau e o Dr. Chico lado a lado,
-## do jeito que os dois pararam na conversa — e não na porta do laser.
-static var chegando_da_revelacao: bool = false
 
-
-## Chamado no fim da cutscene de revelação: daqui em diante o world1 e o
-## laboratório viram um mapa só, ligado pelos lasers.
+## Chamado no fim da cutscene da revelação, no laboratório.
 static func registrar_revelacao() -> void:
 	revelou_dr_chico = true
 

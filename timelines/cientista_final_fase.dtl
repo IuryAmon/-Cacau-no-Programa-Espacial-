@@ -12,10 +12,22 @@ cientista: Aquela porta não era um acidente. Era o primeiro obstáculo da sele�
 cientista (cientista_feliz): E você passou! Resolveu tudo usando química de verdade.
 cientista (cientista_serio): Mas não se anime tanto. A seleção só está começando.
 cientista: Estamos no laboratório do centro espacial. Ele é o coração da base e se liga a todas as outras alas.
+cientista (cientista_feliz): Vem comigo! Quero te mostrar uma coisa.
+leave cientista
+do DialogicBridge.levar_ao_painel()
+join cientista (cientista_feliz) right
+cientista: Este é o painel principal, o computador central do laboratório.
 cientista: Pra seguir em frente, você vai precisar reunir os seis elementos essenciais à vida\: carbono, hidrogênio, oxigênio, nitrogênio, fósforo e enxofre. O famoso CHONPS.
-cientista: Em cada ala tem uma amostra de um elemento. Você coleta e traz pra cá, pro computador principal, bem aqui no centro do laboratório.
-cientista (cientista_mto_feliz): As amostras de hidrogênio e oxigênio você já coletou! Então faltam só quatro.
+cientista: Cada letra do painel é um desses elementos. Em cada ala tem uma amostra de um deles pra você coletar.
+cientista: E é aqui que você entrega. Chegou com uma amostra, é só jogar nesse receptor embaixo do painel, e a letra dela acende.
+cientista (cientista_serio): Só pensa bem antes\: o que entra no receptor não sai mais.
+cientista (cientista_mto_feliz): Ah! E o hidrogênio e o oxigênio você já conseguiu! Lembra dos cilindros que você colocou na máquina do laser? Sobrou gás neles, então eu guardei.
+cientista (cientista_feliz): Olha só!
+leave cientista
+do DialogicBridge.entregar_h_e_o()
+join cientista (cientista_mto_feliz) right
+cientista: Viu? H e O acesos no painel. Então faltam só quatro.
 cientista (cientista_feliz): O carbono está na Oficina do Carbono, na ala de pirólise.
 cientista: O nitrogênio fica lá no alto da Torre de Gases, na estufa.
 cientista (cientista_serio): E o fósforo e o enxofre estão no subsolo, descendo pelo fosso de ventilação. Mas cuidado... lá embaixo é bem escuro.
-cientista (cientista_mto_feliz): Com as seis amostras no computador, a Torre de Lançamento se abre pra você. Bem-vinda à seleção!
+cientista (cientista_mto_feliz): Com as seis letras acesas no painel, a Torre de Lançamento se abre pra você. Bem-vinda à seleção!

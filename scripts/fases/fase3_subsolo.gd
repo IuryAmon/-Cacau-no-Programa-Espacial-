@@ -34,7 +34,7 @@ func _ready() -> void:
 
 	# --- ALA OESTE: o gerador entrega a célula P (nenhuma luz religa) ---
 	_mesa_gerador.resolvido.connect(_on_gerador_resolvido)
-	if _mesa_gerador.ja_resolvida and not Progresso.tem_celula("P"):
+	if _mesa_gerador.ja_resolvida and not Progresso.conquistou_celula("P"):
 		CelulaChonps.criar(self, _ponto_celula_p.global_position, "P")
 
 	# --- ALA LESTE: esteiras acionadas pelo bumerangue ---
@@ -51,7 +51,7 @@ func _ready() -> void:
 	# --- CÉLULA S: sem disjuntores. A "fechadura" é o caminho até ela —
 	# o corredor eletrificado (pede as botas da masseira) e as sentinelas
 	# do trecho leste. A célula espera na sala do fim, no escuro. ---
-	if not Progresso.tem_celula("S"):
+	if not Progresso.conquistou_celula("S"):
 		CelulaChonps.criar(self, _ponto_celula_s.global_position, "S")
 
 	_montar_fosso_de_ventilacao()

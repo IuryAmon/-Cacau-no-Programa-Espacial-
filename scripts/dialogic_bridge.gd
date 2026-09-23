@@ -9,6 +9,28 @@ func andar_ate_foguete() -> void:
 		await player.andar_ate_foguete()
 
 
+# --- REVELAÇÃO DO DR. CHICO, NO LABORATÓRIO ---
+#
+# A timeline cientista_final_fase para duas vezes no meio: para o Dr. Chico
+# levar a Cacau até o painel CHONPS e para ele jogar o H e o O no receptor.
+# Quem encena é a área da cutscene (cutscene_final_fase.gd), achada pelo grupo.
+
+func levar_ao_painel() -> void:
+	var cena := get_tree().get_first_node_in_group("cutscene_revelacao")
+	if cena and cena.has_method("levar_ao_painel"):
+		await cena.levar_ao_painel()
+
+
+func entregar_h_e_o() -> void:
+	var cena := get_tree().get_first_node_in_group("cutscene_revelacao")
+	if cena and cena.has_method("entregar_h_e_o"):
+		await cena.entregar_h_e_o()
+	else:
+		# Sem a cutscene na cena, as letras acendem do mesmo jeito.
+		Progresso.dar_celula("H")
+		Progresso.dar_celula("O")
+
+
 # --- FALA CURTA DO CENÁRIO ---
 #
 # Quando um obstáculo precisa fazer a Cacau comentar alguma coisa (a porta de

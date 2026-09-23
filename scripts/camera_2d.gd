@@ -300,6 +300,25 @@ func aproximar(alvo: Node2D, zoom_alvo: float = 2.2, duracao: float = 0.6) -> vo
 	tween_foco.tween_property(self, "position", posicao_padrao + deslocamento_local, duracao).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
+# Enquadra um ponto do mundo com o zoom dado — para a cutscene mostrar algo que
+# não é a outra pessoa da conversa (o painel CHONPS do laboratório, por
+# exemplo). Como o aproximar(), vale até o restaurar(). Os limites da câmera
+# continuam valendo: perto de uma borda o enquadramento para nela.
+func enquadrar(ponto_global: Vector2, zoom_alvo: float = 2.2, duracao: float = 0.8) -> void:
+	if tween_foco and tween_foco.is_valid():
+		tween_foco.kill()
+
+	var dono := get_parent() as Node2D
+	var deslocamento_local := Vector2.ZERO
+	if dono:
+		deslocamento_local = ponto_global - dono.global_position
+
+	tween_foco = create_tween()
+	tween_foco.set_parallel(true)
+	tween_foco.tween_property(self, "zoom", Vector2(zoom_alvo, zoom_alvo), duracao).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween_foco.tween_property(self, "position", posicao_padrao + deslocamento_local, duracao).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
 # Volta a câmera ao zoom/posição normais (ex: quando o diálogo termina).
 func restaurar(duracao: float = 0.6) -> void:
 	if tween_foco and tween_foco.is_valid():

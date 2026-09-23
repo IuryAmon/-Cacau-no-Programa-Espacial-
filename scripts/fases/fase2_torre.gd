@@ -36,7 +36,7 @@ func _ready() -> void:
 
 	_mesa_ciclo.resolvido.connect(_on_ciclo_resolvido)
 	# Puzzle já resolvido mas célula não coletada (morte no meio): ela volta.
-	if _mesa_ciclo.ja_resolvida and not Progresso.tem_celula("N"):
+	if _mesa_ciclo.ja_resolvida and not Progresso.conquistou_celula("N"):
 		CelulaChonps.criar(self, _ponto_celula.global_position, "N")
 
 

@@ -6,19 +6,19 @@ extends Node2D
 # desmarca a opção. Aplicando aqui por código, a configuração fica garantida
 # mesmo com "Editable Children" desligado.
 #
-# Esta cena também recebe o corte que vem logo depois da revelação do Dr. Chico,
-# no fim do world1: nele a Cacau não entra pela porta do laser, ela já aparece
-# ao lado dele, do jeito que os dois pararam na conversa. Quem chega pelo laser
-# (indo e voltando depois) é a PassagemLaser que posiciona.
+# Esta cena também é onde o cientista se revela como Dr. Chico: na primeira vez
+# que a Cacau entra (vinda do world1 pelo laser), a área ColisaoFinalFase roda a
+# cutscene da revelação (cutscene_final_fase.gd). Quem chega pelo laser é a
+# PassagemLaser que posiciona.
 
-## Quanto a tela leva para clarear no corte que vem da revelação.
+## Quanto a tela leva para clarear na chegada.
 @export var duracao_clarear: float = 1.0
 
 @onready var _camera: Camera2D = $Player/Camera2D
 @onready var _dialog_box_player: Node2D = $Player/dialog_box_player
 @onready var _health_hud: CanvasLayer = $Player/CanvasLayer/HealthHUD
 @onready var _inventario_hud: CanvasLayer = $Player/InventarioHud
-@onready var _chegada_revelacao: Marker2D = get_node_or_null("ChegadaDaRevelacao")
+@onready var _cutscene_revelacao: Node = get_node_or_null("ColisaoFinalFase")
 @onready var _painel_chonps: Node2D = get_node_or_null("PainelChonps")
 
 func _ready() -> void:
@@ -28,11 +28,6 @@ func _ready() -> void:
 	_dialog_box_player.visible = false
 	_health_hud.visible = false
 	_inventario_hud.visible = false
-
-	if EstadoMundo.chegando_da_revelacao:
-		EstadoMundo.chegando_da_revelacao = false
-		_receber_da_revelacao()
-		FadeTela.clarear_na_chegada(self, duracao_clarear)
 
 	_montar_conteudo_de_fases()
 
@@ -50,44 +45,38 @@ func _ready() -> void:
 func _montar_conteudo_de_fases() -> void:
 	FerramentasPlayer.instalar($Player)
 
-	# O pacote do prólogo: ao abrir a porta dos lasers, a personagem recebeu
-	# as células de H e O, e elas acendem no painel do CHONPS aqui.
+	# O pacote do prólogo: as células de H e O vêm dos cilindros que a Cacau
+	# pôs na máquina do laser. Na cutscene da revelação o Dr. Chico as joga no
+	# receptor embaixo do painel (ReceptorChonps) e elas acendem ali, na frente
+	# dela; o _apresentar_hub() só garante as duas se a cutscene não rodar.
 	#
 	# O MAÇARICO NÃO É ENTREGUE AQUI. Ele é a recompensa do pátio da Oficina do
 	# Carbono: está trancado numa gaiola de vidro e só sai de lá com a queima
 	# do acetileno balanceada (ver scripts/puzzle_macarico.gd). O Dr. Chico só aponta o
 	# caminho — as travas do jogo continuam olhando só o Progresso.
+	#
+	# Isso só acontece depois da revelação: o recado do maçarico é do Dr. Chico,
+	# e na primeira entrada ele ainda nem chegou (a cutscene é que o traz).
 	if not Progresso.hub_ja_apresentou:
-		Progresso.hub_ja_apresentou = true
-		Progresso.dar_celula("H")
-		Progresso.dar_celula("O")
-		# Sai em cima do painel, onde quer que ele esteja: a posição vem do nó,
-		# para o aviso continuar certo depois de você arrastar o painel.
-		var onde_avisar := Vector2(1080, 40)
-		if _painel_chonps:
-			onde_avisar = _painel_chonps.global_position + Vector2(0, 20)
-		Blockout.aviso_flutuante(self, onde_avisar,
-			"H e O acesos no painel do CHONPS.\n\"Deixei o maçarico oxídrico trancado no pátio da oficina.\nSe você já controla essa reação, sabe destravar.\"",
-			Color(0.5, 1.0, 0.6))
+		if EstadoMundo.revelou_dr_chico or _cutscene_revelacao == null:
+			_apresentar_hub()
+		else:
+			_cutscene_revelacao.terminou.connect(_apresentar_hub, CONNECT_ONE_SHOT)
 
 	# Chegou de alguma fase? Nasce na porta correspondente.
 	PortaFase.posicionar_player_no_spawn(self)
 	FadeTela.clarear_na_chegada(self, duracao_clarear)
 
 
-# A cena abre com os dois parados como no fim da fala: o Dr. Chico à esquerda
-# dela (é a posição dele aqui na cena) e ela virada para ele.
-func _receber_da_revelacao() -> void:
-	if _chegada_revelacao == null:
-		push_error("Laboratório: falta o nó ChegadaDaRevelacao.")
-		return
-
-	var player: Node2D = $Player
-	player.global_position = _chegada_revelacao.global_position
-	player.velocity = Vector2.ZERO
-
-	var sprite: AnimatedSprite2D = player.get_node_or_null("AnimatedSprite2D")
-	if sprite:
-		sprite.flip_h = true
-		if sprite.sprite_frames and sprite.sprite_frames.has_animation("idle"):
-			sprite.play("idle")
+func _apresentar_hub() -> void:
+	Progresso.hub_ja_apresentou = true
+	Progresso.dar_celula("H")
+	Progresso.dar_celula("O")
+	# Sai em cima do painel, onde quer que ele esteja: a posição vem do nó,
+	# para o aviso continuar certo depois de você arrastar o painel.
+	var onde_avisar := Vector2(1080, 40)
+	if _painel_chonps:
+		onde_avisar = _painel_chonps.global_position + Vector2(0, 20)
+	Blockout.aviso_flutuante(self, onde_avisar,
+		"\"Deixei o maçarico oxídrico trancado no pátio da oficina.\nSe você já controla essa reação, sabe destravar.\"",
+		Color(0.5, 1.0, 0.6))

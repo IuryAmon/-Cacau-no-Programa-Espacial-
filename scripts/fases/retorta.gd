@@ -62,7 +62,7 @@ const PICO_SALTO_CARVAO := 20.0
 ## Arte e ficha do item que vai para a mochila (canto superior direito) ao
 ## retirar o carvão — mesma ficha de coleta dos cilindros de H₂/O₂.
 const TEXTURA_CARVAO := preload("res://assets/itens/Carvão.png")
-const ID_CARVAO := "carvao_vegetal"
+const ID_CARVAO := AmostraChonps.ID_CARVAO
 const NOME_CARVAO := "Carvão Vegetal"
 const DESCRICAO_CARVAO := "Amostra sólida de carbono, sobra da pirólise da madeira sem oxigênio, o que faltava para acender o C no painel CHONPS."
 
@@ -431,10 +431,13 @@ func _retirar_carbono() -> void:
 		_sprite_carvao.visible = false
 	_resolvida = true
 	EstadoMundo.marcar_feito(self)
-	Progresso.dar_celula("C")
+	# O carvão É a amostra de carbono: vai na mochila e só acende o C no painel
+	# quando a Cacau o joga no receptor do laboratório.
+	Progresso.coletar_celula("C")
 	if Inventario.tela_hud_referencia != null:
 		Inventario.tela_hud_referencia.exibir_popup(
 			NOME_CARVAO, TEXTURA_CARVAO, DESCRICAO_CARVAO, ID_CARVAO)
 	else:
 		Blockout.aviso_flutuante(get_parent(), _ponto_celula.global_position,
-			"CÉLULA C CONQUISTADA!\nO painel CHONPS acendeu mais um símbolo.", Color(0.5, 1.0, 0.6))
+			"AMOSTRA DE CARBONO COLETADA!\n" + AmostraChonps.RECADO_ENTREGA,
+			AmostraChonps.cor("C"))

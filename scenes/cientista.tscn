@@ -229,6 +229,7 @@ animations = [{
 }]
 
 [node name="Cientista" type="CharacterBody2D" unique_id=42458414]
+z_index = 2
 position = Vector2(0, -14)
 scale = Vector2(1.4, 1.4)
 script = ExtResource("1_mtcrv")

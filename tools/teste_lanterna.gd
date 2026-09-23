@@ -180,7 +180,7 @@ func _testar_fase3_fosso() -> void:
 		"lanterna espera no armario de manutencao do fosso")
 	_checar(get_tree().get_nodes_in_group("sentinela").size() >= 6,
 		"sentinelas espalhadas pelo mapa inteiro")
-	_checar(f.get_node_or_null("CelulaS") != null or Progresso.tem_celula("S"),
+	_checar(f.get_node_or_null("CelulaS") != null or Progresso.conquistou_celula("S"),
 		"celula S espera na sala atras do corredor eletrificado")
 
 	# As moradoras ficam paradas durante as checagens de feixe.

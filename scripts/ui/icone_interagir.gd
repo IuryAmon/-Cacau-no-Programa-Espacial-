@@ -37,7 +37,11 @@ const COMPENSACAO_DO_CONTROLE := 1.208
 @export var escala_do_icone: float = 2.625:
 	set(valor):
 		escala_do_icone = valor
-		_aplicar()
+		# Mudada na instância (ex: um ícone menor no baú), ela chega antes de o
+		# nó entrar na árvore, quando ainda não dá para perguntar pelo
+		# Controle — aí quem aplica é o _ready().
+		if is_inside_tree():
+			_aplicar()
 
 
 func _ready() -> void:

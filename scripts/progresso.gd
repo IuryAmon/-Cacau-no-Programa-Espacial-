@@ -10,7 +10,16 @@ extends Node
 #
 # Assim como o EstadoMundo, vale enquanto o jogo estiver aberto: não existe
 # sistema de save ainda.
+#
+# Cada elemento do CHONPS passa por dois momentos:
+#   COLETADO  a Cacau pegou a amostra numa ala e está carregando
+#             (coletar_celula / carrega_celula);
+#   ENTREGUE  ela jogou a amostra no receptor do laboratório e a letra acendeu
+#             no painel (dar_celula / tem_celula).
+# As travas do jogo (portão da Torre de Lançamento, etc.) olham só o ENTREGUE:
+# amostra que ainda está na mochila não conta.
 
+signal celula_coletada(letra: String)
 signal celula_entregue(letra: String)
 signal habilidade_conquistada(nome: String)
 
@@ -22,7 +31,10 @@ const CELULAS := ["C", "H", "O", "N", "P", "S"]
 ## Sentinelas; ver scripts/ferramentas/lanterna.gd.)
 const HABILIDADES := ["macarico", "bumerangue", "mochila", "sinalizador", "botas", "lanterna"]
 
+## Letras já acesas no painel.
 var _celulas: Dictionary = {}
+## Amostras que a Cacau pegou e ainda não jogou no receptor.
+var _amostras: Dictionary = {}
 var _habilidades: Dictionary = {}
 
 ## Tag de porta consumida pela cena que abre: o player nasce na porta cuja
@@ -44,14 +56,50 @@ var carga_sinalizador: float = 1.0
 var sinalizador_aceso: bool = true
 
 
+## A Cacau pegou a amostra do elemento: agora ela carrega até o receptor do
+## laboratório. Não acende nada no painel ainda.
+func coletar_celula(letra: String) -> void:
+	if conquistou_celula(letra):
+		return
+	_amostras[letra] = true
+	print("PROGRESSO: amostra ", letra, " coletada — falta entregar no receptor")
+	celula_coletada.emit(letra)
+
+
+## A amostra de "letra" está com a Cacau, esperando para ir ao receptor?
+func carrega_celula(letra: String) -> bool:
+	return _amostras.has(letra)
+
+
+## As amostras que ela carrega, na ordem do CHONPS (é a ordem em que o
+## receptor as recebe).
+func amostras_na_mao() -> Array[String]:
+	var lista: Array[String] = []
+	for letra in CELULAS:
+		if carrega_celula(letra):
+			lista.append(letra)
+	return lista
+
+
+## Já pegou esse elemento, entregue ou não? É o que decide se a amostra ainda
+## espera no cenário da fase.
+func conquistou_celula(letra: String) -> bool:
+	return carrega_celula(letra) or tem_celula(letra)
+
+
+## A amostra entrou no receptor: a letra acende no painel. (Também serve para
+## entregar direto, sem passar pela mão da Cacau — é o que o Dr. Chico faz com
+## o H e o O do prólogo.)
 func dar_celula(letra: String) -> void:
 	if tem_celula(letra):
 		return
+	_amostras.erase(letra)
 	_celulas[letra] = true
 	print("PROGRESSO: célula ", letra, " entregue (", contar_celulas(), "/6)")
 	celula_entregue.emit(letra)
 
 
+## A letra já está acesa no painel?
 func tem_celula(letra: String) -> bool:
 	return _celulas.has(letra)
 

@@ -2,8 +2,8 @@ extends Node2D
 
 # --- PASSAGEM DO LASER (world1 <-> laboratório) ---
 #
-# Depois que o cientista se revela como Dr. Chico, no fim do world1, os dois
-# lasers do jogo viram as duas pontas da MESMA porta:
+# Depois que o puzzle da combustão desliga o laser do world1, os dois lasers do
+# jogo viram as duas pontas da MESMA porta:
 #
 #   world1 .............|LASER|          |LASER|............. laboratório
 #            (x ~6266) ->                <- (x ~155)
@@ -13,8 +13,9 @@ extends Node2D
 # direita no world1 ele entra no laboratório, indo para a esquerda no
 # laboratório ele volta para o world1.
 #
-# Enquanto o Dr. Chico não se revelou, este nó não faz absolutamente nada: o
-# laser continua sendo só o obstáculo que a fase pede para abrir.
+# Enquanto o puzzle não foi resolvido, a passagem não existe: o laser continua
+# sendo só o obstáculo que a fase pede para abrir. A câmera, porém, já fica
+# presa na linha desde o começo — o mapa acaba ali de qualquer jeito.
 #
 # A linha só vale na altura do chão. Em cima do telhado do laboratório o mapa
 # continua para os dois lados, então lá ela não existe e a câmera volta a
@@ -60,21 +61,33 @@ var _limite_camera_solto: int = 0
 
 
 func _ready() -> void:
-	# Sem a revelação não existe passagem nenhuma: o laser é obstáculo comum.
-	if not EstadoMundo.revelou_dr_chico:
-		set_process(false)
+	# A câmera fica presa na linha com ou sem passagem.
+	_preparar_camera.call_deferred()
+
+	# Sem o puzzle resolvido não existe passagem nenhuma: o laser é obstáculo
+	# comum, e o _process() só cuida da câmera (se ela for mexida).
+	if not EstadoMundo.passagem_laser_aberta:
+		set_process(margem_camera > 0.0)
 		return
 
 	# O laser precisa nascer aberto, e sem tocar a animação de abertura: aqui
 	# ele já está aberto desde antes, não é o momento de abrir.
 	_liberar_laser.call_deferred()
-	_preparar_camera.call_deferred()
 
 	if not EstadoMundo.chegando_pelo_laser:
 		return
 	EstadoMundo.chegando_pelo_laser = false
 	_receber_player()
 	FadeTela.clarear_na_chegada(get_tree().current_scene, duracao_fade)
+
+
+## Ligada pelo "puzzle_resolvido" do painel do laser: a passagem passa a
+## existir na hora, sem esperar a cena recarregar. A câmera já estava presa na
+## linha desde o _ready(). O laser não é mexido aqui — ele está no meio da
+## própria animação de desligar.
+func abrir() -> void:
+	EstadoMundo.passagem_laser_aberta = true
+	set_process(true)
 
 
 func _process(_delta: float) -> void:
@@ -88,7 +101,7 @@ func _process(_delta: float) -> void:
 	# volta a seguir livre.
 	var na_altura_da_porta := _na_altura_da_porta(player)
 	_prender_camera(na_altura_da_porta)
-	if not na_altura_da_porta:
+	if not na_altura_da_porta or not EstadoMundo.passagem_laser_aberta:
 		return
 
 	# "Dentro" é o lado do mapa em que esta cena continua existindo.
@@ -164,7 +177,9 @@ func _liberar_laser() -> void:
 
 
 func _preparar_camera() -> void:
-	if margem_camera <= 0.0:
+	# Já preparada: ler o limit_right de novo pegaria a borda da linha, e não o
+	# limite solto de antes.
+	if margem_camera <= 0.0 or _camera != null:
 		return
 	var player := _achar_player()
 	if player == null:

@@ -195,7 +195,7 @@ func _testar_fase3() -> void:
 
 	# A celula S nao depende mais de interruptor: espera na sala do fim,
 	# atras do corredor eletrificado.
-	_checar(Progresso.tem_celula("S") or f.get_node_or_null("CelulaS") != null,
+	_checar(Progresso.conquistou_celula("S") or f.get_node_or_null("CelulaS") != null,
 		"celula S espera atras do corredor eletrificado")
 
 	await _fechar(f)
