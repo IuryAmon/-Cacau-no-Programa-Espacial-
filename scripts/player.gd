@@ -310,8 +310,25 @@ func _physics_process(delta: float) -> void:
 # cutscene, entrada da cena), porque o _physics_process retorna antes.
 func _input(event: InputEvent) -> void:
 	var tecla := event as InputEventKey
-	if tecla and tecla.pressed and not tecla.echo and tecla.keycode == KEY_K:
+	if tecla == null or not tecla.pressed or tecla.echo:
+		return
+	if tecla.keycode == KEY_K:
 		_debug_resolver_puzzle_combustao()
+	elif _e_tecla_cedilha(tecla):
+		_debug_pegar_todas_amostras()
+
+
+## O Ç tem tecla própria no teclado ABNT2, mas cada sistema a informa de um
+## jeito: como Ç no keycode ou no rótulo, só pelo caractere digitado, ou pela
+## posição física (a mesma do ";" no teclado americano). Vale qualquer um.
+## (O Godot não tem constante para o Ç: fora do ASCII, a tecla chega com o
+## próprio código do caractere, 0xC7.)
+const TECLA_CEDILHA := 0xC7
+
+func _e_tecla_cedilha(tecla: InputEventKey) -> bool:
+	return tecla.keycode == TECLA_CEDILHA or tecla.key_label == TECLA_CEDILHA \
+		or tecla.unicode == 0xE7 or tecla.unicode == 0xC7 \
+		or tecla.physical_keycode == KEY_SEMICOLON
 
 # --- POSE DO MAÇARICO ---
 #
@@ -801,6 +818,25 @@ func _debug_resolver_puzzle_combustao() -> void:
 		receptor.sucesso_no_puzzle()
 		print("DEBUG [Player]: puzzle da combustão resolvido via tecla K, laser liberado")
 		return
+
+# --- DEBUG: TODAS AS AMOSTRAS DO CHONPS NA MÃO (tecla Ç) ---
+# Para testar o receptor do painel (o arremesso e o som de cada letra, que sobe
+# um degrau a cada entrega): pega a amostra de todo elemento que ainda não está
+# aceso no painel, como se tivesse coletado nas fases. Aí é só ir ao baú e
+# apertar E uma vez por amostra. Fora de build de debug não faz nada.
+func _debug_pegar_todas_amostras() -> void:
+	if not OS.is_debug_build():
+		return
+	var pegas := PackedStringArray()
+	for letra in Progresso.CELULAS:
+		if Progresso.conquistou_celula(letra):
+			continue
+		Progresso.coletar_celula(letra)
+		Inventario.adicionar_item(AmostraChonps.id_no_inventario(letra),
+			AmostraChonps.nome_do_item(letra), AmostraChonps.textura(letra),
+			AmostraChonps.descricao(letra))
+		pegas.append(letra)
+	print("DEBUG [Player]: amostras pegas via tecla Ç -> ", pegas if not pegas.is_empty() else "nenhuma (já estavam na mão ou no painel)")
 
 func _on_area_2d_body_entered(body: Node2D) -> void:
 	if body == self:

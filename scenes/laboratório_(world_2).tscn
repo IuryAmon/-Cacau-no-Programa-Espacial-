@@ -4922,7 +4922,7 @@ scale = Vector2(2, 2)
 
 [node name="Player" parent="." unique_id=512037344 instance=ExtResource("19_fgauf")]
 z_index = 2
-position = Vector2(349, 113)
+position = Vector2(1932, 144)
 max_jumps = 1
 
 [node name="PortaSimulador" type="Area2D" parent="." unique_id=1391327891]
