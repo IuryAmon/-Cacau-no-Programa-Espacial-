@@ -701,6 +701,18 @@ func _reiniciar_cena_seguro() -> void:
 	PontoDeRetorno.marcar_morte(get_tree())
 	get_tree().reload_current_scene()
 
+# --- CURA ---
+## Devolve vida (ex: a cesta de maçãs, ver CestaMacas). Nunca passa da vida
+## máxima e não levanta quem já morreu. Devolve quanto de vida entrou de fato.
+func curar(quantidade: int) -> int:
+	if current_health <= 0 or quantidade <= 0:
+		return 0
+	var antes := current_health
+	current_health = mini(current_health + quantidade, max_health)
+	if current_health != antes:
+		health_changed.emit(current_health)
+	return current_health - antes
+
 # --- FUNÇÃO DE DANO E KNOCKBACK COM STUN ---
 func take_damage(amount: int, direcao_recuo: Vector2 = Vector2.ZERO) -> void:
 	if esta_invencivel or esta_invencivel_dash or current_health <= 0:

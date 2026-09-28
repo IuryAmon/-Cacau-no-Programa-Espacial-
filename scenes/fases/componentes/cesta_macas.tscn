@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/cesta_macas.gd" id="1_cesta"]
+[ext_resource type="Texture2D" uid="uid://c35bwm13mpeak" path="res://assets/Area Aberta/GandalfHardcore Background layers/Decor.png" id="2_decor"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/icone_interagir.tscn" id="3_tecla"]
+[ext_resource type="AudioStream" uid="uid://ymx4mv06c437" path="res://sounds/RecuperandoVida.mp3" id="4_som"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_alcance"]
+size = Vector2(120, 80)
+
+[node name="CestaMacas" type="Area2D"]
+script = ExtResource("1_cesta")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+z_index = 5
+scale = Vector2(2, 2)
+texture = ExtResource("2_decor")
+offset = Vector2(0, -8)
+region_enabled = true
+region_rect = Rect2(352, 48, 32, 16)
+
+[node name="Colisao" type="CollisionShape2D" parent="."]
+position = Vector2(0, -40)
+shape = SubResource("RectangleShape2D_alcance")
+
+[node name="Dica" parent="." instance=ExtResource("3_tecla")]
+z_index = 6
+position = Vector2(0, -62)
+
+[node name="Som" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, -16)
+stream = ExtResource("4_som")
