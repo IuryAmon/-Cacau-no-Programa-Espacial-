@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/arvore_lenha.gd" id="1_arv"]
+[ext_resource type="AudioStream" path="res://sounds/FolhasArvore.wav" id="2_folhas"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_copa"]
+size = Vector2(404, 270)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tronco"]
+size = Vector2(64, 152)
+
+[node name="ArvoreLenha" type="Area2D" groups=["alvo_bumerangue", "arvore_lenha"]]
+script = ExtResource("1_arv")
+
+[node name="Copa" type="CollisionShape2D" parent="."]
+position = Vector2(12, -227)
+shape = SubResource("RectangleShape2D_copa")
+
+[node name="Tronco" type="CollisionShape2D" parent="."]
+position = Vector2(6, -76)
+shape = SubResource("RectangleShape2D_tronco")
+
+[node name="Galho1" type="Marker2D" parent="."]
+position = Vector2(84, -182)
+
+[node name="Galho2" type="Marker2D" parent="."]
+position = Vector2(-96, -194)
+
+[node name="Galho3" type="Marker2D" parent="."]
+position = Vector2(174, -167)
+
+[node name="SomFolhas" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(12, -227)
+stream = ExtResource("2_folhas")
+max_polyphony = 3

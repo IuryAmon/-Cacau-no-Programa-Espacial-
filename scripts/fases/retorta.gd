@@ -6,16 +6,20 @@ extends Node2D
 #
 # ONDE ELA MORA: no PÁTIO, a fase1.2 (scenes/fases/fase1_2_exterior.tscn), que
 # é a parte de fora do laboratório — sobe-se até lá pelo elevador de carga da
-# entrada da oficina. As três toras moram lá com ela, de propósito: é na
-# própria cena da fornalha que elas são repostas quando uma queima falha (ver
-# _repor_toras), então lenha e forno não podem ficar em fases diferentes.
+# entrada da oficina. A lenha mora lá com ela, na copa da árvore do pátio (ver
+# ArvoreLenha), de propósito: é na própria cena da fornalha que a lenha
+# perdida volta quando uma queima falha (ver _repor_toras), então lenha e
+# forno não podem ficar em fases diferentes.
 #
 # Pirólise de verdade: madeira aquecida SEM oxigênio vira carvão. O puzzle
 # segue cinco passos:
-#   1. recolher as toras no depósito (elas ficam no inventário);
+#   1. derrubar as três toras da árvore com o bumerangue (uma por arremesso)
+#      e recolhê-las do chão (elas ficam no inventário);
 #   2. abastecer a fornalha com E — uma tora por toque, até encher;
 #   3. acender com o maçarico oxídrico (E na fornalha cheia);
-#   4. manter a temperatura na faixa-alvo;
+#   4. no painel da fornalha (scripts/ui/painel_fornalha.gd): segurar E até o
+#      termômetro chegar na marca e, no ponto, vedar a entrada de ar (S) —
+#      se o ar continuar entrando, a madeira queima e vira cinza;
 #   5. com o carvão pronto, E na fornalha novamente retira a célula C.
 #
 # COMO EDITAR NO EDITOR:
@@ -28,9 +32,12 @@ extends Node2D
 #                        virada para o forno. Arraste o marcador para mudar o
 #                        lugar (o x é o que vale; ela anda no chão)
 #
-# As toras NÃO ficam dentro desta cena: são instâncias de madeira.tscn soltas
-# na fase (grupo "madeira"), para você arrastar cada uma no editor. A fornalha
-# só anota onde estavam, para repô-las se a carga virar cinza.
+# As toras NÃO ficam dentro desta cena. No pátio quem as cria é a ArvoreLenha
+# (arraste os marcadores Galho1..3 dela para mudar onde caem), e é para ela
+# que a lenha volta se a carga virar cinza: a árvore devolve à copa só as
+# toras que se perderam no fogo. Numa fase sem árvore, as toras são
+# instâncias de madeira.tscn soltas no chão (grupo "madeira") e a fornalha
+# anota onde estavam, para repô-las no mesmo lugar.
 #
 # SAIR DA FASE NÃO PERDE NADA: a carga do forno e o carvão esperando para ser
 # retirado ficam no EstadoMundo (cada tora também lembra que foi recolhida).
@@ -39,8 +46,8 @@ extends Node2D
 
 const CENA := "res://scenes/fases/componentes/retorta.tscn"
 
-## O fogo pega primeiro e a tela de temperatura só entra depois desta espera.
-const ESPERA_ANTES_DA_DOSAGEM := 0.8
+## O fogo pega primeiro e o painel da fornalha só entra depois desta espera.
+const ESPERA_ANTES_DO_PAINEL := 0.8
 
 ## Depois que a pirólise termina, a fornalha ainda fica acesa este tanto antes
 ## de apagar — e é só depois que ela apaga que dá pra retirar o carvão.
@@ -61,6 +68,13 @@ const POSICAO_CARVAO_DENTRO := Vector2(0, -65)
 const POSICAO_CARVAO_FORA := Vector2(0, -85)
 const PICO_SALTO_CARVAO := 20.0
 
+## Boca da fornalha: de onde sobe a cinza quando a carga queima.
+const POSICAO_DAS_CINZAS := Vector2(0, -100)
+## Comporta fechada: as chamas do sprite andam neste ritmo e o som do fogo
+## baixa isto (dB) até a brasa apagar.
+const RITMO_DO_FOGO_ABAFADO := 0.5
+const ABAFAMENTO_DO_SOM := 9.0
+
 ## Arte e ficha do item que vai para a mochila (canto superior direito) ao
 ## retirar o carvão — mesma ficha de coleta dos cilindros de H₂/O₂.
 const TEXTURA_CARVAO := preload("res://assets/itens/Carvão.png")
@@ -75,9 +89,10 @@ var _acesa: bool = false
 var _carbono_pronto: bool = false
 var _jogador_perto: bool = false
 var _resolvida: bool = false
-var _dosagem_aberta: bool = false
+var _painel_aberto: bool = false
 var _macarico_na_mao: bool = false
-var _tela_dosagem: Dosagem = null
+var _painel: PainelFornalha = null
+var _volume_do_fogo: float = 0.0
 
 # As toras da fase como estavam quando ela abriu (nome, posição e caminho),
 # para repô-las depois de uma queima malsucedida — com o MESMO nome, que é a
@@ -117,6 +132,8 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 
+	if _som_fogo:
+		_volume_do_fogo = _som_fogo.volume_db
 	_resolvida = EstadoMundo.ja_feito(self)
 	# O que estava dentro da fornalha na última visita: sair da fase não
 	# esvazia a carga nem some com o carvão que esperava ser retirado.
@@ -169,10 +186,17 @@ func _limpar_toras() -> void:
 		tora.queue_free()
 
 
-## Devolve as toras aos lugares de origem depois de uma queima perdida. Voltam
-## com o nome original e "desrecolhidas" no EstadoMundo: quem sair e voltar
-## para a fase depois disso continua achando as toras no depósito.
+## Devolve a lenha depois de uma queima perdida. Com a ArvoreLenha na fase, as
+## toras perdidas voltam para a copa dela. Sem árvore, voltam aos lugares de
+## origem no chão, com o nome original e "desrecolhidas" no EstadoMundo: quem
+## sair e voltar para a fase depois disso continua achando as toras lá.
 func _repor_toras() -> void:
+	# Com a árvore do pátio na fase, a lenha não reaparece no chão: a que virou
+	# cinza volta para a copa, e é o bumerangue que a derruba de novo.
+	var arvore := get_tree().get_first_node_in_group(ArvoreLenha.GRUPO) as ArvoreLenha
+	if arvore:
+		arvore.repor_toras_perdidas()
+		return
 	var pai: Node2D = null
 	if is_instance_valid(_pai_das_toras):
 		pai = _pai_das_toras as Node2D
@@ -207,7 +231,10 @@ func _atualizar_sprite() -> void:
 		if _sprite.animation != &"ligada":
 			_tocar_som_fogo()
 		_sprite.play("ligada")
-	elif _madeiras_no_forno <= 0:
+		return
+	# Apagada, as chamas voltam ao ritmo normal para a próxima queima.
+	_sprite.speed_scale = 1.0
+	if _madeiras_no_forno <= 0:
 		_parar_som_fogo()
 		_sprite.play("desligada")
 	else:
@@ -253,12 +280,13 @@ func _process(_delta: float) -> void:
 	if Engine.is_editor_hint() or _resolvida:
 		return
 	_atualizar_popup_madeira()
-	if _dosagem_aberta:
-		# Com o painel na tela, a pose segue a tecla: soprando (D) ela aponta o
-		# maçarico para o forno, largando ela volta ao idle. Enquanto o painel
-		# não abriu (os 2 s de fogo pegando), a chama fica acesa direto.
-		if is_instance_valid(_tela_dosagem):
-			_segurar_macarico(Input.is_action_pressed("ui_right"), 1.0)
+	if _painel_aberto:
+		# Com o painel na tela, a pose segue o fogo: atiçando (E) ela aponta o
+		# maçarico para o forno, largando ela volta ao idle — e na hora de
+		# vedar o ar ela já baixou o maçarico. Enquanto o painel não abriu (o
+		# fogo pegando), a chama fica acesa direto.
+		if is_instance_valid(_painel):
+			_segurar_macarico(_painel.soprando(), 1.0)
 		return
 	if _carbono_pronto:
 		# A pirólise terminou: em vez de pular em cima de um item flutuante,
@@ -297,6 +325,7 @@ func _tocar_som_madeira() -> void:
 ## "ligada" (o fogo pegando, ao acender com o maçarico).
 func _tocar_som_fogo() -> void:
 	if _som_fogo and _som_fogo.stream:
+		_som_fogo.volume_db = _volume_do_fogo
 		_som_fogo.play()
 
 
@@ -311,10 +340,10 @@ func _tentar_acender() -> void:
 	if not Progresso.tem_habilidade("macarico"):
 		return
 
-	_dosagem_aberta = true
+	_painel_aberto = true
 
 	# Como na porta de metal: ela vai sozinha até o lugar de acender (o
-	# marcador PosicaoDoMacarico) e só então a chama sai. O _dosagem_aberta
+	# marcador PosicaoDoMacarico) e só então a chama sai. O _painel_aberto
 	# já ligado segura o E enquanto ela anda.
 	var player := get_tree().get_first_node_in_group("player")
 	if player and player.has_method("recuar_ate_x"):
@@ -325,28 +354,34 @@ func _tentar_acender() -> void:
 	_acesa = true
 	_atualizar_sprite()
 	# Acendendo: a chama fica na mão dela até o painel abrir. Dali em diante a
-	# pose acompanha a tecla D (ver _process).
+	# pose acompanha o E (ver _process).
 	_segurar_macarico(true)
 	FerramentasHUD.destacar("macarico")
 
-	# O fogo pega primeiro: o mundo continua rodando (a tela de dosagem não
-	# pausa nada), então dá para ver a fornalha pegando antes do painel.
-	await get_tree().create_timer(ESPERA_ANTES_DA_DOSAGEM).timeout
+	# O fogo pega primeiro: o mundo continua rodando (o painel não pausa
+	# nada), então dá para ver a fornalha pegando antes dele.
+	await get_tree().create_timer(ESPERA_ANTES_DO_PAINEL).timeout
 	if not is_instance_valid(self) or not is_inside_tree():
 		return
 
-	_tela_dosagem = Dosagem.abrir(self, {
-		"titulo": "PIRÓLISE — TEMPERATURA DA FORNALHA",
-		"modo": "segurar",
-		"rotulo_esq": "FRIO (não carboniza)",
-		"rotulo_dir": "QUENTE (racha a fornalha)",
-		"faixa_centro": 0.62,
-		"faixa_largura": 0.17,
-		"duracao_alvo": 4.0,
-		"msg_falha_forte": "A fornalha rachou com o calor!",
-		"dica": "Sem oxigênio, o calor expulsa os voláteis e sobra carvão.\nSegure {ui_right:D} para aquecer, {ui_left:A} para esfriar — 4 segundos na faixa.  [{fechar} desiste]",
-	})
-	_tela_dosagem.terminado.connect(_on_dosagem_terminada)
+	_painel = PainelFornalha.abrir(self, _area_da_cena())
+	_painel.terminado.connect(_on_painel_terminado)
+	_painel.vedada.connect(_abafar_fogo)
+
+
+## O que o painel não pode tapar: a fornalha e a Cacau parada na frente dela.
+func _area_da_cena() -> Rect2:
+	var area := Rect2(global_position, Vector2.ZERO)
+	if _sprite and _sprite.sprite_frames:
+		var textura := _sprite.sprite_frames.get_frame_texture(_sprite.animation, _sprite.frame)
+		if textura:
+			var tamanho := textura.get_size() * _sprite.global_scale.abs()
+			area = Rect2(_sprite.global_position - tamanho * 0.5, tamanho)
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player:
+		area = area.expand(player.global_position + Vector2(-40, -110))\
+			.expand(player.global_position + Vector2(40, 10))
+	return area
 
 
 ## Liga/desliga a pose do maçarico na personagem (ela fica virada para o forno).
@@ -362,14 +397,14 @@ func _segurar_macarico(ligado: bool, som_offset: float = 0.1) -> void:
 		player.iniciar_uso_macarico(global_position.x, som_offset)
 	else:
 		player.encerrar_uso_macarico()
-		if _dosagem_aberta:
+		if _painel_aberto:
 			# A tela ainda está na frente: largar a pose não devolve o passeio.
 			player.pode_se_mover = false
 
 
-func _on_dosagem_terminada(sucesso: bool, cancelado: bool) -> void:
-	_dosagem_aberta = false
-	_tela_dosagem = null
+func _on_painel_terminado(sucesso: bool, cancelado: bool) -> void:
+	_painel_aberto = false
+	_painel = null
 	_segurar_macarico(false)
 	if cancelado:
 		# Desistiu: o fogo apaga, mas a carga continua lá dentro.
@@ -384,7 +419,48 @@ func _on_dosagem_terminada(sucesso: bool, cancelado: bool) -> void:
 		_madeiras_no_forno = 0
 		_guardar_carga()
 		_atualizar_sprite()
+		_soltar_cinzas()
 		_repor_toras()
+
+
+## Comporta fechada: sem ar, as chamas baixam e o fogo fica abafado até a
+## brasa apagar (ver _concluir).
+func _abafar_fogo() -> void:
+	var tween := create_tween().set_parallel()
+	if _sprite:
+		tween.tween_property(_sprite, "speed_scale", RITMO_DO_FOGO_ABAFADO, 0.6)
+	if _som_fogo:
+		tween.tween_property(_som_fogo, "volume_db", _volume_do_fogo - ABAFAMENTO_DO_SOM, 0.6)
+
+
+## A carga queimou: um punhado de cinza sobe da boca do forno.
+func _soltar_cinzas() -> void:
+	var cinzas := CPUParticles2D.new()
+	cinzas.name = "Cinzas"
+	cinzas.position = POSICAO_DAS_CINZAS
+	cinzas.z_index = 1
+	cinzas.amount = 26
+	cinzas.lifetime = 1.8
+	cinzas.one_shot = true
+	cinzas.explosiveness = 0.8
+	cinzas.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	cinzas.emission_rect_extents = Vector2(30, 8)
+	cinzas.direction = Vector2.UP
+	cinzas.spread = 40.0
+	cinzas.initial_velocity_min = 30.0
+	cinzas.initial_velocity_max = 80.0
+	cinzas.gravity = Vector2(0, -15)
+	cinzas.damping_min = 25.0
+	cinzas.damping_max = 45.0
+	cinzas.scale_amount_min = 3.0
+	cinzas.scale_amount_max = 6.0
+	var rampa := Gradient.new()
+	rampa.set_color(0, Color(0.62, 0.6, 0.64, 1.0))
+	rampa.set_color(1, Color(0.35, 0.33, 0.37, 0.0))
+	cinzas.color_ramp = rampa
+	add_child(cinzas)
+	cinzas.emitting = true
+	cinzas.finished.connect(cinzas.queue_free)
 
 
 func _concluir() -> void:

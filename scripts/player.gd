@@ -339,7 +339,7 @@ func _e_tecla_cedilha(tecla: InputEventKey) -> bool:
 ## Trava a personagem na animação do maçarico e faz ela olhar para o alvo.
 ## Cada chamada precisa de um "encerrar_uso_macarico()" correspondente.
 ## som_offset: de onde tocar o maçarico_sound — 0.1s no aceso inicial, 1.0s
-## nas seguradas seguintes (ex: segurando D na dosagem da retorta).
+## nas seguradas seguintes (ex: segurando E no painel da fornalha).
 func iniciar_uso_macarico(olhar_para_x: float = INF, som_offset: float = 0.1) -> void:
 	if _animated_sprite == null or _animated_sprite.sprite_frames == null:
 		return

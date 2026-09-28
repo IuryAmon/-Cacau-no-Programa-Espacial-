@@ -10,9 +10,13 @@ extends FaseBase
 #   Elevador   a cabine que liga o pátio à oficina lá embaixo (ver
 #              elevador_fase.gd). É por ela que se chega e é por ela que se
 #              volta: entre, aperte E e ela desce.
-#   Patio/     a FORNALHA de carbonização e as três toras de lenha. O clímax da
-#              Fase 1 mudou de endereço: a pirólise é queima de madeira e queima
-#              de madeira é coisa de área aberta, não de galpão fechado.
+#   Patio/     a FORNALHA de carbonização e a ÁRVORE DA LENHA (ArvoreLenha).
+#              O clímax da Fase 1 mudou de endereço: a pirólise é queima de
+#              madeira e queima de madeira é coisa de área aberta, não de galpão
+#              fechado. As três toras estão na copa do salgueiro (o
+#              TileMapLayer Terreno/Arvore) e caem uma por arremesso do
+#              bumerangue; só voltam para a copa se a queima falhar e a carga
+#              virar cinza (ver arvore_lenha.gd).
 #
 # POR QUE A CÂMERA NÃO SE MEXE
 #
@@ -44,3 +48,15 @@ extends FaseBase
 # DESENHO: o TileMapLayer do terreno está em z_index 10, ACIMA de tudo. É o que
 # faz a cabine do elevador (z_index 3) e a personagem (z_index 2) sumirem
 # dentro do poço em vez de deslizarem por cima do chão na hora da viagem.
+#
+# A ÁRVORE TEM DUAS PROFUNDIDADES: a personagem passa ENTRE elas.
+#   Terreno/Arvore        o salgueiro inteiro (Weeping Willow2.png), fora da
+#                         regra do Terreno: z_as_relative desligado, z_index 0
+#                         — ATRÁS da personagem (2).
+#   Terreno/Arvore/Frente os galhos que caem na frente (FRENTEARVORE1.png, o
+#                         mesmo desenho com o tronco e o fundo da copa
+#                         apagados), em z_index 10 — NA FRENTE dela.
+# A Frente é filha da Arvore e está no mesmo ponto em que os tiles dela
+# começam (a célula 11,4 × 16 px = 176,64): herda a vergada e o clarão da
+# pancada do bumerangue sem código nenhum a mais. Se repintar a árvore em
+# outro lugar do TileMapLayer, mova a Frente junto.

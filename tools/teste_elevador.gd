@@ -131,9 +131,12 @@ func _testar_patio() -> void:
 	await _pousar(player)
 	_checar(player.is_on_floor(), "o chao do patio segura a personagem")
 
-	# A fornalha e as três toras mudaram de fase junto.
+	# A fornalha mudou de fase junto, e a lenha dela está na copa da árvore do
+	# pátio: nenhuma tora largada no chão, as três esperando o bumerangue.
 	_checar(f.get_node_or_null("Patio/Retorta") != null, "fornalha mora no patio")
-	_checar(get_tree().get_nodes_in_group("madeira").size() == 3, "as tres toras vieram junto")
+	var arvore: ArvoreLenha = f.get_node_or_null("Patio/ArvoreLenha")
+	_checar(arvore != null and arvore.toras_na_copa() == 3, "as tres toras estao na copa da arvore")
+	_checar(get_tree().get_nodes_in_group("madeira").is_empty(), "nenhuma tora largada no chao")
 
 	# O terreno na frente de tudo é o que esconde a cabine dentro do poço.
 	var terreno: TileMapLayer = f.get_node_or_null("Terreno")

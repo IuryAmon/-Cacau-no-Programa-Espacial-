@@ -5,8 +5,10 @@ extends CanvasLayer
 #
 # O mesmo componente serve os três puzzles de dosagem do plano, mudando só
 # os dados:
-#   retorta     -> modo "segurar": manter a agulha na faixa por alguns
-#                  segundos (D aquece, A esfria; passar do limite racha)
+#   (segurar)   -> modo "segurar": manter a agulha na faixa por alguns
+#                  segundos (D aquece, A esfria; passar do limite racha).
+#                  Era o da retorta, que ganhou painel próprio
+#                  (scripts/ui/painel_fornalha.gd); hoje ninguém usa.
 #   sinalizador -> modo "parar": travar a agulha em movimento dentro da faixa
 #   masseira    -> modo "parar" com 3 acertos (pouco S afunda, muito estilhaça)
 #

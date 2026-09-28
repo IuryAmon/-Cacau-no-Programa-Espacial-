@@ -1,17 +1,21 @@
-[gd_scene format=3]
+[gd_scene format=4 uid="uid://3gc8ilhfdgil"]
 
-[ext_resource type="Script" path="res://scripts/fases/fase1_2_exterior.gd" id="1_fase12"]
+[ext_resource type="Script" uid="uid://vh6frlvuijj3" path="res://scripts/fases/fase1_2_exterior.gd" id="1_fase12"]
 [ext_resource type="TileSet" uid="uid://b1re83kqucchr" path="res://assets/tilesets/tileset_fases.tres" id="2_tileset"]
 [ext_resource type="PackedScene" uid="uid://bmgkds67hbool" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/elevador_fase.tscn" id="4_elevador"]
 [ext_resource type="PackedScene" uid="uid://dpxakpbhyd8af" path="res://scenes/fases/componentes/retorta.tscn" id="5_retorta"]
-[ext_resource type="PackedScene" path="res://scenes/fases/componentes/madeira.tscn" id="6_madeira"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/arvore_lenha.tscn" id="6_arvore"]
 [ext_resource type="Shader" uid="uid://bvr10ahk3yxc6" path="res://shaders/neblina_aerea.gdshader" id="7_neblina"]
+[ext_resource type="Texture2D" uid="uid://b5oe3h6ave45h" path="res://assets/Lab/Tileset/level_tileset.png" id="8_5jmpw"]
 [ext_resource type="Texture2D" uid="uid://btac4g04sojq4" path="res://assets/Area Aberta/GandalfHardcore Background layers/Autumn BG/GandalfHardcore Background layers_layer 5.png" id="8_bg5"]
 [ext_resource type="Texture2D" uid="uid://dyonppdsygfwk" path="res://assets/Area Aberta/GandalfHardcore Background layers/Autumn BG/GandalfHardcore Background layers_layer 4.png" id="9_bg4"]
+[ext_resource type="Texture2D" uid="uid://dmxx2kxynn1xl" path="res://assets/Area Aberta/GandalfHardcore Background layers/Weeping Willow2.png" id="9_gqx3e"]
 [ext_resource type="Texture2D" uid="uid://cst78juil3if7" path="res://assets/Area Aberta/GandalfHardcore Background layers/Normal BG/GandalfHardcore Background layers_layer 3.png" id="10_bg3"]
 [ext_resource type="Texture2D" uid="uid://b6msrrif1ftd5" path="res://assets/Area Aberta/GandalfHardcore Background layers/Normal BG/GandalfHardcore Background layers_layer 2.png" id="11_bg2"]
 [ext_resource type="Texture2D" uid="uid://cw7dix2pwqqp4" path="res://assets/Area Aberta/GandalfHardcore Background layers/Normal BG/GandalfHardcore Background layers_layer 1.png" id="12_bg1"]
+[ext_resource type="PackedScene" uid="uid://x7g0iv3nlm8q" path="res://scenes/fases/componentes/porta_metal_macarico.tscn" id="15_8tkku"]
+[ext_resource type="Texture2D" uid="uid://d0a5v7yihrpsg" path="res://assets/Area Aberta/GandalfHardcore Background layers/FRENTEARVORE1.png" id="16_frente"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ceu"]
 shader = ExtResource("7_neblina")
@@ -23,6 +27,34 @@ shader_parameter/calor = 0.12
 shader_parameter/alcance_calor = 0.9
 shader_parameter/sol_uv = Vector2(0.7567325, 0.34274194)
 shader_parameter/aspecto = 2.245967741935484
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_aditivo"]
+blend_mode = 1
+light_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_halo"]
+offsets = PackedFloat32Array(0, 0.2, 0.44, 1)
+colors = PackedColorArray(1, 0.97, 0.88, 0.3, 1, 0.93, 0.72, 0.42, 1, 0.76, 0.4, 0.2, 1, 0.56, 0.22, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_halo"]
+gradient = SubResource("Gradient_halo")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_nucleo"]
+offsets = PackedFloat32Array(0, 0.22, 0.4, 0.68, 1)
+colors = PackedColorArray(1, 0.98, 0.92, 0.9, 1, 0.94, 0.78, 0.75, 1, 0.88, 0.62, 0.45, 1, 0.8, 0.42, 0.16, 1, 0.74, 0.32, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_nucleo"]
+gradient = SubResource("Gradient_nucleo")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_neblina4"]
 shader = ExtResource("7_neblina")
@@ -68,46 +100,467 @@ shader_parameter/alcance_calor = 0.85
 shader_parameter/sol_uv = Vector2(0.7567325, 0.34274194)
 shader_parameter/aspecto = 2.245967741935484
 
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_aditivo"]
-blend_mode = 1
-light_mode = 1
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8tkku"]
+texture = ExtResource("8_5jmpw")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+10:0/0 = 0
+11:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+14:0/0 = 0
+15:0/0 = 0
+16:0/0 = 0
+17:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+10:1/0 = 0
+11:1/0 = 0
+12:1/0 = 0
+13:1/0 = 0
+14:1/0 = 0
+15:1/0 = 0
+16:1/0 = 0
+17:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+4:2/0 = 0
+5:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+8:2/0 = 0
+9:2/0 = 0
+10:2/0 = 0
+11:2/0 = 0
+12:2/0 = 0
+13:2/0 = 0
+14:2/0 = 0
+15:2/0 = 0
+16:2/0 = 0
+17:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+8:3/0 = 0
+9:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+12:3/0 = 0
+13:3/0 = 0
+14:3/0 = 0
+15:3/0 = 0
+16:3/0 = 0
+17:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+8:4/0 = 0
+9:4/0 = 0
+10:4/0 = 0
+11:4/0 = 0
+12:4/0 = 0
+13:4/0 = 0
+14:4/0 = 0
+15:4/0 = 0
+16:4/0 = 0
+17:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+8:5/0 = 0
+9:5/0 = 0
+10:5/0 = 0
+11:5/0 = 0
+12:5/0 = 0
+13:5/0 = 0
+14:5/0 = 0
+15:5/0 = 0
+16:5/0 = 0
+17:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+4:6/0 = 0
+5:6/0 = 0
+6:6/0 = 0
+7:6/0 = 0
+8:6/0 = 0
+9:6/0 = 0
+10:6/0 = 0
+11:6/0 = 0
+12:6/0 = 0
+13:6/0 = 0
+14:6/0 = 0
+15:6/0 = 0
+16:6/0 = 0
+17:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+4:7/0 = 0
+5:7/0 = 0
+6:7/0 = 0
+7:7/0 = 0
+8:7/0 = 0
+9:7/0 = 0
+10:7/0 = 0
+11:7/0 = 0
+12:7/0 = 0
+13:7/0 = 0
+14:7/0 = 0
+15:7/0 = 0
+16:7/0 = 0
+17:7/0 = 0
+0:8/0 = 0
+1:8/0 = 0
+6:8/0 = 0
+7:8/0 = 0
+8:8/0 = 0
+9:8/0 = 0
+10:8/0 = 0
+11:8/0 = 0
+12:8/0 = 0
+13:8/0 = 0
+14:8/0 = 0
+15:8/0 = 0
+16:8/0 = 0
+17:8/0 = 0
+0:9/0 = 0
+1:9/0 = 0
+2:9/0 = 0
+3:9/0 = 0
+4:9/0 = 0
+5:9/0 = 0
+6:9/0 = 0
+7:9/0 = 0
+8:9/0 = 0
+9:9/0 = 0
+10:9/0 = 0
+11:9/0 = 0
+12:9/0 = 0
+13:9/0 = 0
+14:9/0 = 0
+15:9/0 = 0
+16:9/0 = 0
+17:9/0 = 0
+0:10/0 = 0
+1:10/0 = 0
+2:10/0 = 0
+3:10/0 = 0
+4:10/0 = 0
+5:10/0 = 0
+6:10/0 = 0
+7:10/0 = 0
+8:10/0 = 0
+9:10/0 = 0
+10:10/0 = 0
+11:10/0 = 0
+12:10/0 = 0
+13:10/0 = 0
+14:10/0 = 0
+15:10/0 = 0
+16:10/0 = 0
+17:10/0 = 0
+0:11/0 = 0
+1:11/0 = 0
+2:11/0 = 0
+3:11/0 = 0
+4:11/0 = 0
+5:11/0 = 0
+6:11/0 = 0
+7:11/0 = 0
+10:11/0 = 0
+11:11/0 = 0
+12:11/0 = 0
+13:11/0 = 0
+14:11/0 = 0
+15:11/0 = 0
+16:11/0 = 0
+17:11/0 = 0
+0:12/0 = 0
+1:12/0 = 0
+2:12/0 = 0
+3:12/0 = 0
+4:12/0 = 0
+5:12/0 = 0
+6:12/0 = 0
+7:12/0 = 0
+10:12/0 = 0
+11:12/0 = 0
+12:12/0 = 0
+13:12/0 = 0
+14:12/0 = 0
+15:12/0 = 0
+16:12/0 = 0
+17:12/0 = 0
+0:13/0 = 0
+1:13/0 = 0
+2:13/0 = 0
+3:13/0 = 0
+4:13/0 = 0
+5:13/0 = 0
+6:13/0 = 0
+7:13/0 = 0
+8:13/0 = 0
+9:13/0 = 0
+10:13/0 = 0
+11:13/0 = 0
+12:13/0 = 0
+13:13/0 = 0
+14:13/0 = 0
+15:13/0 = 0
+16:13/0 = 0
+17:13/0 = 0
+0:14/0 = 0
+1:14/0 = 0
+2:14/0 = 0
+3:14/0 = 0
+4:14/0 = 0
+5:14/0 = 0
+6:14/0 = 0
+7:14/0 = 0
+8:14/0 = 0
+9:14/0 = 0
+10:14/0 = 0
+11:14/0 = 0
+12:14/0 = 0
+13:14/0 = 0
+14:14/0 = 0
+15:14/0 = 0
+16:14/0 = 0
+17:14/0 = 0
+0:15/0 = 0
+1:15/0 = 0
+6:15/0 = 0
+7:15/0 = 0
+8:15/0 = 0
+9:15/0 = 0
+10:15/0 = 0
+11:15/0 = 0
+12:15/0 = 0
+13:15/0 = 0
+14:15/0 = 0
+15:15/0 = 0
+16:15/0 = 0
+17:15/0 = 0
+0:16/0 = 0
+1:16/0 = 0
+2:16/0 = 0
+3:16/0 = 0
+4:16/0 = 0
+5:16/0 = 0
+6:16/0 = 0
+7:16/0 = 0
+8:16/0 = 0
+9:16/0 = 0
+14:16/0 = 0
+15:16/0 = 0
+16:16/0 = 0
+17:16/0 = 0
+0:17/0 = 0
+1:17/0 = 0
+2:17/0 = 0
+3:17/0 = 0
+4:17/0 = 0
+5:17/0 = 0
+6:17/0 = 0
+7:17/0 = 0
+8:17/0 = 0
+9:17/0 = 0
+10:17/0 = 0
+11:17/0 = 0
+12:17/0 = 0
+13:17/0 = 0
+14:17/0 = 0
+15:17/0 = 0
+16:17/0 = 0
+17:17/0 = 0
 
-[sub_resource type="Gradient" id="Gradient_halo"]
-offsets = PackedFloat32Array(0, 0.2, 0.44, 1)
-colors = PackedColorArray(1, 0.97, 0.88, 0.3, 1, 0.93, 0.72, 0.42, 1, 0.76, 0.4, 0.2, 1, 0.56, 0.22, 0)
+[sub_resource type="TileSet" id="TileSet_65gn7"]
+sources/1 = SubResource("TileSetAtlasSource_8tkku")
 
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_halo"]
-gradient = SubResource("Gradient_halo")
-width = 512
-height = 512
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(1, 0.5)
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5jmpw"]
+texture = ExtResource("9_gqx3e")
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+4:2/0 = 0
+5:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+8:2/0 = 0
+9:2/0 = 0
+10:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+8:3/0 = 0
+9:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+12:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+8:4/0 = 0
+9:4/0 = 0
+10:4/0 = 0
+11:4/0 = 0
+12:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+8:5/0 = 0
+9:5/0 = 0
+10:5/0 = 0
+11:5/0 = 0
+12:5/0 = 0
+13:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+4:6/0 = 0
+5:6/0 = 0
+6:6/0 = 0
+7:6/0 = 0
+8:6/0 = 0
+9:6/0 = 0
+10:6/0 = 0
+11:6/0 = 0
+12:6/0 = 0
+13:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+4:7/0 = 0
+5:7/0 = 0
+6:7/0 = 0
+7:7/0 = 0
+8:7/0 = 0
+9:7/0 = 0
+10:7/0 = 0
+11:7/0 = 0
+12:7/0 = 0
+13:7/0 = 0
+0:8/0 = 0
+1:8/0 = 0
+2:8/0 = 0
+3:8/0 = 0
+4:8/0 = 0
+5:8/0 = 0
+6:8/0 = 0
+7:8/0 = 0
+8:8/0 = 0
+9:8/0 = 0
+10:8/0 = 0
+11:8/0 = 0
+12:8/0 = 0
+13:8/0 = 0
+0:9/0 = 0
+1:9/0 = 0
+2:9/0 = 0
+3:9/0 = 0
+4:9/0 = 0
+5:9/0 = 0
+6:9/0 = 0
+7:9/0 = 0
+8:9/0 = 0
+9:9/0 = 0
+10:9/0 = 0
+11:9/0 = 0
+12:9/0 = 0
+13:9/0 = 0
+2:10/0 = 0
+3:10/0 = 0
+4:10/0 = 0
+5:10/0 = 0
+6:10/0 = 0
+7:10/0 = 0
+12:10/0 = 0
+5:11/0 = 0
+6:11/0 = 0
+7:11/0 = 0
 
-[sub_resource type="Gradient" id="Gradient_nucleo"]
-offsets = PackedFloat32Array(0, 0.22, 0.4, 0.68, 1)
-colors = PackedColorArray(1, 0.98, 0.92, 0.9, 1, 0.94, 0.78, 0.75, 1, 0.88, 0.62, 0.45, 1, 0.8, 0.42, 0.16, 1, 0.74, 0.32, 0)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_nucleo"]
-gradient = SubResource("Gradient_nucleo")
-width = 256
-height = 256
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(1, 0.5)
+[sub_resource type="TileSet" id="TileSet_8tkku"]
+sources/0 = SubResource("TileSetAtlasSource_5jmpw")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_parede"]
 size = Vector2(40, 1200)
 
-[node name="Fase1_2Exterior" type="Node2D"]
+[node name="Fase1_2Exterior" type="Node2D" unique_id=1805247451]
 script = ExtResource("1_fase12")
 
-[node name="BG" type="ParallaxBackground" parent="."]
+[node name="BG" type="ParallaxBackground" parent="." unique_id=1803105117]
 
-[node name="Ceu" type="ParallaxLayer" parent="BG"]
+[node name="Ceu" type="ParallaxLayer" parent="BG" unique_id=226759237]
 motion_scale = Vector2(0, 0)
 
-[node name="Sprite2D" type="Sprite2D" parent="BG/Ceu"]
+[node name="Sprite2D" type="Sprite2D" parent="BG/Ceu" unique_id=949307911]
 texture_repeat = 2
 material = SubResource("ShaderMaterial_ceu")
 position = Vector2(800, 400)
@@ -116,10 +569,10 @@ texture = ExtResource("8_bg5")
 region_enabled = true
 region_rect = Rect2(0, 0, 2048, 346)
 
-[node name="Sol" type="ParallaxLayer" parent="BG"]
+[node name="Sol" type="ParallaxLayer" parent="BG" unique_id=449131361]
 motion_scale = Vector2(0, 0)
 
-[node name="Halo" type="Sprite2D" parent="BG/Sol"]
+[node name="Halo" type="Sprite2D" parent="BG/Sol" unique_id=1958396634]
 self_modulate = Color(1, 0.87, 0.64, 0.25574794)
 texture_filter = 2
 material = SubResource("CanvasItemMaterial_aditivo")
@@ -127,17 +580,17 @@ position = Vector2(1211, 308)
 scale = Vector2(0.6142695, 0.6142695)
 texture = SubResource("GradientTexture2D_halo")
 
-[node name="Nucleo" type="Sprite2D" parent="BG/Sol"]
+[node name="Nucleo" type="Sprite2D" parent="BG/Sol" unique_id=1910927303]
 texture_filter = 2
 material = SubResource("CanvasItemMaterial_aditivo")
 position = Vector2(1211, 308)
 scale = Vector2(0.32, 0.32)
 texture = SubResource("GradientTexture2D_nucleo")
 
-[node name="Serra" type="ParallaxLayer" parent="BG"]
+[node name="Serra" type="ParallaxLayer" parent="BG" unique_id=733482409]
 motion_scale = Vector2(0, 0)
 
-[node name="Sprite2D" type="Sprite2D" parent="BG/Serra"]
+[node name="Sprite2D" type="Sprite2D" parent="BG/Serra" unique_id=366412972]
 texture_repeat = 2
 material = SubResource("ShaderMaterial_neblina4")
 position = Vector2(800, 452)
@@ -146,10 +599,10 @@ texture = ExtResource("9_bg4")
 region_enabled = true
 region_rect = Rect2(0, 0, 2048, 346)
 
-[node name="Morros" type="ParallaxLayer" parent="BG"]
+[node name="Morros" type="ParallaxLayer" parent="BG" unique_id=245146625]
 motion_scale = Vector2(0, 0)
 
-[node name="Sprite2D" type="Sprite2D" parent="BG/Morros"]
+[node name="Sprite2D" type="Sprite2D" parent="BG/Morros" unique_id=364811054]
 texture_repeat = 2
 material = SubResource("ShaderMaterial_neblina3")
 position = Vector2(800, 452)
@@ -158,10 +611,10 @@ texture = ExtResource("10_bg3")
 region_enabled = true
 region_rect = Rect2(0, 0, 2048, 346)
 
-[node name="MataDistante" type="ParallaxLayer" parent="BG"]
+[node name="MataDistante" type="ParallaxLayer" parent="BG" unique_id=1642668169]
 motion_scale = Vector2(0, 0)
 
-[node name="Sprite2D" type="Sprite2D" parent="BG/MataDistante"]
+[node name="Sprite2D" type="Sprite2D" parent="BG/MataDistante" unique_id=402840063]
 texture_repeat = 2
 material = SubResource("ShaderMaterial_neblina2")
 position = Vector2(800, 452)
@@ -170,10 +623,10 @@ texture = ExtResource("11_bg2")
 region_enabled = true
 region_rect = Rect2(0, 0, 2048, 346)
 
-[node name="Mata" type="ParallaxLayer" parent="BG"]
+[node name="Mata" type="ParallaxLayer" parent="BG" unique_id=1622226992]
 motion_scale = Vector2(0, 0)
 
-[node name="Sprite2D" type="Sprite2D" parent="BG/Mata"]
+[node name="Sprite2D" type="Sprite2D" parent="BG/Mata" unique_id=568836220]
 texture_repeat = 2
 material = SubResource("ShaderMaterial_neblina1")
 position = Vector2(800, 452)
@@ -182,62 +635,78 @@ texture = ExtResource("12_bg1")
 region_enabled = true
 region_rect = Rect2(0, 0, 2048, 346)
 
-[node name="AmbienteCeu" type="CanvasModulate" parent="BG"]
+[node name="AmbienteCeu" type="CanvasModulate" parent="BG" unique_id=2034060155]
 color = Color(0.93, 0.95, 1, 1)
 
-[node name="Terreno" type="TileMapLayer" parent="."]
+[node name="fundo" type="TileMapLayer" parent="." unique_id=2007520616]
+scale = Vector2(2, 2)
+tile_map_data = PackedByteArray("AAAEAA4AAQAQAAYAAAAEAA8AAQAQAAcAAAAFAA4AAQARAAYAAAAFAA8AAQARAAcAAAACAA4AAQAQAAYAAAACAA8AAQAQAAcAAAADAA4AAQARAAYAAAADAA8AAQARAAcAAAAAAA4AAQAQAAYAAAAAAA8AAQAQAAcAAAABAA4AAQARAAYAAAABAA8AAQARAAcAAAD+/w4AAQAQAAYAAAD+/w8AAQAQAAcAAAD//w4AAQARAAYAAAD//w8AAQARAAcAAAD+/wwAAQAQAAYAAAD+/w0AAQAQAAcAAAD//wwAAQARAAYAAAD//w0AAQARAAcAAAAAAAwAAQAQAAYAAAAAAA0AAQAQAAcAAAABAAwAAQARAAYAAAABAA0AAQARAAcAAAACAAwAAQAOAAgAAAACAA0AAQAOAAkAAAADAAwAAQAPAAgAAAADAA0AAQAPAAkAAAAEAAwAAQAQAAYAAAAEAA0AAQAQAAcAAAAFAAwAAQARAAYAAAAFAA0AAQARAAcAAAAEAAoAAQAQAAYAAAAEAAsAAQAQAAcAAAAFAAoAAQARAAYAAAAFAAsAAQARAAcAAAACAAoAAQAOAAYAAAACAAsAAQAOAAcAAAADAAoAAQAPAAYAAAADAAsAAQAPAAcAAAAAAAoAAQAQAAYAAAAAAAsAAQAQAAcAAAABAAoAAQARAAYAAAABAAsAAQARAAcAAAD+/woAAQAQAAYAAAD+/wsAAQAQAAcAAAD//woAAQARAAYAAAD//wsAAQARAAcAAAA=")
+tile_set = SubResource("TileSet_65gn7")
+
+[node name="Terreno" type="TileMapLayer" parent="." unique_id=144999539]
 z_index = 10
 scale = Vector2(2, 2)
-tile_map_data = PackedByteArray("AAD+/xAADAAEAAAAAAD+/xEADAAEAAEAAAD+/xIADAAKAAQAAAD+/xMADAALAAQAAAD+/xQADAAKAAQAAAD//xAADAAFAAAAAAD//xEADAAFAAEAAAD//xIADAALAAQAAAD//xMADAAKAAQAAAD//xQADAAKAAQAAAAAABAADAACAAAAAAAAABEADAACAAEAAAAAABIADAALAAQAAAAAABMADAALAAQAAAAAABQADAALAAQAAAABABAADAADAAAAAAABABEADAADAAEAAAABABIADAALAAQAAAABABMADAAKAAQAAAABABQADAALAAQAAAACABAADAAEAAAAAAACABEADAAEAAEAAAACABIADAAKAAQAAAACABMADAALAAQAAAACABQADAAKAAQAAAADABAADAAFAAAAAAADABEADAAFAAEAAAADABIADAAKAAQAAAADABMADAALAAQAAAADABQADAALAAQAAAAEABAADAACAAAAAAAEABEADAACAAEAAAAEABIADAAKAAQAAAAEABMADAALAAQAAAAEABQADAALAAQAAAAFABAADAADAAAAAAAFABEADAADAAEAAAAFABIADAAKAAQAAAAFABMADAAKAAQAAAAFABQADAALAAQAAAAGABAADAAEAAAAAAAGABEADAAEAAEAAAAGABIADAAKAAQAAAAGABMADAAKAAQAAAAGABQADAAKAAQAAAAHABAADAAFAAAAAAAHABEADAAFAAEAAAAHABIADAALAAQAAAAHABMADAALAAQAAAAHABQADAALAAQAAAAIABAADAACAAAAAAAIABEADAACAAEAAAAIABIADAALAAQAAAAIABMADAAKAAQAAAAIABQADAAKAAQAAAAJABAADAADAAAAAAAJABEADAADAAEAAAAJABIADAAKAAQAAAAJABMADAALAAQAAAAJABQADAALAAQAAAAKABAADAAEAAAAAAAKABEADAAEAAEAAAAKABIADAAKAAQAAAAKABMADAALAAQAAAAKABQADAALAAQAAAALABAADAAFAAAAAAALABEADAAFAAEAAAALABIADAALAAQAAAALABMADAALAAQAAAALABQADAALAAQAAAAMABAADAACAAAAAAAMABEADAACAAEAAAAMABIADAALAAQAAAAMABMADAAKAAQAAAAMABQADAAKAAQAAAANABAADAADAAAAAAANABEADAADAAEAAAANABIADAAKAAQAAAANABMADAAKAAQAAAANABQADAALAAQAAAAOABAADAAEAAAAAAAOABEADAAEAAEAAAAOABIADAAKAAQAAAAOABMADAAKAAQAAAAOABQADAALAAQAAAAPABAADAAFAAAAAAAPABEADAAFAAEAAAAPABIADAALAAQAAAAPABMADAALAAQAAAAPABQADAAKAAQAAAAQABAADAACAAAAAAAQABEADAACAAEAAAAQABIADAALAAQAAAAQABMADAAKAAQAAAAQABQADAAKAAQAAAARABAADAADAAAAAAARABEADAADAAEAAAARABIADAAKAAQAAAARABMADAALAAQAAAARABQADAALAAQAAAASABAADAAEAAAAAAASABEADAAEAAEAAAASABIADAAKAAQAAAASABMADAAKAAQAAAASABQADAAKAAQAAAATABAADAAFAAAAAAATABEADAAFAAEAAAATABIADAALAAQAAAATABMADAAKAAQAAAATABQADAAKAAQAAAAUABAADAACAAAAAAAUABEADAACAAEAAAAUABIADAAKAAQAAAAUABMADAAKAAQAAAAUABQADAALAAQAAAAVABAADAADAAAAAAAVABEADAADAAEAAAAVABIADAALAAQAAAAVABMADAALAAQAAAAVABQADAALAAQAAAAWABAADAAEAAAAAAAWABEADAAEAAEAAAAWABIADAAKAAQAAAAWABMADAAKAAQAAAAWABQADAAKAAQAAAAXABAADAAFAAAAAAAXABEADAAFAAEAAAAXABIADAALAAQAAAAXABMADAAKAAQAAAAXABQADAALAAQAAAAYABAADAACAAAAAAAYABEADAACAAEAAAAYABIADAAKAAQAAAAYABMADAALAAQAAAAYABQADAALAAQAAAAZABAADAADAAAAAAAZABEADAADAAEAAAAZABIADAAKAAQAAAAZABMADAAKAAQAAAAZABQADAALAAQAAAAaABAADAAEAAAAAAAaABEADAAEAAEAAAAaABIADAAKAAQAAAAaABMADAALAAQAAAAaABQADAALAAQAAAAbABAADAAFAAAAAAAbABEADAAFAAEAAAAbABIADAALAAQAAAAbABMADAAKAAQAAAAbABQADAAKAAQAAAAcABAADAACAAAAAAAcABEADAACAAEAAAAcABIADAAKAAQAAAAcABMADAAKAAQAAAAcABQADAALAAQAAAAdABAADAADAAAAAAAdABEADAADAAEAAAAdABIADAALAAQAAAAdABMADAAKAAQAAAAdABQADAALAAQAAAAeABAADAAEAAAAAAAeABEADAAEAAEAAAAeABIADAALAAQAAAAeABMADAAKAAQAAAAeABQADAAKAAQAAAAfABAADAAFAAAAAAAfABEADAAFAAEAAAAfABIADAAKAAQAAAAfABMADAALAAQAAAAfABQADAALAAQAAAAgABAADAACAAAAAAAgABEADAACAAEAAAAgABIADAAKAAQAAAAgABMADAALAAQAAAAgABQADAAKAAQAAAAhABAADAADAAAAAAAhABEADAADAAEAAAAhABIADAAKAAQAAAAhABMADAAKAAQAAAAhABQADAALAAQAAAAiABAADAAEAAAAAAAiABEADAAEAAEAAAAiABIADAALAAQAAAAiABMADAALAAQAAAAiABQADAAKAAQAAAAjABAADAAFAAAAAAAjABEADAAFAAEAAAAjABIADAAKAAQAAAAjABMADAALAAQAAAAjABQADAALAAQAAAA=")
+tile_map_data = PackedByteArray("AAD+/xAADAADAAAAAAD+/xEADAADAAEAAAD+/xIADAAFAAQAAAD+/xMADAAFAAQAAAD+/xQADAAFAAQAAAD//xAADAAEAAAAAAD//xEADAAEAAEAAAD//xIADAAFAAQAAAD//xMADAAFAAQAAAD//xQADAAFAAQAAAAAABAADAAFAAAAAAAAABEADAAFAAEAAAAAABIADAAFAAQAAAAAABMADAAFAAQAAAAAABQADAAFAAQAAAABABAADAACAAAAAAABABEADAACAAEAAAABABIADAAFAAQAAAABABMADAAFAAQAAAABABQADAAFAAQAAAACABAADAADAAAAAAACABEADAADAAEAAAACABIADAAFAAQAAAACABMADAAFAAQAAAACABQADAAFAAQAAAADABAADAAEAAAAAAADABEADAAEAAEAAAADABIADAAFAAQAAAADABMADAAFAAQAAAADABQADAAFAAQAAAAEABAADAAFAAAAAAAEABEADAAFAAEAAAAEABIADAAFAAQAAAAEABMADAAFAAQAAAAEABQADAAFAAQAAAAFABAADAACAAAAAAAFABEADAACAAEAAAAFABIADAAFAAQAAAAFABMADAAFAAQAAAAFABQADAAFAAQAAAAGABAADAADAAAAAAAGABEADAADAAEAAAAGABIADAAFAAQAAAAGABMADAAFAAQAAAAGABQADAAFAAQAAAAHABAAAwADAAAAAAAHABEAAwADAAEAAAAHABIAAwADAAIAAAAHABMAAwADAAMAAAAHABQAAwADAAQAAAAIABAAAwAEAAAAAAAIABEAAwAEAAEAAAAIABIAAwAEAAIAAAAIABMAAwAEAAMAAAAIABQAAwAEAAQAAAAJABAAAwABAAAAAAAJABEAAwABAAEAAAAJABIAAwABAAIAAAAJABMAAwABAAMAAAAJABQAAwABAAQAAAAKABAAAwACAAAAAAAKABEAAwACAAEAAAAKABIAAwACAAIAAAAKABMAAwACAAMAAAAKABQAAwACAAQAAAALABAAAwADAAAAAAALABEAAwADAAEAAAALABIAAwADAAIAAAALABMAAwADAAMAAAALABQAAwADAAQAAAAMABAAAwAEAAAAAAAMABEAAwAEAAEAAAAMABIAAwAEAAIAAAAMABMAAwAEAAMAAAAMABQAAwAEAAQAAAANABAAAwABAAAAAAANABEAAwABAAEAAAANABIAAwABAAIAAAANABMAAwABAAMAAAANABQAAwABAAQAAAAOABAAAwACAAAAAAAOABEAAwACAAEAAAAOABIAAwACAAIAAAAOABMAAwACAAMAAAAOABQAAwACAAQAAAAPABAAAwADAAAAAAAPABEAAwADAAEAAAAPABIAAwADAAIAAAAPABMAAwADAAMAAAAPABQAAwADAAQAAAAQABAAAwAEAAAAAAAQABEAAwAEAAEAAAAQABIAAwAEAAIAAAAQABMAAwAEAAMAAAAQABQAAwAEAAQAAAARABAAAwABAAAAAAARABEAAwABAAEAAAARABIAAwABAAIAAAARABMAAwABAAMAAAARABQAAwABAAQAAAASABAAAwACAAAAAAASABEAAwACAAEAAAASABIAAwACAAIAAAASABMAAwACAAMAAAASABQAAwACAAQAAAATABAAAwADAAAAAAATABEAAwADAAEAAAATABIAAwADAAIAAAATABMAAwADAAMAAAATABQAAwADAAQAAAAUABAAAwAEAAAAAAAUABEAAwAEAAEAAAAUABIAAwAEAAIAAAAUABMAAwAEAAMAAAAUABQAAwAEAAQAAAAVABAAAwABAAAAAAAVABEAAwABAAEAAAAVABIAAwABAAIAAAAVABMAAwABAAMAAAAVABQAAwABAAQAAAAWABAAAwACAAAAAAAWABEAAwACAAEAAAAWABIAAwACAAIAAAAWABMAAwACAAMAAAAWABQAAwACAAQAAAAXABAAAwADAAAAAAAXABEAAwADAAEAAAAXABIAAwADAAIAAAAXABMAAwADAAMAAAAXABQAAwADAAQAAAAYABAAAwAEAAAAAAAYABEAAwAEAAEAAAAYABIAAwAEAAIAAAAYABMAAwAEAAMAAAAYABQAAwAEAAQAAAAZABAAAwABAAAAAAAZABEAAwABAAEAAAAZABIAAwABAAIAAAAZABMAAwABAAMAAAAZABQAAwABAAQAAAAaABAAAwACAAAAAAAaABEAAwACAAEAAAAaABIAAwACAAIAAAAaABMAAwACAAMAAAAaABQAAwACAAQAAAAbABAAAwADAAAAAAAbABEAAwADAAEAAAAbABIAAwADAAIAAAAbABMAAwADAAMAAAAbABQAAwADAAQAAAAcABAAAwAEAAAAAAAcABEAAwAEAAEAAAAcABIAAwAEAAIAAAAcABMAAwAEAAMAAAAcABQAAwAEAAQAAAAdABAAAwABAAAAAAAdABEAAwABAAEAAAAdABIAAwABAAIAAAAdABMAAwABAAMAAAAdABQAAwABAAQAAAAeABAAAwACAAAAAAAeABEAAwACAAEAAAAeABIAAwACAAIAAAAeABMAAwACAAMAAAAeABQAAwACAAQAAAAfABAAAwADAAAAAAAfABEAAwADAAEAAAAfABIAAwADAAIAAAAfABMAAwADAAMAAAAfABQAAwADAAQAAAAgABAAAwAEAAAAAAAgABEAAwAEAAEAAAAgABIAAwAEAAIAAAAgABMAAwAEAAMAAAAgABQAAwAEAAQAAAAhABAAAwABAAAAAAAhABEAAwABAAEAAAAhABIAAwABAAIAAAAhABMAAwABAAMAAAAhABQAAwABAAQAAAAiABAAAwACAAAAAAAiABEAAwACAAEAAAAiABIAAwACAAIAAAAiABMAAwACAAMAAAAiABQAAwACAAQAAAAjABAAAwADAAAAAAAjABEAAwADAAEAAAAjABIAAwADAAIAAAAjABMAAwADAAMAAAAjABQAAwADAAQAAAAkABAAAwAEAAAAAAAkABEAAwAEAAEAAAAkABIAAwAEAAIAAAAkABMAAwAEAAMAAAAkABQAAwAEAAQAAAD9/xAADAACAAAAAAD9/xEADAACAAEAAAD9/xIADAAFAAQAAAD9/xMADAAFAAQAAAD9/xQADAAFAAQAAAD+/wgADQABAAYAAAD+/wkADQABAAcAAAD//wgADQACAAYAAAD//wkADQACAAcAAAAAAAgADQADAAYAAAAAAAkADQADAAcAAAABAAgADQAEAAYAAAABAAkADQAEAAcAAAACAAgADQABAAYAAAACAAkADQABAAcAAAADAAgADQACAAYAAAADAAkADQACAAcAAAAEAAgADQADAAYAAAAEAAkADQADAAcAAAAFAAgADQAEAAYAAAAFAAkADQAEAAcAAAAGAAgADQAFAAYAAAAGAAkADQAFAAcAAAACAAYADQABAAIAAAACAAcADQABAAMAAAADAAYADQACAAIAAAADAAcADQACAAMAAAAEAAYADQADAAIAAAAEAAcADQADAAMAAAAFAAYADQAEAAIAAAAFAAcADQAEAAMAAAAGAAYADQAFAAIAAAAGAAcADQAFAAMAAAD+/wYADQAAAAIAAAD+/wcADQAAAAMAAAD//wYADQABAAIAAAD//wcADQABAAMAAAAAAAYADQACAAIAAAAAAAcADQACAAMAAAABAAYADQADAAIAAAABAAcADQADAAMAAAAMAA8ABQAAAA0AAAANAA8ABQABAA0AAAAPAA8ABQAAAAsAAAAQAA8ABQABAAsAAAASAA8ABQAEAAkAAAATAA8ABQAFAAkAAAAWAA8ABQABAAkAAAAXAA8ABQADAAkAAAAYAA8ABQAAAAkAAAAZAA8ABQABAAkAAAAcAA8ABQAAAAsAAAAdAA8ABQABAAsAAAAJAA8ABQAAAAsAAAAKAA8ABQABAAsAAAAVAA8ABQAAAAkAAAA=")
 tile_set = ExtResource("2_tileset")
 
-[node name="Paredes" type="Node2D" parent="."]
+[node name="Arvore" type="TileMapLayer" parent="Terreno" unique_id=654330316]
+z_as_relative = false
+tile_map_data = PackedByteArray("AAAMAAcAAAABAAMAAAAMAAgAAAABAAQAAAAMAAkAAAABAAUAAAAMAAoAAAABAAYAAAAMAAsAAAABAAcAAAAMAAwAAAABAAgAAAAMAA0AAAABAAkAAAANAAYAAAACAAIAAAANAAcAAAACAAMAAAANAAgAAAACAAQAAAANAAkAAAACAAUAAAANAAoAAAACAAYAAAANAAsAAAACAAcAAAANAAwAAAACAAgAAAANAA0AAAACAAkAAAAOAAUAAAADAAEAAAAOAAYAAAADAAIAAAAOAAcAAAADAAMAAAAOAAgAAAADAAQAAAAOAAkAAAADAAUAAAAOAAoAAAADAAYAAAAOAAsAAAADAAcAAAAOAAwAAAADAAgAAAAOAA0AAAADAAkAAAAOAA4AAAADAAoAAAAPAAUAAAAEAAEAAAAPAAYAAAAEAAIAAAAPAAcAAAAEAAMAAAAPAAgAAAAEAAQAAAAPAAkAAAAEAAUAAAAPAAoAAAAEAAYAAAAPAAsAAAAEAAcAAAAPAAwAAAAEAAgAAAAPAA0AAAAEAAkAAAAPAA4AAAAEAAoAAAAQAAQAAAAFAAAAAAAQAAUAAAAFAAEAAAAQAAYAAAAFAAIAAAAQAAcAAAAFAAMAAAAQAAgAAAAFAAQAAAAQAAkAAAAFAAUAAAAQAAoAAAAFAAYAAAAQAAsAAAAFAAcAAAAQAAwAAAAFAAgAAAAQAA0AAAAFAAkAAAAQAA4AAAAFAAoAAAARAAQAAAAGAAAAAAARAAUAAAAGAAEAAAARAAYAAAAGAAIAAAARAAcAAAAGAAMAAAARAAgAAAAGAAQAAAARAAkAAAAGAAUAAAARAAoAAAAGAAYAAAARAAsAAAAGAAcAAAARAAwAAAAGAAgAAAARAA0AAAAGAAkAAAARAA4AAAAGAAoAAAARAA8AAAAGAAsAAAASAAQAAAAHAAAAAAASAAUAAAAHAAEAAAASAAYAAAAHAAIAAAASAAcAAAAHAAMAAAASAAgAAAAHAAQAAAASAAkAAAAHAAUAAAASAAoAAAAHAAYAAAASAAsAAAAHAAcAAAASAAwAAAAHAAgAAAASAA0AAAAHAAkAAAASAA4AAAAHAAoAAAASAA8AAAAHAAsAAAATAAQAAAAIAAAAAAATAAUAAAAIAAEAAAATAAYAAAAIAAIAAAATAAcAAAAIAAMAAAATAAgAAAAIAAQAAAATAAkAAAAIAAUAAAATAAoAAAAIAAYAAAATAAsAAAAIAAcAAAATAAwAAAAIAAgAAAATAA0AAAAIAAkAAAAUAAUAAAAJAAEAAAAUAAYAAAAJAAIAAAAUAAcAAAAJAAMAAAAUAAgAAAAJAAQAAAAUAAkAAAAJAAUAAAAUAAoAAAAJAAYAAAAUAAsAAAAJAAcAAAAUAAwAAAAJAAgAAAAUAA0AAAAJAAkAAAAVAAYAAAAKAAIAAAAVAAcAAAAKAAMAAAAVAAgAAAAKAAQAAAAVAAkAAAAKAAUAAAAVAAoAAAAKAAYAAAAVAAsAAAAKAAcAAAAVAAwAAAAKAAgAAAAVAA0AAAAKAAkAAAAWAAcAAAALAAMAAAAWAAgAAAALAAQAAAAWAAkAAAALAAUAAAAWAAoAAAALAAYAAAAWAAsAAAALAAcAAAAWAAwAAAALAAgAAAAWAA0AAAALAAkAAAAXAAcAAAAMAAMAAAAXAAgAAAAMAAQAAAAXAAkAAAAMAAUAAAAXAAoAAAAMAAYAAAAXAAsAAAAMAAcAAAAXAAwAAAAMAAgAAAAXAA0AAAAMAAkAAAAYAAkAAAANAAUAAAAYAAoAAAANAAYAAAAYAAsAAAANAAcAAAAYAAwAAAANAAgAAAAYAA0AAAANAAkAAAALAAcAAAAAAAMAAAALAAgAAAAAAAQAAAALAAkAAAAAAAUAAAALAAoAAAAAAAYAAAALAAsAAAAAAAcAAAALAAwAAAAAAAgAAAALAA0AAAAAAAkAAAAMAAYAAAABAAIAAAANAAUAAAACAAEAAAANAA4AAAACAAoAAAAPAAQAAAAEAAAAAAAQAA8AAAAFAAsAAAAXAA4AAAAMAAoAAAA=")
+tile_set = SubResource("TileSet_8tkku")
 
-[node name="ParedeEsquerda" type="StaticBody2D" parent="Paredes"]
+[node name="Frente" type="Sprite2D" parent="Terreno/Arvore" unique_id=1462803917]
+z_as_relative = false
+z_index = 10
+position = Vector2(176, 64)
+texture = ExtResource("16_frente")
+centered = false
+
+[node name="Paredes" type="Node2D" parent="." unique_id=803487146]
+
+[node name="ParedeEsquerda" type="StaticBody2D" parent="Paredes" unique_id=285655024]
 position = Vector2(-20, 200)
 
-[node name="Colisao" type="CollisionShape2D" parent="Paredes/ParedeEsquerda"]
+[node name="Colisao" type="CollisionShape2D" parent="Paredes/ParedeEsquerda" unique_id=221811771]
 shape = SubResource("RectangleShape2D_parede")
 
-[node name="ParedeDireita" type="StaticBody2D" parent="Paredes"]
+[node name="ParedeDireita" type="StaticBody2D" parent="Paredes" unique_id=904541868]
 position = Vector2(1090, 200)
 
-[node name="Colisao" type="CollisionShape2D" parent="Paredes/ParedeDireita"]
+[node name="Colisao" type="CollisionShape2D" parent="Paredes/ParedeDireita" unique_id=2050107777]
 shape = SubResource("RectangleShape2D_parede")
 
-[node name="Patio" type="Node2D" parent="."]
+[node name="Patio" type="Node2D" parent="." unique_id=1027327209]
 
-[node name="Retorta" parent="Patio" instance=ExtResource("5_retorta")]
-position = Vector2(820, 542)
+[node name="Retorta" parent="Patio" unique_id=773315080 instance=ExtResource("5_retorta")]
+position = Vector2(873, 542)
 
-[node name="Madeira1" parent="Patio" instance=ExtResource("6_madeira")]
-position = Vector2(470, 503)
+[node name="ArvoreLenha" parent="Patio" unique_id=799118378 node_paths=PackedStringArray("arvore") instance=ExtResource("6_arvore")]
+position = Vector2(566, 512)
+arvore = NodePath("../../Terreno/Arvore")
 
-[node name="Madeira2" parent="Patio" instance=ExtResource("6_madeira")]
-position = Vector2(560, 503)
-
-[node name="Madeira3" parent="Patio" instance=ExtResource("6_madeira")]
-position = Vector2(650, 503)
-
-[node name="Player" parent="." instance=ExtResource("3_player")]
+[node name="Player" parent="." unique_id=1357281852 instance=ExtResource("3_player")]
 z_index = 2
-position = Vector2(320, 476)
+position = Vector2(64, 451)
 max_jumps = 10
+metadata/_edit_lock_ = true
 
-[node name="Elevador" parent="." instance=ExtResource("4_elevador")]
-position = Vector2(140, 512)
+[node name="Elevador" parent="." unique_id=1677552486 instance=ExtResource("4_elevador")]
+position = Vector2(60, 516)
 direcao = 1
 cena_destino = "res://scenes/fases/fase1_oficina.tscn"
 tag_aqui = "patio"
 tag_destino = "oficina"
 
-[node name="SpawnPadrao" type="Marker2D" parent="."]
+[node name="SpawnPadrao" type="Marker2D" parent="." unique_id=2020829436]
 position = Vector2(320, 476)
 
-[node name="LimitesDaCamera" type="ReferenceRect" parent="."]
+[node name="LimitesDaCamera" type="ReferenceRect" parent="." unique_id=1640068787]
 offset_top = -20.0
 offset_right = 1067.0
 offset_bottom = 580.0
 mouse_filter = 2
 border_color = Color(1, 0.6, 0.2, 0.55)
 metadata/_edit_lock_ = true
+
+[node name="PortaMetalMacarico" parent="." unique_id=894855489 instance=ExtResource("15_8tkku")]
+position = Vector2(195, 513)

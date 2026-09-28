@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Projeto 8.27 (Copy)"
+config/name="Projeto 8.28"
 run/main_scene="uid://bqevk7iunmrs4"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
@@ -25,8 +25,8 @@ Progresso="*res://scripts/progresso.gd"
 FerramentasHUD="*res://scripts/ui/ferramentas_hud.gd"
 Controle="*res://scripts/controle.gd"
 CursorVirtual="*res://scripts/ui/cursor_virtual.gd"
-Dialogic="*uid://c3b5clqd5sgir"
 Objetivos="*res://scripts/objetivos.gd"
+Dialogic="*uid://c3b5clqd5sgir"
 
 [dialogic]
 

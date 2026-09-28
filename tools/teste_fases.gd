@@ -122,7 +122,9 @@ func _testar_fase1_2() -> void:
 
 	_checar(f.get_node_or_null("Player") != null, "player na cena")
 	_checar(f.get_node_or_null("Patio/Retorta") != null, "fornalha mudou para o patio")
-	_checar(get_tree().get_nodes_in_group("madeira").size() == 3, "as tres toras vieram junto")
+	var arvore: ArvoreLenha = f.get_node_or_null("Patio/ArvoreLenha")
+	_checar(arvore != null and arvore.toras_na_copa() == 3,
+		"as tres toras estao na copa da arvore (caem no bumerangue)")
 	_checar(f.get_node_or_null("Elevador") != null, "elevador de volta para a oficina")
 
 	# A câmera parada é o LimitesDaCamera do tamanho de um quadro; a mecânica
