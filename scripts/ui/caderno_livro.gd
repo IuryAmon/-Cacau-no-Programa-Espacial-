@@ -245,10 +245,12 @@ func _compor() -> void:
 	var tem_folha := folha != Vector2.ZERO
 
 	var fim_esquerda := minf(FACE_ESQUERDA.end.x, folha.x) if tem_folha else FACE_ESQUERDA.end.x
-	_por_embaixo(0, faces_a[0], FACE_ESQUERDA, FACE_ESQUERDA.position.x, fim_esquerda)
+	_por_embaixo(0, faces_a[0], PaginasCaderno.numero(par_a, 0), FACE_ESQUERDA,
+		FACE_ESQUERDA.position.x, fim_esquerda)
 	var inicio_direita := maxf(FACE_DIREITA.position.x, folha.y) if tem_folha \
 		else FACE_DIREITA.position.x
-	_por_embaixo(1, faces_b[1], FACE_DIREITA, inicio_direita, FACE_DIREITA.end.x)
+	_por_embaixo(1, faces_b[1], PaginasCaderno.numero(par_b, 1), FACE_DIREITA,
+		inicio_direita, FACE_DIREITA.end.x)
 
 	var tinta: float = TINTA_NA_FOLHA[_quadro] if tem_folha else 0.0
 	if tinta <= 0.0:
@@ -256,10 +258,12 @@ func _compor() -> void:
 		return
 	var frente := _quadro <= ULTIMO_QUADRO_DA_FRENTE
 	_por_na_folha(faces_a[1] if frente else faces_b[0],
+		PaginasCaderno.numero(par_a, 1) if frente else PaginasCaderno.numero(par_b, 0),
 		FACE_DIREITA if frente else FACE_ESQUERDA, folha, tinta)
 
 
-func _por_embaixo(i: int, dados: Dictionary, papel: Rect2, x0: float, x1: float) -> void:
+func _por_embaixo(i: int, dados: Dictionary, numero: int, papel: Rect2, x0: float,
+		x1: float) -> void:
 	var recorte := _recortes[i]
 	recorte.visible = x1 > x0 and not dados.is_empty()
 	if not recorte.visible:
@@ -268,6 +272,7 @@ func _por_embaixo(i: int, dados: Dictionary, papel: Rect2, x0: float, x1: float)
 	recorte.size = Vector2(x1 - x0, papel.size.y)
 	var face := _faces[i]
 	face.dados = dados
+	face.numero = numero
 	face.size = papel.size
 	face.scale = Vector2.ONE
 	face.position = papel.position - recorte.position
@@ -275,7 +280,8 @@ func _por_embaixo(i: int, dados: Dictionary, papel: Rect2, x0: float, x1: float)
 
 
 ## A face vai espremida na largura da folha que vira.
-func _por_na_folha(dados: Dictionary, papel: Rect2, folha: Vector2, tinta: float) -> void:
+func _por_na_folha(dados: Dictionary, numero: int, papel: Rect2, folha: Vector2,
+		tinta: float) -> void:
 	var recorte := _recortes[2]
 	recorte.visible = not dados.is_empty()
 	if not recorte.visible:
@@ -284,6 +290,7 @@ func _por_na_folha(dados: Dictionary, papel: Rect2, folha: Vector2, tinta: float
 	recorte.size = Vector2(folha.y - folha.x, papel.size.y)
 	var face := _faces[2]
 	face.dados = dados
+	face.numero = numero
 	face.size = papel.size
 	face.position = Vector2.ZERO
 	face.scale = Vector2((folha.y - folha.x) / papel.size.x, 1.0)

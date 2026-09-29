@@ -286,13 +286,13 @@ func _tocar(som: AudioStream) -> void:
 # ─────────────────────────────────────────────────────────────
 
 ## [botões, texto]. No teclado, as teclas desenhadas; no controle, os botões.
+## Sem contador de página: o número já está no canto de cada página.
 func _dicas() -> Array:
-	var pagina := "%d / %d" % [_livro.pagina() + 1, PaginasCaderno.quantas()]
 	if BotoesControle.controle_em_uso():
 		var fechar_com := BotoesControle.nome_da_acao(ACAO)
-		return [[[], pagina], [["direcional_horizontal"], "FOLHEAR"],
+		return [[["direcional_horizontal"], "FOLHEAR"],
 			[[fechar_com if fechar_com != "" else "triangulo"], "FECHAR"]]
-	return [[[], pagina], [["tecla_a", "tecla_d"], "FOLHEAR"], [["tecla_m"], "FECHAR"]]
+	return [[["tecla_a", "tecla_d"], "FOLHEAR"], [["tecla_m"], "FECHAR"]]
 
 
 ## A barra de vidro dos puzzles (a do CursorVirtual), com as dicas do caderno.

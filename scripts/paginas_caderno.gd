@@ -3,144 +3,141 @@ extends RefCounted
 
 # --- O QUE ESTÁ ESCRITO NO CADERNO DA CACAU ---
 #
-# Só o texto. Quem desenha e vira as folhas é o CadernoLivro
+# Só o conteúdo. Quem desenha e vira as folhas é o CadernoLivro
 # (scripts/ui/caderno_livro.gd); quem abre e fecha é o autoload Caderno
-# (scripts/caderno.gd).
+# (scripts/caderno.gd); quem põe cada coisa no lugar é a FaceCaderno
+# (scripts/ui/face_caderno.gd).
 #
 # O caderno abre em PÁGINA DUPLA: cada página é uma abertura do caderno, com
 # uma face à esquerda e outra à direita, e cada virada de folha troca as duas.
-# São QUATRO páginas.
 #
-# UMA FACE é um dicionário com "tipo":
+# UMA FACE é um dicionário com "tipo" (e um "titulo" opcional no alto); vazio
+# = folha em branco. Os tipos:
 #
-#   "rosto"    folha de rosto: "titulo", "autor", "epigrafe" (linhas),
-#              "autor_epigrafe" e "obra"
-#   "estrofe"  "versos" (linhas); "fim" = true põe o arremate embaixo
+#   "rosto"         a folha de rosto: "linhas" do título e o "nome" da dona
+#                   escrito na linha, depois do "rotulo_nome"
+#   "desenho"       um desenho com um traço de cada parte até o nome dela,
+#                   feito mapa mental:
+#                   "arte"         o desenho
+#                   "escala"       quanto ele é ampliado (sem dizer, 2×)
+#                   "tinta"        onde o desenho tem tinta (px da arte; sem
+#                                  dizer, a arte toda): os traços passam dela
+#                   "nome"         texto escrito dentro do desenho (o nome do
+#                                  elemento na caixa — em texto, para traduzir)
+#                   "vao_do_nome"  onde esse nome vai (px da arte)
+#                   "marcas"       [{"de", "rumo", "texto"}]: "de" é a beira da
+#                                  parte (px da arte) de onde o traço sai, e
+#                                  "rumo" para onde ele vai (cima, baixo,
+#                                  esquerda, direita). Subindo ou descendo,
+#                                  "lado" (esquerda, direita) põe o texto ao
+#                                  lado da ponta, em vez de na ponta. "ate"
+#                                  (px da arte) para o traço antes, para o
+#                                  texto caber num vão do desenho
+#   "propriedades"  "itens": [{"formula", "texto"}] — a fórmula e uma
+#                   explicação curta embaixo. Com "icones" (uma arte) na face,
+#                   cada item pode ter um "icone": o pedaço dela (px da arte)
+#                   que vai antes da fórmula
 #
-# O poema: "Meus Oito Anos", de Casimiro de Abreu (As Primaveras, 1859) —
-# domínio público. A folha de rosto e as sete estrofes enchem as oito faces.
-# Os tamanhos de letra (scripts/ui/face_caderno.gd) cabem na face o verso mais
-# comprido ("Que amor, que sonhos, que flores,"); verso maior que isso precisa
-# de letra menor lá (o teste_caderno confere).
+# O texto é quebrado e medido na face; o teste_caderno confere que tudo cabe
+# no papel.
+
+const ARTE_HIDROGENIO := preload("res://assets/caderno de anotaçõess/Hidrogênio tabela periódica.png")
+const ARTE_LITIO := preload("res://assets/caderno de anotaçõess/litio atomo3.png")
+## Elétron, próton e nêutron lado a lado, do mesmo tamanho que no átomo.
+const ARTE_PARTICULAS := preload("res://assets/caderno de anotaçõess/eletron, proton e neutron.png")
 
 const PAGINAS := [
+	# A esquerda é o verso da capa, em branco; virando a folha de rosto, o
+	# átomo está atrás dela.
 	[
+		{},
 		{
 			"tipo": "rosto",
-			"titulo": "MEUS OITO ANOS",
-			"autor": "Casimiro de Abreu",
-			"epigrafe": ["Oh! souvenirs!", "printemps! aurores!"],
-			"autor_epigrafe": "V. Hugo",
-			"obra": "As Primaveras, 1859",
+			"linhas": ["Caderno de", "Anotações"],
+			"rotulo_nome": "nome:",
+			"nome": "Cacau",
+		},
+	],
+	[
+		# O átomo não cabe do lado dos nomes: eles vão numa fileira em cima e
+		# noutra embaixo. Em 2× não sobra lugar para o título; em 1,5× o traço
+		# de 2 px da arte vira 3 px certinhos.
+		{
+			"tipo": "desenho",
+			"titulo": "O átomo",
+			"arte": ARTE_LITIO,
+			"escala": 1.5,
+			# Os anéis vão de (47, 18) a (221, 193); o resto é transparente.
+			"tinta": Rect2(47, 18, 175, 176),
+			"marcas": [
+				# Em cima: o anel de fora e o elétron de cima.
+				{"de": Vector2(70, 46), "rumo": "cima", "texto": "eletrosfera"},
+				{"de": Vector2(187, 76), "rumo": "cima", "texto": "elétron"},
+				# O núcleo, no vão entre ele e o anel de dentro: o traço sai do
+				# próton de cima, entre os dois nêutrons.
+				{"de": Vector2(135, 96), "rumo": "cima", "ate": 82, "texto": "núcleo"},
+				# Embaixo, cada nome ao lado da ponta do traço: o próton da
+				# esquerda e o nêutron de baixo.
+				{"de": Vector2(120, 120), "rumo": "baixo", "lado": "esquerda", "texto": "próton"},
+				{"de": Vector2(135, 129), "rumo": "baixo", "lado": "direita", "texto": "nêutron"},
+			],
 		},
 		{
-			"tipo": "estrofe",
-			"versos": [
-				"Oh! que saudades que tenho",
-				"Da aurora da minha vida,",
-				"Da minha infância querida",
-				"Que os anos não trazem mais!",
-				"Que amor, que sonhos, que flores,",
-				"Naquelas tardes fagueiras",
-				"À sombra das bananeiras,",
-				"Debaixo dos laranjais!",
+			"tipo": "propriedades",
+			"icones": ARTE_PARTICULAS,
+			"itens": [
+				{"icone": Rect2(15, 0, 16, 16), "formula": "próton",
+					"texto": "Carga positiva. Fica no núcleo."},
+				{"icone": Rect2(32, 0, 16, 16), "formula": "nêutron",
+					"texto": "Sem carga. Fica no núcleo, junto dos prótons."},
+				{"icone": Rect2(2, 3, 12, 12), "formula": "elétron",
+					"texto": "Carga negativa. Gira na eletrosfera e é bem mais leve que o próton."},
 			],
 		},
 	],
 	[
 		{
-			"tipo": "estrofe",
-			"versos": [
-				"Como são belos os dias",
-				"Do despontar da existência!",
-				"— Respira a alma inocência",
-				"Como perfumes a flor;",
-				"O mar é — lago sereno,",
-				"O céu — um manto azulado,",
-				"O mundo — um sonho dourado,",
-				"A vida — um hino d'amor!",
+			"tipo": "desenho",
+			"titulo": "Atomística",
+			"arte": ARTE_HIDROGENIO,
+			"nome": "Hidrogênio",
+			# Entre o pé do H e o topo do 1,008, por dentro da borda.
+			"vao_do_nome": Rect2(5, 49, 66, 25),
+			"marcas": [
+				{"de": Vector2(15, 10), "rumo": "cima", "texto": "número atômico (Z)"},
+				{"de": Vector2(49, 34), "rumo": "direita", "texto": "símbolo"},
+				{"de": Vector2(38, 83), "rumo": "baixo", "texto": "massa atômica"},
 			],
 		},
 		{
-			"tipo": "estrofe",
-			"versos": [
-				"Que aurora, que sol, que vida,",
-				"Que noites de melodia",
-				"Naquela doce alegria,",
-				"Naquele ingênuo folgar!",
-				"O céu bordado d'estrelas,",
-				"A terra de aromas cheia,",
-				"As ondas beijando a areia",
-				"E a lua beijando o mar!",
-			],
-		},
-	],
-	[
-		{
-			"tipo": "estrofe",
-			"versos": [
-				"Oh! dias da minha infância!",
-				"Oh! meu céu de primavera!",
-				"Que doce a vida não era",
-				"Nessa risonha manhã!",
-				"Em vez das mágoas de agora,",
-				"Eu tinha nessas delícias",
-				"De minha mãe as carícias",
-				"E beijos de minha irmã!",
-			],
-		},
-		{
-			"tipo": "estrofe",
-			"versos": [
-				"Livre filho das montanhas,",
-				"Eu ia bem satisfeito,",
-				"Da camisa aberta o peito,",
-				"— Pés descalços, braços nus —",
-				"Correndo pelas campinas",
-				"À roda das cachoeiras,",
-				"Atrás das asas ligeiras",
-				"Das borboletas azuis!",
-			],
-		},
-	],
-	[
-		{
-			"tipo": "estrofe",
-			"versos": [
-				"Naqueles tempos ditosos",
-				"Ia colher as pitangas,",
-				"Trepava a tirar as mangas,",
-				"Brincava à beira do mar;",
-				"Rezava às Ave-Marias,",
-				"Achava o céu sempre lindo,",
-				"Adormecia sorrindo",
-				"E despertava a cantar!",
-			],
-		},
-		{
-			"tipo": "estrofe",
-			"fim": true,
-			"versos": [
-				"Oh! que saudades que tenho",
-				"Da aurora da minha vida,",
-				"Da minha infância querida",
-				"Que os anos não trazem mais!",
-				"Que amor, que sonhos, que flores,",
-				"Naquelas tardes fagueiras",
-				"À sombra das bananeiras",
-				"Debaixo dos laranjais!",
+			"tipo": "propriedades",
+			"itens": [
+				{"formula": "Z = p", "texto": "Número atômico: quantos prótons o átomo tem."},
+				{"formula": "A = Z + n", "texto": "Número de massa: prótons e nêutrons somados."},
+				{"formula": "p = e", "texto": "Átomo neutro: tantos elétrons quanto prótons."},
 			],
 		},
 	],
 ]
 
+## O que o caderno mostra: as PAGINAS. O teste_caderno põe folhas a mais aqui
+## para ter várias para folhear.
+static var paginas: Array = PAGINAS
+
 
 static func quantas() -> int:
-	return PAGINAS.size()
+	return paginas.size()
+
+
+## O número de uma face (lado 0 = esquerda, 1 = direita), contando as duas de
+## cada página: a folha de rosto é a 1 e, dali em diante, as da esquerda são
+## pares e as da direita, ímpares. O verso da capa é o 0: sem número.
+static func numero(pagina: int, lado: int) -> int:
+	return pagina * 2 + lado
 
 
 ## As duas faces da página ([esquerda, direita]); fora do caderno, duas vazias.
 static func faces(pagina: int) -> Array:
-	if pagina < 0 or pagina >= PAGINAS.size():
+	if pagina < 0 or pagina >= paginas.size():
 		return [{}, {}]
-	return PAGINAS[pagina]
+	return paginas[pagina]

@@ -18,14 +18,39 @@ extends Node
 #   * na primeira e na última página não vira nada;
 #   * pedir uma página longe folheia até ela, mais rápido que uma a uma, e
 #     clicar numa face vira para aquele lado;
-#   * todo verso cabe na face e toda letra existe na fonte;
+#   * a primeira página é a folha de rosto, à direita (a esquerda é o verso da
+#     capa, em branco), com o título e o nome da Cacau;
+#   * a segunda é a do átomo de lítio, em 1,5× e com o título em cima, com
+#     traços até eletrosfera, próton, elétron, núcleo e nêutron, e à direita
+#     as três partículas comentadas, cada uma com o ícone dela;
+#   * a terceira é a de atomística: a caixa do hidrogênio em 2×, com o nome em
+#     texto dentro dela e um traço de cada parte até o que ela é, e as
+#     propriedades na face da direita;
+#   * cada face tem o número dela no canto de baixo de fora (a folha de rosto é
+#     a 1; esquerda par, direita ímpar), também na folha que vira;
+#   * todo texto cabe no papel (o nome, no vão da caixa) e toda letra existe
+#     na fonte;
 #   * com a ficha de coleta aberta ou sem a Cacau em cena, o ícone some e M
 #     não abre.
+#
+# O caderno tem poucas páginas por enquanto: para ter várias para folhear, o
+# teste põe as FOLHAS_DE_TESTE depois delas.
 #
 #   godot --headless --path . res://tools/teste_caderno.tscn
 #
 # Com "-- --capturas=<pasta>" (e SEM --headless) salva o ícone, o caderno
 # aberto e uma virada quadro a quadro, para conferir o desenho a olho.
+
+const FOLHAS_DE_TESTE := [
+	[
+		{"tipo": "propriedades", "itens": [{"formula": "teste 4", "texto": "Face esquerda."}]},
+		{"tipo": "propriedades", "itens": [{"formula": "teste 4", "texto": "Face direita."}]},
+	],
+	[
+		{"tipo": "propriedades", "itens": [{"formula": "teste 5", "texto": "Face esquerda."}]},
+		{"tipo": "propriedades", "itens": [{"formula": "teste 5", "texto": "Face direita."}]},
+	],
+]
 
 var _falhas := 0
 var _pasta_capturas := ""
@@ -37,6 +62,7 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--capturas="):
 			_pasta_capturas = arg.trim_prefix("--capturas=")
+	PaginasCaderno.paginas = PaginasCaderno.PAGINAS + FOLHAS_DE_TESTE
 	_cacau = Node.new()
 	_cacau.name = "Cacau"
 	_cacau.add_to_group("player")
@@ -89,35 +115,155 @@ func _tem_tecla(acao: StringName, tecla: Key) -> bool:
 
 
 func _testar_paginas() -> void:
-	print("\n--- PÁGINAS ---")
-	_checar(PaginasCaderno.quantas() == 4, "quatro páginas (%d)" % PaginasCaderno.quantas())
-	var face := FaceCaderno.new()
-	face.size = CadernoLivro.FACE_DIREITA.size  # a mais estreita
+	print("
+--- PÁGINAS ---")
+	var paginas := PaginasCaderno.PAGINAS
+	_checar(paginas.size() >= 2, "o caderno tem o que ler (%d páginas)" % paginas.size())
 	var fonte := FaceCaderno.FONTE
 	var faltando := ""
-	var estouradas := PackedStringArray()
-	for p in PaginasCaderno.quantas():
-		for dados in PaginasCaderno.faces(p):
-			_checar(not dados.is_empty(), "página %d: as duas faces escritas" % (p + 1))
-			var linhas: Array = []
-			if dados.get("tipo") == "rosto":
-				var titulo := String(dados["titulo"])
-				if fonte.get_string_size(titulo, HORIZONTAL_ALIGNMENT_LEFT, -1,
-						FaceCaderno.TAM_TITULO).x > face.largura_util():
-					estouradas.append(titulo)
-				linhas = [dados["autor"], dados["autor_epigrafe"], dados["obra"]] + dados["epigrafe"]
-			else:
-				linhas = dados["versos"]
-			for linha in linhas:
-				if fonte.get_string_size(String(linha), HORIZONTAL_ALIGNMENT_LEFT, -1,
-						FaceCaderno.TAM_VERSO).x > face.largura_util():
-					estouradas.append(String(linha))
-				for c in String(linha):
+	var fora := PackedStringArray()
+	var cantos := PackedStringArray()
+	for p in paginas.size():
+		_checar(not (paginas[p][0].is_empty() and paginas[p][1].is_empty()),
+			"página %d escrita" % (p + 1))
+		for lado in 2:
+			var dados: Dictionary = paginas[p][lado]
+			if dados.is_empty():
+				continue
+			var face := _face_montada(dados, p, lado)
+			var itens := face.montar()
+			for item in itens:
+				if not item.has("texto"):
+					continue
+				var limite: Rect2 = item.get("limite", face.area_util())
+				if not limite.encloses(FaceCaderno.caixa_do_texto(item)):
+					fora.append(item["texto"])
+				for c in String(item["texto"]):
 					if c != " " and not fonte.has_char(c.unicode_at(0)) and not faltando.contains(c):
 						faltando += c
-	face.free()
-	_checar(estouradas.is_empty(), "todo verso cabe na face %s" % [estouradas])
+			# O número é o último: no canto de baixo de fora.
+			var caixa_numero := FaceCaderno.caixa_do_texto(itens[-1])
+			var fora_de_canto: bool = itens[-1].get("texto") != str(face.numero) \
+				or caixa_numero.end.y <= face.area_util().end.y \
+				or (lado == 0 and caixa_numero.position.x != FaceCaderno.MARGEM.x) \
+				or (lado == 1 and absf(caixa_numero.end.x - face.area_util().end.x) > 1.0)
+			if fora_de_canto:
+				cantos.append("%d: %s" % [face.numero, caixa_numero])
+			face.free()
+	_checar(fora.is_empty(), "todo texto cabe no papel, e o nome no vão da caixa %s" % [fora])
 	_checar(faltando.is_empty(), "toda letra existe na fonte [%s]" % faltando)
+	_checar(cantos.is_empty(),
+		"cada face com o número no canto de baixo de fora, abaixo da margem do texto %s" % [cantos])
+	_checar(PaginasCaderno.numero(0, 1) == 1 and PaginasCaderno.numero(1, 0) == 2 \
+		and PaginasCaderno.numero(1, 1) == 3 and PaginasCaderno.numero(0, 0) == 0,
+		"a folha de rosto é a 1, o átomo 2 e 3, e o verso da capa não tem número")
+
+	var rosto: Dictionary = paginas[0][1]
+	_checar(paginas[0][0].is_empty() and rosto.get("tipo") == "rosto",
+		"a primeira página é a folha de rosto, à direita do verso da capa")
+	_checar(" ".join(rosto.get("linhas", [])) == "Caderno de Anotações" and rosto.get("nome") == "Cacau",
+		"com o título e o nome da Cacau")
+
+	var atomo: Dictionary = paginas[1][0]
+	_checar(atomo.get("tipo") == "desenho" and atomo.get("arte") == PaginasCaderno.ARTE_LITIO,
+		"a segunda é a do átomo de lítio")
+	var face := _face_montada(atomo, 1, 0)
+	var caixa := Rect2()
+	var tinta := Rect2()
+	var titulo := {}
+	for item in face.montar():
+		if item.has("arte"):
+			caixa = item["rect"]
+			tinta = item["tinta"]
+		elif item.get("tam") == FaceCaderno.TAM_TITULO:
+			titulo = item
+	face.free()
+	_checar(caixa.size == PaginasCaderno.ARTE_LITIO.get_size() * 1.5 and caixa.position == caixa.position.round(),
+		"o átomo vai em 1,5×, no pixel inteiro (%s)" % caixa)
+	_checar(titulo.get("texto") == "O átomo" and FaceCaderno.caixa_do_texto(titulo).end.y < tinta.position.y,
+		"com o título \"O átomo\" em cima dele")
+	_conferir_mapa(atomo, 1, ["eletrosfera", "próton", "elétron", "núcleo", "nêutron"])
+	var comentarios: Dictionary = paginas[1][1]
+	face = _face_montada(comentarios, 1, 1)
+	var icones := 0
+	for item in face.montar():
+		if item.has("regiao") and item["rect"].size == item["regiao"].size * FaceCaderno.ESCALA_ICONE:
+			icones += 1
+	face.free()
+	_checar(icones == 3,
+		"e à direita as três partículas comentadas, cada uma com o ícone dela (%d)" % icones)
+
+	var hidrogenio: Dictionary = paginas[2][0]
+	_checar(hidrogenio.get("tipo") == "desenho" and hidrogenio.get("titulo") == "Atomística",
+		"a terceira é a de atomística")
+	face = _face_montada(hidrogenio, 2, 0)
+	var nome := {}
+	for item in face.montar():
+		if item.has("arte"):
+			caixa = item["rect"]
+		elif item.get("tam") == FaceCaderno.TAM_NOME:
+			nome = item
+	face.free()
+	var arte: Texture2D = hidrogenio["arte"]
+	_checar(caixa.size == arte.get_size() * 2.0 and caixa.position == caixa.position.round(),
+		"a caixa do hidrogênio vai em 2×, no pixel inteiro (%s)" % caixa)
+	_checar(nome.get("texto") == "Hidrogênio" and caixa.encloses(FaceCaderno.caixa_do_texto(nome)),
+		"o nome vai em texto, dentro da caixa")
+	_conferir_mapa(hidrogenio, 2, ["número atômico (Z)", "símbolo", "massa atômica"])
+
+	var propriedades: Dictionary = paginas[2][1]
+	var formulas: Array = []
+	for item in propriedades.get("itens", []):
+		formulas.append(item["formula"])
+	_checar(propriedades.get("tipo") == "propriedades" and "A = Z + n" in formulas,
+		"e as propriedades à direita, com A = Z + n %s" % [formulas])
+
+
+## O mapa mental de um desenho: um traço para cada nome pedido, que sai de
+## dentro da tinta do desenho, passa dela e chega até o texto dele, fora da
+## tinta (a não ser que a marca pare o traço num vão do desenho, com "ate");
+## e texto nenhum encosta em outro.
+func _conferir_mapa(dados: Dictionary, pagina: int, nomes: Array) -> void:
+	var face := _face_montada(dados, pagina, 0)
+	var tinta := Rect2()
+	var tracos: Array[Rect2] = []
+	var rotulos: Array[Rect2] = []
+	var textos: Array = []
+	for item in face.montar():
+		if item.has("tinta"):
+			tinta = item["tinta"]
+		elif item.has("traco") and item["cor"] == FaceCaderno.TINTA:
+			tracos.append(item["traco"])
+		elif item.has("texto") and not item.has("limite") and item["tam"] == FaceCaderno.TAM_TEXTO \
+				and item["cor"] == FaceCaderno.TINTA:
+			rotulos.append(FaceCaderno.caixa_do_texto(item))
+			textos.append(item["texto"])
+	face.free()
+	var marcas: Array = dados.get("marcas", [])
+	var ligados := 0
+	for i in mini(marcas.size(), mini(tracos.size(), rotulos.size())):
+		var por_fora: bool = marcas[i].has("ate") or (tinta.intersects(tracos[i]) \
+			and not tinta.encloses(tracos[i]) and not tinta.intersects(rotulos[i]))
+		if por_fora and tracos[i].grow(FaceCaderno.FOLGA_TEXTO + 1.0).intersects(rotulos[i]):
+			ligados += 1
+	var encostados := 0
+	for i in rotulos.size():
+		for j in range(i + 1, rotulos.size()):
+			if rotulos[i].intersects(rotulos[j]):
+				encostados += 1
+	var faltam := nomes.filter(func(n): return not n in textos)
+	_checar(faltam.is_empty() and textos.size() == nomes.size() and ligados == nomes.size() \
+		and encostados == 0,
+		"%s: cada um com seu traço até o nome (%d de %d ligados, faltam %s, %d encostados)" \
+		% [", ".join(nomes), ligados, nomes.size(), faltam, encostados])
+
+
+func _face_montada(dados: Dictionary, pagina: int, lado: int) -> FaceCaderno:
+	var face := FaceCaderno.new()
+	face.size = (CadernoLivro.FACE_ESQUERDA if lado == 0 else CadernoLivro.FACE_DIREITA).size
+	face.dados = dados
+	face.numero = PaginasCaderno.numero(pagina, lado)
+	return face
 
 
 func _testar_icone() -> void:
@@ -149,8 +295,10 @@ func _testar_abrir_e_fechar() -> void:
 	_checar(get_viewport().get_visible_rect().encloses(caixa), "o caderno inteiro cabe na tela (%s)" % caixa)
 	_checar(not _icone().visible, "aberto, o ícone some")
 	_checar(livro.pagina() == 0 and livro.quadro() == 0, "na primeira página, parado")
-	_checar(_face(0).dados.get("tipo") == "rosto" and _face(1).dados.get("tipo") == "estrofe",
-		"folha de rosto à esquerda, primeira estrofe à direita")
+	var dicas: Array = Caderno._dicas().map(func(d): return d[1])
+	_checar(dicas == ["FOLHEAR", "FECHAR"], "o rodapé só diz FOLHEAR e FECHAR, sem contador %s" % [dicas])
+	_checar(not livro._recortes[0].visible and _face(1).dados.get("tipo") == "rosto" \
+		and _face(1).numero == 1, "o verso da capa em branco e a folha de rosto à direita, com o 1")
 	await _capturar("1_aberto")
 
 	_tecla(KEY_M)
@@ -185,7 +333,8 @@ func _testar_virar() -> void:
 	_checar(livro.pagina() == 1 and livro.quadro() == 0, "parou na página 2, no quadro parado")
 	_checar(_face(0).dados == PaginasCaderno.faces(1)[0] and _face(1).dados == PaginasCaderno.faces(1)[1],
 		"com as faces da página 2")
-	await _capturar("3_pagina2")
+	_checar(_face(0).numero == 2 and _face(1).numero == 3,
+		"numeradas 2 e 3 (%d e %d)" % [_face(0).numero, _face(1).numero])
 
 	_tecla(KEY_A)
 	await _quadros(1)
@@ -202,6 +351,13 @@ func _testar_virar() -> void:
 	await _quadros(1)
 	await _esperar_parar()
 	_checar(livro.pagina() == 0, "e a para a esquerda volta")
+
+	# Para conferir a olho: cada página de verdade, parada.
+	if _capturando():
+		for p in PaginasCaderno.PAGINAS.size():
+			livro.ir_para_na_hora(p)
+			await _capturar("3_pagina%d" % (p + 1))
+		livro.ir_para_na_hora(0)
 
 
 ## Segue a virada quadro a quadro, conferindo o texto em cada um. Devolve os
@@ -234,10 +390,14 @@ func _conferir_composicao(a: int, q: int) -> String:
 		return "a face de baixo à esquerda passa por baixo da folha"
 	if esquerda.visible and _face(0).dados != PaginasCaderno.faces(a)[0]:
 		return "a face de baixo à esquerda não é a da página de trás"
+	if esquerda.visible and _face(0).numero != PaginasCaderno.numero(a, 0):
+		return "a face de baixo à esquerda com o número errado"
 	if direita.visible and direita.position.x < folha.y - 0.5:
 		return "a face de baixo à direita aparece antes da borda da folha"
 	if direita.visible and _face(1).dados != PaginasCaderno.faces(a + 1)[1]:
 		return "a face de baixo à direita não é a da página da frente"
+	if direita.visible and _face(1).numero != PaginasCaderno.numero(a + 1, 1):
+		return "a face de baixo à direita com o número errado"
 	var tinta: float = CadernoLivro.TINTA_NA_FOLHA[q]
 	if virando.visible != (tinta > 0.0):
 		return "texto na folha que vira: %s, esperado %s" % [virando.visible, tinta > 0.0]
@@ -246,6 +406,10 @@ func _conferir_composicao(a: int, q: int) -> String:
 			else PaginasCaderno.faces(a + 1)[0]
 		if _face(2).dados != esperado:
 			return "a folha que vira leva a face errada"
+		var numero := PaginasCaderno.numero(a, 1) if q <= CadernoLivro.ULTIMO_QUADRO_DA_FRENTE \
+			else PaginasCaderno.numero(a + 1, 0)
+		if _face(2).numero != numero:
+			return "a folha que vira leva o número errado"
 		if not is_equal_approx(virando.position.x, folha.x) \
 				or not is_equal_approx(virando.size.x, folha.y - folha.x):
 			return "o texto da folha não acompanha a largura dela"
@@ -266,7 +430,6 @@ func _testar_bordas() -> void:
 	await _quadros(3)
 	_checar(not livro.virando() and livro.pagina() == PaginasCaderno.quantas() - 1,
 		"na última página, D não vira")
-	_checar(bool(_face(1).dados.get("fim", false)), "a última face tem o arremate do poema")
 	livro.ir_para_na_hora(0)
 
 
