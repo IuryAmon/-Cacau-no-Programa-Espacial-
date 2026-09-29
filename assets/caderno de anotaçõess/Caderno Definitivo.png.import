@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bqy4mo2ah2bhd"
-path="res://.godot/imported/caderno.png-e2b7adc102dd8285750e5f8e5913810b.ctex"
+uid="uid://e7mi5mo115u0"
+path="res://.godot/imported/Caderno Definitivo.png-2e2093e3846c4fd24ec3d79a698e64cc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/caderno de anotaçõess/caderno.png"
-dest_files=["res://.godot/imported/caderno.png-e2b7adc102dd8285750e5f8e5913810b.ctex"]
+source_file="res://assets/caderno de anotaçõess/Caderno Definitivo.png"
+dest_files=["res://.godot/imported/Caderno Definitivo.png-2e2093e3846c4fd24ec3d79a698e64cc.ctex"]
 
 [params]
 

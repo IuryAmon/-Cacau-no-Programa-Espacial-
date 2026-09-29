@@ -1,13 +1,13 @@
 class_name CadernoLivro
 extends Control
 
-# --- O CADERNO ABERTO: A ARTE, AS FOLHAS VIRANDO E AS FITAS ---
+# --- O CADERNO ABERTO: A ARTE E AS FOLHAS VIRANDO ---
 #
-# A arte é uma folha de 10 quadros lado a lado (caderno.png, 1396 × 832 cada,
-# pixel art ampliada 4×). O quadro 1 é o caderno aberto e parado — é nele que
-# o texto mora. Do 2 ao 9 a folha da direita descola, passa pela lombada e
-# deita à esquerda; o 10 é igual ao 1. Voltar uma página é a mesma animação de
-# trás para a frente.
+# A arte é uma folha de 10 quadros lado a lado (Caderno Definitivo.png,
+# 1396 × 832 cada, pixel art ampliada 4×). O quadro 1 é o caderno aberto e
+# parado — é nele que o texto mora. Do 2 ao 9 a folha da direita descola, passa
+# pela lombada e deita à esquerda; o 10 é igual ao 1. Voltar uma página é a
+# mesma animação de trás para a frente.
 #
 # O TEXTO ANDA COM A FOLHA. A arte não tem texto: cada face é desenhada por
 # cima (FaceCaderno), dentro de um recorte. Durante a virada entre a página A
@@ -27,9 +27,6 @@ extends Control
 # arte: são as colunas em que o quadro difere do quadro 1. Se a animação da
 # arte mudar, é só medir de novo.
 #
-# AS FITAS: as quatro fitas da borda são as quatro páginas. A da página aberta
-# fica puxada para fora, e clicar numa fita folheia até ela.
-#
 # Tudo aqui está em px do quadro (o nó tem o tamanho de um quadro). Quem põe o
 # caderno na tela, amplia e anima a abertura é o autoload Caderno.
 
@@ -38,13 +35,13 @@ signal fora_clicado
 ## Terminou de virar e parou nesta página.
 signal pagina_mudou(pagina: int)
 
-const FOLHA := preload("res://assets/caderno de anotaçõess/caderno.png")
+const FOLHA := preload("res://assets/caderno de anotaçõess/Caderno Definitivo.png")
 const SOM_PAGINA := preload("res://sounds/caderno_pagina.wav")
 
 const QUADROS := 10
 const TAMANHO_QUADRO := Vector2(1396, 832)
-## Onde está o desenho dentro do quadro (o resto é transparente), com as fitas.
-const CAIXA_DESENHO := Rect2(172, 64, 1136, 732)
+## Onde está o desenho dentro do quadro (o resto é transparente).
+const CAIXA_DESENHO := Rect2(172, 140, 1080, 652)
 ## O papel de cada face, por dentro do fio da borda.
 const FACE_ESQUERDA := Rect2(236, 160, 456, 548)
 const FACE_DIREITA := Rect2(736, 160, 452, 548)
@@ -63,18 +60,8 @@ const ULTIMO_QUADRO_DA_FRENTE := 4
 ## Segundos em cada quadro da virada, na ordem em que aparecem (do 2 ao 9 indo,
 ## do 9 ao 2 voltando). Devagar ao descolar e ao assentar, rápido no meio.
 const TEMPOS := [0.06, 0.055, 0.05, 0.05, 0.045, 0.05, 0.06, 0.075]
-## Com mais viradas na fila (fita clicada, tecla segurada), folheia mais rápido.
+## Com mais viradas na fila (tecla segurada), folheia mais rápido.
 const ACELERACAO_FOLHEANDO := 1.7
-
-## As fitas no quadro, de cima para baixo: uma para cada página.
-const FITAS := [Rect2(1212, 268, 96, 68), Rect2(1212, 356, 96, 68),
-	Rect2(1212, 440, 96, 68), Rect2(1212, 524, 96, 68)]
-## Quanto a fita da página aberta sai para fora, e a que está sob o mouse. Anda
-## de 4 em 4 px — o pixel da arte.
-const FITA_ABERTA := 12.0
-const FITA_SOB_O_MOUSE := 4.0
-const VELOCIDADE_FITA := 90.0
-const PIXEL_DA_ARTE := 4.0
 
 ## Empurrãozinho quando não há mais página para aquele lado (mola: rigidez e
 ## amortecimento).
@@ -92,8 +79,6 @@ var _sentido: int = 1
 var _tempo: float = 0.0
 var _quadro: int = 0
 
-var _fitas_saida: Array[float] = []
-var _fita_sob_mouse: int = -1
 var _empurrao: float = 0.0
 var _velocidade_empurrao: float = 0.0
 
@@ -134,15 +119,12 @@ func _ready() -> void:
 	_som.volume_db = -4.0
 	add_child(_som)
 
-	for i in FITAS.size():
-		_fitas_saida.append(FITA_ABERTA if i == _pagina else 0.0)
 	_compor()
 
 
 func _process(delta: float) -> void:
 	if _virando:
 		_avancar_virada(delta)
-	_animar_fitas(delta)
 	_animar_empurrao(delta)
 
 
@@ -195,15 +177,7 @@ func ir_para_na_hora(pagina_pedida: int) -> void:
 	_alvo = _pagina
 	_virando = false
 	_quadro = 0
-	for i in _fitas_saida.size():
-		_fitas_saida[i] = FITA_ABERTA if i == _pagina else 0.0
 	_compor()
-
-
-## Onde estão as fitas agora (px do quadro), já puxadas para fora.
-func area_da_fita(i: int) -> Rect2:
-	var fita: Rect2 = FITAS[i]
-	return Rect2(fita.position, fita.size + Vector2(_saida_da_fita(i), 0.0))
 
 
 # ─────────────────────────────────────────────────────────────
@@ -317,27 +291,8 @@ func _por_na_folha(dados: Dictionary, papel: Rect2, folha: Vector2, tinta: float
 
 
 # ─────────────────────────────────────────────────────────────
-# FITAS E EMPURRÃO
+# EMPURRÃO
 # ─────────────────────────────────────────────────────────────
-
-func _animar_fitas(delta: float) -> void:
-	var mudou := false
-	for i in _fitas_saida.size():
-		var alvo := 0.0
-		if i == _alvo:
-			alvo = FITA_ABERTA
-		elif i == _fita_sob_mouse:
-			alvo = FITA_SOB_O_MOUSE
-		var antes := _saida_da_fita(i)
-		_fitas_saida[i] = move_toward(_fitas_saida[i], alvo, VELOCIDADE_FITA * delta)
-		mudou = mudou or _saida_da_fita(i) != antes
-	if mudou:
-		_arte.queue_redraw()
-
-
-func _saida_da_fita(i: int) -> float:
-	return snappedf(_fitas_saida[i], PIXEL_DA_ARTE)
-
 
 func _empurrar(sentido: int) -> void:
 	_velocidade_empurrao = EMPURRAO_VELOCIDADE * sentido
@@ -362,15 +317,6 @@ func _desenhar_arte() -> void:
 	var origem := Vector2(TAMANHO_QUADRO.x * _quadro, 0.0)
 	_arte.draw_texture_rect_region(FOLHA, Rect2(Vector2.ZERO, TAMANHO_QUADRO),
 		Rect2(origem, TAMANHO_QUADRO))
-	# A fita puxada é a mesma fita redesenhada mais à direita: o pedaço dela que
-	# fica para trás continua lá, e ela parece mais comprida.
-	for i in FITAS.size():
-		var saida := _saida_da_fita(i)
-		if saida <= 0.0:
-			continue
-		var fita: Rect2 = FITAS[i]
-		_arte.draw_texture_rect_region(FOLHA, Rect2(fita.position + Vector2(saida, 0.0), fita.size),
-			Rect2(fita.position + origem, fita.size))
 
 
 # ─────────────────────────────────────────────────────────────
@@ -392,10 +338,7 @@ func _gui_input(evento: InputEvent) -> void:
 
 
 func _clicar(ponto: Vector2) -> void:
-	var fita := _fita_em(ponto)
-	if fita >= 0:
-		ir_para(fita)
-	elif FACE_DIREITA.has_point(ponto):
+	if FACE_DIREITA.has_point(ponto):
 		proxima()
 	elif FACE_ESQUERDA.has_point(ponto):
 		anterior()
@@ -404,15 +347,6 @@ func _clicar(ponto: Vector2) -> void:
 
 
 func _passar_mouse(ponto: Vector2) -> void:
-	_fita_sob_mouse = _fita_em(ponto)
-	var clicavel := (_fita_sob_mouse >= 0 and _fita_sob_mouse != _alvo) \
-		or (FACE_DIREITA.has_point(ponto) and _alvo < PaginasCaderno.quantas() - 1) \
+	var clicavel := (FACE_DIREITA.has_point(ponto) and _alvo < PaginasCaderno.quantas() - 1) \
 		or (FACE_ESQUERDA.has_point(ponto) and _alvo > 0)
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if clicavel else Control.CURSOR_ARROW
-
-
-func _fita_em(ponto: Vector2) -> int:
-	for i in FITAS.size():
-		if area_da_fita(i).has_point(ponto):
-			return i
-	return -1

@@ -9,8 +9,7 @@ extends RefCounted
 #
 # O caderno abre em PÁGINA DUPLA: cada página é uma abertura do caderno, com
 # uma face à esquerda e outra à direita, e cada virada de folha troca as duas.
-# A ordem das páginas é a ordem das fitas na borda do caderno (vermelha, azul,
-# verde, roxa) — por isso são QUATRO: uma fita para cada página.
+# São QUATRO páginas.
 #
 # UMA FACE é um dicionário com "tipo":
 #

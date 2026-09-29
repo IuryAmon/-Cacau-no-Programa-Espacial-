@@ -16,7 +16,8 @@ extends Node
 #     a face de baixo só aparece depois da borda da folha que vira, e a folha
 #     leva a frente (face da direita) ou o verso (a próxima esquerda);
 #   * na primeira e na última página não vira nada;
-#   * clicar numa fita folheia até a página dela, e a fita fica para fora;
+#   * pedir uma página longe folheia até ela, mais rápido que uma a uma, e
+#     clicar numa face vira para aquele lado;
 #   * todo verso cabe na face e toda letra existe na fonte;
 #   * com a ficha de coleta aberta ou sem a Cacau em cena, o ícone some e M
 #     não abre.
@@ -48,7 +49,7 @@ func _ready() -> void:
 	await _testar_abrir_e_fechar()
 	await _testar_virar()
 	await _testar_bordas()
-	await _testar_fitas()
+	await _testar_folhear()
 	await _testar_espaco_nao_vira_pulo()
 	await _testar_quando_nao_abre()
 	await _testar_controle()
@@ -90,7 +91,6 @@ func _tem_tecla(acao: StringName, tecla: Key) -> bool:
 func _testar_paginas() -> void:
 	print("\n--- PÁGINAS ---")
 	_checar(PaginasCaderno.quantas() == 4, "quatro páginas (%d)" % PaginasCaderno.quantas())
-	_checar(PaginasCaderno.quantas() == CadernoLivro.FITAS.size(), "uma fita para cada página")
 	var face := FaceCaderno.new()
 	face.size = CadernoLivro.FACE_DIREITA.size  # a mais estreita
 	var fonte := FaceCaderno.FONTE
@@ -270,15 +270,13 @@ func _testar_bordas() -> void:
 	livro.ir_para_na_hora(0)
 
 
-func _testar_fitas() -> void:
-	print("\n--- FITAS ---")
+func _testar_folhear() -> void:
+	print("\n--- FOLHEAR E CLICAR ---")
 	var livro := Caderno.livro()
-	await _esperar(0.3)
-	_checar(livro._saida_da_fita(0) == CadernoLivro.FITA_ABERTA, "a fita da página aberta fica para fora")
 	var ultima := PaginasCaderno.quantas() - 1
-	_clicar(livro.area_da_fita(ultima).get_center())
+	livro.ir_para(ultima)
 	await _quadros(2)
-	_checar(livro.virando(), "clicar na última fita folheia")
+	_checar(livro.virando(), "pedir a última página folheia")
 	var viradas := 0
 	var inicio := Time.get_ticks_msec()
 	var ultima_pagina := livro.pagina()
@@ -289,15 +287,12 @@ func _testar_fitas() -> void:
 		if Time.get_ticks_msec() - inicio > 8000:
 			break
 		await _quadros(1)
-	_checar(livro.pagina() == ultima, "até a página da fita (%d)" % (livro.pagina() + 1))
+	_checar(livro.pagina() == ultima, "até a última página (%d)" % (livro.pagina() + 1))
 	var tempo_uma := 0.0
 	for t in CadernoLivro.TEMPOS:
 		tempo_uma += t
 	_checar((Time.get_ticks_msec() - inicio) * 0.001 < tempo_uma * ultima,
 		"folheando mais rápido que virar uma a uma")
-	await _esperar(0.3)
-	_checar(livro._saida_da_fita(ultima) == CadernoLivro.FITA_ABERTA and livro._saida_da_fita(0) == 0.0,
-		"a fita dela vai para fora e a da primeira volta")
 	await _capturar("4_ultima_pagina")
 
 	_clicar(CadernoLivro.FACE_ESQUERDA.get_center())

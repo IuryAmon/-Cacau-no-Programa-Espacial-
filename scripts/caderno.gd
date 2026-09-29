@@ -9,8 +9,8 @@ extends CanvasLayer
 #   PaginasCaderno (scripts/paginas_caderno.gd)   O QUE está escrito
 #   este autoload                                  QUANDO: o ícone aparece, o
 #                                                  caderno abre, pausa e fecha
-#   CadernoLivro (scripts/ui/caderno_livro.gd)     COMO: a arte, as folhas
-#                                                  virando e as fitas
+#   CadernoLivro (scripts/ui/caderno_livro.gd)     COMO: a arte e as folhas
+#                                                  virando
 #
 # Aberto, o mundo pausa (como na ficha de coleta) e o caderno segura as teclas
 # (Interacao.marcar_tela_aberta): o espaço ou o ○ apertados em cima dele não
@@ -20,7 +20,6 @@ extends CanvasLayer
 # COM O CADERNO ABERTO
 #   A/D, ←/→, direcional, analógico   folheia (segurando, continua folheando)
 #   clique na face direita/esquerda   folheia; a roda do mouse também
-#   clique numa fita                  folheia direto até a página dela
 #   M, ESC, △, ○                      fecha; clicar fora do caderno também
 #
 # O ícone some junto com a lista de objetivos (fala, ficha de coleta, puzzle,
