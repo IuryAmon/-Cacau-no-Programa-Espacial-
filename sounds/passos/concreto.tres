@@ -1,0 +1,27 @@
+[gd_resource type="AudioStreamRandomizer" format=3 uid="uid://fpvmn4nbbqdo"]
+
+[ext_resource type="AudioStream" uid="uid://c686k1o5us43l" path="res://sounds/passos/concreto/passo_concreto_01.wav" id="1_concreto"]
+[ext_resource type="AudioStream" uid="uid://c5fhu7onj56ie" path="res://sounds/passos/concreto/passo_concreto_02.wav" id="2_concreto"]
+[ext_resource type="AudioStream" uid="uid://dhausjgy0uccr" path="res://sounds/passos/concreto/passo_concreto_03.wav" id="3_concreto"]
+[ext_resource type="AudioStream" uid="uid://xgqxy75155dd" path="res://sounds/passos/concreto/passo_concreto_04.wav" id="4_concreto"]
+[ext_resource type="AudioStream" uid="uid://b5s54xs00pj0e" path="res://sounds/passos/concreto/passo_concreto_05.wav" id="5_concreto"]
+[ext_resource type="AudioStream" uid="uid://r3xfvqp3n3qh" path="res://sounds/passos/concreto/passo_concreto_06.wav" id="6_concreto"]
+[ext_resource type="AudioStream" uid="uid://b5vt66dugd5lo" path="res://sounds/passos/concreto/passo_concreto_07.wav" id="7_concreto"]
+[ext_resource type="AudioStream" uid="uid://j1qeoylllyek" path="res://sounds/passos/concreto/passo_concreto_08.wav" id="8_concreto"]
+[ext_resource type="AudioStream" uid="uid://dtk8tujw4a2sn" path="res://sounds/passos/concreto/passo_concreto_09.wav" id="9_concreto"]
+[ext_resource type="AudioStream" uid="uid://b3m4jqfqkiibb" path="res://sounds/passos/concreto/passo_concreto_10.wav" id="10_concreto"]
+
+[resource]
+random_pitch = 1.06
+random_volume_offset_db = 1.5
+streams_count = 10
+stream_0/stream = ExtResource("1_concreto")
+stream_1/stream = ExtResource("2_concreto")
+stream_2/stream = ExtResource("3_concreto")
+stream_3/stream = ExtResource("4_concreto")
+stream_4/stream = ExtResource("5_concreto")
+stream_5/stream = ExtResource("6_concreto")
+stream_6/stream = ExtResource("7_concreto")
+stream_7/stream = ExtResource("8_concreto")
+stream_8/stream = ExtResource("9_concreto")
+stream_9/stream = ExtResource("10_concreto")

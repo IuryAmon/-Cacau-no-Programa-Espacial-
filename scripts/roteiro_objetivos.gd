@@ -26,12 +26,6 @@ extends RefCounted
 # aparece a etapa atual da primeira trilha ainda não terminada — é o "próximo
 # passo" do jogo.
 #
-# PARALELAS: as trilhas dos elementos (carbono, nitrogênio, subsolo) podem ser
-# feitas em qualquer ordem. Fora das cenas delas, quando a vez é de uma
-# paralela, aparecem TODAS as paralelas ainda abertas, cada uma com o seu
-# cabeçalho — no laboratório, logo depois da revelação, a Cacau vê a Ala de
-# Pirólise, a Torre de Gases e o subsolo de uma vez.
-#
 # ETAPAS
 #
 # Cada etapa tem um ou mais objetivos que aparecem JUNTOS (pegar o H₂ e o O₂,
@@ -96,12 +90,9 @@ const CAMINHOS_POR_CENA := {
 
 const TEXTO_MACARICO := "Pegue o maçarico no domo de vidro"
 
-## Marca das trilhas dos elementos (ver PARALELAS no topo).
-const PARALELA := true
-
 ## As trilhas, na ordem do jogo. Cada uma:
 ##   id, titulo (cabeçalho do HUD), cor (losango do cabeçalho),
-##   cenas (onde ela é a trilha "da casa"), etapas e paralela.
+##   cenas (onde ela é a trilha "da casa") e etapas.
 ## Cada etapa: {"objetivos": [...], "portao": Callable (só nas etapas sem
 ## objetivo)}. Cada objetivo: {"id", "texto", "feito": Callable,
 ## "contagem": Callable opcional que devolve Vector2i(atual, total),
@@ -152,7 +143,7 @@ func _init(visitou: Callable) -> void:
 			[_obj("carvao", "Faça carvão a partir das madeiras", _pegou.bind("C"))],
 			[_obj("entregar_c", "Leve o carvão ao receptor do painel CHONPS, no laboratório",
 				_entregou.bind("C"))],
-		], PARALELA),
+		]),
 
 		_trilha("nitrogenio", "NITROGÊNIO", AmostraChonps.CORES["N"], [FASE2], [
 			[_obj("entrar_torre", "Entre na Torre de Gases e Estufa", _visitou.bind(FASE2))],
@@ -166,7 +157,7 @@ func _init(visitou: Callable) -> void:
 			[_obj("pegar_n", "Pegue a amostra de nitrogênio (N)", _pegou.bind("N"))],
 			[_obj("entregar_n", "Leve o nitrogênio ao receptor do painel CHONPS, no laboratório",
 				_entregou.bind("N"))],
-		], PARALELA),
+		]),
 
 		_trilha("subsolo", "ENXOFRE E FÓSFORO", AmostraChonps.CORES["S"], [FASE3], [
 			[_obj("entrar_subsolo", "Entre no subsolo pelo fosso de ventilação", _visitou.bind(FASE3))],
@@ -179,7 +170,7 @@ func _init(visitou: Callable) -> void:
 				_pegou.bind("S"))],
 			[_obj("entregar_ps", "Leve o fósforo e o enxofre ao receptor do painel CHONPS",
 				_entregou_p_e_s, _contar_p_e_s)],
-		], PARALELA),
+		]),
 
 		_trilha("lancamento", "TORRE DE LANÇAMENTO", Color(0.95, 0.55, 0.65), [FASE_FINAL, FINAL_ORBITA], [
 			[_obj("entrar_lancamento", "Entre na Torre de Lançamento", _visitou.bind(FASE_FINAL))],
@@ -193,13 +184,11 @@ func _init(visitou: Callable) -> void:
 #  Montagem
 # ─────────────────────────────────────────────
 
-func _trilha(id: String, titulo: String, cor: Color, cenas: Array, etapas: Array,
-		paralela: bool = false) -> Dictionary:
+func _trilha(id: String, titulo: String, cor: Color, cenas: Array, etapas: Array) -> Dictionary:
 	var lista: Array[Dictionary] = []
 	for etapa in etapas:
 		lista.append(etapa if etapa is Dictionary else {"objetivos": etapa})
-	return {"id": id, "titulo": titulo, "cor": cor, "cenas": cenas, "etapas": lista,
-		"paralela": paralela}
+	return {"id": id, "titulo": titulo, "cor": cor, "cenas": cenas, "etapas": lista}
 
 
 func _portao(condicao: Callable) -> Dictionary:

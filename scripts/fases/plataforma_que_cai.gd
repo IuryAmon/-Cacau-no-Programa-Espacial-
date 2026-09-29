@@ -120,6 +120,7 @@ func montar(camada: TileMapLayer, celulas: Array[Vector2i]) -> void:
 
 	_montar_sprites(camada, celulas)
 	_montar_colisoes(camada, celulas)
+	_herdar_superficie(camada, celulas)
 
 	var meia := caixa.size * 0.5
 
@@ -339,6 +340,20 @@ func _montar_sprites(camada: TileMapLayer, celulas: Array[Vector2i]) -> void:
 			sprite.modulate = td.modulate
 			sprite.offset = -Vector2(td.texture_origin)
 		_visual.add_child(sprite)
+
+
+# Os passos da Cacau perguntam ao corpo em que ela pisa o que ele é (ver
+# som_passos.gd): fora do TileMap, o Corpo leva a superfície pintada nos tiles
+# de que saiu — as plataformas laranja são "metal".
+func _herdar_superficie(camada: TileMapLayer, celulas: Array[Vector2i]) -> void:
+	if camada.tile_set.get_custom_data_layer_by_name(SomPassos.CAMADA_DO_TILESET) < 0:
+		return
+	for c in celulas:
+		var dados := camada.get_cell_tile_data(c)
+		var superficie := str(dados.get_custom_data(SomPassos.CAMADA_DO_TILESET)) if dados else ""
+		if superficie != "":
+			_corpo.set_meta(SomPassos.META_DO_CORPO, StringName(superficie))
+			return
 
 
 # Fileiras contíguas de tiles quadrados viram UM retângulo: sem as "costuras"

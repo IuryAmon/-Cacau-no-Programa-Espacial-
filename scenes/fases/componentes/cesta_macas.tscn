@@ -12,7 +12,7 @@ size = Vector2(120, 80)
 script = ExtResource("1_cesta")
 
 [node name="Sprite" type="Sprite2D" parent="."]
-z_index = 5
+z_index = 1
 scale = Vector2(2, 2)
 texture = ExtResource("2_decor")
 offset = Vector2(0, -8)
@@ -24,7 +24,7 @@ position = Vector2(0, -40)
 shape = SubResource("RectangleShape2D_alcance")
 
 [node name="Dica" parent="." instance=ExtResource("3_tecla")]
-z_index = 6
+z_index = 1
 position = Vector2(0, -62)
 
 [node name="Som" type="AudioStreamPlayer2D" parent="."]

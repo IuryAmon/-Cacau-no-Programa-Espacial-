@@ -49,8 +49,15 @@ var _player_travado: Node = null
 
 ## Roda uma timeline curta da Cacau e trava o movimento dela enquanto ela fala.
 func falar_cacau(timeline: String) -> void:
+	falar(timeline)
+
+
+## Roda uma timeline qualquer com a Cacau parada, e devolve o movimento no fim.
+## Devolve false se já havia outra conversa no ar (e aí não abre nada). O rádio
+## do Dr. Chico (radio_comunicacao.gd) usa esta.
+func falar(timeline: String) -> bool:
 	if _falando or Dialogic.current_timeline != null:
-		return
+		return false
 	_falando = true
 
 	_player_travado = get_tree().get_first_node_in_group("player")
@@ -59,6 +66,7 @@ func falar_cacau(timeline: String) -> void:
 
 	Dialogic.timeline_ended.connect(_ao_terminar_fala, CONNECT_ONE_SHOT)
 	Dialogic.start(timeline)
+	return true
 
 
 func _ao_terminar_fala() -> void:

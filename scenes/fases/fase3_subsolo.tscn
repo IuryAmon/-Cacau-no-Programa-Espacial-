@@ -2,8 +2,6 @@
 
 [ext_resource type="Script" path="res://scripts/fases/fase3_subsolo.gd" id="1_f7ouf"]
 [ext_resource type="TileSet" path="res://assets/tilesets/tileset_fases.tres" id="2_6ho1x"]
-[ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_fase.tscn" id="3_qione"]
-[ext_resource type="Script" path="res://scripts/fases/porta_fase.gd" id="4_6uwry"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/pickup_habilidade.tscn" id="5_llw3s"]
 [ext_resource type="Script" path="res://scripts/fases/pickup_habilidade.gd" id="6_lcnjk"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/estacao_recarga.tscn" id="7_kslvx"]
@@ -24,6 +22,7 @@
 [ext_resource type="Script" path="res://scripts/player.gd" id="22_sgbco"]
 [ext_resource type="AudioStream" path="res://sounds/SomPulo2.mp3" id="23_dflhn"]
 [ext_resource type="AudioStream" path="res://sounds/Dano.mp3" id="24_cswk1"]
+[ext_resource type="PackedScene" uid="uid://bojlwu3n38ixr" path="res://scenes/fases/componentes/porta_modelo.tscn" id="porta_modelo"]
 
 [sub_resource type="Gradient" id="Gradient_te27o"]
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
@@ -144,13 +143,12 @@ autowrap_mode = 3
 
 [node name="Atrio" type="Node2D" parent="." unique_id=858526030]
 
-[node name="PortaFosso" type="Area2D" parent="Atrio" unique_id=2121293960 instance=ExtResource("3_qione")]
-position = Vector2(2450, 512)
-script = ExtResource("4_6uwry")
-rotulo = "FOSSO DE VENTILAÇÃO — SUBIR AO LABORATÓRIO"
+[node name="PortaFosso" parent="Atrio" unique_id=2121293960 instance=ExtResource("porta_modelo")]
+position = Vector2(2450, 396)
 cena_destino = "res://scenes/laboratório_(world_2).tscn"
-tag_aqui = "entrada"
 tag_destino = "volta_do_fosso"
+recebe_chegada = true
+tag_aqui = "entrada"
 
 [node name="PlacaAtrio" type="Label" parent="Atrio" unique_id=1126140223]
 offset_left = 2570.0

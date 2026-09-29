@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://b200x0ggeg44c" path="res://scripts/fases/fase2_torre.gd" id="1_prq4b"]
 [ext_resource type="TileSet" uid="uid://b1re83kqucchr" path="res://assets/tilesets/tileset_fases.tres" id="2_lqu7f"]
-[ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_fase.tscn" id="3_i0f4a"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/bloco_alternavel.tscn" id="5_4rshv"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/alvo_bumerangue.tscn" id="7_f8kj7"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/chapa_soldada.tscn" id="9_t7g3a"]
@@ -11,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/valvula_purga.tscn" id="15_qrtwr"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/mesa_puzzle.tscn" id="17_vk21l"]
 [ext_resource type="PackedScene" uid="uid://bmgkds67hbool" path="res://scenes/player.tscn" id="19_5b5kj"]
+[ext_resource type="PackedScene" uid="uid://bojlwu3n38ixr" path="res://scenes/fases/componentes/porta_modelo.tscn" id="porta_modelo"]
 
 [node name="Fase2Torre" type="Node2D" unique_id=2036018265]
 script = ExtResource("1_prq4b")
@@ -101,12 +101,12 @@ autowrap_mode = 3
 
 [node name="Base" type="Node2D" parent="." unique_id=1012807402]
 
-[node name="PortaHub" parent="Base" unique_id=2121293960 instance=ExtResource("3_i0f4a")]
-position = Vector2(140, 512)
-rotulo = "VOLTAR AO LABORATÓRIO"
+[node name="PortaHub" parent="Base" unique_id=2121293960 instance=ExtResource("porta_modelo")]
+position = Vector2(140, 396)
 cena_destino = "res://scenes/laboratório_(world_2).tscn"
-tag_aqui = "entrada"
 tag_destino = "volta_da_torre"
+recebe_chegada = true
+tag_aqui = "entrada"
 
 [node name="ArmarioFundo" type="ColorRect" parent="Base" unique_id=166108245]
 z_index = -6

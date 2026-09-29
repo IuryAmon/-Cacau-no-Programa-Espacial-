@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dvk2s84777g37"
+path="res://.godot/imported/passo metal.mp3-78d44d4a2d89798ad7a5db6bbb87d8bd.mp3str"
+
+[deps]
+
+source_file="res://sounds/passos/passo metal.mp3"
+dest_files=["res://.godot/imported/passo metal.mp3-78d44d4a2d89798ad7a5db6bbb87d8bd.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

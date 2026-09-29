@@ -32,6 +32,7 @@ remote_path = NodePath("../../platform")
 [node name="platform" type="AnimatableBody2D" parent="." unique_id=1611689587]
 position = Vector2(-4, -3)
 rotation = -0.009523511
+metadata/superficie = "metal"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="platform" unique_id=89734528]
 scale = Vector2(3, 3)

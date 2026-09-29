@@ -1,0 +1,15 @@
+[gd_resource type="AudioStreamRandomizer" format=3 uid="uid://btt4mr53bbpb6"]
+
+[ext_resource type="AudioStream" uid="uid://dvp2ya0i24qh6" path="res://sounds/passos/metal/passo_metal_01.wav" id="1_metal"]
+[ext_resource type="AudioStream" uid="uid://cuwbnq2fted4a" path="res://sounds/passos/metal/passo_metal_02.wav" id="2_metal"]
+[ext_resource type="AudioStream" uid="uid://cgq7mkqrt8018" path="res://sounds/passos/metal/passo_metal_03.wav" id="3_metal"]
+[ext_resource type="AudioStream" uid="uid://crp5ya4vposf" path="res://sounds/passos/metal/passo_metal_04.wav" id="4_metal"]
+
+[resource]
+random_pitch = 1.06
+random_volume_offset_db = 1.5
+streams_count = 4
+stream_0/stream = ExtResource("1_metal")
+stream_1/stream = ExtResource("2_metal")
+stream_2/stream = ExtResource("3_metal")
+stream_3/stream = ExtResource("4_metal")

@@ -19,8 +19,11 @@ extends Area2D
 #
 # A ARTE é a mesma folha de decoração do world1 (Decor.png), recortada do
 # atlas: as duas cestas têm o mesmo corpo pixel a pixel, então esvaziar é só
-# trocar o recorte do Sprite. Ele desenha em z_index 5, o mesmo da camada "à
-# frente" do world1 — na frente da personagem, como os outros enfeites do chão.
+# trocar o recorte do Sprite. Ele desenha em z_index 1: ATRÁS da personagem
+# (z_index 2), que passa na frente da cesta, e ainda na frente do chão (os
+# TileMapLayers ficam em 0 no world1 e abaixo disso nas fases). O botão (Dica)
+# também fica em 1, atrás dela: por vir depois do Sprite na árvore, ainda
+# desenha por cima da cesta.
 #
 # COMO EDITAR NO EDITOR:
 #   posição do nó -> no CHÃO, no meio da cesta: a arte cresce para cima dele, e

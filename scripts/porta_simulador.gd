@@ -16,6 +16,14 @@ extends Area2D
 #   scenes/fases/componentes/porta_ala_eletrolise.tscn (sprites do spritesheet
 #     "porta ala de eletrolise.png": 12 quadros de 148x134; abrindo = 0->11,
 #     fechando = os mesmos 12 ao contrário)
+#   scenes/fases/componentes/porta_modelo.tscn         (a mesma porta com o
+#     "porta modelo.png" — a das entradas das fases que ainda não têm arte
+#     própria: Torre de Gases, Torre de Lançamento, as voltas ao laboratório e
+#     a cápsula)
+#
+# A viagem também conversa com a PortaFase (porta_fase.gd), que só sobrou no
+# alçapão do fosso de ventilação: a tag vai também para o Progresso.spawn_tag,
+# que é o que ela lê — e uma porta daqui recebe quem chega por ela.
 #
 # Estrutura na cena:
 #   PortaSimulador (Area2D, este script)
@@ -129,10 +137,15 @@ func _ready() -> void:
 	_registrar_spawn(false)
 
 	# A tag separa quem recebe quando a cena tem mais de uma porta de chegada:
-	# a porta do simulador e a da ala de eletrólise convivem no laboratório.
-	if recebe_chegada and chegando_por_porta and tag_chegada == tag_aqui:
+	# a porta do simulador, a da ala de eletrólise e as das fases convivem no
+	# laboratório. Quem desceu pelo alçapão do fosso (uma PortaFase) chega só
+	# com a tag no Progresso.
+	var veio_por_porta := chegando_por_porta and tag_chegada == tag_aqui
+	var veio_pelo_alcapao := Progresso.spawn_tag != "" and Progresso.spawn_tag == tag_aqui
+	if recebe_chegada and (veio_por_porta or veio_pelo_alcapao):
 		chegando_por_porta = false
 		tag_chegada = ""
+		Progresso.spawn_tag = ""
 		_receber_jogador()
 		return
 
@@ -459,6 +472,8 @@ func _usar_porta() -> void:
 	if not cena_destino.is_empty():
 		chegando_por_porta = true
 		tag_chegada = tag_destino
+		# Para o alçapão do fosso, que é uma PortaFase e só lê o Progresso.
+		Progresso.spawn_tag = tag_destino
 		await FadeTela.trocar_cena(self, cena_destino, duracao_fade_cena)
 		return
 

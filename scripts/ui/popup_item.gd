@@ -98,6 +98,7 @@ const ASCENDENTES := 11
 		previa_visivel = valor
 		if Engine.is_editor_hint():
 			_ficha = _ficha_de_previa() if previa_visivel else {}
+			visible = previa_visivel
 		_invalidar()
 @export var previa_nome: String = "Cilindro de Oxigênio (Comburente)":
 	set(valor):
@@ -145,7 +146,14 @@ func _ready() -> void:
 		# CPU animando dentro da janela do editor. Com "previa_visivel"
 		# desligada (o padrão), a ficha fica vazia e o _draw devolve na
 		# primeira linha: é o que mantém o workspace das fases limpo.
+		#
+		# E ESCONDIDA, não só vazia: este Control ocupa a tela inteira, e no
+		# editor das fases a HUD do Player é desenhada em cima do começo do
+		# mapa. Visível, ele ganhava todo clique ali e selecionava o Player no
+		# lugar do que estava embaixo (o rádio da entrada da fase 1). O
+		# cadeado do nó na inventario_hud.tscn não vale nas cenas de fora.
 		_ficha = _ficha_de_previa() if previa_visivel else {}
+		visible = previa_visivel
 		_entrada = 1.0
 		_tempo = 0.7
 		set_process(false)

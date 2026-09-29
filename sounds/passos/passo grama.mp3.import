@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://6imt6t1jhsoe"
+path="res://.godot/imported/passo grama.mp3-ffeb4fa6de3a2571d24a7762402e3258.mp3str"
+
+[deps]
+
+source_file="res://sounds/passos/passo grama.mp3"
+dest_files=["res://.godot/imported/passo grama.mp3-ffeb4fa6de3a2571d24a7762402e3258.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

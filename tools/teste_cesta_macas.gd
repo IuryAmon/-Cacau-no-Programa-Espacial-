@@ -60,7 +60,12 @@ func _testar_comer() -> void:
 	_checar(frente.get_cell_source_id(Vector2i(-28, -13)) == -1,
 		"a cesta vazia de referência saiu do mapa")
 	_checar(sprite.region_rect == CestaMacas.REGIAO_CHEIA, "começa cheia")
-	_checar(sprite.z_index == frente.z_index, "desenha na mesma camada dos enfeites da frente")
+	var chao := mundo.get_node("Chão") as TileMapLayer
+	_checar(sprite.z_index < player.z_index, "a cesta desenha atrás da Cacau")
+	_checar(sprite.z_index > chao.z_index, "e na frente do chão")
+	_checar(dica.z_index < player.z_index, "o botão E também fica atrás dela")
+	_checar(dica.z_index == sprite.z_index and dica.get_index() > sprite.get_index(),
+		"e por cima da cesta")
 	_checar(not dica.visible, "de longe, sem botão")
 
 	await _chegar_perto(player, cesta)

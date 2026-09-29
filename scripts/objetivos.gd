@@ -101,8 +101,9 @@ func _atualizar_lista() -> void:
 	for trilha in trilhas:
 		ultimas.append(_ultima_etapa_cumprida(trilha))
 
+	var t := _trilha_da_vez(ultimas)
 	var desejados: Array[Dictionary] = []
-	for t in _trilhas_da_vez(ultimas):
+	if t >= 0:
 		var atual: int = ultimas[t] + 1
 		for objetivo in trilhas[t]["etapas"][atual]["objetivos"]:
 			if not objetivo["feito"].call() and _aparece(objetivo):
@@ -131,7 +132,6 @@ func _atualizar_lista() -> void:
 	# trilha junta, sob o cabeçalho dela, na ordem do jogo.
 	for objetivo in desejados:
 		if not _hud.tem(objetivo["id"]):
-			var t: int = _por_id[objetivo["id"]][0]
 			_hud.adicionar(objetivo["id"], objetivo["texto"], _contagem(objetivo),
 				trilhas[t]["titulo"], trilhas[t]["cor"], objetivo["pai"], t)
 
@@ -164,25 +164,18 @@ func _aparece(objetivo: Dictionary) -> bool:
 	return not aparece.is_valid() or aparece.call()
 
 
-## Quais trilhas aparecem: a da cena em que a Cacau está, se ainda não acabou;
-## senão a primeira não terminada do jogo — e, se ela for uma das paralelas
-## (os elementos), todas as paralelas abertas junto. Vazio = o jogo acabou.
-func _trilhas_da_vez(ultimas: Array[int]) -> Array[int]:
+## Qual trilha aparece: a da cena em que a Cacau está, se ainda não acabou; senão
+## a primeira não terminada do jogo — uma de cada vez, na ordem do roteiro
+## (carbono, depois nitrogênio, depois enxofre e fósforo). -1 = o jogo acabou.
+func _trilha_da_vez(ultimas: Array[int]) -> int:
 	var trilhas := _roteiro.trilhas
 	for t in trilhas.size():
 		if _cena_atual in trilhas[t]["cenas"] and _trilha_aberta(t, ultimas):
-			return [t]
+			return t
 	for t in trilhas.size():
-		if not _trilha_aberta(t, ultimas):
-			continue
-		if not trilhas[t]["paralela"]:
-			return [t]
-		var paralelas: Array[int] = []
-		for p in range(t, trilhas.size()):
-			if trilhas[p]["paralela"] and _trilha_aberta(p, ultimas):
-				paralelas.append(p)
-		return paralelas
-	return []
+		if _trilha_aberta(t, ultimas):
+			return t
+	return -1
 
 
 func _trilha_aberta(t: int, ultimas: Array[int]) -> bool:

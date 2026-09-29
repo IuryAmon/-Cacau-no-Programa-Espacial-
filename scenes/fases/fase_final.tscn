@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://di4ll381io8uk" path="res://scripts/fases/fase_final.gd" id="1_41xgo"]
 [ext_resource type="TileSet" uid="uid://b1re83kqucchr" path="res://assets/tilesets/tileset_fases.tres" id="2_wgt38"]
-[ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_fase.tscn" id="3_0fnbh"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/painel_chonps.tscn" id="5_c2wfx"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/bloco_alternavel.tscn" id="7_yj8gp"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/piso_eletrificado.tscn" id="9_j5so8"]
@@ -11,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/valvula_purga.tscn" id="15_5vq5d"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/mesa_puzzle.tscn" id="17_ecmwi"]
 [ext_resource type="PackedScene" uid="uid://bmgkds67hbool" path="res://scenes/player.tscn" id="19_5ws2t"]
+[ext_resource type="PackedScene" uid="uid://bojlwu3n38ixr" path="res://scenes/fases/componentes/porta_modelo.tscn" id="porta_modelo"]
 
 [node name="FaseFinal" type="Node2D" unique_id=727119340]
 script = ExtResource("1_41xgo")
@@ -115,12 +115,12 @@ autowrap_mode = 3
 
 [node name="Portao" type="Node2D" parent="." unique_id=1343140551]
 
-[node name="PortaHub" parent="Portao" unique_id=2121293960 instance=ExtResource("3_0fnbh")]
-position = Vector2(140, 512)
-rotulo = "VOLTAR AO LABORATÓRIO"
+[node name="PortaHub" parent="Portao" unique_id=2121293960 instance=ExtResource("porta_modelo")]
+position = Vector2(140, 396)
 cena_destino = "res://scenes/laboratório_(world_2).tscn"
-tag_aqui = "entrada"
 tag_destino = "volta_do_lancamento"
+recebe_chegada = true
+tag_aqui = "entrada"
 
 [node name="PainelChonps" parent="Portao" unique_id=1592784654 instance=ExtResource("5_c2wfx")]
 position = Vector2(450, 292)
@@ -276,12 +276,11 @@ offset_bottom = -160.0
 mouse_filter = 2
 color = Color(0.6, 0.4, 0.48, 1)
 
-[node name="PortaCapsula" parent="Plataforma/Capsula" unique_id=532589864 instance=ExtResource("3_0fnbh")]
-position = Vector2(0, 202)
-rotulo = "EMBARCAR NA CÁPSULA"
+[node name="PortaCapsula" parent="Plataforma/Capsula" unique_id=532589864 instance=ExtResource("porta_modelo")]
+position = Vector2(0, 86)
 cena_destino = "res://scenes/fases/final_orbita.tscn"
+tag_destino = "orbita"
 tag_aqui = "capsula"
-cor_porta = Color(0.85, 0.65, 0.7, 1)
 
 [node name="PlacaApollo" type="Label" parent="Plataforma" unique_id=195671972]
 offset_left = 730.0

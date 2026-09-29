@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://cx4pclvr0jy1" path="res://scripts/fases/radio_comunicacao.gd" id="1_radio"]
+[ext_resource type="Texture2D" uid="uid://bo4hqe3atj232" path="res://assets/Lab/radio de comunicação.png" id="2_arte"]
+[ext_resource type="AudioStream" uid="uid://c2b8rj0o1f30u" path="res://sounds/radio/radio_chamada.wav" id="3_chamada"]
+[ext_resource type="AudioStream" uid="uid://c7q8f231m2iko" path="res://sounds/radio/radio_chiado.wav" id="4_chiado"]
+
+[sub_resource type="Gradient" id="Gradient_led"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_led"]
+gradient = SubResource("Gradient_led")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[node name="RadioComunicacao" type="Node2D"]
+z_index = 1
+script = ExtResource("1_radio")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2_arte")
+hframes = 3
+
+[node name="Luz" type="PointLight2D" parent="."]
+position = Vector2(17, -13)
+enabled = false
+color = Color(1, 0.22, 0.18, 1)
+energy = 1.3
+texture = SubResource("GradientTexture2D_led")
+texture_scale = 0.55
+
+[node name="SomChamada" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_chamada")
+volume_db = -4.0
+
+[node name="SomChiado" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_chiado")

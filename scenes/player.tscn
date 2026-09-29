@@ -15,6 +15,10 @@
 [ext_resource type="Texture2D" uid="uid://cmknqskksqfxe" path="res://assets/Cacau Assets/UsandoMacarico.png" id="10_macarico"]
 [ext_resource type="AudioStream" uid="uid://by5g6kb1qaabt" path="res://sounds/maçarico_sound.mp3" id="11_macsound"]
 [ext_resource type="Texture2D" uid="uid://cjjt1rgewxich" path="res://assets/Cacau Assets/jogandoboomerang.png" id="12_bumerangue"]
+[ext_resource type="Script" uid="uid://lryca2xik5s3" path="res://scripts/som_passos.gd" id="13_passos"]
+[ext_resource type="AudioStream" uid="uid://d11koksv0ccbr" path="res://sounds/passos/grama.tres" id="14_grama"]
+[ext_resource type="AudioStream" uid="uid://fpvmn4nbbqdo" path="res://sounds/passos/concreto.tres" id="15_concreto"]
+[ext_resource type="AudioStream" uid="uid://btt4mr53bbpb6" path="res://sounds/passos/metal.tres" id="16_metal"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_3vyb7"]
 radius = 13.0
@@ -511,5 +515,20 @@ anchors_preset = 0
 [node name="SomPulo" type="AudioStreamPlayer2D" parent="." unique_id=1164273241]
 stream = ExtResource("2_smehm")
 volume_db = 6.597
+
+[node name="SomPassos" type="AudioStreamPlayer2D" parent="." node_paths=PackedStringArray("sprite") unique_id=91000030]
+position = Vector2(0, 36)
+volume_db = -14.0
+max_polyphony = 3
+script = ExtResource("13_passos")
+sprite = NodePath("../AnimatedSprite2D")
+sons_por_superficie = Dictionary[StringName, AudioStream]({
+&"grama": ExtResource("14_grama"),
+&"concreto": ExtResource("15_concreto"),
+&"metal": ExtResource("16_metal")
+})
+volume_por_superficie = Dictionary[StringName, float]({
+&"grama": -3.0
+})
 
 [editable path="CanvasLayer/HealthHUD"]

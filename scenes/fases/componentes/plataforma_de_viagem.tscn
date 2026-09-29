@@ -15,6 +15,7 @@ size = Vector2(184, 12)
 
 [node name="PlataformaDeViagem" type="AnimatableBody2D"]
 script = ExtResource("1_viagem")
+metadata/superficie = "metal"
 
 [node name="Sprite" type="Sprite2D" parent="."]
 scale = Vector2(2, 2)

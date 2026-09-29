@@ -82,11 +82,19 @@ Selecione o nó e use o Inspetor. As propriedades mais usadas:
 - `CorrenteVapor`: **`empuxo`** (a Cacau anda a 350 px/s) e **`direcao`**.
 - `AlvoBumerangue`: **`permanece_ativo`** (interruptor definitivo) ou a
   **`janela`** em segundos (alvo temporizado).
-- `PortaFase`: **`cena_destino`**, **`requer_habilidade`** e o par
-  **`tag_aqui` / `tag_destino`**, que decide em qual porta o jogador nasce ao
-  chegar de outra fase. Entra-se como nas portas da oficina: **W** no teclado,
-  **direcional para cima** no controle — e o desenho do botão só aparece com a
-  Cacau perto (e só se a porta estiver destrancada).
+- Portas entre as fases: todas são a porta da oficina (`porta_simulador.gd`) —
+  a Ala de Pirólise com a arte dela (`porta_ala_eletrolise.tscn`) e as que ainda
+  não têm arte própria (Torre de Gases, Torre de Lançamento, as voltas ao
+  laboratório e a cápsula) com o `porta modelo.png` (`porta_modelo.tscn`).
+  Mesma animação, mesmo W / direcional para cima. No Inspetor:
+  **`cena_destino`** e o par **`tag_destino` / `tag_aqui`** — ao chegar, quem
+  recebe a Cacau (e toca a saída pela porta) é a porta com **`recebe_chegada`**
+  ligado cujo `tag_aqui` bate com o `tag_destino` de quem ela usou. Para trocar a
+  arte de uma delas, duplique `porta_modelo.tscn` e troque a textura do
+  `SpritePorta` (12 quadros de 148x134 na horizontal).
+- `PortaFase`: sobrou só no alçapão do fosso de ventilação, no laboratório
+  (**`no_piso`**, trancado por **`requer_habilidade`** = mochila). Usa o mesmo
+  par de tags, e conversa com as portas acima.
 - `MesaPuzzle`: **`puzzle_config`** guarda os slots, as peças e os textos do
   puzzle de arrastar.
 
@@ -231,6 +239,9 @@ que o espaço fica livre.
   Valem para todas as plataformas do retângulo — para um trecho com outro
   ritmo, duplique o nó e cubra só aquele trecho.
 - Na Oficina, o retângulo cobre as plataformas do corredor vertical.
+- **Som dos passos:** os tiles de `Plataformas.png` são "metal" na camada
+  `superficie` do TileSet, e a plataforma que se solta leva isso junto — pisar
+  nela soa metal (ver `scripts/som_passos.gd`).
 
 ## Plataforma móvel (parede a parede)
 
@@ -449,10 +460,8 @@ objeto do cenário sabe que objetivo existe.
 - O roteiro é dividido em **trilhas**, uma por ala (prólogo, Carbono,
   Nitrogênio, Enxofre e Fósforo, Torre de Lançamento). Dentro de uma fase
   aparece só a etapa atual da trilha dela; no laboratório, a da primeira trilha
-  não terminada — e, a partir do Carbono, as três trilhas dos elementos
-  (Carbono, Nitrogênio, Enxofre e Fósforo) aparecem juntas, porque podem ser
-  feitas em qualquer ordem (elas são marcadas com `PARALELA` no roteiro). Cada
-  trilha na tela ganha o seu cabeçalho com o nome dela.
+  não terminada — uma ala de cada vez, na ordem do jogo: Carbono, depois
+  Nitrogênio, depois Enxofre e Fósforo. O nome da trilha é o cabeçalho da lista.
 - Objetivos da mesma etapa aparecem juntos (o H₂ e o O₂ do prólogo). Etapa sem
   objetivo é um portão: segura a lista vazia (é assim que nada aparece antes da
   primeira conversa com o cientista).
@@ -533,4 +542,18 @@ queima da fornalha dá errado, e as duas setas da Oficina):
 
 ```
 godot --headless --fixed-fps 60 --path . -s res://tools/teste_objetivos.gd
+```
+
+As portas entre as fases têm o delas: a porta modelo, os pares de tags de todas
+as portas (quem sai por uma acha quem a recebe do outro lado) e as viagens de
+verdade — laboratório ↔ Torre e alçapão do fosso ↔ subsolo:
+
+```
+godot --headless --fixed-fps 60 --path . res://tools/teste_porta_modelo.tscn
+```
+
+E os passos da Cacau, com o som de cada chão (grama, concreto e metal):
+
+```
+godot --headless --path . res://tools/teste_passos.tscn
 ```

@@ -52,6 +52,7 @@ directories/dtl_directory={
 "cientista_final_fase": "res://timelines/cientista_final_fase.dtl",
 "cientista_laser_aberto": "res://timelines/cientista_laser_aberto.dtl",
 "jaleco": "res://timelines/jaleco.dtl",
+"radio_fase1": "res://timelines/radio_fase1.dtl",
 "samambaia": "res://timelines/samambaia.dtl",
 "simulador_derrota": "res://timelines/simulador_derrota.dtl",
 "simulador_ligar": "res://timelines/simulador_ligar.dtl",

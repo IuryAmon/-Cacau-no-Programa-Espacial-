@@ -655,8 +655,8 @@ tile_map_data = PackedByteArray("AAAMAAcAAAABAAMAAAAMAAgAAAABAAQAAAAMAAkAAAABAAU
 tile_set = SubResource("TileSet_8tkku")
 
 [node name="Frente" type="Sprite2D" parent="Terreno/Arvore" unique_id=1462803917]
-z_as_relative = false
 z_index = 10
+z_as_relative = false
 position = Vector2(176, 64)
 texture = ExtResource("16_frente")
 centered = false
@@ -684,12 +684,6 @@ position = Vector2(873, 542)
 position = Vector2(566, 512)
 arvore = NodePath("../../Terreno/Arvore")
 
-[node name="Player" parent="." unique_id=1357281852 instance=ExtResource("3_player")]
-z_index = 2
-position = Vector2(64, 451)
-max_jumps = 10
-metadata/_edit_lock_ = true
-
 [node name="Elevador" parent="." unique_id=1677552486 instance=ExtResource("4_elevador")]
 position = Vector2(60, 516)
 direcao = 1
@@ -710,3 +704,8 @@ metadata/_edit_lock_ = true
 
 [node name="PortaMetalMacarico" parent="." unique_id=894855489 instance=ExtResource("15_8tkku")]
 position = Vector2(195, 513)
+
+[node name="Player" parent="." unique_id=1357281852 instance=ExtResource("3_player")]
+z_index = 2
+position = Vector2(49, 397)
+max_jumps = 10

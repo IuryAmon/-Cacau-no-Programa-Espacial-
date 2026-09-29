@@ -15,8 +15,8 @@ extends SceneTree
 #   * "Entre no laboratório" é cumprido na cena seguinte;
 #   * apertar E na porta de metal sem o maçarico adianta "Pegue o maçarico",
 #     e a linha continua a mesma quando a etapa dele chega;
-#   * no laboratório, depois da revelação, as três trilhas dos elementos
-#     aparecem juntas, cada uma com o seu cabeçalho;
+#   * no laboratório, depois da revelação, aparece só a trilha do Carbono —
+#     as alas vêm uma de cada vez, na ordem do jogo;
 #   * visitar a Torre antes de terminar a oficina não pula a oficina no
 #     laboratório — mas dentro da Torre vale só a trilha da Torre;
 #   * a seta de descer só aparece depois de um tempo parada em cima do pilar;
@@ -139,17 +139,11 @@ func _testar_prologo() -> void:
 
 	EstadoMundo.revelou_dr_chico = true
 	await _segundos(1.0)
-	_checar(_pendentes() == PackedStringArray(["entrar_oficina", "entrar_torre", "entrar_subsolo"]),
-		"depois da revelação: as três alas juntas (%s)" % [_pendentes()])
-	_checar(_linha("entrar_oficina").texto == "Entre na Ala de Pirólise", "carbono: entrar na Ala de Pirólise")
-	_checar(_linha("entrar_torre").texto == "Entre na Torre de Gases e Estufa", "nitrogênio: entrar na Torre")
-	_checar(_linha("entrar_subsolo").texto == "Entre no subsolo pelo fosso de ventilação",
-		"enxofre e fósforo: entrar no subsolo")
+	_checar(_pendentes() == PackedStringArray(["entrar_oficina"]),
+		"depois da revelação: só 'Entre na Ala de Pirólise' (%s)" % [_pendentes()])
+	_checar(_linha("entrar_oficina").texto == "Entre na Ala de Pirólise", "com esse texto")
 	await _segundos(1.0)
-	_checar(_hud().titulos() == PackedStringArray(["CARBONO", "NITROGÊNIO", "ENXOFRE E FÓSFORO"]),
-		"um cabeçalho por ala, na ordem do jogo (%s)" % [_hud().titulos()])
-	_checar(_linha("entrar_oficina").y < _linha("entrar_torre").y \
-		and _linha("entrar_torre").y < _linha("entrar_subsolo").y, "e as linhas na mesma ordem")
+	_checar(_hud().titulos() == PackedStringArray(["CARBONO"]), "só o cabeçalho CARBONO (%s)" % [_hud().titulos()])
 
 
 func _testar_oficina() -> void:
@@ -209,9 +203,9 @@ func _testar_quebra_de_sequencia() -> void:
 	await _abrir(LAB)
 	await _segundos(2.5)
 	_checar(_hud().tem("entregar_c"), "no laboratório volta a valer a oficina (%s)" % [_ids()])
-	_checar(_hud().tem("alavanca") and _hud().tem("entrar_subsolo"), "junto com a Torre e o subsolo (%s)" % [_ids()])
-	_checar(_hud().titulos() == PackedStringArray(["CARBONO", "NITROGÊNIO", "ENXOFRE E FÓSFORO"]),
-		"com os três cabeçalhos (%s)" % [_hud().titulos()])
+	_checar(not _hud().tem("alavanca") and not _hud().tem("entrar_subsolo"),
+		"sem a Torre nem o subsolo, que vêm depois (%s)" % [_ids()])
+	_checar(_hud().titulos() == PackedStringArray(["CARBONO"]), "só com o cabeçalho CARBONO (%s)" % [_hud().titulos()])
 
 
 func _testar_setas() -> void:

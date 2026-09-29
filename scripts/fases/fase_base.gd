@@ -18,6 +18,11 @@ extends Node2D
 # Desligue de novo antes de exportar o jogo de verdade.
 @export var testar_a_partir_daqui: bool = false
 
+## Toda fase vem depois da revelação no laboratório (é por ele que se chega
+## aqui): o cientista já é o Dr. Chico. Vale para toda fala dele numa fase — o
+## rádio da entrada da fase 1, os puzzles.
+const NOME_DO_CIENTISTA := "Dr. Chico"
+
 @onready var player: CharacterBody2D = get_node_or_null("Player")
 
 
@@ -26,6 +31,13 @@ func _ready() -> void:
 
 
 func _preparar_fase() -> void:
+	# Abrindo a fase direto do editor a revelação nunca aconteceu nesta sessão
+	# e o nome ainda seria o "Desconhecido" do world1 (o simulador faz a mesma
+	# coisa na entrada dele). Só troca se precisar: trocar dispara o efeito da
+	# revelação no rótulo do nome (reveal_name_effect.gd).
+	if str(Dialogic.VAR.get_variable("reveal_name", "")) != NOME_DO_CIENTISTA:
+		Dialogic.VAR.set_variable("reveal_name", NOME_DO_CIENTISTA)
+
 	if player == null:
 		push_warning("%s: falta o nó Player na cena." % name)
 		return

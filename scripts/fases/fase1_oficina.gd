@@ -7,7 +7,10 @@ extends FaseBase
 #                fica o ELEVADOR DE CARGA (Entrada/ElevadorPatio): entre nele e
 #                aperte E para subir ao PÁTIO, que é a fase1.2
 #                (scenes/fases/fase1_2_exterior.tscn) — a parte de fora do
-#                laboratório, onde a FORNALHA de carbonização passou a morar
+#                laboratório, onde a FORNALHA de carbonização passou a morar.
+#                Na parede ao lado da porta de chegada, o RÁDIO do Dr. Chico
+#                (Entrada/RadioDrChico) chama assim que a Cacau entra na fase —
+#                a conversa é a timeline radio_fase1 (ver radio_comunicacao.gd)
 #   ② TREINO     escola do arremesso — em construção manual no editor; só a
 #                caixa elétrica AlvoFixo1 ficou de placeholder
 #   ②b PORTÃO    no meio do mapa, uma BARREIRA fecha a passagem e só cai com os
