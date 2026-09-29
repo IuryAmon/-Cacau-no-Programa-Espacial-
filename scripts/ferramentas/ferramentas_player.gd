@@ -116,7 +116,7 @@ var _dash_recarga_chao: float = 0.0
 var _dash_fantasma: float = 0.0
 var _escala_base: Vector2 = Vector2.ONE
 var _tween_escala: Tween = null
-var _tecla_m_estava_pressionada: bool = false
+var _tecla_n_estava_pressionada: bool = false
 
 # Congelamento de impacto: mexe no Engine.time_scale, então guarda o valor
 # anterior e devolve mesmo se a cena morrer no meio.
@@ -278,19 +278,19 @@ func _physics_process(delta: float) -> void:
 		Progresso.sinalizador_aceso = not Progresso.sinalizador_aceso
 
 
-# --- DEBUG: TECLA M ------------------------------------------------------
+# --- DEBUG: TECLA N ------------------------------------------------------
 #
 # Equipa a mochila de N₂ na hora, em qualquer fase, sem precisar resolver o
 # armário da Torre de Gases — é só para testar o dash. Mesmo espírito da
 # tecla K do player.gd (coleta os cilindros do puzzle).
 
 func _debug_equipar_mochila() -> void:
-	var pressionada := Input.is_physical_key_pressed(KEY_M)
-	if pressionada and not _tecla_m_estava_pressionada \
+	var pressionada := Input.is_physical_key_pressed(KEY_N)
+	if pressionada and not _tecla_n_estava_pressionada \
 			and not Progresso.tem_habilidade("mochila"):
 		Progresso.dar_habilidade("mochila")
-		print("DEBUG [Ferramentas]: mochila de N₂ equipada pela tecla M.")
-	_tecla_m_estava_pressionada = pressionada
+		print("DEBUG [Ferramentas]: mochila de N₂ equipada pela tecla N.")
+	_tecla_n_estava_pressionada = pressionada
 
 
 # --- MIRA (dash e bumerangue) --------------------------------------------

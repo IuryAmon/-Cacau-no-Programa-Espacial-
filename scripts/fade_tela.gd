@@ -16,8 +16,9 @@ extends CanvasLayer
 const COR_CORTINA := Color(0, 0, 0, 1)
 
 ## HUDs que são autoload (vivem FORA da cena) e desenham por cima da cortina:
-## o cinto de ferramentas e a lista de objetivos. Ver esconder_huds().
-const HUDS_AUTOLOAD: Array[String] = ["FerramentasHUD", "Objetivos"]
+## o cinto de ferramentas, a lista de objetivos e o ícone do caderno. Ver
+## esconder_huds().
+const HUDS_AUTOLOAD: Array[String] = ["FerramentasHUD", "Objetivos", "Caderno"]
 
 ## Marcado por quem troca de cena com a tela já apagada. A cena que abrir em
 ## seguida consome isso (via "clarear_na_chegada") para nascer preta e clarear,

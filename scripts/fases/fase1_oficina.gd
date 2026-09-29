@@ -120,7 +120,7 @@ func _conferir_paineis() -> void:
 	_barreira.abrir_passagem()
 
 
-## M: recolhe de uma vez toda a madeira espalhada pela fase e destranca as duas
+## N: recolhe de uma vez toda a madeira espalhada pela fase e destranca as duas
 ## ferramentas da oficina (maçarico oxídrico e bumerangue) — sem precisar
 ## visitar o depósito nem resolver as gaiolas de novo a cada teste.
 func _debug_coletar_tudo() -> void:
