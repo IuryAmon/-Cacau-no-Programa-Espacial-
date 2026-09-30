@@ -16,6 +16,8 @@ extends RefCounted
 #
 #   "rosto"         a folha de rosto: "linhas" do título e o "nome" da dona
 #                   escrito na linha, depois do "rotulo_nome"
+#   "epigrafe"      uma citação ("texto", já com as aspas) e, embaixo e
+#                   alinhadas à direita, as linhas da "autoria"
 #   "desenho"       um desenho com um traço de cada parte até o nome dela,
 #                   feito mapa mental:
 #                   "arte"         o desenho
@@ -36,7 +38,12 @@ extends RefCounted
 #   "propriedades"  "itens": [{"formula", "texto"}] — a fórmula e uma
 #                   explicação curta embaixo. Com "icones" (uma arte) na face,
 #                   cada item pode ter um "icone": o pedaço dela (px da arte)
-#                   que vai antes da fórmula
+#                   que vai antes da fórmula; e, com "pedacos" ({nome: o
+#                   pedaço}), o texto pode ter {nome} no meio, que vira o
+#                   ícone. O que vai *entre asteriscos* fica na cor da
+#                   fórmula. Com "formulas_no_meio", cada fórmula vai
+#                   centrada na face, e com "formula_embaixo", embaixo do
+#                   texto dela
 #
 # O texto é quebrado e medido na face; o teste_caderno confere que tudo cabe
 # no papel.
@@ -45,10 +52,16 @@ const ARTE_HIDROGENIO := preload("res://assets/caderno de anotaçõess/Hidrogên
 const ARTE_LITIO := preload("res://assets/caderno de anotaçõess/litio atomo3.png")
 ## Elétron, próton e nêutron lado a lado, do mesmo tamanho que no átomo.
 const ARTE_PARTICULAS := preload("res://assets/caderno de anotaçõess/eletron, proton e neutron.png")
+## Cada partícula na ARTE_PARTICULAS (px da arte), para o {nome} no texto.
+const PARTICULAS := {
+	"elétron": Rect2(2, 3, 12, 12),
+	"próton": Rect2(15, 0, 16, 16),
+	"nêutron": Rect2(32, 0, 16, 16),
+}
 
 const PAGINAS := [
-	# A esquerda é o verso da capa, em branco; virando a folha de rosto, o
-	# átomo está atrás dela.
+	# A esquerda é o verso da capa, em branco; virando a folha de rosto, a
+	# epígrafe está atrás dela.
 	[
 		{},
 		{
@@ -57,6 +70,16 @@ const PAGINAS := [
 			"rotulo_nome": "nome:",
 			"nome": "Cacau",
 		},
+	],
+	[
+		# A direita fica em branco: o átomo ocupa as duas faces da folha
+		# seguinte.
+		{
+			"tipo": "epigrafe",
+			"texto": "“Equipado com seus cinco sentidos, o ser humano explora o universo ao seu redor e chama essa aventura de ciência.”",
+			"autoria": ["— Edwin Hubble"],
+		},
+		{},
 	],
 	[
 		# O átomo não cabe do lado dos nomes: eles vão numa fileira em cima e
@@ -72,25 +95,25 @@ const PAGINAS := [
 			"marcas": [
 				# Em cima: o anel de fora e o elétron de cima.
 				{"de": Vector2(70, 46), "rumo": "cima", "texto": "eletrosfera"},
-				{"de": Vector2(187, 76), "rumo": "cima", "texto": "elétron"},
+				{"de": Vector2(187, 76), "rumo": "cima", "texto": "elétron (e)"},
 				# O núcleo, no vão entre ele e o anel de dentro: o traço sai do
 				# próton de cima, entre os dois nêutrons.
 				{"de": Vector2(135, 96), "rumo": "cima", "ate": 82, "texto": "núcleo"},
 				# Embaixo, cada nome ao lado da ponta do traço: o próton da
 				# esquerda e o nêutron de baixo.
-				{"de": Vector2(120, 120), "rumo": "baixo", "lado": "esquerda", "texto": "próton"},
-				{"de": Vector2(135, 129), "rumo": "baixo", "lado": "direita", "texto": "nêutron"},
+				{"de": Vector2(120, 120), "rumo": "baixo", "lado": "esquerda", "texto": "próton (p)"},
+				{"de": Vector2(135, 129), "rumo": "baixo", "lado": "direita", "texto": "nêutron (n)"},
 			],
 		},
 		{
 			"tipo": "propriedades",
 			"icones": ARTE_PARTICULAS,
 			"itens": [
-				{"icone": Rect2(15, 0, 16, 16), "formula": "próton",
+				{"icone": Rect2(15, 0, 16, 16), "formula": "próton (p)",
 					"texto": "Carga positiva. Fica no núcleo."},
-				{"icone": Rect2(32, 0, 16, 16), "formula": "nêutron",
+				{"icone": Rect2(32, 0, 16, 16), "formula": "nêutron (n)",
 					"texto": "Sem carga. Fica no núcleo, junto dos prótons."},
-				{"icone": Rect2(2, 3, 12, 12), "formula": "elétron",
+				{"icone": Rect2(2, 3, 12, 12), "formula": "elétron (e)",
 					"texto": "Carga negativa. Gira na eletrosfera e é bem mais leve que o próton."},
 			],
 		},
@@ -106,15 +129,19 @@ const PAGINAS := [
 			"marcas": [
 				{"de": Vector2(15, 10), "rumo": "cima", "texto": "número atômico (Z)"},
 				{"de": Vector2(49, 34), "rumo": "direita", "texto": "símbolo"},
-				{"de": Vector2(38, 83), "rumo": "baixo", "texto": "massa atômica"},
+				{"de": Vector2(38, 83), "rumo": "baixo", "texto": "número de massa (A)"},
 			],
 		},
 		{
 			"tipo": "propriedades",
+			"formulas_no_meio": true,
+			"formula_embaixo": true,
+			"icones": ARTE_PARTICULAS,
+			"pedacos": PARTICULAS,
 			"itens": [
-				{"formula": "Z = p", "texto": "Número atômico: quantos prótons o átomo tem."},
-				{"formula": "A = Z + n", "texto": "Número de massa: prótons e nêutrons somados."},
-				{"formula": "p = e", "texto": "Átomo neutro: tantos elétrons quanto prótons."},
+				{"formula": "Z = p", "texto": "*Número atômico (Z)* é a quantidade de *prótons* {próton} existentes no núcleo do átomo."},
+				{"formula": "A = Z + n", "texto": "*Número de massa (A)* é a soma da quantidade de *prótons* {próton} e *nêutrons* {nêutron}."},
+				{"formula": "p = e", "texto": "Um átomo neutro terá a mesma quantidade de *elétrons* {elétron} e *prótons* {próton}."},
 			],
 		},
 	],

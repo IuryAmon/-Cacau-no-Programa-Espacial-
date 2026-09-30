@@ -20,12 +20,20 @@ extends Node
 #     clicar numa face vira para aquele lado;
 #   * a primeira página é a folha de rosto, à direita (a esquerda é o verso da
 #     capa, em branco), com o título e o nome da Cacau;
-#   * a segunda é a do átomo de lítio, em 1,5× e com o título em cima, com
-#     traços até eletrosfera, próton, elétron, núcleo e nêutron, e à direita
-#     as três partículas comentadas, cada uma com o ícone dela;
-#   * a terceira é a de atomística: a caixa do hidrogênio em 2×, com o nome em
-#     texto dentro dela e um traço de cada parte até o que ela é, e as
-#     propriedades na face da direita;
+#   * a segunda tem a epígrafe à esquerda, atrás da folha de rosto: a frase
+#     do Hubble entre aspas e a autoria alinhada à direita, embaixo dela; a
+#     direita fica em branco, sem número;
+#   * a terceira é a do átomo de lítio, em 1,5× e com o título em cima, com
+#     traços até eletrosfera, próton (p), elétron (e), núcleo e nêutron (n), e
+#     à direita as três partículas comentadas, cada uma com o ícone dela e a
+#     letra entre parênteses;
+#   * a quarta é a de atomística: a caixa do hidrogênio em 2×, com o nome em
+#     texto (ampliado 1,5×) dentro dela e um traço de cada parte até o que ela
+#     é (em baixo, o número de massa (A)), e as propriedades na face da
+#     direita: cada texto e, embaixo dele, a fórmula no meio da face; no
+#     texto, o ícone de cada partícula no lugar
+#     do {nome} dela, na linha, sem encostar em texto nenhum, e o número
+#     atômico, o número de massa e as partículas na cor das fórmulas;
 #   * cada face tem o número dela no canto de baixo de fora (a folha de rosto é
 #     a 1; esquerda par, direita ímpar), também na folha que vira;
 #   * todo texto cabe no papel (o nome, no vão da caixa) e toda letra existe
@@ -123,6 +131,7 @@ func _testar_paginas() -> void:
 	var faltando := ""
 	var fora := PackedStringArray()
 	var cantos := PackedStringArray()
+	var marcas_escritas := PackedStringArray()
 	for p in paginas.size():
 		_checar(not (paginas[p][0].is_empty() and paginas[p][1].is_empty()),
 			"página %d escrita" % (p + 1))
@@ -138,10 +147,16 @@ func _testar_paginas() -> void:
 				var limite: Rect2 = item.get("limite", face.area_util())
 				if not limite.encloses(FaceCaderno.caixa_do_texto(item)):
 					fora.append(item["texto"])
+				if "{" in item["texto"] or "}" in item["texto"] or "*" in item["texto"]:
+					marcas_escritas.append(item["texto"])
 				for c in String(item["texto"]):
 					if c != " " and not fonte.has_char(c.unicode_at(0)) and not faltando.contains(c):
 						faltando += c
-			# O número é o último: no canto de baixo de fora.
+			# O número é o último: no canto de baixo de fora. O verso da capa
+			# não tem.
+			if face.numero == 0:
+				face.free()
+				continue
 			var caixa_numero := FaceCaderno.caixa_do_texto(itens[-1])
 			var fora_de_canto: bool = itens[-1].get("texto") != str(face.numero) \
 				or caixa_numero.end.y <= face.area_util().end.y \
@@ -152,22 +167,34 @@ func _testar_paginas() -> void:
 			face.free()
 	_checar(fora.is_empty(), "todo texto cabe no papel, e o nome no vão da caixa %s" % [fora])
 	_checar(faltando.is_empty(), "toda letra existe na fonte [%s]" % faltando)
+	_checar(marcas_escritas.is_empty(), "todo {nome} virou ícone e todo *destaque*, cor %s" % [marcas_escritas])
 	_checar(cantos.is_empty(),
 		"cada face com o número no canto de baixo de fora, abaixo da margem do texto %s" % [cantos])
 	_checar(PaginasCaderno.numero(0, 1) == 1 and PaginasCaderno.numero(1, 0) == 2 \
-		and PaginasCaderno.numero(1, 1) == 3 and PaginasCaderno.numero(0, 0) == 0,
-		"a folha de rosto é a 1, o átomo 2 e 3, e o verso da capa não tem número")
+		and PaginasCaderno.numero(2, 0) == 4 and PaginasCaderno.numero(2, 1) == 5 \
+		and PaginasCaderno.numero(0, 0) == 0,
+		"a folha de rosto é a 1, a epígrafe a 2, o átomo 4 e 5, e o verso da capa não tem número")
 
 	var rosto: Dictionary = paginas[0][1]
 	_checar(paginas[0][0].is_empty() and rosto.get("tipo") == "rosto",
-		"a primeira página é a folha de rosto, à direita do verso da capa")
+		"a primeira página é a folha de rosto, à direita do verso da capa, em branco")
 	_checar(" ".join(rosto.get("linhas", [])) == "Caderno de Anotações" and rosto.get("nome") == "Cacau",
 		"com o título e o nome da Cacau")
 
-	var atomo: Dictionary = paginas[1][0]
+	var epigrafe: Dictionary = paginas[1][0]
+	var citacao := String(epigrafe.get("texto", ""))
+	_checar(epigrafe.get("tipo") == "epigrafe" and paginas[1][1].is_empty() \
+		and citacao.begins_with("“Equipado com seus cinco sentidos,") and citacao.ends_with("de ciência.”") \
+		and epigrafe.get("autoria") == ["— Edwin Hubble"],
+		"a segunda tem a epígrafe do Hubble à esquerda, entre aspas, e a direita em branco")
+	var curta := _epigrafe_montada(epigrafe, 1, 0)
+	_checar(_autoria_embaixo(curta["citacao"], curta["autoria"]),
+		"a citação em %d linhas e a autoria embaixo, alinhada à direita" % curta["citacao"].size())
+
+	var atomo: Dictionary = paginas[2][0]
 	_checar(atomo.get("tipo") == "desenho" and atomo.get("arte") == PaginasCaderno.ARTE_LITIO,
-		"a segunda é a do átomo de lítio")
-	var face := _face_montada(atomo, 1, 0)
+		"a terceira é a do átomo de lítio")
+	var face := _face_montada(atomo, 2, 0)
 	var caixa := Rect2()
 	var tinta := Rect2()
 	var titulo := {}
@@ -182,9 +209,9 @@ func _testar_paginas() -> void:
 		"o átomo vai em 1,5×, no pixel inteiro (%s)" % caixa)
 	_checar(titulo.get("texto") == "O átomo" and FaceCaderno.caixa_do_texto(titulo).end.y < tinta.position.y,
 		"com o título \"O átomo\" em cima dele")
-	_conferir_mapa(atomo, 1, ["eletrosfera", "próton", "elétron", "núcleo", "nêutron"])
-	var comentarios: Dictionary = paginas[1][1]
-	face = _face_montada(comentarios, 1, 1)
+	_conferir_mapa(atomo, 2, ["eletrosfera", "próton (p)", "elétron (e)", "núcleo", "nêutron (n)"])
+	var comentarios: Dictionary = paginas[2][1]
+	face = _face_montada(comentarios, 2, 1)
 	var icones := 0
 	for item in face.montar():
 		if item.has("regiao") and item["rect"].size == item["regiao"].size * FaceCaderno.ESCALA_ICONE:
@@ -192,11 +219,14 @@ func _testar_paginas() -> void:
 	face.free()
 	_checar(icones == 3,
 		"e à direita as três partículas comentadas, cada uma com o ícone dela (%d)" % icones)
+	var particulas: Array = comentarios["itens"].map(func(i): return i["formula"])
+	_checar(particulas == ["próton (p)", "nêutron (n)", "elétron (e)"],
+		"com a letra de cada uma entre parênteses %s" % [particulas])
 
-	var hidrogenio: Dictionary = paginas[2][0]
+	var hidrogenio: Dictionary = paginas[3][0]
 	_checar(hidrogenio.get("tipo") == "desenho" and hidrogenio.get("titulo") == "Atomística",
-		"a terceira é a de atomística")
-	face = _face_montada(hidrogenio, 2, 0)
+		"a quarta é a de atomística")
+	face = _face_montada(hidrogenio, 3, 0)
 	var nome := {}
 	for item in face.montar():
 		if item.has("arte"):
@@ -207,16 +237,55 @@ func _testar_paginas() -> void:
 	var arte: Texture2D = hidrogenio["arte"]
 	_checar(caixa.size == arte.get_size() * 2.0 and caixa.position == caixa.position.round(),
 		"a caixa do hidrogênio vai em 2×, no pixel inteiro (%s)" % caixa)
-	_checar(nome.get("texto") == "Hidrogênio" and caixa.encloses(FaceCaderno.caixa_do_texto(nome)),
-		"o nome vai em texto, dentro da caixa")
-	_conferir_mapa(hidrogenio, 2, ["número atômico (Z)", "símbolo", "massa atômica"])
+	_checar(nome.get("texto") == "Hidrogênio" and nome.get("escala") == FaceCaderno.ESCALA_NOME \
+		and caixa.encloses(FaceCaderno.caixa_do_texto(nome)),
+		"o nome vai em texto, ampliado %s×, dentro da caixa" % FaceCaderno.ESCALA_NOME)
+	_conferir_mapa(hidrogenio, 3, ["número atômico (Z)", "símbolo", "número de massa (A)"])
 
-	var propriedades: Dictionary = paginas[2][1]
+	var propriedades: Dictionary = paginas[3][1]
 	var formulas: Array = []
 	for item in propriedades.get("itens", []):
 		formulas.append(item["formula"])
-	_checar(propriedades.get("tipo") == "propriedades" and "A = Z + n" in formulas,
-		"e as propriedades à direita, com A = Z + n %s" % [formulas])
+	_checar(propriedades.get("tipo") == "propriedades" and formulas == ["Z = p", "A = Z + n", "p = e"],
+		"e as propriedades à direita, com Z = p, A = Z + n e p = e %s" % [formulas])
+	face = _face_montada(propriedades, 3, 1)
+	var no_meio := 0
+	var textos: Array[Rect2] = []
+	var destaques: Array = []
+	var icones_no_texto: Array = []
+	# De cima para baixo, o que cada linha é: F = fórmula, t = texto.
+	var linhas := {}
+	for item in face.montar():
+		if item.get("tam") == FaceCaderno.TAM_FORMULA:
+			linhas[item["pos"].y] = "F"
+			if absf(FaceCaderno.caixa_do_texto(item).get_center().x - face.size.x * 0.5) <= 1.0:
+				no_meio += 1
+		elif item.has("texto"):
+			textos.append(FaceCaderno.caixa_do_texto(item))
+			if not item.has("limite"):
+				linhas[item["pos"].y] = "t"
+			if item["cor"] == FaceCaderno.TINTA_TITULO:
+				destaques.append(item["texto"])
+		elif item.has("regiao"):
+			icones_no_texto.append(item)
+	var area := face.area_util()
+	face.free()
+	_checar(no_meio == 3, "as fórmulas no meio da face (%d de 3)" % no_meio)
+	var alturas := linhas.keys()
+	alturas.sort()
+	var sequencia := "".join(alturas.map(func(y): return linhas[y]))
+	_checar(RegEx.create_from_string("^(t+F){3}$").search(sequencia) != null,
+		"cada texto vem antes da fórmula dele (%s)" % sequencia)
+	var ordem: Array = icones_no_texto.map(func(i): return PaginasCaderno.PARTICULAS.find_key(i["regiao"]))
+	var soltos := icones_no_texto.filter(func(i): return i["arte"] == PaginasCaderno.ARTE_PARTICULAS \
+		and i["rect"].size == i["regiao"].size * FaceCaderno.ESCALA_ICONE_NO_TEXTO \
+		and area.encloses(i["rect"]) and not textos.any(func(c): return c.intersects(i["rect"])))
+	_checar(ordem == ["próton", "próton", "nêutron", "elétron", "próton"] \
+		and soltos.size() == icones_no_texto.size(),
+		"no texto, o ícone de cada partícula, sem encostar em texto nenhum %s" % [ordem])
+	_checar(destaques == ["Número atômico (Z)", "prótons", "Número de massa (A)", "prótons", "nêutrons",
+		"elétrons", "prótons"], "na cor das fórmulas, o número atômico, o de massa e as partículas %s" \
+		% [destaques])
 
 
 ## O mapa mental de um desenho: um traço para cada nome pedido, que sai de
@@ -264,6 +333,38 @@ func _face_montada(dados: Dictionary, pagina: int, lado: int) -> FaceCaderno:
 	face.dados = dados
 	face.numero = PaginasCaderno.numero(pagina, lado)
 	return face
+
+
+## Os textos de uma epígrafe montada: {"citacao": as linhas, "autoria": as da
+## autoria}, cada uma com "texto", "pos" e "caixa". O número da face fica fora.
+func _epigrafe_montada(dados: Dictionary, pagina: int, lado: int) -> Dictionary:
+	var face := _face_montada(dados, pagina, lado)
+	var citacao: Array = []
+	var autoria: Array = []
+	for item in face.montar():
+		# Numa epígrafe, só o número tem "limite".
+		if not item.has("texto") or item.has("limite"):
+			continue
+		var linha := {"texto": item["texto"], "pos": item["pos"],
+			"caixa": FaceCaderno.caixa_do_texto(item)}
+		if item["cor"] == FaceCaderno.TINTA:
+			citacao.append(linha)
+		elif item["cor"] == FaceCaderno.TINTA_FRACA:
+			autoria.append(linha)
+	face.free()
+	return {"citacao": citacao, "autoria": autoria}
+
+
+## As linhas da autoria embaixo da citação e alinhadas à direita do bloco,
+## com a citação alinhada à esquerda e sem passar da autoria.
+func _autoria_embaixo(citacao: Array, autoria: Array) -> bool:
+	if citacao.size() < 2 or autoria.is_empty():
+		return false
+	var fim: float = autoria[0]["caixa"].end.x
+	return autoria[0]["caixa"].position.y > citacao[-1]["caixa"].end.y \
+		and autoria.all(func(l): return l["caixa"].end.x == fim) \
+		and citacao.all(func(l): return l["caixa"].position.x == citacao[0]["caixa"].position.x \
+			and l["caixa"].end.x <= fim + 1.0)
 
 
 func _testar_icone() -> void:
@@ -331,10 +432,9 @@ func _testar_virar() -> void:
 	var vistos := await _acompanhar_virada(0, "indo")
 	_checar(vistos == [1, 2, 3, 4, 5, 6, 7, 8], "indo, quadros 2 a 9 da arte, em ordem %s" % [vistos])
 	_checar(livro.pagina() == 1 and livro.quadro() == 0, "parou na página 2, no quadro parado")
-	_checar(_face(0).dados == PaginasCaderno.faces(1)[0] and _face(1).dados == PaginasCaderno.faces(1)[1],
-		"com as faces da página 2")
-	_checar(_face(0).numero == 2 and _face(1).numero == 3,
-		"numeradas 2 e 3 (%d e %d)" % [_face(0).numero, _face(1).numero])
+	_checar(_face(0).dados == PaginasCaderno.faces(1)[0] and not livro._recortes[1].visible,
+		"com a epígrafe à esquerda e a direita em branco")
+	_checar(_face(0).numero == 2, "a epígrafe com o número 2 (%d)" % _face(0).numero)
 
 	_tecla(KEY_A)
 	await _quadros(1)
@@ -399,11 +499,13 @@ func _conferir_composicao(a: int, q: int) -> String:
 	if direita.visible and _face(1).numero != PaginasCaderno.numero(a + 1, 1):
 		return "a face de baixo à direita com o número errado"
 	var tinta: float = CadernoLivro.TINTA_NA_FOLHA[q]
-	if virando.visible != (tinta > 0.0):
-		return "texto na folha que vira: %s, esperado %s" % [virando.visible, tinta > 0.0]
+	var esperado: Dictionary = PaginasCaderno.faces(a)[1] if q <= CadernoLivro.ULTIMO_QUADRO_DA_FRENTE \
+		else PaginasCaderno.faces(a + 1)[0]
+	# Face em branco não tem o que levar.
+	var com_texto := tinta > 0.0 and not esperado.is_empty()
+	if virando.visible != com_texto:
+		return "texto na folha que vira: %s, esperado %s" % [virando.visible, com_texto]
 	if virando.visible:
-		var esperado: Dictionary = PaginasCaderno.faces(a)[1] if q <= CadernoLivro.ULTIMO_QUADRO_DA_FRENTE \
-			else PaginasCaderno.faces(a + 1)[0]
 		if _face(2).dados != esperado:
 			return "a folha que vira leva a face errada"
 		var numero := PaginasCaderno.numero(a, 1) if q <= CadernoLivro.ULTIMO_QUADRO_DA_FRENTE \

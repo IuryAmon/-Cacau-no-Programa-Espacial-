@@ -11,7 +11,8 @@ extends Control
 # art numa grade de 11 px por em, então os tamanhos são múltiplos de 11 e cada
 # pixel da letra fica inteiro: o texto na 22 (pixel de 2 px), a fórmula na 33 e
 # o título na 44. A caixa do hidrogênio vai ampliada 2×, no mesmo pixel de 2 px
-# do texto (o nome do elemento dentro dela vai na 11: na 22 não cabe no vão).
+# do texto (o nome do elemento dentro dela vai na 11 ampliada 1,5×: na 22 não
+# cabe no vão).
 # O átomo de lítio vai em 1,5×, para caber com o título: o traço de 2 px dele
 # vira 3 px certinhos.
 #
@@ -24,6 +25,11 @@ const TAM_TEXTO := 22
 const TAM_FORMULA := 33
 const TAM_TITULO := 44
 const TAM_NOME := 11
+## O nome na caixa vai na TAM_NOME ampliada assim, desenhado ampliado e não
+## numa letra maior: na 22 não cabe (136 px num vão de 132), e numa letra fora
+## da grade de 11 o pixel dela borra. Em 1,5×, cada pixel da letra fica com 1
+## ou 2 px, como o traço do átomo.
+const ESCALA_NOME := 1.5
 const ENTRELINHA := 32.0
 const MARGEM := Vector2(24, 24)
 ## O bloco fica um pouco acima do meio: o meio "de olho" de uma página é mais
@@ -49,12 +55,20 @@ const ALCANCE := 28.0
 const FOLGA_TEXTO := 8.0
 
 ## Nas propriedades, de linha de base a linha de base: da fórmula ao texto
-## dela, e do fim de um item à fórmula do próximo.
+## dela, e do fim de um item à fórmula do próximo. Com a fórmula embaixo do
+## texto: do texto à fórmula dele, e da fórmula ao texto do próximo item (as
+## mesmas folgas, contando a altura de cada letra).
 const DA_FORMULA := 36.0
 const ENTRE_ITENS := 64.0
+const ATE_A_FORMULA := 44.0
+const DEPOIS_DA_FORMULA := 56.0
 ## O ícone antes da fórmula: ampliado assim e com esta folga até ela.
 const ESCALA_ICONE := 2.0
 const FOLGA_ICONE := 12.0
+## O ícone no meio do texto ({nome}): no tamanho em que a partícula está no
+## átomo (e cabe entre uma linha e outra), com esta folga de cada lado.
+const ESCALA_ICONE_NO_TEXTO := 1.5
+const FOLGA_ICONE_NO_TEXTO := 3.0
 
 ## Folha de rosto: linha de base da primeira linha do título e da linha do
 ## nome (fração da altura da face), de uma linha do título à outra, e a linha
@@ -64,6 +78,11 @@ const ALTURA_NOME := 0.72
 const ENTRELINHA_TITULO := 52.0
 const LINHA_NOME := 220.0
 const FOLGA_NOME := 12.0
+
+## Epígrafe: a largura em que a citação quebra (mais estreita que o papel, com
+## folga dos lados) e, de linha de base a linha de base, do fim dela à autoria.
+const LARGURA_EPIGRAFE := 352.0
+const DA_CITACAO := 56.0
 
 const TINTA := Color8(0x3d, 0x2a, 0x22)
 const TINTA_TITULO := Color8(0x8e, 0x3b, 0x2c)
@@ -113,6 +132,8 @@ func montar() -> Array:
 	match String(dados.get("tipo", "")):
 		"rosto":
 			itens.append_array(_montar_rosto())
+		"epigrafe":
+			itens.append_array(_montar_epigrafe(area))
 		"desenho":
 			itens.append_array(_montar_desenho(area))
 		"propriedades":
@@ -125,9 +146,10 @@ func montar() -> Array:
 ## Onde fica o texto de um item de montar(), do ascendente ao descendente.
 static func caixa_do_texto(item: Dictionary) -> Rect2:
 	var tam: int = item["tam"]
+	var escala: float = item.get("escala", 1.0)
 	var sobe := FONTE.get_ascent(tam)
-	return Rect2(item["pos"] - Vector2(0, sobe),
-		Vector2(_largura(item["texto"], tam), sobe + FONTE.get_descent(tam)))
+	return Rect2(item["pos"] - Vector2(0, sobe * escala),
+		Vector2(_largura(item["texto"], tam), sobe + FONTE.get_descent(tam)) * escala)
 
 
 func _draw() -> void:
@@ -140,6 +162,11 @@ func _draw() -> void:
 			draw_rect(item["traco"], item["cor"])
 		elif item.has("poligono"):
 			draw_colored_polygon(item["poligono"], item["cor"])
+		elif item.has("escala"):
+			draw_set_transform(item["pos"], 0.0, Vector2.ONE * item["escala"])
+			draw_string(FONTE, Vector2.ZERO, item["texto"], HORIZONTAL_ALIGNMENT_LEFT, -1,
+				item["tam"], item["cor"])
+			draw_set_transform(Vector2.ZERO)
 		else:
 			draw_string(FONTE, item["pos"], item["texto"], HORIZONTAL_ALIGNMENT_LEFT, -1,
 				item["tam"], item["cor"])
@@ -210,6 +237,37 @@ func _enfeite(centro: Vector2, meia_largura: float, cor: Color) -> Array:
 
 
 # ─────────────────────────────────────────────────────────────
+# EPÍGRAFE (a citação e de quem ela é)
+# ─────────────────────────────────────────────────────────────
+
+## A citação alinhada à esquerda e, embaixo, a autoria mais fraca, alinhada à
+## direita do bloco; o bloco vai no meio da área, um pouco acima.
+func _montar_epigrafe(area: Rect2) -> Array:
+	var itens: Array = []
+	var linhas := EstiloHUD.quebrar(FONTE, String(dados.get("texto", "")), TAM_TEXTO,
+		minf(LARGURA_EPIGRAFE, area.size.x))
+	var autoria: Array = dados.get("autoria", [])
+	var mais_largo := 0.0
+	for linha in Array(linhas) + autoria:
+		mais_largo = maxf(mais_largo, _largura(String(linha), TAM_TEXTO))
+
+	var y := FONTE.get_ascent(TAM_TEXTO)
+	for i in linhas.size():
+		if i > 0:
+			y += ENTRELINHA
+		itens.append({"texto": linhas[i], "pos": Vector2(0, y), "tam": TAM_TEXTO, "cor": TINTA})
+	for i in autoria.size():
+		var texto := String(autoria[i])
+		y += DA_CITACAO if i == 0 else ENTRELINHA
+		itens.append({"texto": texto, "tam": TAM_TEXTO, "cor": TINTA_FRACA,
+			"pos": Vector2(mais_largo - _largura(texto, TAM_TEXTO), y)})
+	var altura := y + FONTE.get_descent(TAM_TEXTO)
+	_mover(itens, Vector2(area.get_center().x - mais_largo * 0.5,
+		area.get_center().y - altura * 0.5 - SUBIDA_OPTICA).round())
+	return itens
+
+
+# ─────────────────────────────────────────────────────────────
 # DESENHO (a arte e o mapa mental dela)
 # ─────────────────────────────────────────────────────────────
 
@@ -229,10 +287,11 @@ func _montar_desenho(area: Rect2) -> Array:
 	if not nome.is_empty():
 		var vao: Rect2 = dados.get("vao_do_nome", Rect2(Vector2.ZERO, arte.get_size()))
 		vao = Rect2(vao.position * escala, vao.size * escala)
-		var sobe := FONTE.get_ascent(TAM_NOME)
-		var desce := FONTE.get_descent(TAM_NOME)
-		itens.append({"texto": nome, "tam": TAM_NOME, "cor": TINTA, "limite": vao,
-			"pos": Vector2(vao.get_center().x - _largura(nome, TAM_NOME) * 0.5,
+		var sobe := FONTE.get_ascent(TAM_NOME) * ESCALA_NOME
+		var desce := FONTE.get_descent(TAM_NOME) * ESCALA_NOME
+		itens.append({"texto": nome, "tam": TAM_NOME, "escala": ESCALA_NOME, "cor": TINTA,
+			"limite": vao,
+			"pos": Vector2(vao.get_center().x - _largura(nome, TAM_NOME) * ESCALA_NOME * 0.5,
 				vao.get_center().y + (sobe - desce) * 0.5)})
 
 	for marca in dados.get("marcas", []):
@@ -298,7 +357,10 @@ func _marca(marca: Dictionary, escala: float, tinta: Rect2) -> Array:
 
 ## Bloco alinhado à esquerda, centrado pela linha mais larga e um pouco acima
 ## do meio da área. Com ícones, eles ficam numa coluna à esquerda, no meio da
-## altura da fórmula, e a fórmula e o texto se alinham depois dela.
+## altura da fórmula, e a fórmula e o texto se alinham depois dela. Com
+## "formulas_no_meio", cada fórmula fica centrada no bloco, e o bloco já está
+## no meio da face; com "formula_embaixo", o texto vem antes e a fórmula dele
+## embaixo. Um {nome} no texto vira o ícone do "pedacos", na linha.
 func _montar_propriedades(area: Rect2) -> Array:
 	var icones: Texture2D = dados.get("icones")
 	var coluna := 0.0
@@ -307,35 +369,154 @@ func _montar_propriedades(area: Rect2) -> Array:
 			if item.has("icone"):
 				coluna = maxf(coluna, item["icone"].size.x * ESCALA_ICONE)
 	var x := coluna + FOLGA_ICONE if coluna > 0.0 else 0.0
+	var embaixo: bool = dados.get("formula_embaixo", false)
 
 	var itens: Array = []
-	var y := 0.0
+	var formulas: Array = []
+	var y := NAN
+	var ultimo_tam := TAM_TEXTO
 	var mais_largo := 0.0
-	var primeiro := true
 	for item in dados.get("itens", []):
+		# A fórmula (String) e as linhas do texto, na ordem em que vão.
+		var ordem: Array = _quebrar_com_icones(String(item.get("texto", "")), area.size.x - x)
 		var formula := String(item.get("formula", ""))
-		y = FONTE.get_ascent(TAM_FORMULA) if primeiro else y + ENTRE_ITENS
-		primeiro = false
-		if icones != null and item.has("icone"):
-			var regiao: Rect2 = item["icone"]
-			var lado := regiao.size * ESCALA_ICONE
-			var meio_da_formula := y - FONTE.get_ascent(TAM_FORMULA) * 0.5
-			itens.append({"arte": icones, "regiao": regiao, "rect": Rect2(
-				Vector2((coluna - lado.x) * 0.5, meio_da_formula - lado.y * 0.5).round(), lado)})
-		itens.append({"texto": formula, "pos": Vector2(x, y), "tam": TAM_FORMULA,
-			"cor": TINTA_TITULO})
-		mais_largo = maxf(mais_largo, x + _largura(formula, TAM_FORMULA))
-		var primeira := true
-		for linha in EstiloHUD.quebrar(FONTE, String(item.get("texto", "")), TAM_TEXTO,
-				area.size.x - x):
-			y += DA_FORMULA if primeira else ENTRELINHA
-			primeira = false
-			itens.append({"texto": linha, "pos": Vector2(x, y), "tam": TAM_TEXTO, "cor": TINTA})
-			mais_largo = maxf(mais_largo, x + _largura(linha, TAM_TEXTO))
-	var altura := y + FONTE.get_descent(TAM_TEXTO)
+		if embaixo:
+			ordem.append(formula)
+		else:
+			ordem.push_front(formula)
+		var anterior := ""
+		for coisa in ordem:
+			var e_formula: bool = coisa is String
+			if is_nan(y):
+				y = FONTE.get_ascent(TAM_FORMULA if e_formula else TAM_TEXTO)
+			elif anterior.is_empty():
+				y += DEPOIS_DA_FORMULA if embaixo else ENTRE_ITENS
+			elif e_formula:
+				y += ATE_A_FORMULA
+			else:
+				y += DA_FORMULA if anterior == "formula" else ENTRELINHA
+			anterior = "formula" if e_formula else "texto"
+			ultimo_tam = TAM_FORMULA if e_formula else TAM_TEXTO
+			if not e_formula:
+				mais_largo = maxf(mais_largo, _por_linha(itens, coisa, Vector2(x, y), icones))
+				continue
+			if icones != null and item.has("icone"):
+				var regiao: Rect2 = item["icone"]
+				var lado := regiao.size * ESCALA_ICONE
+				var meio_da_formula := y - FONTE.get_ascent(TAM_FORMULA) * 0.5
+				itens.append({"arte": icones, "regiao": regiao, "rect": Rect2(
+					Vector2((coluna - lado.x) * 0.5, meio_da_formula - lado.y * 0.5).round(), lado)})
+			formulas.append({"texto": formula, "pos": Vector2(x, y), "tam": TAM_FORMULA,
+				"cor": TINTA_TITULO})
+			itens.append(formulas[-1])
+			mais_largo = maxf(mais_largo, x + _largura(formula, TAM_FORMULA))
+	if dados.get("formulas_no_meio", false):
+		for formula in formulas:
+			formula["pos"] = Vector2((mais_largo - _largura(formula["texto"], TAM_FORMULA)) * 0.5,
+				formula["pos"].y)
+	var altura := (0.0 if is_nan(y) else y) + FONTE.get_descent(ultimo_tam)
 	_mover(itens, Vector2(area.get_center().x - mais_largo * 0.5,
 		area.get_center().y - altura * 0.5 - SUBIDA_OPTICA).round())
 	return itens
+
+
+## Quebra o texto em linhas que cabem na largura, como o EstiloHUD.quebrar,
+## mas com os ícones ({nome}) ocupando o lugar deles e o *destaque* na cor da
+## fórmula. Cada linha é uma lista de pedaços: texto ({"texto", "cor"}) ou
+## ícone (Rect2, a região dele na arte).
+func _quebrar_com_icones(texto: String, largura: float) -> Array:
+	var linhas: Array = []
+	var linha: Array = []
+	var ocupado := 0.0
+	var espaco := _largura(" ", TAM_TEXTO)
+	var destaque := false
+	for palavra in texto.split(" ", false):
+		var pedacos := _pedacos_da_palavra(palavra, destaque)
+		var largura_da_palavra := _largura_dos_pedacos(pedacos)
+		if not linha.is_empty() and ocupado + espaco + largura_da_palavra > largura:
+			linhas.append(linha)
+			linha = []
+		if linha.is_empty():
+			ocupado = largura_da_palavra
+		else:
+			# O espaço fica da cor de onde ele está: dentro do destaque, emenda.
+			linha.append({"texto": " ", "cor": _cor_do_texto(destaque)})
+			ocupado += espaco + largura_da_palavra
+		linha.append_array(pedacos)
+		if palavra.count("*") % 2 == 1:
+			destaque = not destaque
+	if not linha.is_empty():
+		linhas.append(linha)
+	return linhas
+
+
+## Uma palavra em pedaços de texto e ícones: "{nêutron}." vira o ícone do
+## nêutron e o ponto, e cada * liga ou desliga o destaque. Um {nome} que o
+## "pedacos" da face não tem fica escrito.
+func _pedacos_da_palavra(palavra: String, destaque: bool) -> Array:
+	var regioes: Dictionary = dados.get("pedacos", {})
+	var pedacos: Array = []
+	var corrido := ""
+	var i := 0
+	while i < palavra.length():
+		var fecha := palavra.find("}", i) if palavra[i] == "{" else -1
+		var nome := palavra.substr(i + 1, fecha - i - 1) if fecha >= 0 else ""
+		if palavra[i] != "*" and not regioes.has(nome):
+			corrido += palavra[i]
+			i += 1
+			continue
+		if not corrido.is_empty():
+			pedacos.append({"texto": corrido, "cor": _cor_do_texto(destaque)})
+			corrido = ""
+		if palavra[i] == "*":
+			destaque = not destaque
+			i += 1
+		else:
+			pedacos.append(regioes[nome])
+			i = fecha + 1
+	if not corrido.is_empty():
+		pedacos.append({"texto": corrido, "cor": _cor_do_texto(destaque)})
+	return pedacos
+
+
+static func _cor_do_texto(destaque: bool) -> Color:
+	return TINTA_TITULO if destaque else TINTA
+
+
+static func _largura_dos_pedacos(pedacos: Array) -> float:
+	var largura := 0.0
+	for pedaco in pedacos:
+		largura += _largura(pedaco["texto"], TAM_TEXTO) if pedaco is Dictionary \
+			else pedaco.size.x * ESCALA_ICONE_NO_TEXTO + FOLGA_ICONE_NO_TEXTO * 2.0
+	return largura
+
+
+## Põe uma linha de _quebrar_com_icones com a linha de base em "pos": o texto
+## da mesma cor entre os ícones num item só, e cada ícone no meio da altura da
+## letra. Devolve onde a linha acaba.
+func _por_linha(itens: Array, linha: Array, pos: Vector2, arte: Texture2D) -> float:
+	var x := pos.x
+	var corrido := ""
+	var cor := TINTA
+	var meio := pos.y - FONTE.get_ascent(TAM_TEXTO) * 0.5
+	for pedaco in linha + [null]:
+		if pedaco is Dictionary and (corrido.is_empty() or pedaco["cor"] == cor):
+			corrido += pedaco["texto"]
+			cor = pedaco["cor"]
+			continue
+		if not corrido.is_empty():
+			itens.append({"texto": corrido, "pos": Vector2(x, pos.y), "tam": TAM_TEXTO, "cor": cor})
+			x += _largura(corrido, TAM_TEXTO)
+			corrido = ""
+		if pedaco is Dictionary:
+			corrido = pedaco["texto"]
+			cor = pedaco["cor"]
+		elif pedaco is Rect2:
+			var lado: Vector2 = pedaco.size * ESCALA_ICONE_NO_TEXTO
+			itens.append({"arte": arte, "regiao": pedaco, "rect": Rect2(
+				Vector2(x + FOLGA_ICONE_NO_TEXTO, meio - lado.y * 0.5).round(), lado)})
+			x += lado.x + FOLGA_ICONE_NO_TEXTO * 2.0
+	return x
 
 
 ## Leva os itens montados em (0, 0) para o lugar deles na face.
