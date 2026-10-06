@@ -336,6 +336,14 @@ func _testar_cinto() -> void:
 
 	_checar(FerramentasHUD.tem_no_cinto("bumerangue"),
 		"fechar a ficha pendurou a ferramenta no cinto")
+
+	# Com o bumerangue no cinto sobe o tutorial dele, que segura o mundo até o
+	# E (o teste da ficha e da telinha é o tools/teste_tutorial_bumerangue).
+	_checar(FerramentasHUD.tutorial_aberto() and get_tree().paused,
+		"e subiu o tutorial do bumerangue, com o mundo parado")
+	await FerramentasHUD.fechar_tutorial()
+	_checar(not FerramentasHUD.tutorial_aberto() and not get_tree().paused,
+		"fechado o tutorial, o mundo volta a andar")
 	_checar(FerramentasHUD.ponto_de_entrada().is_equal_approx(antes),
 		"o ponto de entrada do cinto nao se mexe quando uma ferramenta entra")
 

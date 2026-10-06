@@ -26,8 +26,8 @@ FerramentasHUD="*res://scripts/ui/ferramentas_hud.gd"
 Controle="*res://scripts/controle.gd"
 CursorVirtual="*res://scripts/ui/cursor_virtual.gd"
 Objetivos="*res://scripts/objetivos.gd"
-Dialogic="*uid://c3b5clqd5sgir"
 Caderno="*res://scripts/caderno.gd"
+Dialogic="*uid://c3b5clqd5sgir"
 
 [dialogic]
 

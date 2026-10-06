@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://b2un5uc6giuc2" path="res://scenes/fases/componentes/caixa_eletrica.tscn" id="7_gsbid"]
 [ext_resource type="PackedScene" uid="uid://bmgkds67hbool" path="res://scenes/player.tscn" id="13_etf7r"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/gaiola_vidro_eletrica.tscn" id="14_gaiola"]
+[ext_resource type="PackedScene" path="res://scenes/puzzle_carbono.tscn" id="15_puzcarb"]
 [ext_resource type="PackedScene" uid="uid://bnekrea2h8yv1" path="res://scenes/puzzle_macarico.tscn" id="15_puzmac"]
 [ext_resource type="Texture2D" uid="uid://3ut0t761chme" path="res://assets/itens/maçaricoDesligado.png" id="16_macdes"]
 [ext_resource type="Texture2D" uid="uid://cfxbdvip8cuib" path="res://assets/itens/Boomerangue.png" id="17_boomer"]
@@ -1463,6 +1464,7 @@ text = "FERRAMENTA
 
 [node name="GaiolaBumerangue" parent="Entrada" unique_id=1590805511 instance=ExtResource("14_gaiola")]
 position = Vector2(2174, 320)
+puzzle_cena = ExtResource("15_puzcarb")
 item_alvo = NodePath("../PickupBumerangue")
 
 [node name="Treino" type="Node2D" parent="." unique_id=586655572]

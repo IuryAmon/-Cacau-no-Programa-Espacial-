@@ -3,7 +3,9 @@ extends FaseBase
 # --- FASE 1: OFICINA DO CARBONO (Mapa 2 do plano) ---
 #
 # Fluxo horizontal, side-scroller:
-#   ① ENTRADA    bancada do Dr. Chico — monta o BUMERANGUE. É aqui também que
+#   ① ENTRADA    bancada do Dr. Chico — o BUMERANGUE está no domo de vidro,
+#                que só abre com o átomo de carbono montado no computador
+#                (puzzle_carbono). É aqui também que
 #                fica o ELEVADOR DE CARGA (Entrada/ElevadorPatio): entre nele e
 #                aperte E para subir ao PÁTIO, que é a fase1.2
 #                (scenes/fases/fase1_2_exterior.tscn) — a parte de fora do

@@ -1,0 +1,105 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/seletor_particula.gd" id="1_seletor"]
+[ext_resource type="Texture2D" uid="uid://12prq7vwplys" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes119.png" id="2_seta"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="3_fonte"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_botao"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_seta1"]
+atlas = ExtResource("2_seta")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_seta2"]
+atlas = ExtResource("2_seta")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_seta3"]
+atlas = ExtResource("2_seta")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_seta"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_seta1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_seta2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_seta3")
+}],
+"loop": false,
+"name": &"default",
+"speed": 18.0
+}]
+
+[node name="SeletorParticula" type="Control"]
+custom_minimum_size = Vector2(75, 166)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 75.0
+offset_bottom = 166.0
+mouse_filter = 2
+script = ExtResource("1_seletor")
+
+[node name="BotaoMais" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 8.0
+offset_right = 68.0
+offset_bottom = 35.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_botao")
+
+[node name="Seta" type="AnimatedSprite2D" parent="BotaoMais"]
+position = Vector2(30, 17.5)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_seta")
+flip_v = true
+
+[node name="Icone" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 23.0
+offset_top = 40.0
+offset_right = 53.0
+offset_bottom = 70.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="Quantos" type="Label" parent="."]
+layout_mode = 0
+offset_top = 72.0
+offset_right = 75.0
+offset_bottom = 98.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("3_fonte")
+theme_override_font_sizes/font_size = 22
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoMenos" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 100.0
+offset_right = 68.0
+offset_bottom = 135.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_botao")
+
+[node name="Seta" type="AnimatedSprite2D" parent="BotaoMenos"]
+position = Vector2(30, 17.5)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_seta")
+
+[node name="Nome" type="Label" parent="."]
+layout_mode = 0
+offset_top = 152.0
+offset_right = 75.0
+offset_bottom = 166.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 0.9)
+theme_override_fonts/font = ExtResource("3_fonte")
+theme_override_font_sizes/font_size = 11
+text = "Partícula"
+horizontal_alignment = 1

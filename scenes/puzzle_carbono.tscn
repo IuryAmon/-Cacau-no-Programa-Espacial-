@@ -1,0 +1,371 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/puzzle_carbono.gd" id="1_pc"]
+[ext_resource type="AudioStream" uid="uid://d184o4jmhqq0t" path="res://sounds/PuzzleConcluido2.mp3" id="2_sucesso"]
+[ext_resource type="AudioStream" uid="uid://0t8yju2oahhm" path="res://sounds/AcessoNegado.mp3" id="3_erro"]
+[ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="4_pop"]
+[ext_resource type="AudioStream" uid="uid://bxtvw2yqbqsj6" path="res://sounds/drag.mp3" id="5_drag"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="7_fonte"]
+[ext_resource type="Texture2D" uid="uid://cji6avv68agjd" path="res://assets/UI/Computador receptor/tela_computador.png" id="8_tela"]
+[ext_resource type="Texture2D" path="res://assets/UI/Computador receptor/particulas_atomo.png" id="9_particulas"]
+[ext_resource type="Shader" path="res://shaders/tela_crt.gdshader" id="10_crt"]
+[ext_resource type="Texture2D" uid="uid://cfxbdvip8cuib" path="res://assets/itens/Boomerangue.png" id="11_bumerangue"]
+[ext_resource type="PackedScene" path="res://scenes/ui/seletor_particula.tscn" id="12_seletor"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_caixa"]
+bg_color = Color(0.05, 0.1, 0.18, 0.55)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.9, 0.95, 1, 0.9)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_proton"]
+atlas = ExtResource("9_particulas")
+region = Rect2(0, 0, 60, 60)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_neutron"]
+atlas = ExtResource("9_particulas")
+region = Rect2(64, 0, 60, 60)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eletron"]
+atlas = ExtResource("9_particulas")
+region = Rect2(128, 16, 30, 30)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_brilho"]
+blend_mode = 1
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("10_crt")
+shader_parameter/forca_linhas = 0.1
+shader_parameter/periodo = 4.0
+shader_parameter/vinheta = 0.45
+
+[node name="PuzzleCarbono" type="CanvasLayer"]
+process_mode = 3
+layer = 98
+script = ExtResource("1_pc")
+
+[node name="AudioSucesso" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_sucesso")
+volume_db = 2.0
+
+[node name="AudioErro" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_erro")
+volume_db = 2.0
+
+[node name="AudioPop" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_pop")
+
+[node name="AudioDrag" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_drag")
+
+[node name="RootControl" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Fundo" type="ColorRect" parent="RootControl"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.75)
+
+[node name="Instrucoes" type="Label" parent="RootControl"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 20.0
+offset_right = 154.0
+offset_bottom = 52.0
+theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
+theme_override_fonts/font = ExtResource("7_fonte")
+theme_override_font_sizes/font_size = 11
+text = "{fechar}
+para fechar"
+horizontal_alignment = 1
+
+[node name="Tela" type="TextureRect" parent="RootControl"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 278.0
+offset_top = 72.0
+offset_right = 1148.0
+offset_bottom = 702.0
+scale = Vector2(1.2, 1.2)
+mouse_filter = 2
+texture = ExtResource("8_tela")
+expand_mode = 1
+
+[node name="Display" type="Control" parent="RootControl/Tela"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 0
+offset_left = 42.0
+offset_top = 42.0
+offset_right = 828.0
+offset_bottom = 567.0
+pivot_offset = Vector2(393, 262.5)
+mouse_filter = 2
+
+[node name="Cabecalho" type="Label" parent="RootControl/Tela/Display"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 14.0
+offset_right = 764.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.56, 0.78, 1, 0.9)
+theme_override_fonts/font = ExtResource("7_fonte")
+theme_override_font_sizes/font_size = 11
+text = "LIBERAÇÃO DO BUMERANGUE"
+
+[node name="GrupoAtomo" type="Control" parent="RootControl/Tela/Display"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Atomo" type="Control" parent="RootControl/Tela/Display/GrupoAtomo"]
+layout_mode = 0
+offset_left = 58.0
+offset_top = 76.0
+offset_right = 438.0
+offset_bottom = 456.0
+mouse_filter = 2
+
+[node name="Titulo" type="Label" parent="RootControl/Tela/Display/GrupoAtomo"]
+layout_mode = 0
+offset_left = 470.0
+offset_top = 46.0
+offset_right = 770.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("7_fonte")
+theme_override_font_sizes/font_size = 20
+text = "REPRESENTE O ÁTOMO:"
+horizontal_alignment = 1
+
+[node name="Caixa" type="Panel" parent="RootControl/Tela/Display/GrupoAtomo"]
+layout_mode = 0
+offset_left = 563.0
+offset_top = 78.0
+offset_right = 677.0
+offset_bottom = 216.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_caixa")
+
+[node name="Numero" type="Label" parent="RootControl/Tela/Display/GrupoAtomo/Caixa"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 9.0
+offset_right = 60.0
+offset_bottom = 29.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("7_fonte")
+theme_override_font_sizes/font_size = 16
+text = "6"
+
+[node name="Simbolo" type="Label" parent="RootControl/Tela/Display/GrupoAtomo/Caixa"]
+layout_mode = 0
+offset_top = 28.0
+offset_right = 114.0
+offset_bottom = 84.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("7_fonte")
+theme_override_font_sizes/font_size = 44
+text = "C"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Nome" type="Label" parent="RootControl/Tela/Display/GrupoAtomo/Caixa"]
+layout_mode = 0
+offset_top = 84.0
+offset_right = 114.0
+offset_bottom = 100.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("7_fonte")
+theme_override_font_sizes/font_size = 12
+text = "Carbono"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Massa" type="Label" parent="RootControl/Tela/Display/GrupoAtomo/Caixa"]
+layout_mode = 0
+offset_top = 106.0
+offset_right = 114.0
+offset_bottom = 128.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("7_fonte")
+theme_override_font_sizes/font_size = 16
+text = "12,011"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Titulo2" type="Label" parent="RootControl/Tela/Display/GrupoAtomo"]
+layout_mode = 0
+offset_left = 470.0
+offset_top = 230.0
+offset_right = 770.0
+offset_bottom = 254.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("7_fonte")
+theme_override_font_sizes/font_size = 20
+text = "COM AS PARTÍCULAS:"
+horizontal_alignment = 1
+
+[node name="Seletores" type="Control" parent="RootControl/Tela/Display/GrupoAtomo"]
+layout_mode = 0
+offset_left = 470.0
+offset_top = 264.0
+offset_right = 770.0
+offset_bottom = 430.0
+mouse_filter = 2
+
+[node name="SeletorProtons" parent="RootControl/Tela/Display/GrupoAtomo/Seletores" instance=ExtResource("12_seletor")]
+layout_mode = 0
+offset_left = 0.0
+offset_right = 75.0
+
+[node name="Icone" parent="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorProtons" index="1"]
+texture = SubResource("AtlasTexture_proton")
+
+[node name="Nome" parent="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorProtons" index="4"]
+text = "Prótons"
+
+[node name="SeletorNeutrons" parent="RootControl/Tela/Display/GrupoAtomo/Seletores" instance=ExtResource("12_seletor")]
+layout_mode = 0
+offset_left = 75.0
+offset_right = 150.0
+
+[node name="Icone" parent="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorNeutrons" index="1"]
+texture = SubResource("AtlasTexture_neutron")
+
+[node name="Nome" parent="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorNeutrons" index="4"]
+text = "Nêutrons"
+
+[node name="SeletorCamadaK" parent="RootControl/Tela/Display/GrupoAtomo/Seletores" instance=ExtResource("12_seletor")]
+layout_mode = 0
+offset_left = 150.0
+offset_right = 225.0
+
+[node name="Icone" parent="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorCamadaK" index="1"]
+offset_left = 29.0
+offset_top = 46.0
+offset_right = 47.0
+offset_bottom = 64.0
+texture = SubResource("AtlasTexture_eletron")
+
+[node name="Nome" parent="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorCamadaK" index="4"]
+text = "Camada K"
+
+[node name="SeletorCamadaL" parent="RootControl/Tela/Display/GrupoAtomo/Seletores" instance=ExtResource("12_seletor")]
+layout_mode = 0
+offset_left = 225.0
+offset_right = 300.0
+
+[node name="Icone" parent="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorCamadaL" index="1"]
+offset_left = 29.0
+offset_top = 46.0
+offset_right = 47.0
+offset_bottom = 64.0
+texture = SubResource("AtlasTexture_eletron")
+
+[node name="Nome" parent="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorCamadaL" index="4"]
+text = "Camada L"
+
+[node name="Particulas" type="Control" parent="RootControl/Tela/Display/GrupoAtomo"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="GrupoLiberado" type="Control" parent="RootControl/Tela/Display"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LabelLiberado" type="Label" parent="RootControl/Tela/Display/GrupoLiberado"]
+layout_mode = 0
+offset_top = 70.0
+offset_right = 786.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_fonts/font = ExtResource("7_fonte")
+theme_override_font_sizes/font_size = 33
+text = "BUMERANGUE LIBERADO!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Bumerangue" type="TextureRect" parent="RootControl/Tela/Display/GrupoLiberado"]
+layout_mode = 0
+offset_left = 353.0
+offset_top = 172.0
+offset_right = 433.0
+offset_bottom = 342.0
+mouse_filter = 2
+texture = ExtResource("11_bumerangue")
+expand_mode = 1
+
+[node name="Rodape" type="Label" parent="RootControl/Tela/Display"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 492.0
+offset_right = 764.0
+offset_bottom = 512.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 0.9)
+theme_override_fonts/font = ExtResource("7_fonte")
+theme_override_font_sizes/font_size = 11
+text = "USE AS SETAS PARA PÔR E TIRAR PARTÍCULAS DO ÁTOMO"
+
+[node name="Aura" type="ColorRect" parent="RootControl/Tela/Display"]
+material = SubResource("CanvasItemMaterial_brilho")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.25, 0.6, 1, 0.14)
+
+[node name="Varredura" type="ColorRect" parent="RootControl/Tela/Display"]
+material = SubResource("ShaderMaterial_crt")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Led" type="ColorRect" parent="RootControl/Tela"]
+layout_mode = 0
+offset_left = 762.0
+offset_top = 597.0
+offset_right = 774.0
+offset_bottom = 603.0
+mouse_filter = 2
+color = Color(0.9, 0.12, 0.1, 1)
+
+[editable path="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorProtons"]
+[editable path="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorNeutrons"]
+[editable path="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorCamadaK"]
+[editable path="RootControl/Tela/Display/GrupoAtomo/Seletores/SeletorCamadaL"]

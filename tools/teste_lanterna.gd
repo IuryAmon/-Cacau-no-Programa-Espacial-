@@ -44,7 +44,8 @@ func _fechar(raiz: Node) -> void:
 ## Espera a ficha de coleta da ferramenta aparecer e a fecha. Enquanto ela está
 ## na tela o mundo fica pausado e o E é dela (Interacao.ocupada), então nada do
 ## roteiro anda — é a apresentação do bumerangue que a cena de teste dispara
-## sozinha ao entregar a habilidade.
+## sozinha ao entregar a habilidade. Fechada a ficha, sobe o tutorial do
+## bumerangue, que segura o mundo do mesmo jeito: ele também é fechado.
 func _fechar_ficha_de_coleta(player: Node) -> void:
 	var espera := 0.0
 	while not Inventario.popup_aberto and espera < 1.5:
@@ -53,6 +54,8 @@ func _fechar_ficha_de_coleta(player: Node) -> void:
 	var hud = player.get_node_or_null("InventarioHud")
 	if hud != null and Inventario.popup_aberto:
 		await hud.fechar_popup()
+	if FerramentasHUD.tutorial_aberto():
+		await FerramentasHUD.fechar_tutorial()
 	get_tree().paused = false
 
 
@@ -408,6 +411,9 @@ func _testar_cena_completa() -> void:
 	var hud_item = player.get_node_or_null("InventarioHud")
 	if hud_item and Inventario.popup_aberto:
 		await hud_item.fechar_popup()
+	# ...e o tutorial do bumerangue, que sobe assim que a ficha fecha.
+	if FerramentasHUD.tutorial_aberto():
+		await FerramentasHUD.fechar_tutorial()
 	_checar(not Interacao.ocupada(), "nenhuma tela segurando as ferramentas antes do clique")
 	_checar(not ferramentas._bumerangue_no_ar, "nenhum bumerangue no ar antes do clique")
 	Input.action_press("arremessar_mouse")

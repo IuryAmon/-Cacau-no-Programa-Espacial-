@@ -17,7 +17,7 @@ extends RefCounted
 #
 #   prologo    world1 até a revelação do Dr. Chico
 #   carbono    Ala de Pirólise + Pátio (fase 1 e 1.2)    -> entregar o C
-#   nitrogenio Torre de Gases e Estufa                   -> entregar o N
+#   nitrogenio a fase 2 (em branco, sendo refeita)       -> entregar o N
 #   subsolo    Subsolo em blecaute                       -> entregar o P e o S
 #   lancamento Torre de Lançamento                       -> embarque
 #
@@ -75,16 +75,12 @@ const CAIXA_WORLD1 := "/root/World/Caixa"
 const ESPINHOS_TREINO := "/root/Fase1Oficina/Treino/EspinhosCaixa"
 const PORTA_METAL := "/root/Fase1Oficina/Patio/PortaMetal"
 const PORTA_METAL_ELEVADOR := "/root/Fase1Oficina/Patio/PortaMetal2"
-const ALAVANCA_ARMARIO := "/root/Fase2Torre/Base/AlavancaArmario"
-const CHAPA_ARMARIO := "/root/Fase2Torre/Base/ChapaArmario"
-const MESA_CICLO_N := "/root/Fase2Torre/Estufa/MesaCicloN"
 const MESA_PURIFICADOR := "/root/FaseFinal/Plataforma/MesaPurificador"
 
 ## Todos os caminhos acima, para o teste conferir se ainda existem nas cenas.
 const CAMINHOS_POR_CENA := {
 	WORLD1: [CIENTISTA_WORLD1, ITEM_H2, ITEM_O2, CAIXA_WORLD1],
 	FASE1: [ESPINHOS_TREINO, PORTA_METAL, PORTA_METAL_ELEVADOR],
-	FASE2: [ALAVANCA_ARMARIO, CHAPA_ARMARIO, MESA_CICLO_N],
 	FASE_FINAL: [MESA_PURIFICADOR],
 }
 
@@ -145,15 +141,14 @@ func _init(visitou: Callable) -> void:
 				_entregou.bind("C"))],
 		]),
 
+		# A fase do nitrogênio está em branco, sendo refeita do zero: os passos
+		# que dependiam dos objetos da antiga Torre (a alavanca atrás da grade,
+		# a chapa soldada do armário, o ciclo do nitrogênio na estufa) saíram
+		# junto com eles. Ficaram só os que não consultam nenhum nó da cena —
+		# os passos novos entram aqui conforme a fase for sendo montada.
 		_trilha("nitrogenio", "NITROGÊNIO", AmostraChonps.CORES["N"], [FASE2], [
 			[_obj("entrar_torre", "Entre na Torre de Gases e Estufa", _visitou.bind(FASE2))],
-			[
-				_obj("alavanca", "Puxe a alavanca atrás da grade com o bumerangue",
-					_feito.bind(ALAVANCA_ARMARIO)),
-				_obj("chapa", "Corte a chapa soldada do armário com o maçarico", _feito.bind(CHAPA_ARMARIO)),
-			],
 			[_obj("mochila", "Pegue a mochila propulsora de N₂", _tem.bind("mochila"))],
-			[_obj("ciclo_n", "Suba até a estufa e monte o ciclo do nitrogênio", _feito.bind(MESA_CICLO_N))],
 			[_obj("pegar_n", "Pegue a amostra de nitrogênio (N)", _pegou.bind("N"))],
 			[_obj("entregar_n", "Leve o nitrogênio ao receptor do painel CHONPS, no laboratório",
 				_entregou.bind("N"))],

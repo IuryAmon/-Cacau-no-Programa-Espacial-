@@ -14,7 +14,7 @@ extends Node2D
 @export_group("Puzzle")
 # Arraste aqui a cena do puzzle deste item (ex: puzzle_hidrogenio.tscn).
 # Deixe vazio para uma gaiola SEM puzzle: só chegar perto e apertar E já
-# abre (ex: o bumerangue).
+# abre.
 @export var puzzle_cena: PackedScene
 # Aponte para o ItemColetavel que esta gaiola está travando
 @export var item_alvo: NodePath

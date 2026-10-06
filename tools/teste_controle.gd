@@ -16,6 +16,7 @@ extends Node
 #   * puzzle do maçarico resolvido SÓ com o controle (cursor, direcional, ✕) e
 #     a gaiola aberta com □;
 #   * puzzle do hidrogênio: segurar ✕ arrasta, soltar larga;
+#   * puzzle do carbono: o ✕ aperta as setas que põem e tiram partículas;
 #   * puzzle de ordenar: arrastar até o encaixe, e △ desiste (○ não);
 #   * guincho sem cursor: direcional gira o mostrador, ✕ aciona, □ solta;
 #   * dosagem: △ desiste;
@@ -32,6 +33,7 @@ extends Node
 
 const MACARICO := "res://scenes/puzzle_macarico.tscn"
 const HIDROGENIO := "res://scenes/puzzle_hidrogenio.tscn"
+const CARBONO := "res://scenes/puzzle_carbono.tscn"
 const GUINCHO := "res://scenes/puzzle_guincho.tscn"
 const PLAYER := "res://scenes/player.tscn"
 
@@ -57,6 +59,7 @@ func _ready() -> void:
 	await _testar_posse_do_toque()
 	await _testar_macarico()
 	await _testar_hidrogenio()
+	await _testar_carbono()
 	await _testar_ordenar()
 	await _testar_guincho()
 	await _testar_dosagem()
@@ -317,6 +320,30 @@ func _testar_hidrogenio() -> void:
 	_checar(Interacao.toque_preso(&"jump"), "e esse ✕ não faz a Cacau pular ao sair")
 	_botao(JOY_BUTTON_A, false)
 	await _quadros(4)
+	puzzle.queue_free()
+	await _quadros(2)
+
+
+func _testar_carbono() -> void:
+	print("\n--- AS SETAS COM O ✕ (PUZZLE DO CARBONO) ---")
+	var puzzle: CanvasLayer = load(CARBONO).instantiate()
+	add_child(puzzle)
+	await _quadros(3)
+	puzzle.abrir_puzzle()
+	await _esperar(0.4)
+	_checar(CursorVirtual.ativo(), "cursor ligado no puzzle do carbono")
+	_checar(CursorVirtual._alvos.size() == 8, "alvos: as duas setas de cada seletor")
+
+	await _clicar_em(puzzle.seletores["protons"].retangulo_do_botao(1).get_center())
+	_checar(puzzle.quantas("protons") == 1, "✕ na seta de cima dos prótons põe um próton no núcleo")
+	await _clicar_em(puzzle.seletores["camada_k"].retangulo_do_botao(1).get_center())
+	_checar(puzzle.quantas("camada_k") == 1, "na da camada K, um elétron nela")
+	await _clicar_em(puzzle.seletores["protons"].retangulo_do_botao(-1).get_center())
+	_checar(puzzle.quantas("protons") == 0, "e ✕ na seta de baixo tira")
+
+	await _tocar(JOY_BUTTON_Y)
+	_checar(not puzzle.visible and not get_tree().paused, "△ sai do puzzle sem resolver")
+	_checar(not Caderno.aberto(), "e esse △ não abre o caderno")
 	puzzle.queue_free()
 	await _quadros(2)
 

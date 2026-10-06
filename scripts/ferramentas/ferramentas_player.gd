@@ -376,6 +376,9 @@ func _arremessar_bumerangue(mira: Vector2) -> void:
 
 	# O gesto do braço. Vem antes do lançamento de propósito: a pose já vira a
 	# personagem para o lado da mira, e é dessa mão que o bumerangue sai.
+	# No chão o gesto também PARA a personagem (player.parar_ao_arremessar), mas
+	# só a partir do próximo quadro de física: o player.velocity lido logo abaixo
+	# ainda é o da corrida, e é ele que o arremesso herda.
 	player.tocar_arremesso_bumerangue(mira.x)
 
 	_bumerangue_no_ar = true

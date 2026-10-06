@@ -1,0 +1,340 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/demo_bumerangue.gd" id="1_demo"]
+[ext_resource type="Texture2D" uid="uid://cjjt1rgewxich" path="res://assets/Cacau Assets/jogandoboomerang.png" id="2_cacau"]
+[ext_resource type="Texture2D" uid="uid://cttst545y0mep" path="res://assets/Lab/Caixa Eletricaa/CAIXA ELETRICA0.png" id="3_cxa0"]
+[ext_resource type="Texture2D" uid="uid://bdadvhdfejvaw" path="res://assets/Lab/Caixa Eletricaa/CAIXA ELETRICA1.png" id="4_cxa1"]
+[ext_resource type="Texture2D" uid="uid://ofvo12gnv3bd" path="res://assets/Lab/Caixa Eletricaa/CAIXA ELETRICA2.png" id="5_cxa2"]
+[ext_resource type="Texture2D" uid="uid://bi68xygawuxtd" path="res://assets/Lab/Caixa Eletricaa/CAIXA ELETRICA3.png" id="6_cxa3"]
+[ext_resource type="Texture2D" uid="uid://cfxbdvip8cuib" path="res://assets/itens/Boomerangue.png" id="7_bum"]
+[ext_resource type="Texture2D" uid="uid://cfv83ou0yrn85" path="res://assets/Cacau Assets/paradoSHEET.png" id="8_parada"]
+[ext_resource type="TileSet" uid="uid://b1re83kqucchr" path="res://assets/tilesets/tileset_fases.tres" id="9_tiles"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada0"]
+atlas = ExtResource("8_parada")
+region = Rect2(0, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada1"]
+atlas = ExtResource("8_parada")
+region = Rect2(96, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada2"]
+atlas = ExtResource("8_parada")
+region = Rect2(192, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada3"]
+atlas = ExtResource("8_parada")
+region = Rect2(288, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada4"]
+atlas = ExtResource("8_parada")
+region = Rect2(384, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada5"]
+atlas = ExtResource("8_parada")
+region = Rect2(480, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada6"]
+atlas = ExtResource("8_parada")
+region = Rect2(576, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada7"]
+atlas = ExtResource("8_parada")
+region = Rect2(672, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada8"]
+atlas = ExtResource("8_parada")
+region = Rect2(768, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada9"]
+atlas = ExtResource("8_parada")
+region = Rect2(864, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada10"]
+atlas = ExtResource("8_parada")
+region = Rect2(960, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parada11"]
+atlas = ExtResource("8_parada")
+region = Rect2(1056, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jogando0"]
+atlas = ExtResource("2_cacau")
+region = Rect2(0, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jogando1"]
+atlas = ExtResource("2_cacau")
+region = Rect2(96, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jogando2"]
+atlas = ExtResource("2_cacau")
+region = Rect2(192, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jogando3"]
+atlas = ExtResource("2_cacau")
+region = Rect2(288, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jogando4"]
+atlas = ExtResource("2_cacau")
+region = Rect2(384, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jogando5"]
+atlas = ExtResource("2_cacau")
+region = Rect2(480, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jogando6"]
+atlas = ExtResource("2_cacau")
+region = Rect2(576, 0, 96, 96)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_cacau"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada9")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parada11")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jogando0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jogando1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jogando2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jogando3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jogando4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jogando5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jogando6")
+}],
+"loop": false,
+"name": &"jogando_bumerangue",
+"speed": 18.0
+}]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_caixa"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_cxa1")
+}],
+"loop": false,
+"name": &"intacta",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_cxa0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_cxa1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_cxa2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_cxa3")
+}],
+"loop": false,
+"name": &"quebrando",
+"speed": 12.0
+}]
+
+[sub_resource type="Gradient" id="Gradient_bola"]
+offsets = PackedFloat32Array(0, 0.55, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.5, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_luz"]
+gradient = SubResource("Gradient_bola")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_aviso"]
+blend_mode = 1
+
+[sub_resource type="Curve" id="Curve_rastro"]
+_data = [Vector2(0, 0.05), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_rastro"]
+colors = PackedColorArray(0.55, 0.85, 0.45, 0, 0.55, 0.85, 0.45, 0.5)
+
+[sub_resource type="Gradient" id="Gradient_impacto"]
+offsets = PackedFloat32Array(0, 0.2, 0.65, 1)
+colors = PackedColorArray(1, 1, 0.93, 1, 1, 0.86, 0.42, 1, 1, 0.5, 0.14, 0.9, 0.6, 0.16, 0.05, 0)
+
+[sub_resource type="Gradient" id="Gradient_arco"]
+offsets = PackedFloat32Array(0, 0.25, 0.7, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.65, 0.92, 1, 1, 0.28, 0.55, 1, 0.85, 0.12, 0.2, 0.7, 0)
+
+[node name="DemoBumerangue" type="Control"]
+process_mode = 3
+texture_filter = 1
+clip_contents = true
+custom_minimum_size = Vector2(300, 210)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 300.0
+offset_bottom = 210.0
+scale = Vector2(2, 2)
+mouse_filter = 2
+script = ExtResource("1_demo")
+
+[node name="Mundo" type="Node2D" parent="."]
+
+[node name="Cenario" type="TileMapLayer" parent="Mundo"]
+position = Vector2(24, 180)
+scale = Vector2(2, 2)
+tile_map_data = PackedByteArray("AAD///n/DAARAAYAAAAAAPn/DAAQAAYAAAABAPn/DAARAAYAAAACAPn/DAAQAAYAAAADAPn/DAARAAYAAAAEAPn/DAAQAAYAAAAFAPn/DAARAAYAAAAGAPn/DAAOAAYAAAAHAPn/DAAPAAYAAAAIAPn/DAAQAAYAAAAJAPn/DAARAAYAAAD///r/DAARAAcAAAAAAPr/DAAQAAcAAAABAPr/DAARAAcAAAACAPr/DAAQAAcAAAADAPr/DAARAAcAAAAEAPr/DAAQAAcAAAAFAPr/DAARAAcAAAAGAPr/DAAOAAcAAAAHAPr/DAAPAAcAAAAIAPr/DAAQAAcAAAAJAPr/DAARAAcAAAD///v/DAARAAYAAAAAAPv/DAAQAAYAAAABAPv/DAARAAYAAAACAPv/DAAQAAYAAAADAPv/DAARAAYAAAAEAPv/DAAQAAYAAAAFAPv/DAARAAYAAAAGAPv/DAAOAAYAAAAHAPv/DAAPAAYAAAAIAPv/DAAQAAYAAAAJAPv/DAARAAYAAAD///z/DAARAAcAAAAAAPz/DAAQAAcAAAABAPz/DAARAAcAAAACAPz/DAAQAAcAAAADAPz/DAARAAcAAAAEAPz/DAAQAAcAAAAFAPz/DAARAAcAAAAGAPz/DAAOAAcAAAAHAPz/DAAPAAcAAAAIAPz/DAAQAAcAAAAJAPz/DAARAAcAAAD///3/DAARAAYAAAAAAP3/DAAQAAYAAAABAP3/DAARAAYAAAACAP3/DAAQAAYAAAADAP3/DAARAAYAAAAEAP3/DAAQAAYAAAAFAP3/DAARAAYAAAAGAP3/DAAQAAYAAAAHAP3/DAARAAYAAAAIAP3/DAAQAAYAAAAJAP3/DAARAAYAAAD///7/DAARAAcAAAAAAP7/DAAQAAcAAAABAP7/DAARAAcAAAACAP7/DAAQAAcAAAADAP7/DAARAAcAAAAEAP7/DAAQAAcAAAAFAP7/DAARAAcAAAAGAP7/DAAQAAcAAAAHAP7/DAARAAcAAAAIAP7/DAAQAAcAAAAJAP7/DAARAAcAAAD/////DAARAAYAAAAAAP//DAAQAAYAAAABAP//DAARAAYAAAACAP//DAAQAAYAAAADAP//DAARAAYAAAAEAP//DAAQAAYAAAAFAP//DAARAAYAAAAGAP//DAAQAAYAAAAHAP//DAARAAYAAAAIAP//DAAQAAYAAAAJAP//DAARAAYAAAD//wAADAAGAAAAAAAAAAAADAABAAAAAAABAAAADAACAAAAAAACAAAADAADAAAAAAADAAAADAAEAAAAAAAEAAAADAAFAAAAAAAFAAAADAAGAAAAAAAGAAAADAABAAAAAAAHAAAADAACAAAAAAAIAAAADAADAAAAAAAJAAAADAAEAAAAAAD//wEADAAGAAEAAAAAAAEADAABAAEAAAABAAEADAACAAEAAAACAAEADAADAAEAAAADAAEADAAEAAEAAAAEAAEADAAFAAEAAAAFAAEADAAGAAEAAAAGAAEADAABAAEAAAAHAAEADAACAAEAAAAIAAEADAADAAEAAAAJAAEADAAEAAEAAAA=")
+tile_set = ExtResource("9_tiles")
+collision_enabled = false
+navigation_enabled = false
+
+[node name="Caixa" type="AnimatedSprite2D" parent="Mundo"]
+position = Vector2(248, 116)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_caixa")
+animation = &"intacta"
+
+[node name="Alvo" type="Marker2D" parent="Mundo/Caixa"]
+position = Vector2(-2, 10)
+
+[node name="BrilhoAlvo" type="Sprite2D" parent="Mundo"]
+modulate = Color(1, 0.72, 0.28, 0)
+material = SubResource("CanvasItemMaterial_aviso")
+position = Vector2(248, 127)
+scale = Vector2(0.29, 0.29)
+texture = SubResource("GradientTexture2D_luz")
+
+[node name="Cacau" type="AnimatedSprite2D" parent="Mundo"]
+position = Vector2(60, 108)
+scale = Vector2(1.5, 1.5)
+sprite_frames = SubResource("SpriteFrames_cacau")
+animation = &"idle"
+
+[node name="Mao" type="Marker2D" parent="Mundo/Cacau"]
+position = Vector2(26, 19)
+
+[node name="Rastro" type="Line2D" parent="Mundo"]
+width = 5.0
+width_curve = SubResource("Curve_rastro")
+gradient = SubResource("Gradient_rastro")
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+
+[node name="Bumerangue" type="Sprite2D" parent="Mundo"]
+visible = false
+position = Vector2(99, 136)
+scale = Vector2(2.4, 2.4)
+texture = ExtResource("7_bum")
+
+[node name="FaiscasImpacto" type="CPUParticles2D" parent="Mundo"]
+position = Vector2(248, 125)
+emitting = false
+amount = 34
+lifetime = 0.55
+one_shot = true
+explosiveness = 0.95
+randomness = 0.4
+lifetime_randomness = 0.4
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(12, 14)
+direction = Vector2(0, -1)
+spread = 78.0
+gravity = Vector2(0, 900)
+initial_velocity_min = 130.0
+initial_velocity_max = 380.0
+damping_min = 8.0
+damping_max = 40.0
+scale_amount_min = 1.5
+scale_amount_max = 3.5
+color_ramp = SubResource("Gradient_impacto")
+
+[node name="FaiscasArco" type="CPUParticles2D" parent="Mundo"]
+position = Vector2(248, 127)
+emitting = false
+amount = 26
+lifetime = 0.45
+one_shot = true
+explosiveness = 1.0
+randomness = 0.5
+lifetime_randomness = 0.5
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(9, 12)
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, 520)
+initial_velocity_min = 60.0
+initial_velocity_max = 300.0
+damping_min = 20.0
+damping_max = 70.0
+scale_amount_max = 3.0
+color_ramp = SubResource("Gradient_arco")
+
+[node name="Cortina" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.055, 0)
+
+[node name="Tecla" type="Control" parent="."]
+layout_mode = 0
+offset_left = 130.0
+offset_top = 18.0
+offset_right = 170.0
+offset_bottom = 58.0
+mouse_filter = 2

@@ -35,6 +35,9 @@ extends RefCounted
 #                                  lado da ponta, em vez de na ponta. "ate"
 #                                  (px da arte) para o traço antes, para o
 #                                  texto caber num vão do desenho
+#                   "desenho_no_meio"  o desenho vai no meio da face, com os
+#                                  nomes em volta (sem isto, o que vai no meio
+#                                  é o conjunto: o desenho e os nomes dele)
 #   "propriedades"  "itens": [{"formula", "texto"}] — a fórmula e uma
 #                   explicação curta embaixo. Com "icones" (uma arte) na face,
 #                   cada item pode ter um "icone": o pedaço dela (px da arte)
@@ -47,6 +50,19 @@ extends RefCounted
 #
 # O texto é quebrado e medido na face; o teste_caderno confere que tudo cabe
 # no papel.
+#
+# O CADERNO NÃO VEM INTEIRO. A Cacau começa com ele só até a página 3 (a folha
+# de rosto e a epígrafe); as outras páginas são NOTAS soltas pelo mapa
+# (scenes/fases/componentes/nota_caderno.tscn). Cada nota das NOTAS devolve as
+# páginas duplas dela ao caderno, no lugar delas: o número de cada face não
+# muda, então, com uma nota faltando no meio, a numeração pula. Página que
+# nenhuma nota traz já vem no caderno.
+#
+# Por enquanto a nota é uma só, "O Átomo": ela traz as páginas 4 a 7 (o átomo
+# e, na folha seguinte, a caixa do elemento e as contas).
+#
+# PARA UMA NOTA NOVA: escreva as páginas duplas nas PAGINAS, dê um nome a ela
+# nas NOTAS e ponha uma nota_caderno.tscn no mapa com esse nome.
 
 const ARTE_HIDROGENIO := preload("res://assets/caderno de anotaçõess/Hidrogênio tabela periódica.png")
 const ARTE_LITIO := preload("res://assets/caderno de anotaçõess/litio atomo3.png")
@@ -87,14 +103,13 @@ const PAGINAS := [
 		# de 2 px da arte vira 3 px certinhos.
 		{
 			"tipo": "desenho",
-			"titulo": "O átomo",
+			"titulo": "O Átomo",
 			"arte": ARTE_LITIO,
 			"escala": 1.5,
 			# Os anéis vão de (47, 18) a (221, 193); o resto é transparente.
 			"tinta": Rect2(47, 18, 175, 176),
 			"marcas": [
-				# Em cima: o anel de fora e o elétron de cima.
-				{"de": Vector2(70, 46), "rumo": "cima", "texto": "eletrosfera"},
+				# Em cima: o elétron de cima.
 				{"de": Vector2(187, 76), "rumo": "cima", "texto": "elétron (e)"},
 				# O núcleo, no vão entre ele e o anel de dentro: o traço sai do
 				# próton de cima, entre os dois nêutrons.
@@ -119,16 +134,17 @@ const PAGINAS := [
 		},
 	],
 	[
+		# Continua a nota do átomo: sem título, com a caixa do elemento bem no
+		# meio da face.
 		{
 			"tipo": "desenho",
-			"titulo": "Atomística",
+			"desenho_no_meio": true,
 			"arte": ARTE_HIDROGENIO,
 			"nome": "Hidrogênio",
 			# Entre o pé do H e o topo do 1,008, por dentro da borda.
 			"vao_do_nome": Rect2(5, 49, 66, 25),
 			"marcas": [
 				{"de": Vector2(15, 10), "rumo": "cima", "texto": "número atômico (Z)"},
-				{"de": Vector2(49, 34), "rumo": "direita", "texto": "símbolo"},
 				{"de": Vector2(38, 83), "rumo": "baixo", "texto": "número de massa (A)"},
 			],
 		},
@@ -147,24 +163,116 @@ const PAGINAS := [
 	],
 ]
 
-## O que o caderno mostra: as PAGINAS. O teste_caderno põe folhas a mais aqui
-## para ter várias para folhear.
+## As notas soltas pelo mapa: o nome de cada uma (é o que a nota_caderno.tscn
+## escolhe no editor), o "titulo" que aparece no aviso de nota adicionada e as
+## "paginas" que ela devolve ao caderno (a posição de cada uma nas PAGINAS,
+## contando do 0, na ordem).
+const NOTAS := {
+	"atomo": {"titulo": "O Átomo", "paginas": [2, 3]},
+}
+
+## O caderno inteiro: as PAGINAS. O teste_caderno põe folhas a mais aqui para
+## ter várias para folhear.
 static var paginas: Array = PAGINAS
 
+## As notas que a Cacau já achou (nome -> true). Como o EstadoMundo, vale
+## enquanto o jogo estiver aberto: não existe sistema de save ainda.
+static var _achadas: Dictionary = {}
 
+
+# ─────────────────────────────────────────────────────────────
+# AS NOTAS
+# ─────────────────────────────────────────────────────────────
+
+static func tem_nota(nota: String) -> bool:
+	return _achadas.has(nota)
+
+
+## Põe a nota no caderno. Devolve false se ela não existe ou já estava lá.
+## Quem acha uma nota no jogo chama o Caderno.guardar_nota(), que faz isto e
+## avisa na tela.
+static func guardar_nota(nota: String) -> bool:
+	if not NOTAS.has(nota) or tem_nota(nota):
+		return false
+	_achadas[nota] = true
+	return true
+
+
+## O caderno volta a ser o do começo do jogo, só até a página 3.
+static func esquecer_notas() -> void:
+	_achadas.clear()
+
+
+static func notas_achadas() -> int:
+	return _achadas.size()
+
+
+static func titulo_da_nota(nota: String) -> String:
+	return String(NOTAS.get(nota, {}).get("titulo", ""))
+
+
+## As páginas duplas que a nota traz (a posição de cada uma em "paginas").
+static func paginas_da_nota(nota: String) -> Array:
+	return NOTAS.get(nota, {}).get("paginas", [])
+
+
+## Os números da primeira e da última face que a nota traz (x e y): a esquerda
+## da primeira página dupla dela e a direita da última.
+static func numeros_da_nota(nota: String) -> Vector2i:
+	var dela := paginas_da_nota(nota)
+	if dela.is_empty():
+		return Vector2i.ZERO
+	return Vector2i(int(dela[0]) * 2, int(dela[-1]) * 2 + 1)
+
+
+## Em que página do caderno a nota começa agora, contando só as que ele tem
+## (-1 = ainda não foi achada).
+static func lugar_da_nota(nota: String) -> int:
+	var dela := paginas_da_nota(nota)
+	if not tem_nota(nota) or dela.is_empty():
+		return -1
+	return no_caderno().find(int(dela[0]))
+
+
+# ─────────────────────────────────────────────────────────────
+# O QUE O CADERNO TEM AGORA
+# ─────────────────────────────────────────────────────────────
+
+## As páginas que estão no caderno agora: a posição de cada uma em "paginas",
+## na ordem. Ficam de fora as das notas que a Cacau ainda não achou.
+static func no_caderno() -> Array[int]:
+	var faltando := {}
+	for nota in NOTAS:
+		if not tem_nota(nota):
+			for pagina in paginas_da_nota(nota):
+				faltando[int(pagina)] = true
+	var lista: Array[int] = []
+	for i in paginas.size():
+		if not faltando.has(i):
+			lista.append(i)
+	return lista
+
+
+## Quantas páginas o caderno tem agora. Daqui para baixo, "pagina" conta só
+## essas: 0 é a primeira que ele tem, 1 a seguinte, e assim por diante.
 static func quantas() -> int:
-	return paginas.size()
+	return no_caderno().size()
 
 
 ## O número de uma face (lado 0 = esquerda, 1 = direita), contando as duas de
-## cada página: a folha de rosto é a 1 e, dali em diante, as da esquerda são
-## pares e as da direita, ímpares. O verso da capa é o 0: sem número.
+## cada página do caderno inteiro: a folha de rosto é a 1 e, dali em diante, as
+## da esquerda são pares e as da direita, ímpares. O verso da capa é o 0: sem
+## número.
 static func numero(pagina: int, lado: int) -> int:
-	return pagina * 2 + lado
+	var tem := no_caderno()
+	if pagina < 0 or pagina >= tem.size():
+		return pagina * 2 + lado
+	return tem[pagina] * 2 + lado
 
 
 ## As duas faces da página ([esquerda, direita]); fora do caderno, duas vazias.
 static func faces(pagina: int) -> Array:
-	if pagina < 0 or pagina >= paginas.size():
+	var tem := no_caderno()
+	if pagina < 0 or pagina >= tem.size():
 		return [{}, {}]
-	return paginas[pagina]
+	return paginas[tem[pagina]]

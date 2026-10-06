@@ -197,14 +197,14 @@ func _testar_quebra_de_sequencia() -> void:
 	# Visita a Torre com a oficina pela metade.
 	await _abrir(FASE2)
 	await _segundos(2.5)
-	_checar(_hud().tem("alavanca") and _hud().tem("chapa"), "dentro da Torre vale a trilha da Torre (%s)" % [_ids()])
+	_checar(_hud().tem("mochila"), "dentro da fase 2 vale a trilha do nitrogênio (%s)" % [_ids()])
 	_checar(_hud().titulos() == PackedStringArray(["NITROGÊNIO"]), "só com o cabeçalho NITROGÊNIO (%s)" % [_hud().titulos()])
 	_checar(not _hud().tem("entregar_c") and not _hud().tem("entrar_subsolo"), "sem as outras alas")
 	await _abrir(LAB)
 	await _segundos(2.5)
 	_checar(_hud().tem("entregar_c"), "no laboratório volta a valer a oficina (%s)" % [_ids()])
-	_checar(not _hud().tem("alavanca") and not _hud().tem("entrar_subsolo"),
-		"sem a Torre nem o subsolo, que vêm depois (%s)" % [_ids()])
+	_checar(not _hud().tem("mochila") and not _hud().tem("entrar_subsolo"),
+		"sem o nitrogênio nem o subsolo, que vêm depois (%s)" % [_ids()])
 	_checar(_hud().titulos() == PackedStringArray(["CARBONO"]), "só com o cabeçalho CARBONO (%s)" % [_hud().titulos()])
 
 

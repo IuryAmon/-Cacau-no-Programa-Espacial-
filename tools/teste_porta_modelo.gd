@@ -35,7 +35,7 @@ const SCRIPT_PORTA := "res://scripts/porta_simulador.gd"
 ## As portas que ganharam a porta modelo.
 const PORTAS_MODELO := {
 	LAB: ["PortaTorre", "PortaLancamento"],
-	FASE2: ["Base/PortaHub"],
+	FASE2: ["PortaHub"],
 	FASE3: ["Atrio/PortaFosso"],
 	FASE_FINAL: ["Portao/PortaHub", "Plataforma/Capsula/PortaCapsula"],
 }
@@ -141,9 +141,9 @@ func _testar_torre_ida_e_volta() -> void:
 	await _abrir(LAB)
 	await _usar(get_tree().current_scene.get_node("PortaTorre"))
 	await _esperar_cena(FASE2)
-	await _conferir_saida(get_tree().current_scene.get_node("Base/PortaHub"), "chegou na Torre saindo pela PortaHub")
+	await _conferir_saida(get_tree().current_scene.get_node("PortaHub"), "chegou na Torre saindo pela PortaHub")
 
-	await _usar(get_tree().current_scene.get_node("Base/PortaHub"))
+	await _usar(get_tree().current_scene.get_node("PortaHub"))
 	await _esperar_cena(LAB)
 	await _conferir_saida(get_tree().current_scene.get_node("PortaTorre"), "voltou ao laboratório saindo pela porta da Torre")
 

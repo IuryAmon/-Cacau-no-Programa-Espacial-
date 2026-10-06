@@ -8,6 +8,7 @@
 [ext_resource type="AudioStream" uid="uid://0t8yju2oahhm" path="res://sounds/AcessoNegado.mp3" id="6_po"]
 [ext_resource type="AudioStream" uid="uid://bxtvw2yqbqsj6" path="res://sounds/drag.mp3" id="7_po"]
 [ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="8_po"]
+[ext_resource type="Texture2D" uid="uid://c05lbtw04gb6e" path="res://assets/caderno de anotaçõess/Oxigênio tabela periódica.png" id="9_po"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_atombg"]
 atlas = ExtResource("5_po")
@@ -106,17 +107,63 @@ texture = ExtResource("3_po")
 
 [node name="Titulo" type="Label" parent="RootControl" unique_id=-1266080570]
 layout_mode = 0
-offset_left = 513.0
-offset_top = 186.0
-offset_right = 1301.0
-offset_bottom = 253.0
+offset_left = 558.0
+offset_top = 188.0
+offset_right = 1182.0
+offset_bottom = 263.375
 theme_override_colors/font_color = Color(0.29945153, 0, 0.0070019774, 1)
 theme_override_constants/line_spacing = 8
 theme_override_fonts/font = ExtResource("4_po")
 theme_override_font_sizes/font_size = 33
-text = "Arraste o elétron para completar
-a eletrosfera do átomo de oxigênio"
+text = "Complete a eletrosfera
+do átomo:"
+horizontal_alignment = 2
+
+[node name="Titulo2" type="Label" parent="RootControl" unique_id=758712632]
+layout_mode = 0
+offset_left = 1074.0
+offset_top = 422.0
+offset_right = 1324.0
+offset_bottom = 497.375
+theme_override_colors/font_color = Color(0.29945153, 0, 0.0070019774, 1)
+theme_override_constants/line_spacing = 8
+theme_override_fonts/font = ExtResource("4_po")
+theme_override_font_sizes/font_size = 33
+text = "Arrastando
+o elétron"
 horizontal_alignment = 1
+
+[node name="CaixaOxigenio" type="TextureRect" parent="RootControl" unique_id=1304477292]
+layout_mode = 0
+offset_left = 1193.0
+offset_top = 183.0
+offset_right = 1345.0
+offset_bottom = 367.0
+mouse_filter = 2
+texture = ExtResource("9_po")
+expand_mode = 1
+
+[node name="Papel" type="ColorRect" parent="RootControl/CaixaOxigenio" unique_id=1962240519]
+show_behind_parent = true
+layout_mode = 0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 150.0
+offset_bottom = 182.0
+mouse_filter = 2
+color = Color(0.90588236, 0.8352941, 0.7019608, 1)
+
+[node name="Nome" type="Label" parent="RootControl/CaixaOxigenio" unique_id=847715604]
+layout_mode = 0
+offset_left = 34.0
+offset_top = 114.0
+offset_right = 90.0
+offset_bottom = 126.0
+scale = Vector2(1.5, 1.5)
+theme_override_colors/font_color = Color(0.23921569, 0.16470589, 0.13333334, 1)
+theme_override_fonts/font = ExtResource("4_po")
+theme_override_font_sizes/font_size = 11
+text = "Oxigênio"
 
 [node name="Instrucoes" type="Label" parent="RootControl" unique_id=-719099383]
 layout_mode = 0
@@ -133,9 +180,9 @@ horizontal_alignment = 1
 
 [node name="AtomoBG" type="TextureRect" parent="RootControl" unique_id=-1136539932]
 layout_mode = 0
-offset_left = 659.0
+offset_left = 599.0
 offset_top = 267.0
-offset_right = 959.0
+offset_right = 899.0
 offset_bottom = 567.0
 scale = Vector2(1.5, 1.5)
 mouse_filter = 2
@@ -143,18 +190,18 @@ texture = SubResource("AtlasTexture_atombg")
 
 [node name="AtomoBG2" type="TextureRect" parent="RootControl" unique_id=1399174332]
 layout_mode = 0
-offset_left = 758.0
+offset_left = 698.0
 offset_top = 365.0
-offset_right = 1012.0
+offset_right = 952.0
 offset_bottom = 619.0
 mouse_filter = 2
 texture = SubResource("AtlasTexture_atombg")
 
 [node name="ZonaNucleo" type="Panel" parent="RootControl" unique_id=-885151923]
 layout_mode = 0
-offset_left = 839.0
+offset_left = 779.0
 offset_top = 447.0
-offset_right = 929.0
+offset_right = 869.0
 offset_bottom = 537.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_nucleo")
@@ -174,9 +221,9 @@ vertical_alignment = 1
 
 [node name="LabelCamadaK" type="Label" parent="RootControl" unique_id=-294967293]
 layout_mode = 0
-offset_left = 979.0
+offset_left = 919.0
 offset_top = 581.0
-offset_right = 1069.0
+offset_right = 1009.0
 offset_bottom = 603.0
 theme_override_colors/font_color = Color(0.5, 0.7, 1, 0.9)
 theme_override_fonts/font = ExtResource("4_po")
@@ -185,9 +232,9 @@ text = "K"
 
 [node name="LabelCamadaL" type="Label" parent="RootControl" unique_id=-294967292]
 layout_mode = 0
-offset_left = 1053.0
+offset_left = 993.0
 offset_top = 648.0
-offset_right = 1143.0
+offset_right = 1083.0
 offset_bottom = 670.0
 theme_override_colors/font_color = Color(0.2, 0.9, 0.9, 0.9)
 theme_override_fonts/font = ExtResource("4_po")
@@ -196,22 +243,22 @@ text = "L "
 
 [node name="LabelEletrons" type="Label" parent="RootControl" unique_id=-294967291]
 layout_mode = 0
-offset_left = 1154.0
-offset_top = 361.0
-offset_right = 1304.0
-offset_bottom = 383.0
+offset_left = 1124.0
+offset_top = 566.0
+offset_right = 1274.0
+offset_bottom = 588.0
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_fonts/font = ExtResource("4_po")
 theme_override_font_sizes/font_size = 11
-text = "Elétron:"
+text = "Elétron"
 horizontal_alignment = 1
 
 [node name="PecaEletron1" type="TextureRect" parent="RootControl" unique_id=-294967285]
 layout_mode = 0
-offset_left = 1210.0
-offset_top = 389.0
-offset_right = 1245.0
-offset_bottom = 424.0
+offset_left = 1182.0
+offset_top = 524.0
+offset_right = 1217.0
+offset_bottom = 559.0
 mouse_filter = 2
 texture = SubResource("AtlasTexture_eletron1")
 

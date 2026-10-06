@@ -44,20 +44,6 @@ func _fechar(raiz: Node) -> void:
 	await get_tree().process_frame
 
 
-## Espera a ficha de coleta da ferramenta subir e a fecha. Enquanto ela está na
-## tela o mundo fica pausado e o E é dela (Interacao.ocupada) — o roteiro
-## automático precisa "apertar E" por conta própria para seguir.
-func _fechar_ficha_de_coleta(raiz: Node) -> void:
-	var espera := 0.0
-	while not Inventario.popup_aberto and espera < 1.5:
-		await get_tree().create_timer(0.05).timeout
-		espera += 0.05
-	var hud = raiz.get_node_or_null("Player/InventarioHud")
-	if hud != null and Inventario.popup_aberto:
-		await hud.fechar_popup()
-	get_tree().paused = false
-
-
 func _testar_fase1() -> void:
 	print("\n--- FASE 1: OFICINA DO CARBONO ---")
 	var f := await _abrir("res://scenes/fases/fase1_oficina.tscn")
@@ -75,21 +61,27 @@ func _testar_fase1() -> void:
 	# caixa elétrica de placeholder continua de pé.
 	_checar(f.get_node_or_null("Treino/AlvoFixo1") != null, "caixa eletrica de treino na cena")
 
-	# Bumerangue na gaiola, igual ao maçarico, mas SEM puzzle: chegar perto e
-	# apertar E já abre.
+	# Bumerangue no domo de vidro, igual ao maçarico: chegar perto e apertar E
+	# abre o puzzle do carbono, e resolver o puzzle abre o domo.
 	var gaiola_bumerangue := f.get_node_or_null("Entrada/GaiolaBumerangue")
 	var pickup_bumerangue := f.get_node_or_null("Entrada/PickupBumerangue")
 	_checar(gaiola_bumerangue != null, "gaiola do bumerangue na entrada")
 	_checar(pickup_bumerangue != null, "pickup do bumerangue na entrada")
 	if gaiola_bumerangue and pickup_bumerangue:
-		_checar(gaiola_bumerangue.puzzle_cena == null, "gaiola do bumerangue nao tem puzzle")
+		_checar(gaiola_bumerangue.puzzle_cena != null \
+			and gaiola_bumerangue.puzzle_cena.resource_path == "res://scenes/puzzle_carbono.tscn",
+			"gaiola do bumerangue abre o puzzle do carbono")
 		_checar(not pickup_bumerangue.monitoring, "bumerangue comeca trancado na gaiola")
 		gaiola_bumerangue._on_zona_deteccao_body_entered(player)
 		Input.action_press("interact")
 		await get_tree().process_frame
 		Input.action_release("interact")
 		await get_tree().process_frame
-		_checar(gaiola_bumerangue.puzzle_concluido, "E sem puzzle abriu a gaiola direto")
+		var puzzle_bumerangue: CanvasLayer = gaiola_bumerangue.puzzle_ui
+		_checar(puzzle_bumerangue.visible and not gaiola_bumerangue.puzzle_concluido,
+			"E abriu o puzzle, e a gaiola continua fechada")
+		puzzle_bumerangue.fechar_puzzle(true)
+		_checar(gaiola_bumerangue.puzzle_concluido, "puzzle resolvido abriu a gaiola")
 		# A animação "abrindo" da gaiola de vidro (12 quadros a 10 fps, 1.2s)
 		# precisa terminar antes do pickup destravar — dá a folga pra isso.
 		await get_tree().create_timer(2.2).timeout
@@ -136,37 +128,97 @@ func _testar_fase1_2() -> void:
 	await _fechar(f)
 
 
+## A fase do nitrogênio está em branco, sendo refeita do zero: só o palco (o
+## céu e o chão da área aberta) e o que faz a cena abrir e a Cacau entrar e
+## sair. Quando a fase nova ganhar objetos, os testes deles entram aqui.
 func _testar_fase2() -> void:
-	print("\n--- FASE 2: TORRE DE GASES ---")
+	print("\n--- FASE 2: NITROGENIO (em branco) ---")
 	var f := await _abrir("res://scenes/fases/fase2_torre.tscn")
 
-	var porta_armario := f.get_node("Base/PortaArmario")
-	_checar(porta_armario.solido, "armario da mochila comeca trancado")
+	# Nada da antiga Torre de Gases ficou.
+	var sobras := PackedStringArray()
+	for nome in ["Fundo", "Secoes", "Base", "Subida1", "Subida2", "Tubulacoes", "Estufa"]:
+		if f.get_node_or_null(nome) != null:
+			sobras.append(nome)
+	_checar(sobras.is_empty(), "nada da antiga Torre sobrou na cena %s" % [sobras])
+	var filhos: Array = f.get_children().map(func(n: Node) -> String: return str(n.name))
+	filhos.sort()
+	_checar(filhos == ["BG", "LimitesDaCamera", "Paredes", "Player", "PortaHub", "SpawnPadrao", "Terreno"],
+		"na cena, so o palco e o que a faz funcionar: %s" % [filhos])
 
-	# Trava 1: alavanca atras da grade. Sozinha nao abre.
-	f.get_node("Base/AlavancaArmario").atingir_bumerangue()
-	await get_tree().process_frame
-	_checar(porta_armario.solido, "so a alavanca NAO abre o armario")
+	# O fundo: o céu de camadas da área aberta, o mesmo do pátio da fase 1.2.
+	var bg := f.get_node_or_null("BG") as ParallaxBackground
+	_checar(bg != null, "o fundo e o ceu de camadas (ParallaxBackground)")
+	if bg != null:
+		var patio: Node = (load("res://scenes/fases/fase1_2_exterior.tscn") as PackedScene).instantiate()
+		var iguais := true
+		var camadas := PackedStringArray()
+		for camada in patio.get_node("BG").get_children():
+			camadas.append(str(camada.name))
+			var aqui := bg.get_node_or_null(NodePath(camada.name))
+			if aqui == null or aqui.get_child_count() != camada.get_child_count():
+				iguais = false
+				continue
+			for i in camada.get_child_count():
+				var a := camada.get_child(i) as Sprite2D
+				var b := aqui.get_child(i) as Sprite2D
+				var arte_a := a.texture.resource_path
+				var arte_b := b.texture.resource_path
+				# O sol é um degradê guardado dentro de cada cena: aí vale o tipo.
+				if arte_a.contains("::"):
+					arte_a = a.texture.get_class()
+					arte_b = b.texture.get_class()
+				if (arte_a != arte_b or a.position != b.position
+						or a.scale != b.scale or a.region_rect != b.region_rect
+						or (a.material == null) != (b.material == null)):
+					iguais = false
+		patio.free()
+		_checar(iguais, "com as mesmas camadas e a mesma arte do patio %s" % [camadas])
+		var anda := true
+		for nome in ["Serra", "Morros", "MataDistante", "Mata"]:
+			var camada := bg.get_node(nome) as ParallaxLayer
+			if (camada.motion_scale.x <= 0.0 or camada.motion_scale.y != 0.0
+					or camada.motion_mirroring != Vector2(4096, 0)):
+				anda = false
+		_checar(anda and (bg.get_node("Ceu") as ParallaxLayer).motion_scale == Vector2.ZERO,
+			"as matas e os morros andam com a camera (so na horizontal) e se repetem; o ceu fica parado")
 
-	# Trava 2: chapa soldada. Sem maçarico o corte falha; com ele, abre.
-	Progresso.dar_habilidade("macarico")
-	# Ganhar a ferramenta dispara a ficha de coleta, que PAUSA o mundo até
-	# alguém apertar E. Sem fechar aqui, o corte da chapa e a porta do armário
-	# ficam congelados e o resto do roteiro não anda.
-	await _fechar_ficha_de_coleta(f)
-	var chapa := f.get_node("Base/ChapaArmario")
-	chapa._cortar()
-	await get_tree().create_timer(1.4).timeout
-	await get_tree().process_frame
-	_checar(not porta_armario.solido, "alavanca + chapa cortada abriram o armario")
-	_checar(f.get_node_or_null("PickupMochila") != null, "mochila apareceu no armario")
+	# O chão: a grama da área aberta, reta, de ponta a ponta.
+	var terreno := f.get_node("Terreno") as TileMapLayer
+	var limites := f.get_node("LimitesDaCamera") as ReferenceRect
+	var fonte := terreno.tile_set.get_source(3) as TileSetAtlasSource
+	var so_grama := true
+	var topo := 999999
+	for celula in terreno.get_used_cells():
+		if terreno.get_cell_source_id(celula) != 3:
+			so_grama = false
+		topo = mini(topo, celula.y)
+	_checar(so_grama and fonte.texture.resource_path.ends_with("Area Aberta/GandalfHardcore Background layers/Floor Tiles1.png"),
+		"o chao e so a grama da area aberta")
+	var passo := float(terreno.tile_set.tile_size.x) * terreno.scale.x
+	var furos := 0
+	for x in range(int(limites.position.x / passo) - 1, int((limites.position.x + limites.size.x) / passo) + 1):
+		if terreno.get_cell_source_id(Vector2i(x, topo)) != 3:
+			furos += 1
+	_checar(furos == 0 and limites.size.x >= 3000.0,
+		"reto e sem furo por toda a largura da fase (%d px)" % limites.size.x)
 
-	# Ventilador desliga a corrente de vapor.
-	var corrente := f.get_node("Subida2/Corrente1")
-	_checar(corrente.ativa, "corrente de vapor comeca ligada")
-	f.get_node("Subida2/Ventilador1").atingir_bumerangue()
-	await get_tree().process_frame
-	_checar(not corrente.ativa, "ventilador desligou a corrente")
+	# A Cacau nasce em pé no chão e não sai do mapa pelas pontas.
+	var player: CharacterBody2D = f.get_node("Player")
+	get_tree().paused = false
+	for i in 30:
+		await get_tree().physics_frame
+	_checar(player.is_on_floor() and absf(player.global_position.y + 36.0 - topo * passo) < 6.0,
+		"a Cacau nasce em pe na grama (pe em %.0f, chao em %.0f)" % [player.global_position.y + 36.0, topo * passo])
+	var paredes := f.get_node("Paredes")
+	_checar(paredes.get_node("ParedeEsquerda").position.x < limites.position.x
+		and paredes.get_node("ParedeDireita").position.x > limites.position.x + limites.size.x,
+		"com uma parede invisivel em cada ponta, fora do quadro")
+
+	# A porta de volta ao laboratório continua sendo a chegada da fase.
+	var porta := f.get_node("PortaHub")
+	_checar(porta.cena_destino == "res://scenes/laboratório_(world_2).tscn" and porta.recebe_chegada
+		and porta.tag_aqui == "entrada", "a porta do laboratorio continua de pe (chegada e volta)")
 
 	await _fechar(f)
 

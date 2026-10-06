@@ -22,8 +22,9 @@ extends Control
 #              cada uma vai a TECLA que a aciona, não o nome.
 #
 # A tecla é o que faz o cinto valer alguma coisa em jogo: o painel deixa de ser
-# troféu e vira consulta ("o que eu aperto para o maçarico?"). É a mesma tampa
-# de tecla do rodapé da ficha de coleta (EstiloHUD.tecla).
+# troféu e vira consulta ("o que eu aperto para o maçarico?"). É a mesma tecla
+# desenhada do rodapé da ficha de coleta (EstiloHUD.tecla_da_acao), afundando
+# em loop como o E do cenário.
 #
 # O CABEÇALHO é a linha de status: normalmente diz CINTO; quando uma ferramenta
 # é conquistada ou usada no mundo, ele vira o nome dela, na cor dela, e volta
@@ -41,7 +42,8 @@ const PADDING := Vector2(16.0, 10.0)
 const PADDING_BASE := 12.0
 const ALTURA_CABECALHO := 24.0
 ## Faixa das tampas de tecla, embaixo dos alvéolos.
-const ALTURA_TECLA := 30.0
+## Cabe a tecla desenhada (32 px) inteira, sem encostar no alvéolo de cima.
+const ALTURA_TECLA := 38.0
 const CORTE := 16.0
 
 const TAM_CABECALHO := 11
@@ -77,6 +79,9 @@ var _largura_atual: float = 0.0
 var _status_texto: String = ""
 var _status_cor: Color = EstiloHUD.TEXTO_FRACO
 var _status_tempo: float = 0.0
+## Quadro da animação das teclas no último desenho: elas afundam em loop, e o
+## cinto só se redesenha quando o quadro vira (5 vezes por segundo).
+var _quadro_das_teclas: int = -1
 
 
 func _ready() -> void:
@@ -212,8 +217,13 @@ func _process(delta: float) -> void:
 		_status_tempo = maxf(_status_tempo - delta, 0.0)
 		ativo = true
 
-	queue_redraw()
-	if not ativo:
+	# Parado, o cinto só precisa de um desenho novo quando as teclas embaixo
+	# das ferramentas mudam de quadro. Sem ferramenta nenhuma, ele dorme.
+	var quadro := BotoesControle.quadro_atual()
+	if ativo or quadro != _quadro_das_teclas:
+		_quadro_das_teclas = quadro
+		queue_redraw()
+	if not ativo and _ferramentas.is_empty():
 		set_process(false)
 
 
@@ -333,7 +343,7 @@ func _desenhar_tecla(ferramenta: Dictionary, centro: Vector2, surgir: float) -> 
 	var f := _fonte()
 	if f == null:
 		return
-	var y := centro.y + ALTURA_CELULA * 0.5 + ALTURA_TECLA * 0.5 - 4.0
+	var y := centro.y + ALTURA_CELULA * 0.5 + ALTURA_TECLA * 0.5 - 1.0
 	var tecla := String(ferramenta["tecla"])
 
 	if tecla.is_empty():
@@ -345,7 +355,7 @@ func _desenhar_tecla(ferramenta: Dictionary, centro: Vector2, surgir: float) -> 
 			TAM_PASSIVA, EstiloHUD.com_alfa(EstiloHUD.TEXTO_FRACO, surgir * 0.8), 1.6)
 		return
 
-	# De controle na mão a tampa vira o botão da ação (□ no bumerangue...).
+	# A tecla desenhada (F, E...); de controle na mão vira o botão da ação (□).
 	EstiloHUD.tecla_da_acao(self, f, Vector2(centro.x, y), tecla,
 		String(ferramenta.get("acao", "")), ferramenta["cor"], surgir, TAM_TECLA)
 

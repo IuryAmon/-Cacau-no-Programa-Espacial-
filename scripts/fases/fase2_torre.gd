@@ -1,77 +1,29 @@
 extends FaseBase
 
-# --- FASE 2: TORRE DE GASES E ESTUFA (Mapa 3 do plano) ---
+# --- FASE 2: NITROGÊNIO (em branco, esperando ser construída) ---
 #
-# Fluxo vertical. A novidade estrutural: a MOCHILA DE N₂ é pega na BASE, mas
-# trancada por duas fechaduras que exigem as habilidades anteriores — a grade
-# (bumerangue) e a chapa soldada (maçarico).
+# A fase do nitrogênio vai ser refeita do zero, ao ar livre. A cena está só
+# com o palco:
 #
-#   ① BASE        armário da mochila (2 travas)
-#   ② SUBIDA 1    plataformas + chamas (jato de N₂ apaga)
-#   ③ SUBIDA 2    correntes de vapor + ventiladores (bumerangue)
-#   ④ TUBULAÇÕES  atalhos soldados e válvulas de purga
-#   ⑤ ESTUFA      ciclo do nitrogênio + carta de Johanna Döbereiner
-
-@onready var _alavanca: AlvoBumerangue = $Base/AlavancaArmario
-@onready var _chapa: ChapaSoldada = $Base/ChapaArmario
-@onready var _porta_armario: BlocoAlternavel = $Base/PortaArmario
-@onready var _ponto_mochila: Marker2D = $Base/PontoDaMochila
-
-@onready var _ventilador1: AlvoBumerangue = $Subida2/Ventilador1
-@onready var _corrente1: CorrenteVapor = $Subida2/Corrente1
-@onready var _ventilador2: AlvoBumerangue = $Subida2/Ventilador2
-@onready var _corrente2: CorrenteVapor = $Subida2/Corrente2
-
-@onready var _mesa_ciclo: MesaPuzzle = $Estufa/MesaCicloN
-@onready var _ponto_celula: Marker2D = $Estufa/PontoDaCelula
-
-var _armario_aberto: bool = false
-
-
-func _ready() -> void:
-	super()
-
-	_ligar_ventilador(_ventilador1, _corrente1)
-	_ligar_ventilador(_ventilador2, _corrente2)
-
-	_mesa_ciclo.resolvido.connect(_on_ciclo_resolvido)
-	# Puzzle já resolvido mas célula não coletada (morte no meio): ela volta.
-	if _mesa_ciclo.ja_resolvida and not Progresso.conquistou_celula("N"):
-		CelulaChonps.criar(self, _ponto_celula.global_position, "N")
-
-
-func _ligar_ventilador(ventilador: AlvoBumerangue, corrente: CorrenteVapor) -> void:
-	if ventilador.ativo:
-		corrente.desligar()
-		return
-	ventilador.mudou.connect(func(ativo: bool) -> void:
-		if ativo:
-			corrente.desligar())
-
-
-func _on_ciclo_resolvido() -> void:
-	CelulaChonps.criar(self, _ponto_celula.global_position, "N")
-
-
-func _process(_delta: float) -> void:
-	# O armário vigia as duas travas: alavanca puxada E chapa cortada.
-	if _armario_aberto:
-		return
-	var chapa_cortada := not is_instance_valid(_chapa)
-	if _alavanca.ativo and chapa_cortada:
-		_abrir_armario()
-
-
-func _abrir_armario() -> void:
-	_armario_aberto = true
-	_porta_armario.definir_solido(false)
-
-	if Progresso.tem_habilidade("mochila"):
-		return
-
-	PickupHabilidade.criar(self, "PickupMochila", _ponto_mochila.global_position, {
-		"habilidade": "mochila",
-		"rotulo": "MOCHILA PROPULSORA DE N₂",
-		"mensagem": "Mochila equipada!\nShift + direção: dash em 8 direções com jato de N₂ (no chão ou no ar).",
-		"cor": Color(0.3, 0.6, 0.9),
-	})
+#   BG/        o céu de camadas da área aberta (o mesmo do pátio da fase 1.2 e
+#              do world1). O céu e o sol ficam presos na tela; a serra, os
+#              morros e as matas andam mais devagar que a câmera, só na
+#              horizontal (motion_scale 0.2 / 0.4 / 0.6 / 0.8), e se repetem
+#              sozinhos de 4096 em 4096 px.
+#   Terreno    o chão de grama da área aberta, reto, de 0 a 3200 px (o topo
+#              fica em y = 512). Pinte o resto por cima dele.
+#   Paredes/   dois corpos invisíveis nas pontas, para a Cacau não cair para
+#              fora do mapa. Mova-os junto quando esticar o chão.
+#   PortaHub   a porta de volta para o laboratório — é também onde ela chega
+#              (a porta do laboratório procura por esta "tag_aqui").
+#   LimitesDaCamera, SpawnPadrao, Player   o de sempre (ver fase_base.gd).
+#
+# Este script não liga nada: a FaseBase já cuida da câmera e de pôr a Cacau na
+# porta. A lógica da fase nova entra aqui conforme ela for sendo montada.
+#
+# O QUE O RESTO DO JOGO AINDA ESPERA DESTA FASE
+#   * a MOCHILA DE N₂ (Progresso "mochila"), que era pega aqui;
+#   * a amostra de NITROGÊNIO (Progresso, célula "N") — sem ela o painel
+#     CHONPS não fecha;
+#   * a trilha "nitrogenio" do scripts/roteiro_objetivos.gd, que hoje só tem
+#     os passos que não dependem de nenhum objeto da cena.

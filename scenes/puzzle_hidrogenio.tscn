@@ -8,6 +8,7 @@
 [ext_resource type="AudioStream" uid="uid://0t8yju2oahhm" path="res://sounds/AcessoNegado.mp3" id="6_ph"]
 [ext_resource type="AudioStream" uid="uid://bxtvw2yqbqsj6" path="res://sounds/drag.mp3" id="7_ph"]
 [ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="8_ph"]
+[ext_resource type="Texture2D" uid="uid://bqcjwhpmytdf5" path="res://assets/caderno de anotaçõess/Hidrogênio tabela periódica.png" id="9_ph"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_atombg"]
 atlas = ExtResource("4_vrkcy")
@@ -47,11 +48,9 @@ volume_db = 2.0
 
 [node name="AudioDrag" type="AudioStreamPlayer" parent="." unique_id=723964737]
 stream = ExtResource("7_ph")
-volume_db = 0.0
 
 [node name="AudioPop" type="AudioStreamPlayer" parent="." unique_id=723964738]
 stream = ExtResource("8_ph")
-volume_db = 0.0
 
 [node name="RootControl" type="Control" parent="." unique_id=267167004]
 layout_mode = 3
@@ -83,17 +82,63 @@ texture = ExtResource("3_4opf7")
 
 [node name="Titulo" type="Label" parent="RootControl" unique_id=1028886725]
 layout_mode = 0
-offset_left = 545.0
-offset_top = 190.0
-offset_right = 1285.0
-offset_bottom = 257.0
+offset_left = 558.0
+offset_top = 188.0
+offset_right = 1182.0
+offset_bottom = 263.375
 theme_override_colors/font_color = Color(0.29945153, 0, 0.0070019774, 1)
+theme_override_constants/line_spacing = 8
 theme_override_fonts/font = ExtResource("4_54aeq")
 theme_override_font_sizes/font_size = 33
+text = "Represente 
+o átomo:"
+horizontal_alignment = 2
+
+[node name="Titulo2" type="Label" parent="RootControl" unique_id=758712631]
+layout_mode = 0
+offset_left = 1074.0
+offset_top = 422.0
+offset_right = 1323.0
+offset_bottom = 497.375
+theme_override_colors/font_color = Color(0.29945153, 0, 0.0070019774, 1)
 theme_override_constants/line_spacing = 8
-text = "REPRESENTE O ÁTOMO DE HIDROGÊNIO
-ARRASTANDO AS PARTÍCULAS"
-horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 33
+text = "Arrastando  
+as partículas"
+horizontal_alignment = 2
+
+[node name="CaixaHidrogenio" type="TextureRect" parent="RootControl" unique_id=1304477291]
+layout_mode = 0
+offset_left = 1193.0
+offset_top = 183.0
+offset_right = 1345.0
+offset_bottom = 367.0
+mouse_filter = 2
+texture = ExtResource("9_ph")
+expand_mode = 1
+
+[node name="Papel" type="ColorRect" parent="RootControl/CaixaHidrogenio" unique_id=1962240518]
+show_behind_parent = true
+layout_mode = 0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 150.0
+offset_bottom = 182.0
+mouse_filter = 2
+color = Color(0.90588236, 0.8352941, 0.7019608, 1)
+
+[node name="Nome" type="Label" parent="RootControl/CaixaHidrogenio" unique_id=847715603]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 114.0
+offset_right = 93.0
+offset_bottom = 126.0
+scale = Vector2(1.5, 1.5)
+theme_override_colors/font_color = Color(0.23921569, 0.16470589, 0.13333334, 1)
+theme_override_fonts/font = ExtResource("4_54aeq")
+theme_override_font_sizes/font_size = 11
+text = "Hidrogênio"
 
 [node name="Instrucoes" type="Label" parent="RootControl" unique_id=575867912]
 layout_mode = 0
@@ -149,9 +194,9 @@ offset_bottom = 46.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/line_spacing = 8
 theme_override_fonts/font = ExtResource("4_54aeq")
 theme_override_font_sizes/font_size = 22
-theme_override_constants/line_spacing = 8
 text = ".
 
 Núcleo"
@@ -168,19 +213,19 @@ mouse_filter = 2
 
 [node name="PecaProton" type="TextureRect" parent="RootControl" unique_id=113765283]
 layout_mode = 0
-offset_left = 1193.0
-offset_top = 349.0
-offset_right = 1273.0
-offset_bottom = 429.0
+offset_left = 1246.0
+offset_top = 507.0
+offset_right = 1326.0
+offset_bottom = 587.0
 mouse_filter = 2
 texture = SubResource("AtlasTexture_proton")
 
 [node name="LabelNomeP" type="Label" parent="RootControl" unique_id=561517388]
 layout_mode = 0
-offset_left = 1138.0
-offset_top = 433.0
-offset_right = 1330.0
-offset_bottom = 455.0
+offset_left = 1191.0
+offset_top = 591.0
+offset_right = 1383.0
+offset_bottom = 613.0
 theme_override_colors/font_color = Color(1, 0.6, 0.6, 1)
 theme_override_fonts/font = ExtResource("4_54aeq")
 theme_override_font_sizes/font_size = 11
@@ -189,19 +234,19 @@ horizontal_alignment = 1
 
 [node name="PecaNeutron" type="TextureRect" parent="RootControl" unique_id=113765284]
 layout_mode = 0
-offset_left = 1057.0
-offset_top = 349.0
-offset_right = 1137.0
-offset_bottom = 429.0
+offset_left = 1146.0
+offset_top = 508.0
+offset_right = 1226.0
+offset_bottom = 588.0
 mouse_filter = 2
 texture = SubResource("AtlasTexture_neutron")
 
 [node name="LabelNomeN" type="Label" parent="RootControl" unique_id=561517389]
 layout_mode = 0
-offset_left = 1004.0
-offset_top = 432.0
-offset_right = 1196.0
-offset_bottom = 454.0
+offset_left = 1093.0
+offset_top = 591.0
+offset_right = 1285.0
+offset_bottom = 613.0
 theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
 theme_override_fonts/font = ExtResource("4_54aeq")
 theme_override_font_sizes/font_size = 11
@@ -210,19 +255,19 @@ horizontal_alignment = 1
 
 [node name="PecaEletron" type="TextureRect" parent="RootControl" unique_id=892145036]
 layout_mode = 0
-offset_left = 1140.0
-offset_top = 487.0
-offset_right = 1188.0
-offset_bottom = 535.0
+offset_left = 1075.0
+offset_top = 534.0
+offset_right = 1123.0
+offset_bottom = 582.0
 mouse_filter = 2
 texture = SubResource("AtlasTexture_eletron")
 
 [node name="LabelNomeE" type="Label" parent="RootControl" unique_id=2037326576]
 layout_mode = 0
-offset_left = 1073.0
-offset_top = 544.0
-offset_right = 1265.0
-offset_bottom = 566.0
+offset_left = 1008.0
+offset_top = 591.0
+offset_right = 1200.0
+offset_bottom = 613.0
 theme_override_colors/font_color = Color(0.6, 0.7, 1, 1)
 theme_override_fonts/font = ExtResource("4_54aeq")
 theme_override_font_sizes/font_size = 11

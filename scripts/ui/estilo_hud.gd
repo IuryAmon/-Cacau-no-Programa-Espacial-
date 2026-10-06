@@ -220,10 +220,10 @@ static func com_alfa(cor: Color, alfa: float) -> Color:
 	return Color(cor.r, cor.g, cor.b, cor.a * clampf(alfa, 0.0, 1.0))
 
 
-## Tampa de tecla: caixinha chanfrada com a letra dentro. É a MESMA peça no
-## rodapé da ficha de coleta ("[E] CONTINUAR") e embaixo de cada ferramenta do
-## cinto — é por ela que a pessoa liga "isto na tela" a "aquilo no teclado".
-## Devolve a largura desenhada, para quem precisa continuar o texto ao lado.
+## Tampa de tecla: caixinha chanfrada com a letra dentro. É o reserva de
+## "tecla_da_acao" para a tecla que ainda não tem desenho na folha do teclado
+## (SHIFT, T, R...). Devolve a largura desenhada, para quem precisa continuar o
+## texto ao lado.
 static func tecla(ci: CanvasItem, f: Font, centro: Vector2, txt: String, cor: Color,
 		alfa: float = 1.0, tamanho: int = 15) -> float:
 	if f == null or txt.is_empty():
@@ -241,17 +241,35 @@ static func tecla(ci: CanvasItem, f: Font, centro: Vector2, txt: String, cor: Co
 	return largura
 
 
-## A tampa de tecla que acompanha o dispositivo: no teclado, a tecla escrita
-## ("E"); de controle na mão, o botão da ação desenhado (□), no mesmo lugar.
-## Ação sem botão no controle continua mostrando a tecla.
+## A tecla de uma ação, do jeito que o resto do jogo a mostra: o desenho da
+## folha do teclado (o mesmo E do cenário), afundando em loop — ou, de controle
+## na mão, o botão da ação (□), no mesmo lugar. É a MESMA peça no rodapé da
+## ficha de coleta ("[E] CONTINUAR"), embaixo de cada ferramenta do cinto e no
+## tutorial: é por ela que a pessoa liga "isto na tela" a "aquilo no teclado".
+##
+## Tecla sem desenho na folha cai na tampa escrita ("tecla"), na cor pedida.
+## Quem chama precisa se redesenhar para a tecla afundar (5 quadros por
+## segundo, ver BotoesControle.quadro_atual). Devolve a largura desenhada.
 static func tecla_da_acao(ci: CanvasItem, f: Font, centro: Vector2, txt: String,
 		acao: StringName, cor: Color, alfa: float = 1.0, tamanho: int = 15) -> float:
+	var desenho := desenho_da_tecla(txt, acao)
+	if desenho != "":
+		var escala := BotoesControle.escala_para(float(tamanho) + 11.0)
+		return BotoesControle.desenhar(ci, centro, desenho, escala, com_alfa(Color.WHITE, alfa),
+			BotoesControle.quadro_atual())
+	return tecla(ci, f, centro, txt, cor, alfa, tamanho)
+
+
+## O nome (BotoesControle) do desenho que representa a tecla "txt" da ação: o
+## botão do controle, se a pessoa está de controle e a ação tem botão; senão a
+## tecla da folha do teclado. Vazio se a tecla ainda não tem desenho.
+static func desenho_da_tecla(txt: String, acao: StringName) -> String:
 	if BotoesControle.controle_em_uso():
 		var botao := BotoesControle.nome_da_acao(acao)
 		if botao != "":
-			var escala := BotoesControle.escala_para(float(tamanho) + 11.0)
-			return BotoesControle.desenhar(ci, centro, botao, escala, com_alfa(Color.WHITE, alfa))
-	return tecla(ci, f, centro, txt, cor, alfa, tamanho)
+			return botao
+	var nome := "tecla_" + txt.to_lower()
+	return nome if BotoesControle.TECLAS.has(nome) else ""
 
 
 # ─────────────────────────────────────────────────────────────

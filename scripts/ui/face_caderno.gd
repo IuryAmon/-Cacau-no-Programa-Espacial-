@@ -272,7 +272,8 @@ func _montar_epigrafe(area: Rect2) -> Array:
 # ─────────────────────────────────────────────────────────────
 
 ## Monta com o desenho em (0, 0); no fim, o conjunto (a tinta do desenho, os
-## traços e os textos) vai para o meio da área.
+## traços e os textos) vai para o meio da área. Com "desenho_no_meio", quem
+## vai para o meio é só a tinta do desenho, e os nomes ficam em volta dela.
 func _montar_desenho(area: Rect2) -> Array:
 	var arte: Texture2D = dados.get("arte")
 	if arte == null:
@@ -298,9 +299,10 @@ func _montar_desenho(area: Rect2) -> Array:
 		itens.append_array(_marca(marca, escala, tinta))
 
 	var conjunto := tinta
-	for item in itens:
-		if item.has("texto"):
-			conjunto = conjunto.merge(caixa_do_texto(item))
+	if not dados.get("desenho_no_meio", false):
+		for item in itens:
+			if item.has("texto"):
+				conjunto = conjunto.merge(caixa_do_texto(item))
 	_mover(itens, (area.get_center() - conjunto.get_center()).round())
 	return itens
 

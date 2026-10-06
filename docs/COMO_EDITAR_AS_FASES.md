@@ -10,7 +10,7 @@ Tudo é arrastável, redimensionável e trocável direto no editor.
 |---|---|
 | `scenes/fases/fase1_oficina.tscn` | Oficina do Carbono |
 | `scenes/fases/fase1_2_exterior.tscn` | Pátio da Oficina (fase 1.2) — tela única, do outro lado do elevador |
-| `scenes/fases/fase2_torre.tscn` | Torre de Gases e Estufa |
+| `scenes/fases/fase2_torre.tscn` | Fase 2, a do nitrogênio — **em branco**, sendo refeita do zero (só o céu e o chão da área aberta) |
 | `scenes/fases/fase3_subsolo.tscn` | Subsolo em blecaute (P + S) |
 | `scenes/fases/fase_final.tscn` | Torre de lançamento |
 | `scenes/fases/final_orbita.tscn` | Encerramento em órbita |
@@ -57,6 +57,21 @@ popup e sem selo. Preencheu o
 Se você preferir uma arte diferente só para o pickup do chão, arraste ela para
 o `Sprite` do `PickupHabilidade`: o slot preenchido tem prioridade sobre o
 catálogo.
+
+## As teclas desenhadas (E, F, W, M...)
+
+Toda tecla que o jogo mostra sai da mesma folha, `assets/UI/gdb-keyboard-2.png`
+(o teclado inteiro, com os quatro quadros de apertar de cada tecla): o E do
+cenário, o W das portas, o M do caderno — e também a tecla embaixo de cada
+ferramenta do **cinto**, o E de "continuar" da **ficha de coleta** e as teclas
+do **tutorial** (o ESC que fecha e o F que afunda quando a Cacau arremessa). De
+controle na mão, todas viram o botão do controle.
+
+Já estão ligadas: ESC, E, W, A, S, D, M e F. Para ligar mais uma (o SHIFT da
+mochila, por exemplo), abra `scripts/ui/botoes_controle.gd`, escreva o canto
+dela na folha em `TECLAS` (cada tecla ocupa 16×16 px no primeiro bloco) e
+acrescente o nome no **fim** de `NOMES`. Tecla que ainda não está ligada
+aparece no HUD como uma tampinha com a letra escrita.
 
 ## Pintar o cenário
 
@@ -361,7 +376,7 @@ elétrica** (`scenes/fases/componentes/gaiola_vidro_eletrica.tscn`), exclusiva
 desta fase — o prólogo continua com a gaiola de grade (`scenes/gaiola_puzzle.tscn`).
 As duas cenas usam o mesmo script, `scripts/gaiola_puzzle.gd`.
 
-- `Entrada/GaiolaBumerangue` — sem puzzle: chegar perto e apertar **E** abre.
+- `Entrada/GaiolaBumerangue` — abre o puzzle do carbono (montar o átomo).
 - `Patio/GaiolaMacarico` — abre o puzzle do maçarico. Dentro do domo, encostada
   e inclinada no maçarico, está a `Patio/MascaraSolda`: um `Sprite2D` e nada
   mais — **não é item**, não entra no inventário e continua ali depois que a
@@ -403,6 +418,73 @@ topo de `scripts/puzzle_macarico.gd`. A coluna de cada substância (setas e
 tamanho das moléculas) é `scenes/ui/termo_equacao.tscn`. Durante os testes, a
 tecla **L** resolve o puzzle na hora; o teste automático é
 `tools/teste_puzzle_macarico.tscn`.
+
+### O puzzle do bumerangue (fase 1)
+
+`scenes/puzzle_carbono.tscn`, na mesma tela do computador do puzzle do
+maçarico. É a ideia do puzzle do hidrogênio do prólogo — montar o átomo com
+as partículas —, agora com o **carbono**: 6 prótons e 6 nêutrons no núcleo,
+2 elétrons na camada K e 4 na camada L. A caixa do elemento (6, C, 12,011) é a
+pista: o número atômico dá os prótons, a massa menos os prótons dá os
+nêutrons, e o átomo neutro tem tantos elétrons quantos prótons.
+
+Tudo se mexe pelas **setas**, as mesmas dos puzzles de balanceamento. São
+quatro seletores (`scenes/ui/seletor_particula.tscn`): prótons, nêutrons,
+camada K e camada L. A seta de cima põe uma partícula no átomo, a de baixo
+tira, e o número entre elas fica amarelo (falta), verde (bate) ou vermelho
+(passou). O que não cabe (o terceiro elétron na camada K) a seta recusa, e o
+rodapé diz por quê. Fechar a tela no meio não desmonta o átomo.
+
+O átomo pedido, os textos do terminal e os raios do desenho ficam nas
+constantes do topo de `scripts/puzzle_carbono.gd`. Na cena, o átomo é
+desenhado no meio do nó `Atomo`, e cada seletor é a cena do seletor com os
+filhos editáveis: as partículas têm a arte e o tamanho do `Icone` do seletor
+de cada uma (a arte é
+`assets/UI/Computador receptor/particulas_atomo.png`). Durante os testes, a
+tecla **L** resolve o puzzle na hora; o teste automático é
+`tools/teste_puzzle_carbono.tscn`.
+
+### O tutorial do bumerangue
+
+Pegou o bumerangue, sobe a ficha de coleta de sempre ("FERRAMENTA
+ADQUIRIDA"). No **E**, o ícone voa para o cinto e sobe uma segunda ficha, o
+**tutorial**, limpa de propósito: um quadradinho animado, **uma frase**
+embaixo dele e a tecla que fecha: o **ESC** (o **△** no controle). O **E** (o
+**□**) fecha também, só não aparece desenhado. Nada de título nem rodapé
+escrito. O jogo fica parado até fechar.
+
+No quadradinho, a Cacau está parada (a `idle` do jogo), a tecla **F** afunda
+no alto, no meio, ela arremessa, o bumerangue vai até a caixa elétrica, a
+caixa quebra e ele volta para a mão — e ela volta para a `idle`. De controle,
+o F vira o **□**.
+
+- **A frase** é o campo `tutorial` → `texto` do bumerangue, em
+  `scripts/ferramentas/catalogo_ferramentas.gd`. É a única coisa escrita na
+  ficha; ela quebra em linhas sozinha, na largura do quadradinho.
+- **O quadradinho** é a cena `scenes/ui/demo_bumerangue.tscn`, com nós de
+  verdade:
+  - `Mundo/Cenario` é um `TileMapLayer` com o tileset das fases — pinte como
+    se pinta o mapa. Hoje ele repete o que há em volta das caixas da fase 1: a
+    placa rebitada da parede, o piso de faixa amarela e, em cima da caixa, as
+    placas com os cabos dela subindo. A colisão fica desligada (é só desenho);
+  - `Mundo/Cacau` tem as duas animações (`idle` e `jogando_bumerangue`) e a
+    velocidade de cada uma; o bumerangue voa do `Mao` dela até o `Alvo` da
+    `Mundo/Caixa`;
+  - `Tecla` é a tecla F: arraste o nó para mudar o lugar e redimensione para
+    mudar o tamanho (o desenho ocupa o nó inteiro; hoje 40×40, no alto e no
+    meio);
+  - o **tamanho** é do nó raiz: o Tamanho dele (300×210) é o quanto do
+    cenário aparece, e a **Escala** (hoje 2, o dobro do tamanho do jogo) é o
+    quanto ele é ampliado na ficha. A ficha inteira acompanha os dois.
+  Os tempos do roteiro são as constantes do topo de
+  `scripts/ui/demo_bumerangue.gd`.
+- **A ficha** (margens, tamanho da letra — `TAM_TEXTO` —, tempos de entrada) é
+  `scripts/ui/tutorial_ferramenta.gd`, desenhada como a ficha de coleta.
+
+Para dar tutorial a outra ferramenta, escreva o campo `tutorial` dela no
+catálogo (`texto` e, se quiser, a cena de `demo`). Sem o campo, a ferramenta
+só ganha a ficha de coleta. O teste automático é
+`tools/teste_tutorial_bumerangue.tscn`.
 
 ### A folha de átomos e moléculas
 
@@ -504,6 +586,30 @@ Para um objeto novo lembrar do estado: `EstadoMundo.marcar_feito(self)` /
 `ler(self, "marca", padrao)` para valores. Se só deve anotar na saída por
 porta, entre no grupo `EstadoMundo.GRUPO_SALVAR_AO_SAIR` e tenha um
 `salvar_ao_sair()`. Nos alvos de bumerangue, ligue `persistir` no Inspetor.
+
+## A fase 2 em branco
+
+A antiga Torre de Gases e Estufa saiu inteira de `fase2_torre.tscn`. A cena
+ficou só com o palco, para a fase do nitrogênio ser montada do zero:
+
+- `BG` — o céu de camadas da área aberta (o mesmo do pátio da fase 1.2). O
+  céu e o sol ficam presos na tela; a serra, os morros e as matas andam mais
+  devagar que a câmera, só na horizontal, e se repetem sozinhos;
+- `Terreno` — o chão de grama da área aberta, reto, de 0 a 3200 px (o topo em
+  y = 512). Pinte o resto por cima;
+- `Paredes` — duas paredes invisíveis nas pontas, para a Cacau não cair para
+  fora do mapa. Mova junto quando esticar o chão;
+- `PortaHub` — a porta de volta ao laboratório (e por onde ela chega);
+- `LimitesDaCamera`, `SpawnPadrao` e `Player`, como em toda fase.
+
+O que ainda falta voltar para o jogo fechar: a **mochila de N₂** e a
+**amostra de nitrogênio (N)**, que eram pegas aqui. Na lista de objetivos, a
+trilha do nitrogênio (`scripts/roteiro_objetivos.gd`) ficou só com "entrar",
+"pegar a mochila", "pegar o N" e "entregar o N" — os passos da alavanca, da
+chapa do armário e do ciclo do nitrogênio saíram junto com os objetos.
+
+Atenção: o `tools/gerar_cenas_fases.tscn` (logo abaixo) ainda sabe montar a
+Torre antiga e sobrescreveria esta cena.
 
 ## Regerar o blockout do zero
 

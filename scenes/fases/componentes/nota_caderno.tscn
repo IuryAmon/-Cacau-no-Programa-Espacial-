@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/nota_caderno.gd" id="1_nota"]
+[ext_resource type="Texture2D" uid="uid://itbkhrp71c1j" path="res://assets/itens/notas diario.png" id="2_arte"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/icone_interagir.tscn" id="3_tecla"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_alcance"]
+size = Vector2(104, 96)
+
+[node name="NotaCaderno" type="Area2D"]
+z_index = 1
+script = ExtResource("1_nota")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+show_behind_parent = true
+position = Vector2(0, -36)
+scale = Vector2(2, 2)
+texture = ExtResource("2_arte")
+
+[node name="Colisao" type="CollisionShape2D" parent="."]
+position = Vector2(0, -48)
+shape = SubResource("RectangleShape2D_alcance")
+
+[node name="Dica" parent="." instance=ExtResource("3_tecla")]
+position = Vector2(0, -98)

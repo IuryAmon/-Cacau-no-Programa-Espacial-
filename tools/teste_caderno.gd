@@ -23,13 +23,14 @@ extends Node
 #   * a segunda tem a epígrafe à esquerda, atrás da folha de rosto: a frase
 #     do Hubble entre aspas e a autoria alinhada à direita, embaixo dela; a
 #     direita fica em branco, sem número;
-#   * a terceira é a do átomo de lítio, em 1,5× e com o título em cima, com
-#     traços até eletrosfera, próton (p), elétron (e), núcleo e nêutron (n), e
-#     à direita as três partículas comentadas, cada uma com o ícone dela e a
-#     letra entre parênteses;
-#   * a quarta é a de atomística: a caixa do hidrogênio em 2×, com o nome em
-#     texto (ampliado 1,5×) dentro dela e um traço de cada parte até o que ela
-#     é (em baixo, o número de massa (A)), e as propriedades na face da
+#   * a terceira é a do átomo de lítio, em 1,5× e com o título "O Átomo" em
+#     cima, com traços até próton (p), elétron (e), núcleo e nêutron (n) (a
+#     eletrosfera não tem traço), e à direita as três partículas comentadas,
+#     cada uma com o ícone dela e a letra entre parênteses;
+#   * a quarta continua a nota do átomo, sem título: a caixa do hidrogênio em
+#     2×, bem no meio da face, com o nome em texto (ampliado 1,5×) dentro dela
+#     e um traço do número atômico (Z), em cima, e do número de massa (A), em
+#     baixo (o símbolo não tem traço), e as propriedades na face da
 #     direita: cada texto e, embaixo dele, a fórmula no meio da face; no
 #     texto, o ícone de cada partícula no lugar
 #     do {nome} dela, na linha, sem encostar em texto nenhum, e o número
@@ -71,6 +72,10 @@ func _ready() -> void:
 		if arg.begins_with("--capturas="):
 			_pasta_capturas = arg.trim_prefix("--capturas=")
 	PaginasCaderno.paginas = PaginasCaderno.PAGINAS + FOLHAS_DE_TESTE
+	# O caderno começa só até a página 3, e as outras são notas soltas pelo
+	# mapa (o teste delas é o teste_notas_caderno). Aqui é o caderno inteiro.
+	for nota in PaginasCaderno.NOTAS:
+		PaginasCaderno.guardar_nota(nota)
 	_cacau = Node.new()
 	_cacau.name = "Cacau"
 	_cacau.add_to_group("player")
@@ -207,9 +212,9 @@ func _testar_paginas() -> void:
 	face.free()
 	_checar(caixa.size == PaginasCaderno.ARTE_LITIO.get_size() * 1.5 and caixa.position == caixa.position.round(),
 		"o átomo vai em 1,5×, no pixel inteiro (%s)" % caixa)
-	_checar(titulo.get("texto") == "O átomo" and FaceCaderno.caixa_do_texto(titulo).end.y < tinta.position.y,
-		"com o título \"O átomo\" em cima dele")
-	_conferir_mapa(atomo, 2, ["eletrosfera", "próton (p)", "elétron (e)", "núcleo", "nêutron (n)"])
+	_checar(titulo.get("texto") == "O Átomo" and FaceCaderno.caixa_do_texto(titulo).end.y < tinta.position.y,
+		"com o título \"O Átomo\" em cima dele")
+	_conferir_mapa(atomo, 2, ["próton (p)", "elétron (e)", "núcleo", "nêutron (n)"])
 	var comentarios: Dictionary = paginas[2][1]
 	face = _face_montada(comentarios, 2, 1)
 	var icones := 0
@@ -224,9 +229,11 @@ func _testar_paginas() -> void:
 		"com a letra de cada uma entre parênteses %s" % [particulas])
 
 	var hidrogenio: Dictionary = paginas[3][0]
-	_checar(hidrogenio.get("tipo") == "desenho" and hidrogenio.get("titulo") == "Atomística",
-		"a quarta é a de atomística")
+	_checar(hidrogenio.get("tipo") == "desenho" and hidrogenio.get("arte") == PaginasCaderno.ARTE_HIDROGENIO \
+		and not hidrogenio.has("titulo"),
+		"a quarta é a da caixa do hidrogênio, sem título: continua a nota do átomo")
 	face = _face_montada(hidrogenio, 3, 0)
+	var meio_da_face := face.size * 0.5
 	var nome := {}
 	for item in face.montar():
 		if item.has("arte"):
@@ -237,10 +244,12 @@ func _testar_paginas() -> void:
 	var arte: Texture2D = hidrogenio["arte"]
 	_checar(caixa.size == arte.get_size() * 2.0 and caixa.position == caixa.position.round(),
 		"a caixa do hidrogênio vai em 2×, no pixel inteiro (%s)" % caixa)
+	_checar(caixa.get_center() == meio_da_face,
+		"bem no meio da face (%s, o meio é %s)" % [caixa.get_center(), meio_da_face])
 	_checar(nome.get("texto") == "Hidrogênio" and nome.get("escala") == FaceCaderno.ESCALA_NOME \
 		and caixa.encloses(FaceCaderno.caixa_do_texto(nome)),
 		"o nome vai em texto, ampliado %s×, dentro da caixa" % FaceCaderno.ESCALA_NOME)
-	_conferir_mapa(hidrogenio, 3, ["número atômico (Z)", "símbolo", "número de massa (A)"])
+	_conferir_mapa(hidrogenio, 3, ["número atômico (Z)", "número de massa (A)"])
 
 	var propriedades: Dictionary = paginas[3][1]
 	var formulas: Array = []

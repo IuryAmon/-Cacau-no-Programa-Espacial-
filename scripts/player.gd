@@ -115,16 +115,23 @@ var _macarico_geracao : int = 0
 @export var luz_macarico_energia := 1.6
 
 # --- POSE DO ARREMESSO DO BUMERANGUE ---
-# Os 7 quadros do gesto de arremessar. Ao contrário da pose do maçarico, esta
-# NÃO trava o movimento: arremessar em corrida é a mecânica (o voo herda o
-# momento da personagem), então ela continua andando enquanto o braço faz o
-# gesto — o gesto toma conta só do sprite.
+# Os 7 quadros do gesto de arremessar. O gesto toma conta do sprite e, NO CHÃO,
+# segura a personagem no lugar enquanto roda (ver "parar_ao_arremessar"). No
+# ar ela continua livre: arremessar no meio de um pulo não mexe na trajetória.
+#
+# Arremessar em corrida continua valendo a pena: o voo herda o momento que ela
+# tinha NO INSTANTE do arremesso (ver bumerangue.gd), e ela só para no quadro
+# seguinte — corre, joga forte e freia para ver o bumerangue ir.
 #
 # A pose é contada em TEMPO, não em "await animation_finished": qualquer coisa
 # que troque a animação por baixo (knockback, dash, morte) deixaria uma espera
 # pendurada segurando a flag para sempre. Com um contador, o pior caso é o
 # gesto acabar sozinho um quadro depois.
 const ANIM_BUMERANGUE := "jogando_bumerangue"
+## EM TESTE: no chão, a Cacau fica parada enquanto o gesto do arremesso roda
+## (ela não anda nem vira; pular continua valendo, e no ar nada muda).
+## Desligado, volta o jeito antigo: ela segue correndo com o braço no gesto.
+@export var parar_ao_arremessar : bool = true
 var _arremesso_restante : float = 0.0
 # Estado de chão em que o gesto começou: sair do chão (ou pisar nele) no meio
 # encerra a pose — pulo e queda mandam mais na leitura do que o braço.
@@ -249,6 +256,11 @@ func _physics_process(delta: float) -> void:
 	# diagonal (ver "O ANALÓGICO NO MUNDO" em controle.gd). Uma leitura por
 	# quadro serve ao andar, à animação e ao empurrão das caixas.
 	_lado_de_andar = Controle.lado_de_andar(_lado_de_andar)
+	# No chão, o gesto do arremesso segura a personagem no lugar: é como se
+	# ninguém estivesse apontando lado nenhum (ela não anda, não vira e não
+	# empurra caixa). O pulo logo abaixo continua valendo — e tira ela do chão.
+	if parada_pelo_arremesso():
+		_lado_de_andar = 0.0
 
 	# PULO PARA BAIXO: S + ESPAÇO (analógico apontado para baixo + ✕)
 	if Controle.aponta_para_baixo() and apertou_pulo:
@@ -603,8 +615,17 @@ func _verificar_colisoes_estaticas() -> void:
 # --- POSE DO ARREMESSO DO BUMERANGUE ---
 #
 # Quem chama: ferramentas_player.gd, no instante em que o bumerangue sai da
-# mão. Não trava nada — a personagem continua correndo, pulando e podendo
-# levar dano no meio do gesto.
+# mão. No chão o gesto segura a personagem no lugar (parada_pelo_arremesso);
+# no ar não trava nada. Em qualquer caso ela continua podendo pular e levar
+# dano no meio do gesto.
+
+## True enquanto o gesto do arremesso segura a personagem no lugar. Só vale
+## para o gesto que COMEÇOU no chão e enquanto ela continuar nele: arremesso no
+## ar não para ninguém, e sair do chão no meio do gesto (um pulo) solta na hora.
+func parada_pelo_arremesso() -> bool:
+	return parar_ao_arremessar and _arremesso_restante > 0.0 \
+		and _arremesso_no_chao and is_on_floor()
+
 
 ## Toca o gesto do arremesso por cima da animação atual.
 ## `olhar_para_x` é a componente X da mira: o braço tem que sair para o lado

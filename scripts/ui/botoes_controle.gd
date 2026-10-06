@@ -22,9 +22,14 @@ extends RefCounted
 #   {controle:...}       trecho que só aparece no controle
 #
 # TECLAS DESENHADAS: num Label com IconesNoTexto (o "rotular" já põe um), a
-# tecla do teclado também sai desenhada — ESC, E, W, A, S, D e M, da folha
+# tecla do teclado também sai desenhada — ESC, E, W, A, S, D, M e F, da folha
 # gdb-keyboard-2.png, a mesma do WASD e do E do world1. Tecla sem desenho
-# (ESPAÇO, ENTER, CLIQUE) continua escrita.
+# (ESPAÇO, ENTER, CLIQUE) continua escrita. O cinto, a ficha de coleta e o
+# tutorial das ferramentas usam as mesmas (ver EstiloHUD.tecla_da_acao).
+#
+# PARA DESENHAR MAIS UMA TECLA: a folha tem o teclado inteiro. Ache a tecla no
+# primeiro bloco (cada uma ocupa 16×16 px), escreva o canto dela em TECLAS e
+# acrescente o nome no FIM de NOMES. Os quadros de apertar já vêm junto.
 #
 # APERTANDO: as teclas e os botões ✕ ○ □ △ têm os 4 quadros da animação de
 # apertar nas folhas; desenhados num texto, eles afundam em loop como o E da
@@ -42,6 +47,7 @@ const TECLAS := {
 	"tecla_s": Rect2(80, 64, 16, 16),
 	"tecla_d": Rect2(96, 64, 16, 16),
 	"tecla_m": Rect2(160, 80, 16, 16),
+	"tecla_f": Rect2(112, 64, 16, 16),
 }
 
 ## Onde cada botão está na folha (a versão "flat": aro escuro e símbolo
@@ -98,7 +104,8 @@ const NOMES := ["cruz", "bolinha", "quadrado", "triangulo", "l1", "r1", "l2", "r
 	"l3", "r3", "analogico_esquerdo", "analogico_direito", "direcional", "options",
 	"direcional_cima", "direcional_baixo", "direcional_esquerda", "direcional_direita",
 	"direcional_horizontal", "direcional_vertical",
-	"tecla_esc", "tecla_e", "tecla_w", "tecla_a", "tecla_s", "tecla_d", "tecla_m"]
+	"tecla_esc", "tecla_e", "tecla_w", "tecla_a", "tecla_s", "tecla_d", "tecla_m",
+	"tecla_f"]
 const PRIMEIRO_CODIGO := 0xE000
 
 static var _texturas := {}

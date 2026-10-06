@@ -42,6 +42,15 @@ static var FERRAMENTAS := {
 		# em múltiplo inteiro, para o pixel não sair esticado.
 		"escala_mapa": 3.0,
 		"cor": Color(0.55, 0.85, 0.45),
+		# O TUTORIAL que sobe logo depois da ficha de coleta, com o ícone já no
+		# cinto (scripts/ui/tutorial_ferramenta.gd). "texto" é a ÚNICA coisa
+		# escrita na ficha; "demo" é a cena da telinha animada (a Cacau
+		# arremessando e a caixa elétrica quebrando). Ferramenta sem este campo
+		# simplesmente não tem tutorial.
+		"tutorial": {
+			"texto": "Jogue o bumerangue nas caixinhas para cortar os circuitos elétricos",
+			"demo": "res://scenes/ui/demo_bumerangue.tscn",
+		},
 	},
 	"mochila": {
 		"nome": "Mochila de N₂ (Ferramenta)",
@@ -165,6 +174,18 @@ static func acao(habilidade: String) -> String:
 	if not FERRAMENTAS.has(habilidade):
 		return ""
 	return FERRAMENTAS[habilidade].get("acao", "")
+
+
+## O tutorial da ferramenta, pronto para a ficha (TutorialFerramenta.abrir):
+## texto e demo como estão escritos lá em cima, mais a cor da ferramenta.
+## Devolve {} para quem não tem tutorial.
+static func tutorial(habilidade: String) -> Dictionary:
+	if not FERRAMENTAS.has(habilidade) or not FERRAMENTAS[habilidade].has("tutorial"):
+		return {}
+	var ficha: Dictionary = FERRAMENTAS[habilidade]["tutorial"].duplicate()
+	ficha["id"] = habilidade
+	ficha["cor"] = cor(habilidade)
+	return ficha
 
 
 ## Escala do ícone no Sprite do pickup (chão). 1.0 por padrão — só ferramentas

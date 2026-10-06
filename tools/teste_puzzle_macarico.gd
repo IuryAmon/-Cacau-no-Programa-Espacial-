@@ -24,6 +24,7 @@ extends Node
 # na pasta, para conferir o layout a olho.
 
 const PUZZLE := "res://scenes/puzzle_macarico.tscn"
+const PUZZLE_DO_BUMERANGUE := "res://scenes/puzzle_carbono.tscn"
 const FASE := "res://scenes/fases/fase1_oficina.tscn"
 const GAIOLA_VIDRO := "res://scenes/fases/componentes/gaiola_vidro_eletrica.tscn"
 const FOLHA_ANTIGA := "res://assets/puzzle combustão do hidrogênio/atomos H2 O2 H2O.png"
@@ -248,19 +249,15 @@ func _testar_gaiolas_da_fase() -> void:
 	await get_tree().process_frame
 	await get_tree().physics_frame
 
-	for info in [["Patio/GaiolaMacarico", "Patio/PickupMacarico", true],
-			["Entrada/GaiolaBumerangue", "Entrada/PickupBumerangue", false]]:
+	for info in [["Patio/GaiolaMacarico", "Patio/PickupMacarico", PUZZLE],
+			["Entrada/GaiolaBumerangue", "Entrada/PickupBumerangue", PUZZLE_DO_BUMERANGUE]]:
 		var gaiola: Node2D = fase.get_node_or_null(info[0])
 		var pickup: Area2D = fase.get_node_or_null(info[1])
 		_checar(gaiola != null and gaiola.scene_file_path == GAIOLA_VIDRO, "%s é a gaiola de vidro" % info[0])
 		if gaiola == null or pickup == null:
 			continue
-		var tem_puzzle: bool = info[2]
-		if tem_puzzle:
-			_checar(gaiola.puzzle_cena != null and gaiola.puzzle_cena.resource_path == PUZZLE,
-				"%s abre o puzzle do maçarico" % info[0])
-		else:
-			_checar(gaiola.puzzle_cena == null, "%s abre sem puzzle" % info[0])
+		_checar(gaiola.puzzle_cena != null and gaiola.puzzle_cena.resource_path == info[2],
+			"%s abre o puzzle dela (%s)" % [info[0], String(info[2]).get_file()])
 
 		var anim: AnimatedSprite2D = gaiola.get_node("GaiolaAnimada")
 		var quadros := anim.sprite_frames
