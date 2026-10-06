@@ -725,6 +725,8 @@ func _reiniciar_cena_seguro() -> void:
 # --- CURA ---
 ## Devolve vida (ex: a cesta de maçãs, ver CestaMacas). Nunca passa da vida
 ## máxima e não levanta quem já morreu. Devolve quanto de vida entrou de fato.
+## Quando entra alguma, a personagem acende e solta brilhinhos (ver
+## scripts/fx/brilho_de_cura.gd) — com a vida já cheia não acontece nada.
 func curar(quantidade: int) -> int:
 	if current_health <= 0 or quantidade <= 0:
 		return 0
@@ -732,6 +734,7 @@ func curar(quantidade: int) -> int:
 	current_health = mini(current_health + quantidade, max_health)
 	if current_health != antes:
 		health_changed.emit(current_health)
+		BrilhoDeCura.tocar(_animated_sprite)
 	return current_health - antes
 
 # --- FUNÇÃO DE DANO E KNOCKBACK COM STUN ---

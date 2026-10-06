@@ -63,9 +63,9 @@ catálogo.
 Toda tecla que o jogo mostra sai da mesma folha, `assets/UI/gdb-keyboard-2.png`
 (o teclado inteiro, com os quatro quadros de apertar de cada tecla): o E do
 cenário, o W das portas, o M do caderno — e também a tecla embaixo de cada
-ferramenta do **cinto**, o E de "continuar" da **ficha de coleta** e as teclas
-do **tutorial** (o ESC que fecha e o F que afunda quando a Cacau arremessa). De
-controle na mão, todas viram o botão do controle.
+ferramenta do **cinto**, o E de "continuar" da **ficha de coleta** e a tecla
+do **tutorial** (o F que afunda quando a Cacau arremessa). De controle na mão,
+todas viram o botão do controle.
 
 Já estão ligadas: ESC, E, W, A, S, D, M e F. Para ligar mais uma (o SHIFT da
 mochila, por exemplo), abra `scripts/ui/botoes_controle.gd`, escreva o canto
@@ -448,10 +448,17 @@ tecla **L** resolve o puzzle na hora; o teste automático é
 
 Pegou o bumerangue, sobe a ficha de coleta de sempre ("FERRAMENTA
 ADQUIRIDA"). No **E**, o ícone voa para o cinto e sobe uma segunda ficha, o
-**tutorial**, limpa de propósito: um quadradinho animado, **uma frase**
-embaixo dele e a tecla que fecha: o **ESC** (o **△** no controle). O **E** (o
-**□**) fecha também, só não aparece desenhado. Nada de título nem rodapé
-escrito. O jogo fica parado até fechar.
+**tutorial**, limpa de propósito: um quadradinho animado e **uma frase**
+embaixo dele. Nada de título, rodapé escrito nem tecla de sair desenhada. O
+jogo fica parado até fechar.
+
+Ela fecha com **qualquer tecla de ação**: espaço, enter, ESC, shift, F, E, M,
+o clique do mouse — e, no controle, ✕ ○ □ △. São todas as ações do mapa de
+entrada do projeto (Projeto → Configurações → Mapa de Entrada), então tecla de
+ferramenta nova já entra sozinha. Só não fecham as teclas de **andar** (WASD,
+setas, direcional e analógico) e tecla que não faz nada no jogo. A tecla que
+fecha não vira ação no mundo: o F não arremessa, o espaço não pula. A regra
+está em "QUEM FECHA A FICHA", em `scripts/ui/ferramentas_hud.gd`.
 
 No quadradinho, a Cacau está parada (a `idle` do jogo), a tecla **F** afunda
 no alto, no meio, ela arremessa, o bumerangue vai até a caixa elétrica, a

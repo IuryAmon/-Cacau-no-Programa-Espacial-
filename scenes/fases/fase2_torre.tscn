@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://b6msrrif1ftd5" path="res://assets/Area Aberta/GandalfHardcore Background layers/Normal BG/GandalfHardcore Background layers_layer 2.png" id="11_bg2"]
 [ext_resource type="Texture2D" uid="uid://cw7dix2pwqqp4" path="res://assets/Area Aberta/GandalfHardcore Background layers/Normal BG/GandalfHardcore Background layers_layer 1.png" id="12_bg1"]
 [ext_resource type="PackedScene" uid="uid://bmgkds67hbool" path="res://scenes/player.tscn" id="19_5b5kj"]
-[ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_modelo.tscn" id="porta_modelo"]
+[ext_resource type="PackedScene" uid="uid://bojlwu3n38ixr" path="res://scenes/fases/componentes/porta_modelo.tscn" id="porta_modelo"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ceu"]
 shader = ExtResource("7_neblina")
@@ -209,7 +209,7 @@ position = Vector2(3220, 200)
 shape = SubResource("RectangleShape2D_parede")
 
 [node name="PortaHub" parent="." unique_id=789359535 instance=ExtResource("porta_modelo")]
-position = Vector2(347, 395)
+position = Vector2(343, 399)
 cena_destino = "res://scenes/laboratório_(world_2).tscn"
 tag_destino = "volta_da_torre"
 recebe_chegada = true

@@ -19,9 +19,11 @@ extends Node
 #     quebra, ele volta para a mão, a Cacau volta para a idle, e tudo recomeça
 #     com a caixa inteira;
 #   * na fase 1, de verdade: pegar o bumerangue abre a ficha de coleta; o E
-#     fecha e sobe o tutorial, com o mundo parado; a tecla desenhada para sair
-#     é o ESC, e o E também sai; apertados cedo demais, nenhum dos dois fecha;
-#     de controle saem o △ e o □, e o □ que fecha não arremessa o bumerangue.
+#     fecha e sobe o tutorial, com o mundo parado; a ficha não desenha tecla de
+#     sair e fecha com qualquer tecla de ação (ESC, E, espaço, enter, shift, F,
+#     M, o clique; de controle, ✕ ○ □ △), mas não com as de andar, nem com
+#     tecla sem função, nem cedo demais; e a tecla que fecha não vira ação no
+#     mundo (o □ não arremessa, o espaço não pula, o M não abre o caderno).
 #
 #   godot --headless --path . res://tools/teste_tutorial_bumerangue.tscn
 #
@@ -130,9 +132,6 @@ func _testar_teclas() -> void:
 	_checar(EstiloHUD.desenho_da_tecla("F", &"arremessar") == "tecla_f",
 		"no teclado, a tecla do bumerangue no HUD e o F desenhado")
 	_checar(EstiloHUD.desenho_da_tecla("E", &"interact") == "tecla_e", "e a de continuar, o E desenhado")
-	var sair := BotoesControle.tecla_da_acao(TutorialFerramenta.ACAO_FECHAR)
-	_checar(sair == "ESC" and EstiloHUD.desenho_da_tecla(sair, TutorialFerramenta.ACAO_FECHAR) == "tecla_esc",
-		"a tecla desenhada para sair do tutorial e o ESC")
 	_checar(EstiloHUD.desenho_da_tecla("SHIFT", &"dash") == "",
 		"tecla que ainda nao tem desenho (SHIFT) continua na tampa escrita")
 	_botao(JOY_BUTTON_DPAD_UP, true)
@@ -142,8 +141,6 @@ func _testar_teclas() -> void:
 	_checar(Controle.em_uso and EstiloHUD.desenho_da_tecla("F", &"arremessar") == "quadrado"
 		and EstiloHUD.desenho_da_tecla("E", &"interact") == "quadrado",
 		"de controle na mao, as duas viram o quadrado")
-	_checar(EstiloHUD.desenho_da_tecla(sair, TutorialFerramenta.ACAO_FECHAR) == "triangulo",
-		"e a de sair do tutorial vira o triangulo")
 	_tecla(KEY_CTRL)
 	await _quadros(3)
 	_checar(not Controle.em_uso and EstiloHUD.desenho_da_tecla("F", &"arremessar") == "tecla_f",
@@ -167,7 +164,7 @@ func _testar_ficha() -> void:
 	ficha.abrir(CatalogoFerramentas.tutorial("bumerangue"))
 	await get_tree().process_frame
 	_checar(ficha.visible and ficha.esta_aberto(), "abrir mostra a ficha")
-	_checar(not ficha.pode_fechar(), "recem aberta, ela ainda nao aceita o E")
+	_checar(not ficha.pode_fechar(), "recem aberta, ela ainda nao fecha")
 
 	var tela := ficha.size
 	var quadro := ficha.retangulo_da_ficha()
@@ -196,13 +193,17 @@ func _testar_ficha() -> void:
 		"nenhuma linha passa da largura da telinha (%d de %d px)" % [maior, ficha.largura_do_texto()])
 	var m: Dictionary = ficha._medidas()
 	var topo_frase: float = m["topo_frase"]
-	var centro_tecla: Vector2 = m["centro_tecla"]
-	var fim_da_frase := topo_frase + linhas.size() * float(m["entrelinha"])
+	var fim_da_frase: float = m["fim_frase"]
 	_checar(topo_frase >= quadro_telinha.end.y + 8.0, "a frase fica embaixo da telinha")
-	_checar(centro_tecla.y - TutorialFerramenta.ALTURA_TECLA * 0.5 >= fim_da_frase
-		and centro_tecla.y + TutorialFerramenta.ALTURA_TECLA * 0.5 <= quadro.end.y - 8.0
-		and absf(centro_tecla.x - quadro.get_center().x) < 1.0,
-		"e a tecla que fecha, embaixo da frase, no meio da ficha")
+	_checar(fim_da_frase >= topo_frase + (linhas.size() - 1) * float(m["entrelinha"])
+		+ FONTE.get_ascent(TutorialFerramenta.TAM_TEXTO),
+		"e o fim dela conta todas as linhas")
+	# Sem tecla de sair: embaixo da frase vem só a margem da ficha.
+	_checar(not m.has("centro_tecla") and not ficha.has_method("_desenhar_tecla"),
+		"a ficha nao desenha tecla de sair")
+	_checar(is_equal_approx(quadro.end.y - fim_da_frase, TutorialFerramenta.MARGEM),
+		"ela termina logo embaixo da frase, com a mesma margem dos lados (%d px)"
+			% (quadro.end.y - fim_da_frase))
 	# A frase é o único texto: a ficha não guarda nem título, nem etiqueta, nem rodapé.
 	var escritos := PackedStringArray()
 	for constante: String in (ficha.get_script() as GDScript).get_script_constant_map():
@@ -212,11 +213,11 @@ func _testar_ficha() -> void:
 
 	print("  . fechar")
 	await _esperar_ate(ficha.pode_fechar)
-	_checar(ficha.pode_fechar(), "montada, a ficha aceita o E")
+	_checar(ficha.pode_fechar(), "montada, a ficha ja fecha")
 	var fechou := [false]
 	ficha.fechado.connect(func() -> void: fechou[0] = true)
 	ficha.fechar()
-	_checar(not ficha.pode_fechar(), "fechando, ela nao aceita outro E")
+	_checar(not ficha.pode_fechar(), "fechando, ela nao fecha de novo")
 	await _esperar_ate(func() -> bool: return fechou[0])
 	_checar(fechou[0] and not ficha.visible, "fechar tira a ficha da tela e avisa")
 	await get_tree().process_frame
@@ -518,12 +519,10 @@ func _testar_na_fase() -> void:
 	_checar(ficha.visible and ficha.telinha() is DemoBumerangue, "a ficha esta na tela com a telinha")
 
 	print("  . cedo demais")
-	await _apertar_e()
-	_checar(FerramentasHUD.tutorial_aberto() and ficha.esta_aberto(),
-		"apertado com a ficha ainda subindo, o E nao a fecha")
-	await _apertar(KEY_ESCAPE)
-	_checar(FerramentasHUD.tutorial_aberto() and ficha.esta_aberto(),
-		"nem o ESC")
+	for cedo: Array in [["o E", KEY_E], ["o ESC", KEY_ESCAPE], ["o espaco", KEY_SPACE]]:
+		await _apertar(cedo[1])
+		_checar(FerramentasHUD.tutorial_aberto() and ficha.esta_aberto(),
+			"apertado com a ficha ainda subindo, %s nao a fecha" % cedo[0])
 	await _esperar_ate(ficha.pode_fechar)
 	_checar(ficha.pode_fechar(), "a ficha termina de subir")
 	var telinha: DemoBumerangue = ficha.telinha()
@@ -539,60 +538,63 @@ func _testar_na_fase() -> void:
 	_comparar_com_o_mapa(fase, telinha)
 	await _capturas_da_ficha(telinha)
 
-	print("  . o ESC sai")
-	await _apertar(KEY_ESCAPE)
-	_checar(not ficha.esta_aberto(), "o ESC fecha o tutorial")
-	await _esperar_ate(func() -> bool: return not fechados.is_empty())
-	_checar(fechados == ["bumerangue"], "o FerramentasHUD avisa que o tutorial do bumerangue fechou")
-	_checar(not FerramentasHUD.tutorial_aberto() and not get_tree().paused and not Interacao.ocupada(),
-		"o mundo volta a andar e o E volta para o cenario")
-	_checar(not ferramentas._bumerangue_no_ar, "fechar nao arremessou nada")
+	print("  . so tecla de acao fecha")
+	var teimosas := PackedStringArray()
+	for parada: Array in [["A", KEY_A], ["D", KEY_D], ["W", KEY_W], ["S", KEY_S], ["seta esquerda", KEY_LEFT],
+			["seta direita", KEY_RIGHT], ["seta para cima", KEY_UP], ["CTRL", KEY_CTRL], ["P", KEY_P]]:
+		await _apertar(parada[1])
+		if not ficha.esta_aberto():
+			teimosas.append(parada[0])
+			await _esperar_ate(func() -> bool: return not FerramentasHUD.tutorial_aberto())
+			FerramentasHUD.ensinar("bumerangue")
+			await _esperar_ate(ficha.pode_fechar)
+	_checar(teimosas.is_empty() and ficha.esta_aberto(),
+		"as teclas de andar e as sem funcao nao fecham o tutorial %s" % [teimosas])
 
-	print("  . o E tambem sai")
+	print("  . qualquer tecla de acao sai")
+	var saidas := 0
+	for caso: Array in [["o ESC", KEY_ESCAPE, &""], ["o E", KEY_E, &""], ["o espaco", KEY_SPACE, &"jump"],
+			["o enter", KEY_ENTER, &""], ["o shift", KEY_SHIFT, &"dash"], ["o F", KEY_F, &"arremessar"],
+			["o M", KEY_M, &""]]:
+		if saidas > 0:
+			FerramentasHUD.ensinar("bumerangue")
+			await _esperar_ate(ficha.pode_fechar)
+		saidas += 1
+		var tecla: Key = caso[1]
+		await _conferir_que_fecha(caso[0], func(apertada: bool) -> void: _evento_de_tecla(tecla, apertada),
+			caso[2], fase)
 	FerramentasHUD.ensinar("bumerangue")
 	await _esperar_ate(ficha.pode_fechar)
-	_checar(ficha.pode_fechar() and get_tree().paused, "o tutorial pode ser aberto de novo")
-	await _apertar_e()
-	_checar(not ficha.esta_aberto(), "o E fecha o tutorial")
-	await _esperar_ate(func() -> bool: return fechados.size() >= 2)
-	_checar(fechados.size() == 2 and not FerramentasHUD.tutorial_aberto() and not get_tree().paused
-		and not Interacao.ocupada(), "e o mundo volta a andar do mesmo jeito")
-	_checar(not ferramentas._bumerangue_no_ar, "sem arremessar nada")
+	saidas += 1
+	await _conferir_que_fecha("o clique do mouse", _clique, &"arremessar_mouse", fase)
+	await _esperar_ate(func() -> bool: return fechados.size() >= saidas)
+	_checar(fechados.size() == saidas and fechados.count("bumerangue") == saidas,
+		"o FerramentasHUD avisou de cada vez que o tutorial do bumerangue fechou (%d)" % fechados.size())
 	await _esperar(3.2)
 	_checar(cinto.is_processing() and cinto._quadro_das_teclas == BotoesControle.quadro_atual(),
 		"com o jogo andando e o cinto quieto, a tecla dele continua afundando em loop")
 	await _capturar("6_jogo_com_o_cinto")
 
-	print("  . de controle, o quadrado que fecha nao arremessa")
+	print("  . de controle, os quatro botoes saem e o direcional nao")
 	FerramentasHUD.ensinar("bumerangue")
 	await _esperar_ate(ficha.pode_fechar)
-	_checar(ficha.pode_fechar() and get_tree().paused, "o tutorial pode ser aberto de novo")
-	_botao(JOY_BUTTON_X, true)
-	await _quadros(3)
-	_checar(not ficha.esta_aberto(), "o quadrado fecha o tutorial")
-	await _esperar_ate(func() -> bool: return not FerramentasHUD.tutorial_aberto())
-	_checar(not get_tree().paused and Interacao.toque_preso(&"arremessar"),
-		"e, ainda apertado, continua preso a ficha que fechou")
-	await _quadros(4)
-	_checar(not ferramentas._bumerangue_no_ar, "o bumerangue fica na mao")
-	_botao(JOY_BUTTON_X, false)
-	await _quadros(4)
-	_checar(Interacao.livre_para(&"arremessar"), "solto o botao, o proximo toque ja arremessa")
-
-	print("  . de controle, o triangulo sai e a bolinha nao")
-	FerramentasHUD.ensinar("bumerangue")
-	await _esperar_ate(ficha.pode_fechar)
-	_botao(JOY_BUTTON_B, true)
-	await _quadros(3)
-	_botao(JOY_BUTTON_B, false)
-	await _quadros(3)
-	_checar(ficha.esta_aberto(), "a bolinha nao fecha o tutorial (e o botao do dash, nao o de sair)")
-	_botao(JOY_BUTTON_Y, true)
-	await _quadros(3)
-	_botao(JOY_BUTTON_Y, false)
-	_checar(not ficha.esta_aberto(), "o triangulo fecha")
-	await _esperar_ate(func() -> bool: return not FerramentasHUD.tutorial_aberto())
-	_checar(not get_tree().paused and not ferramentas._bumerangue_no_ar, "e o mundo volta a andar")
+	for direcional: JoyButton in [JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT, JOY_BUTTON_DPAD_UP,
+			JOY_BUTTON_DPAD_DOWN]:
+		_botao(direcional, true)
+		await _quadros(3)
+		_botao(direcional, false)
+		await _quadros(3)
+	_checar(ficha.esta_aberto() and get_tree().paused, "o direcional nao fecha o tutorial")
+	var primeiro := true
+	for caso: Array in [["o X", JOY_BUTTON_A, &"jump"], ["a bolinha", JOY_BUTTON_B, &"dash"],
+			["o quadrado", JOY_BUTTON_X, &"arremessar"], ["o triangulo", JOY_BUTTON_Y, &""]]:
+		if not primeiro:
+			FerramentasHUD.ensinar("bumerangue")
+			await _esperar_ate(ficha.pode_fechar)
+		primeiro = false
+		var botao: JoyButton = caso[1]
+		await _conferir_que_fecha(caso[0], func(apertado: bool) -> void: _botao(botao, apertado),
+			caso[2], fase)
 	_tecla(KEY_CTRL)
 	await _quadros(3)
 
@@ -653,6 +655,46 @@ func _mesmos_quadros(a: SpriteFrames, b: SpriteFrames, animacao: StringName) -> 
 func _avancar_ate(demo: DemoBumerangue, instante: float) -> void:
 	while demo._tempo < instante:
 		demo._process(PASSO)
+
+
+## Aperta uma tecla (ou botão) com o tutorial montado e confere que ele fecha,
+## que o mundo volta a andar e que o toque — ainda apertado — não vira ação
+## nenhuma: nada é arremessado, a Cacau não pula, o caderno não abre, e a ação
+## do mundo daquela tecla (`acao_do_mundo`, se ela tiver uma) fica presa à
+## ficha até a tecla ser solta.
+func _conferir_que_fecha(nome: String, apertar: Callable, acao_do_mundo: StringName, fase: Node) -> void:
+	var ficha: TutorialFerramenta = FerramentasHUD._tutorial
+	var player: CharacterBody2D = fase.get_node("Player")
+	var ferramentas: FerramentasPlayer = player.get_node("Ferramentas")
+	if not ficha.pode_fechar():
+		_checar(false, "o tutorial devia estar montado antes de apertar %s" % nome)
+		return
+
+	await get_tree().process_frame
+	apertar.call(true)
+	await _quadros(3)
+	_checar(not ficha.esta_aberto(), "%s fecha o tutorial" % nome)
+	await _esperar_ate(func() -> bool: return not FerramentasHUD.tutorial_aberto())
+	await _quadros(4)
+	var quieta := not ferramentas._bumerangue_no_ar and player.velocity.y >= 0.0 and not Caderno.aberto()
+	if acao_do_mundo != &"":
+		quieta = quieta and Interacao.toque_preso(acao_do_mundo)
+	_checar(not get_tree().paused and not Interacao.ocupada() and quieta,
+		"o mundo volta a andar e, ainda apertado, %s nao vira acao nenhuma" % nome)
+	apertar.call(false)
+	await _quadros(4)
+	if acao_do_mundo != &"":
+		_checar(Interacao.livre_para(acao_do_mundo), "solto, o proximo toque ja vale")
+
+
+## O clique esquerdo do mouse (a ação "arremessar_mouse").
+func _clique(apertado: bool) -> void:
+	var evento := InputEventMouseButton.new()
+	evento.button_index = MOUSE_BUTTON_LEFT
+	evento.pressed = apertado
+	evento.position = get_viewport().get_visible_rect().size * 0.5
+	evento.global_position = evento.position
+	Input.parse_input_event(evento)
 
 
 ## Um toque de E de verdade: passa pelo _input, que é onde o Interacao decide

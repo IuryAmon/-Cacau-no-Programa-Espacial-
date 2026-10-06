@@ -78,6 +78,7 @@ func _testar_comer() -> void:
 	await _apertar_e()
 	_checar(not cesta.esta_vazia(), "com a vida cheia, o E não gasta a cesta")
 	_checar(not som.playing, "e não toca o som")
+	_checar(_brilho_de(player) == null, "nem acende a Cacau")
 
 	# Machucada.
 	player.current_health = 1
@@ -90,6 +91,10 @@ func _testar_comer() -> void:
 	_checar(avisos == [player.max_health], "o HUD fica sabendo da cura")
 	_checar(sprite.region_rect == CestaMacas.REGIAO_VAZIA, "fica só a cesta")
 	_checar(som.playing, "toca o RecuperandoVida")
+	var brilho := _brilho_de(player)
+	_checar(brilho != null, "a Cacau acende com o brilho de cura")
+	_checar(brilho != null and brilho.get_index() == player.get_node("AnimatedSprite2D").get_index() + 1,
+		"o brilho desenha logo por cima do sprite dela")
 	await _capturar("2_amassando")
 	await _quadros(2)
 	_checar(not dica.visible, "vazia, o botão some")
@@ -102,6 +107,9 @@ func _testar_comer() -> void:
 	player.current_health = player.max_health
 	await _esperar(0.5)
 	_checar(sprite.scale.is_equal_approx(Vector2(2, 2)), "a amassada volta ao tamanho normal")
+	await _capturar("2b_brilhinhos")
+	await _esperar_o_jogo(2.0, func() -> bool: return _brilho_de(player) == null)
+	_checar(_brilho_de(player) == null, "o brilho de cura some sozinho")
 	await _capturar("3_vazia")
 	await _fechar(mundo)
 
@@ -175,6 +183,23 @@ func _quadros(n: int) -> void:
 
 func _esperar(segundos: float) -> void:
 	await get_tree().create_timer(segundos, true).timeout
+
+
+## Espera no relógio DO JOGO (o delta que os efeitos de fato recebem), e sai
+## antes se `pronto` já valer.
+func _esperar_o_jogo(segundos: float, pronto: Callable) -> void:
+	var passou := 0.0
+	while passou < segundos and not pronto.call():
+		await get_tree().process_frame
+		passou += get_process_delta_time()
+
+
+## O brilho de cura aceso na personagem, ou null (ver scripts/fx/brilho_de_cura.gd).
+func _brilho_de(player: Node) -> BrilhoDeCura:
+	for filho in player.get_children():
+		if filho is BrilhoDeCura and not filho.is_queued_for_deletion():
+			return filho
+	return null
 
 
 func _capturando() -> bool:

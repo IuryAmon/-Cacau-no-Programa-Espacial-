@@ -1667,7 +1667,7 @@ polygon = PackedVector2Array(-6.650757, 39, -3.143982, 53, -17.775635, 53.5, -13
 
 [node name="Player" parent="." unique_id=512037344 instance=ExtResource("13_etf7r")]
 z_index = 2
-position = Vector2(525, 352)
+position = Vector2(1642, 245)
 max_jumps = 10
 
 [node name="Checkpoint" parent="." unique_id=305036439 instance=ExtResource("32_checkpoint")]
@@ -1875,7 +1875,7 @@ border_width = 2.0
 metadata/_edit_lock_ = true
 
 [node name="CestaMacas" parent="." unique_id=484415686 instance=ExtResource("41_sis0h")]
-position = Vector2(6252, 512)
+position = Vector2(5049, 514)
 
 [node name="CestaMacas2" parent="." unique_id=482028533 instance=ExtResource("41_sis0h")]
 position = Vector2(2782, -64)

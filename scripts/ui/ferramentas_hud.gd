@@ -14,7 +14,7 @@ extends CanvasLayer
 #   3. ENSINAR a ferramenta que tem tutorial no catálogo (hoje, o bumerangue):
 #      assim que a ficha de coleta fecha e o ícone chega no cinto, sobe a ficha
 #      de tutorial (scripts/ui/tutorial_ferramenta.gd): uma telinha animada e
-#      uma frase. O mundo continua parado até o ESC (ou o E).
+#      uma frase. O mundo continua parado até uma tecla de ação qualquer.
 #
 # É autoload porque habilidade atravessa fase: o cinto precisa continuar na
 # tela depois de uma troca de cena ou de uma morte, sem ninguém remontar.
@@ -117,8 +117,8 @@ func ensinar(habilidade: String) -> void:
 		return
 	_habilidade_no_tutorial = habilidade
 	_tutorial.abrir(dados)
-	# O E é da ficha enquanto ela estiver na tela (e o □, que no controle
-	# também é o do bumerangue, não arremessa nada ao fechá-la).
+	# As teclas são da ficha enquanto ela estiver na tela: a que a fecha (o F,
+	# o espaço, o □ do controle...) não arremessa, não pula nem dá dash depois.
 	Interacao.marcar_tela_aberta(_tutorial, true)
 	get_tree().paused = true
 
@@ -144,25 +144,31 @@ func tutorial_aberto() -> bool:
 
 
 # QUEM FECHA A FICHA
-#   ESC / △   a tecla desenhada no pé dela (a ação "fechar", a dos puzzles);
-#   E / □     também fecha, para quem vem apertando E desde a ficha de coleta.
-# Nenhum dos dois fecha com a ficha ainda subindo.
+#   Qualquer tecla de AÇÃO do jogo: espaço, enter, ESC, shift, F, E... e, no
+#   controle, ✕ ○ □ △. A ficha não desenha tecla nenhuma: a pessoa aperta o
+#   que tiver na mão. Só as teclas de ANDAR não fecham (WASD, setas,
+#   direcional e analógico), nem tecla que não faz nada no jogo.
+# Nenhuma fecha com a ficha ainda subindo.
 
 func _input(evento: InputEvent) -> void:
-	if not tutorial_aberto() or not evento.is_action_pressed(TutorialFerramenta.ACAO_FECHAR):
+	if not tutorial_aberto() or not _e_tecla_de_acao(evento):
 		return
-	# Com a ficha na tela o ESC é dela — inclusive o apertado cedo demais, que
+	# Com a ficha na tela a tecla é dela — inclusive a apertada cedo demais, que
 	# só não fecha — e não passa para o jogo parado atrás.
 	get_viewport().set_input_as_handled()
 	if _tutorial.pode_fechar():
 		fechar_tutorial()
 
 
-func _process(_delta: float) -> void:
-	# "toque_de_tela": só um E novo, apertado com a ficha já montada, fecha —
-	# e não o toque que acabou de passar a ficha de coleta.
-	if tutorial_aberto() and _tutorial.pode_fechar() and Interacao.toque_de_tela():
-		fechar_tutorial()
+## O toque (novo, não o de tecla segurada) é de alguma ação do jogo? Vale
+## qualquer ação do mapa de entrada do projeto — as que existem hoje e as que
+## vierem. Ficam de fora só as "ui_*" da engine: é com elas que a Cacau anda, e
+## as teclas das outras (enter, espaço, ESC) já são de ações do jogo.
+func _e_tecla_de_acao(evento: InputEvent) -> bool:
+	for acao in InputMap.get_actions():
+		if not String(acao).begins_with("ui_") and evento.is_action_pressed(acao):
+			return true
+	return false
 
 
 # --- O CINTO ---

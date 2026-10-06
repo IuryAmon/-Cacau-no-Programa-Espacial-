@@ -5,17 +5,16 @@ extends Control
 #
 # Sobe logo depois da ficha de coleta (scripts/ui/popup_item.gd), quando o
 # ícone da ferramenta já voou para o cinto: o mundo continua parado e uma
-# ficha pequena mostra o que aquilo FAZ. É limpa de propósito — três coisas e
+# ficha pequena mostra o que aquilo FAZ. É limpa de propósito — duas coisas e
 # mais nada:
 #
 #   a TELINHA   uma cena animada com a Cacau usando a ferramenta
 #               (a do bumerangue é scenes/ui/demo_bumerangue.tscn);
-#   a FRASE     uma só, embaixo da telinha;
-#   a TECLA     que fecha, afundando no pé da ficha: o ESC (△ no controle).
-#               O E (□) fecha também, só não aparece desenhado.
+#   a FRASE     uma só, embaixo da telinha.
 #
-# Nada de título, etiqueta ou rodapé escrito: quem conta a história é a
-# telinha, e a frase só diz para que serve.
+# Nada de título, etiqueta, rodapé escrito nem tecla de sair desenhada: quem
+# conta a história é a telinha, e a frase só diz para que serve. A ficha sai
+# com qualquer tecla de ação (ver "QUEM FECHA A FICHA" no FerramentasHUD).
 #
 # A frase e a cena da telinha de cada ferramenta ficam no campo "tutorial" do
 # CatalogoFerramentas. A ficha se mede sozinha: a largura vem da telinha e a
@@ -31,25 +30,16 @@ extends Control
 ## Emitido quando a ficha termina de sair da tela.
 signal fechado
 
-## A ação do mapa de entrada desenhada no pé da ficha: é dela que saem a tecla
-## (ESC) e o botão do controle (△). É a mesma que fecha os puzzles.
-const ACAO_FECHAR := &"fechar"
-
 # --- Medidas (espaço de projeto, em pixels de tela) ---
 const MARGEM := 32.0
 const CORTE := 26.0
 ## Largura do texto quando a ferramenta não tem telinha.
 const LARGURA_SEM_TELINHA := 360.0
-## Vão entre a telinha e a frase, e entre a frase e a tecla.
+## Vão entre a telinha e a frase.
 const ESPACO_FRASE := 24.0
-const ESPACO_TECLA := 20.0
 
 const TAM_TEXTO := 26
 const ENTRELINHA := 1.45
-## A tecla que fecha é o desenho da folha do teclado (16 px) em 3×. O tamanho
-## pedido ao EstiloHUD.tecla_da_acao é o que leva a essa ampliação.
-const TAM_TECLA := 25
-const ALTURA_TECLA := 48.0
 
 # --- Tempos ---
 ## Respiro antes de a ficha subir: é o tempo de o alvéolo novo estourar no
@@ -57,7 +47,7 @@ const ALTURA_TECLA := 48.0
 const ATRASO := 0.35
 const DURACAO_ENTRADA := 0.45
 const DURACAO_SAIDA := 0.24
-## A partir de quanto da entrada a ficha já fecha (a tecla já está na tela).
+## A partir de quanto da entrada a ficha já fecha (a frase já está na tela).
 ## Antes disso o toque é de quem estava só passando a ficha anterior.
 const ENTRADA_PARA_FECHAR := 0.9
 ## A telinha só começa o roteiro com a ficha quase no lugar.
@@ -76,7 +66,6 @@ var _telinha_animando: bool = false
 var _espera: float = 0.0
 var _entrada: float = 0.0
 var _saida: float = 0.0
-var _tempo: float = 0.0
 var _aberto: bool = false
 var _layout: Dictionary = {}
 
@@ -105,7 +94,6 @@ func abrir(dados: Dictionary) -> void:
 	_espera = ATRASO
 	_entrada = 0.0
 	_saida = 0.0
-	_tempo = 0.0
 	_aberto = true
 	_invalidar()
 	visible = true
@@ -167,8 +155,6 @@ func largura_do_texto() -> float:
 # ─────────────────────────────────────────────────────────────
 
 func _process(delta: float) -> void:
-	_tempo += delta
-
 	if _aberto:
 		if _espera > 0.0:
 			_espera -= delta
@@ -275,7 +261,7 @@ func _invalidar() -> void:
 	queue_redraw()
 
 
-## Tudo em uma coluna, centrada: telinha, frase, tecla.
+## Tudo em uma coluna, centrada: a telinha e a frase.
 func _medidas() -> Dictionary:
 	if not _layout.is_empty():
 		return _layout
@@ -290,8 +276,12 @@ func _medidas() -> Dictionary:
 	var topo_frase := MARGEM
 	if _telinha != null:
 		topo_frase += tela.y + ESPACO_FRASE
-	var topo_tecla := topo_frase + linhas.size() * entrelinha + ESPACO_TECLA
-	var altura := topo_tecla + ALTURA_TECLA + MARGEM - 6.0
+	# A frase é a última coisa da ficha. Na última linha conta a altura da
+	# letra, e não a entrelinha inteira: a margem de baixo fica igual às outras.
+	var altura_frase := 0.0
+	if not linhas.is_empty():
+		altura_frase = (linhas.size() - 1) * entrelinha + _fonte().get_height(TAM_TEXTO)
+	var altura := topo_frase + altura_frase + MARGEM
 
 	# Um pouco acima do meio da tela, como a ficha de coleta.
 	var origem := Vector2(
@@ -302,8 +292,7 @@ func _medidas() -> Dictionary:
 		"caixa": Rect2(origem, Vector2(largura, altura)),
 		"canto_telinha": origem + Vector2(MARGEM, MARGEM),
 		"topo_frase": origem.y + topo_frase,
-		"centro_tecla": Vector2(origem.x + largura * 0.5,
-			roundf(origem.y + topo_tecla + ALTURA_TECLA * 0.5)),
+		"fim_frase": origem.y + topo_frase + altura_frase,
 		"largura_texto": largura_texto,
 		"linhas": linhas,
 		"entrelinha": entrelinha,
@@ -355,7 +344,6 @@ func _desenhar_ficha(m: Dictionary, acento: Color, alfa: float) -> void:
 			EstiloHUD.com_alfa(acento, alfa * 0.8 * _etapa(0.2, 0.6)), false, 2.0)
 
 	_desenhar_frase(m, alfa)
-	_desenhar_tecla(m, acento, alfa)
 
 
 ## A frase, centrada embaixo da telinha, linha por linha.
@@ -375,20 +363,6 @@ func _desenhar_frase(m: Dictionary, alfa: float) -> void:
 		var x := roundf(caixa.get_center().x - largura * 0.5)
 		draw_string(f, Vector2(x, topo + f.get_ascent(TAM_TEXTO) + i * entrelinha), linhas[i],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_TEXTO, EstiloHUD.com_alfa(EstiloHUD.TEXTO, a_frase))
-
-
-## A tecla que fecha, sozinha e afundando em loop: o ESC da folha do teclado
-## (de controle na mão, o △).
-func _desenhar_tecla(m: Dictionary, acento: Color, alfa: float) -> void:
-	var f := _fonte()
-	if f == null:
-		return
-	var a_tecla := alfa * _etapa(0.62, 0.92)
-	if a_tecla <= 0.004:
-		return
-	var pulso := 0.55 + 0.45 * (0.5 + 0.5 * sin(_tempo * 3.0))
-	EstiloHUD.tecla_da_acao(self, f, m["centro_tecla"], BotoesControle.tecla_da_acao(ACAO_FECHAR),
-		ACAO_FECHAR, EstiloHUD.com_alfa(acento, pulso), a_tecla, TAM_TECLA)
 
 
 # ─────────────────────────────────────────────────────────────
