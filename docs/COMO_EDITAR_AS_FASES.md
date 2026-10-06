@@ -41,18 +41,19 @@ Alguns componentes têm um segundo slot para o estado ligado:
 ## A arte das ferramentas (maçarico, bumerangue, mochila...)
 
 Ferramenta é caso à parte porque a mesma arte aparece em três lugares: o
-pickup no chão, o popup de conquista e o selo redondo do canto da tela. Por
-isso ela não fica presa a um `Sprite` de cena: mora em
+pickup no chão, a ficha de coleta e a ficha dela nos **equipamentos**, no canto
+da tela. Por isso ela não fica presa a um `Sprite` de cena: mora em
 **`scripts/ferramentas/catalogo_ferramentas.gd`**.
 
 Para dar arte a uma ferramenta, solte o PNG em `assets/itens/` e escreva o
 caminho no campo `icone` da ferramenta lá no catálogo. É o mesmo lugar onde
-ficam o nome, a descrição do popup e a cor do anel do selo. O maçarico já está
-preenchido — as outras quatro estão com `icone` vazio esperando a arte.
+ficam o nome, a descrição da ficha de coleta e a cor do aro que abre em volta
+da ficha quando ela chega. O maçarico e o bumerangue já estão preenchidos — as
+outras estão com `icone` vazio esperando a arte.
 
 Enquanto o `icone` estiver vazio, a ferramenta funciona normalmente, só sem
-popup e sem selo. Preencheu o
-`icone`, os três lugares acendem de uma vez, sem mexer em cena nenhuma.
+ficha de coleta e sem aparecer nos equipamentos. Preencheu o `icone`, os três
+lugares acendem de uma vez, sem mexer em cena nenhuma.
 
 Se você preferir uma arte diferente só para o pickup do chão, arraste ela para
 o `Sprite` do `PickupHabilidade`: o slot preenchido tem prioridade sobre o
@@ -63,7 +64,7 @@ catálogo.
 Toda tecla que o jogo mostra sai da mesma folha, `assets/UI/gdb-keyboard-2.png`
 (o teclado inteiro, com os quatro quadros de apertar de cada tecla): o E do
 cenário, o W das portas, o M do caderno — e também a tecla embaixo de cada
-ferramenta do **cinto**, o E de "continuar" da **ficha de coleta** e a tecla
+ferramenta dos **equipamentos**, o E de continuar da **ficha de coleta** e a tecla
 do **tutorial** (o F que afunda quando a Cacau arremessa). De controle na mão,
 todas viram o botão do controle.
 
@@ -72,6 +73,52 @@ mochila, por exemplo), abra `scripts/ui/botoes_controle.gd`, escreva o canto
 dela na folha em `TECLAS` (cada tecla ocupa 16×16 px no primeiro bloco) e
 acrescente o nome no **fim** de `NOMES`. Tecla que ainda não está ligada
 aparece no HUD como uma tampinha com a letra escrita.
+
+## O HUD: a vida, a mochila e os equipamentos
+
+O HUD é feito de uma peça só, a **ficha**: o quadrado da caixa de elemento do
+caderno (`Hidrogênio tabela periódica.png`) — papel do caderno, moldura de
+tinta, canto de pixel e uma sombra dura embaixo. Não tem painel de vidro,
+hexágono nem degradê. As cores (tiradas do caderno e das teclas) e as medidas
+da ficha ficam no topo de `scripts/ui/estilo_hud.gd`: mudar ali muda todas as
+peças de uma vez.
+
+| Peça | Onde | Arquivo |
+|---|---|---|
+| A vida | canto de cima, à esquerda | `scripts/ui/hud_vital.gd` |
+| A mochila | canto de cima, à direita | `scripts/ui/mochila_hud.gd` |
+| Os equipamentos | canto de baixo, à direita | `scripts/ui/equipamentos_hud.gd` |
+| A ficha de coleta | meio da tela, ao pegar algo | `scripts/ui/popup_item.gd` |
+
+**A vida** é o nome da Cacau escrito com a tabela periódica: **Ca · Ca · U**
+(cálcio, cálcio, urânio), uma ficha por vida. Levar dano arranca a última ficha
+do nome; curar a faz brotar de volta; com uma só, ela pulsa. Os elementos estão
+em `ELEMENTOS`, no topo do `hud_vital.gd`. O rosto ao lado é a
+`assets/Cacau Assets/cara do hud.png`, com os três quadros que ela já tinha:
+inteira, o clarão branco (a pancada) e machucada (quando só resta uma vida). Se
+redesenhar a folha, os recortes de cada quadro são as constantes `ROSTO_...`.
+No simulador a mesma peça vira a nave: o desenho dela, o casco em porcentagem e
+uma barra.
+
+**A mochila** mostra as três casas, as vazias também. O nome do item não fica
+escrito embaixo dele: o rótulo MOCHILA vira o nome por uns segundos quando o
+item chega, e enquanto o ponteiro está em cima dele num puzzle de arrastar.
+
+**Os equipamentos** são as ferramentas que ela já tem, cada uma com a tecla que
+a usa embaixo. A nova entra encostada no canto e empurra as antigas.
+
+**A ficha de coleta** tem só o desenho do item, o nome e a descrição (os textos
+são os que estão escritos na cena do item ou no catálogo das ferramentas). O que
+vier entre parênteses no nome — "Cilindro de Oxigênio (Comburente)" — vira uma
+linha miúda embaixo dele; "(Ferramenta)" não vira nada. Ela não escreve o que
+aconteceu nem para onde o item foi: no **E**, o desenho voa até a mochila ou
+até os equipamentos, e é o voo que mostra.
+
+Para ver uma peça sem rodar o jogo, ligue a "Prévia no editor" dela no
+Inspector (e desligue depois: ela mora no player, que está em toda fase). O
+teste automático é `tools/teste_hud.tscn` (com `-- --capturas=<pasta>`, sem
+`--headless`, ele salva imagens do HUD no pátio, no dano, no perigo e na
+cura); a ficha de coleta e a mochila têm o `tools/teste_popup_item.tscn`.
 
 ## Pintar o cenário
 
@@ -446,13 +493,14 @@ tecla **L** resolve o puzzle na hora; o teste automático é
 
 ### O tutorial do bumerangue
 
-Pegou o bumerangue, sobe a ficha de coleta de sempre ("FERRAMENTA
-ADQUIRIDA"). No **E**, o ícone voa para o cinto e sobe uma segunda ficha, o
-**tutorial**, limpa de propósito: um quadradinho animado e **uma frase**
-embaixo dele. Nada de título, rodapé escrito nem tecla de sair desenhada. O
-jogo fica parado até fechar.
+Pegou o bumerangue, sobe a ficha de coleta de sempre (o desenho, o nome e a
+descrição). No **E**, o ícone voa para os **equipamentos** e sobe uma segunda
+ficha, o **tutorial**, limpa de propósito: um quadradinho animado e **uma
+frase** embaixo dele. Nada de título nem rodapé escrito: só o **E** preso na
+beirada de baixo, no canto direito, igual ao da ficha de coleta. O jogo fica
+parado até fechar.
 
-Ela fecha com **qualquer tecla de ação**: espaço, enter, ESC, shift, F, E, M,
+Ela fecha com o E e com **qualquer outra tecla de ação**: espaço, enter, ESC, shift, F, M,
 o clique do mouse — e, no controle, ✕ ○ □ △. São todas as ações do mapa de
 entrada do projeto (Projeto → Configurações → Mapa de Entrada), então tecla de
 ferramenta nova já entra sozinha. Só não fecham as teclas de **andar** (WASD,

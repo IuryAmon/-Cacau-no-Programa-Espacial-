@@ -9,11 +9,14 @@ extends Node
 #   * a ficha NASCE DO TEXTO. Nada de offset ajustado no editor que um nome
 #     mais comprido desmancha — texto maior faz a caixa crescer, e ela tem de
 #     continuar dentro da tela.
+#   * a ficha é LIMPA: o nome, a descrição e (se o nome trouxer um parêntese)
+#     a etiqueta. Nada de "ferramenta adquirida", "item coletado" nem do
+#     destino escrito — é o voo do ícone que diz para onde a coisa foi.
 #   * o caminho inteiro de uma coleta funciona: abrir, pausar, fechar, o ícone
 #     voar, o alvéolo encher, "popup_fechado" sair e o jogo despausar — nessa
 #     ordem, porque é dela que o FerramentasHUD depende.
 #   * a mochila fica no canto SUPERIOR DIREITO, com a capacidade que promete.
-#   * ferramenta não ocupa alvéolo (ela vai para o cinto).
+#   * ferramenta não ocupa casa da mochila (ela vai para os equipamentos).
 #
 #   godot --headless --path . res://tools/teste_popup_item.tscn
 
@@ -35,7 +38,7 @@ func _ready() -> void:
 	await _testar_coleta_completa()
 	await _testar_mochila()
 	await _testar_ferramenta()
-	await _testar_cinto()
+	await _testar_equipamentos()
 	print("\n>>> %s <<<" % ("TUDO OK" if _falhas == 0 else "%d FALHA(S)" % _falhas))
 	get_tree().quit(1 if _falhas > 0 else 0)
 
@@ -69,12 +72,6 @@ func _testar_estilo() -> void:
 	_checar(EstiloHUD.cor_do_item("nao_existe").is_equal_approx(EstiloHUD.ACENTO_PADRAO),
 		"item desconhecido cai no acento padrao")
 
-	# Chapeu do popup separa ferramenta de item comum.
-	_checar(EstiloHUD.chapeu_do_item("bumerangue") == "FERRAMENTA ADQUIRIDA",
-		"ferramenta ganha chapeu de ferramenta")
-	_checar(EstiloHUD.chapeu_do_item("carvao_vegetal") == "ITEM COLETADO",
-		"item comum ganha chapeu de item")
-
 	# Pixel art: acima de 2x so multiplo inteiro (16x16 numa caixa de 82 -> 5x,
 	# e nao 5,125x, que esticaria uma coluna de pixels).
 	var arte := ImageTexture.create_from_image(Image.create(16, 16, false, Image.FORMAT_RGBA8))
@@ -100,7 +97,7 @@ func _testar_ficha_solta() -> void:
 	_checar(not ficha.visible, "a ficha nasce escondida")
 
 	var curta := {"id": "Cilindro_Oxigenio", "nome": "Cilindro de Oxigênio (Comburente)",
-		"descricao": "Uma linha só.", "icone": null, "destino": "MOCHILA · SLOT 1"}
+		"descricao": "Uma linha só.", "icone": null}
 	ficha.abrir(curta)
 	await get_tree().process_frame
 	var caixa_curta: Rect2 = ficha.retangulo_da_ficha()
@@ -116,8 +113,12 @@ func _testar_ficha_solta() -> void:
 	_checar(caixa_longa.size.y > caixa_curta.size.y,
 		"descricao mais longa faz a caixa crescer (%.0f -> %.0f)"
 			% [caixa_curta.size.y, caixa_longa.size.y])
-	_checar(is_equal_approx(caixa_longa.size.x, caixa_curta.size.x),
-		"a largura da ficha e fixa: so a altura responde ao texto")
+	_checar(caixa_curta.size.x < caixa_longa.size.x
+		and caixa_curta.size.x >= PopupItem.LARGURA_MINIMA,
+		"com pouco texto a ficha fica estreita, sem virar uma faixa (%.0f)" % caixa_curta.size.x)
+	_checar(caixa_longa.size.x <= PopupItem.LARGURA
+		and caixa_longa.size.x > PopupItem.LARGURA - 80.0,
+		"com muito texto ela chega perto da largura maxima e para (%.0f)" % caixa_longa.size.x)
 
 	var tela := ficha.size
 	_checar(caixa_longa.position.x >= 0.0 and caixa_longa.end.x <= tela.x,
@@ -133,14 +134,55 @@ func _testar_ficha_solta() -> void:
 	enorme["nome"] = "Maçarico Oxídrico De Precisão Para Corte De Chapa (Ferramenta)"
 	ficha.abrir(enorme)
 	await get_tree().process_frame
-	_checar(is_equal_approx(ficha.retangulo_da_ficha().size.x, PopupItem.LARGURA),
-		"nome enorme nao alarga a ficha (o titulo e que encolhe)")
+	var quadro_enorme := ficha.retangulo_da_ficha()
+	_checar(quadro_enorme.size.x <= PopupItem.LARGURA,
+		"nome enorme nao alarga a ficha alem da maxima (ele e que quebra em linhas)")
+	_checar(quadro_enorme.position.y >= 0.0 and quadro_enorme.end.y <= tela.y,
+		"e ela continua dentro da tela")
 
-	# O medalhao e o ponto de partida do voo: tem de cair dentro da ficha.
-	var centro := ficha.centro_do_medalhao()
+	# O desenho do item e o ponto de partida do voo: tem de cair dentro da ficha.
+	var centro := ficha.centro_do_icone()
 	var quadro := ficha.retangulo_da_ficha()
-	_checar(quadro.has_point(centro), "o medalhao esta dentro da ficha")
-	_checar(centro.x < quadro.get_center().x, "o medalhao fica na coluna da esquerda")
+	_checar(quadro.has_point(centro), "o desenho do item esta dentro da ficha")
+	_checar(centro.x < quadro.get_center().x, "o desenho fica na coluna da esquerda")
+
+	# A tecla de continuar fica presa na beirada de baixo, do lado direito.
+	var tecla := ficha.centro_da_tecla(quadro)
+	_checar(is_equal_approx(tecla.y, quadro.end.y) and tecla.x > quadro.get_center().x,
+		"a tecla de continuar fica na beirada de baixo da ficha, a direita")
+
+	print("\n--- A FICHA E LIMPA: NOME E DESCRICAO, E MAIS NADA ---")
+	var bumerangue := CatalogoFerramentas.dados("bumerangue")
+	ficha.abrir({"id": "bumerangue", "nome": bumerangue["nome"],
+		"descricao": bumerangue["descricao"], "icone": bumerangue["textura"]})
+	await get_tree().process_frame
+	_checar(ficha.textos() == PackedStringArray(["BUMERANGUE", bumerangue["descricao"]]),
+		"a ficha do bumerangue escreve so o nome e a descricao %s" % [ficha.textos()])
+
+	var macarico := CatalogoFerramentas.dados("macarico")
+	ficha.abrir({"id": "macarico", "nome": macarico["nome"],
+		"descricao": macarico["descricao"], "icone": macarico["textura"]})
+	await get_tree().process_frame
+	_checar(ficha.textos()[0] == "MAÇARICO OXÍDRICO" and not "FERRAMENTA" in ficha.textos(),
+		"o \"(Ferramenta)\" do nome do macarico nao vira linha na ficha")
+
+	ficha.abrir(curta)
+	await get_tree().process_frame
+	_checar(ficha.textos() == PackedStringArray(["CILINDRO DE OXIGÊNIO", "COMBURENTE", "Uma linha só."]),
+		"no cilindro, o parentese do nome vira a etiqueta embaixo dele %s" % [ficha.textos()])
+
+	# Nenhuma ficha escreve o tipo do que aconteceu nem para onde o item foi.
+	var proibidas := ["ADQUIRID", "COLETAD", "CINTO", "EQUIPAMENTO", "MOCHILA", "SLOT",
+		"CONTINUAR", "FERRAMENTA"]
+	var achadas := PackedStringArray()
+	for dados in [curta, longa, enorme]:
+		ficha.abrir(dados)
+		for linha in ficha.textos():
+			for palavra in proibidas:
+				# O nome inventado do teste traz "(Ferramenta)", que tem de sumir.
+				if palavra in linha.to_upper():
+					achadas.append("%s em \"%s\"" % [palavra, linha])
+	_checar(achadas.is_empty(), "nenhuma ficha escreve tipo, destino ou \"continuar\" %s" % [achadas])
 
 	ficha.queue_free()
 	await get_tree().process_frame
@@ -170,7 +212,8 @@ func _testar_coleta_completa() -> void:
 	_checar(quadro_mochila.end.x <= tela.x and quadro_mochila.position.y >= 0.0,
 		"a mochila cabe inteira dentro da tela")
 	_checar(mochila.ocupados() == 0 and not mochila.esta_cheia(),
-		"a mochila comeca vazia, com os %d alveolos a mostra" % MochilaHUD.CAPACIDADE)
+		"a mochila comeca vazia, com as %d casas a mostra" % MochilaHUD.CAPACIDADE)
+	_checar(mochila.texto_do_rotulo() == "MOCHILA", "e o rotulo dela diz MOCHILA")
 
 	var arte := _arte(16)
 	hud.exibir_popup("Cilíndro de Hidrogênio (Combustível)", arte,
@@ -183,10 +226,6 @@ func _testar_coleta_completa() -> void:
 	_checar(get_tree().paused, "o mundo pausa enquanto a pessoa le")
 	_checar(mochila.ocupados() == 0, "o item ainda NAO entrou: quem nao leu nao pegou")
 
-	# O destino aparece no rodape antes de a pessoa fechar.
-	_checar(hud._texto_do_destino("Cilindro_de_Hidrogenio", true) == "MOCHILA · SLOT 1",
-		"o rodape diz para qual alveolo o item vai")
-
 	# Fecha e acompanha a coreografia ate o fim.
 	var chegou := []
 	hud.popup_fechado.connect(func(id: String) -> void: chegou.append(id))
@@ -197,17 +236,21 @@ func _testar_coleta_completa() -> void:
 	_checar(not Inventario.popup_aberto, "a tecla E voltou para o mundo")
 	_checar(not get_tree().paused, "o mundo voltou a andar")
 	_checar(not ficha.visible, "a ficha saiu da tela")
-	_checar(mochila.ocupados() == 1, "o item chegou no alveolo")
-	_checar(mochila.indice_de("Cilindro_de_Hidrogenio") == 0, "e chegou no primeiro alveolo")
+	_checar(mochila.ocupados() == 1, "o item chegou na mochila")
+	_checar(mochila.indice_de("Cilindro_de_Hidrogenio") == 0, "e chegou na primeira casa")
 	_checar(Inventario.tem_item("Cilindro_de_Hidrogenio"),
 		"o inventario de verdade so recebeu o item depois da leitura")
 
-	# O alveolo pega a cor do item (e por isso que o voo e a chegada combinam).
+	# A casa pega a cor do item (e por isso que o voo e a chegada combinam).
 	_checar(mochila._slots[0]["cor"].is_equal_approx(
 		EstiloHUD.cor_do_item("Cilindro_de_Hidrogenio")),
-		"o alveolo acende na cor do item")
-	_checar(mochila._slots[0]["titulo"] == "Cilíndro de Hidrogênio",
-		"o rotulo do alveolo perde o parentese da categoria")
+		"a casa acende na cor do item")
+	# O nome do item nao fica escrito embaixo dele: o rotulo da mochila o
+	# mostra uns segundos, sem o parentese, e volta a dizer MOCHILA.
+	_checar(mochila.texto_do_rotulo() == "CILÍNDRO DE HIDROGÊNIO",
+		"na chegada, o rotulo da mochila mostra o nome do item (sem o parentese)")
+	await get_tree().create_timer(MochilaHUD.TEMPO_DESTAQUE + 0.3).timeout
+	_checar(mochila.texto_do_rotulo() == "MOCHILA", "e depois volta a dizer MOCHILA")
 
 	_limpar(hud)
 	await get_tree().process_frame
@@ -227,33 +270,41 @@ func _testar_mochila() -> void:
 	# Caminho sem ficha: Inventario.adicionar_item() cai aqui.
 	for i in MochilaHUD.CAPACIDADE:
 		hud.exibir_item_na_tela("item_%d" % i, "Item %d" % i, _arte(16))
-	_checar(mochila.ocupados() == MochilaHUD.CAPACIDADE, "os tres alveolos encheram")
+	_checar(mochila.ocupados() == MochilaHUD.CAPACIDADE, "as tres casas encheram")
 	_checar(mochila.esta_cheia() and mochila.proximo_livre() == -1,
 		"mochila cheia se reconhece como cheia")
 
-	# Cheia, o rodape da ficha avisa em vez de mentir um numero de slot.
-	_checar(hud._texto_do_destino("novo", true) == "MOCHILA CHEIA",
-		"com a mochila cheia o rodape avisa, e nao inventa alveolo")
 	hud.exibir_item_na_tela("sobra", "Sobra", _arte(16))
 	_checar(mochila.ocupados() == MochilaHUD.CAPACIDADE,
 		"item a mais nao entra nem quebra a fileira")
 
-	# Item repetido nao ocupa dois alveolos.
+	# Item repetido nao ocupa duas casas.
 	hud.exibir_item_na_tela("item_1", "Item 1", _arte(16))
 	_checar(mochila.ocupados() == MochilaHUD.CAPACIDADE and mochila.indice_de("item_1") == 1,
-		"item repetido continua no alveolo dele")
+		"item repetido continua na casa dele")
+
+	# O ponteiro em cima de um item (num puzzle de arrastar) poe o nome dele
+	# no rotulo; fora, o rotulo volta.
+	await get_tree().create_timer(MochilaHUD.TEMPO_DESTAQUE + 0.3).timeout
+	mochila.foco = 2
+	_checar(mochila.texto_do_rotulo() == "ITEM 2", "com o ponteiro no item, o rotulo diz o nome dele")
+	_checar(mochila.slot_no_ponto(mochila.centro_do_slot(2)) == 2
+		and mochila.slot_no_ponto(mochila.centro_do_slot(2) + Vector2(0.0, MochilaHUD.LADO)) == -1,
+		"a casa e um quadrado: o centro pega o item, um lado abaixo ja nao")
+	mochila.foco = -1
+	_checar(mochila.texto_do_rotulo() == "MOCHILA", "sem ponteiro, o rotulo volta a dizer MOCHILA")
 
 	# Saida: o receptor consumiu o item.
 	hud.remover_item_da_tela("item_1")
 	await get_tree().create_timer(0.5).timeout
-	_checar(not mochila.tem("item_1"), "o alveolo esvaziou quando o item foi usado")
-	_checar(mochila.proximo_livre() == 1, "o alveolo liberado volta a ser o proximo da fila")
+	_checar(not mochila.tem("item_1"), "a casa esvaziou quando o item foi usado")
+	_checar(mochila.proximo_livre() == 1, "a casa liberada volta a ser a proxima da fila")
 
-	# Cada alveolo tem um centro proprio, para o voo saber onde encaixar.
+	# Cada casa tem um centro proprio, para o voo saber onde encaixar.
 	var a := mochila.centro_do_slot(0)
 	var b := mochila.centro_do_slot(2)
 	_checar(b.x > a.x and is_equal_approx(a.y, b.y),
-		"os alveolos estao numa fileira horizontal, da esquerda para a direita")
+		"as casas estao numa fileira horizontal, da esquerda para a direita")
 
 	_limpar(hud)
 	await get_tree().process_frame
@@ -273,9 +324,6 @@ func _testar_ferramenta() -> void:
 	var dados := CatalogoFerramentas.dados("bumerangue")
 	_checar(not dados.is_empty(), "o catalogo entrega a ficha do bumerangue")
 
-	_checar(hud._texto_do_destino("bumerangue", false) == "CINTO DE FERRAMENTAS",
-		"o rodape manda a ferramenta para o cinto, nao para a mochila")
-
 	var chegou := []
 	hud.popup_fechado.connect(func(id: String) -> void: chegou.append(id))
 	hud.exibir_popup(dados["nome"], dados["textura"], dados["descricao"], "bumerangue", false)
@@ -284,22 +332,24 @@ func _testar_ferramenta() -> void:
 
 	await hud.fechar_popup()
 	_checar(chegou.size() == 1 and chegou[0] == "bumerangue",
-		"popup_fechado saiu com o id da ferramenta (e o selo do cinto nasce nele)")
-	_checar(mochila.ocupados() == 0, "ferramenta nao ocupa alveolo da mochila")
+		"popup_fechado saiu com o id da ferramenta (e a ficha do equipamento nasce nele)")
+	_checar(mochila.ocupados() == 0, "ferramenta nao ocupa casa da mochila")
 	_checar(not get_tree().paused, "o mundo voltou a andar depois da ferramenta")
 
 	# O ponto de chegada do voo existe e fica no canto de baixo a direita.
-	var cinto := FerramentasHUD.ponto_de_entrada()
+	var chegada := FerramentasHUD.ponto_de_entrada()
 	var tela := hud.get_viewport().get_visible_rect().size
-	_checar(cinto.x > tela.x * 0.5 and cinto.y > tela.y * 0.5,
-		"o cinto (destino do voo) esta no canto inferior direito")
+	_checar(chegada.x > tela.x * 0.5 and chegada.y > tela.y * 0.5,
+		"os equipamentos (destino do voo) estao no canto inferior direito")
 
 	_limpar(hud)
 	await get_tree().process_frame
 
 
-func _testar_cinto() -> void:
-	print("\n--- O CINTO (canto inferior direito) ---")
+func _testar_equipamentos() -> void:
+	print("\n--- OS EQUIPAMENTOS (canto inferior direito) ---")
+	_checar(EquipamentosHUD.ROTULO == "EQUIPAMENTOS",
+		"o rotulo da peca diz EQUIPAMENTOS (nao e mais \"cinto\")")
 	var hud: CanvasLayer = (load(HUD) as PackedScene).instantiate()
 	get_tree().root.add_child(hud)
 	await get_tree().process_frame
@@ -318,13 +368,13 @@ func _testar_cinto() -> void:
 		_checar(InputMap.has_action(acao),
 			"a acao '%s' (tecla do %s) existe no mapa de entrada" % [acao, h])
 
-	# O destino do voo NAO pode depender de quantas ferramentas ja estao no
-	# cinto: a ficha mira nele antes de o alveolo existir.
+	# O destino do voo NAO pode depender de quantos equipamentos ja existem: a
+	# ficha de coleta mira nele antes de a ficha do equipamento existir.
 	var antes := FerramentasHUD.ponto_de_entrada()
 
 	# Caminho de verdade: conquistar a habilidade, ler a ficha, fechar.
-	_checar(not FerramentasHUD.tem_no_cinto("bumerangue"),
-		"o cinto comeca sem o bumerangue")
+	_checar(not FerramentasHUD.tem_equipamento("bumerangue"),
+		"os equipamentos comecam sem o bumerangue")
 	Progresso.dar_habilidade("bumerangue")
 	var espera := 0.0
 	while not Inventario.popup_aberto and espera < 1.5:
@@ -334,21 +384,21 @@ func _testar_cinto() -> void:
 	await hud.fechar_popup()
 	await get_tree().process_frame
 
-	_checar(FerramentasHUD.tem_no_cinto("bumerangue"),
-		"fechar a ficha pendurou a ferramenta no cinto")
+	_checar(FerramentasHUD.tem_equipamento("bumerangue"),
+		"fechar a ficha pos a ferramenta nos equipamentos")
 
-	# Com o bumerangue no cinto sobe o tutorial dele, que segura o mundo até o
-	# E (o teste da ficha e da telinha é o tools/teste_tutorial_bumerangue).
+	# Com o bumerangue equipado sobe o tutorial dele, que segura o mundo até uma
+	# tecla de ação (o teste da ficha e da telinha é o tools/teste_tutorial_bumerangue).
 	_checar(FerramentasHUD.tutorial_aberto() and get_tree().paused,
 		"e subiu o tutorial do bumerangue, com o mundo parado")
 	await FerramentasHUD.fechar_tutorial()
 	_checar(not FerramentasHUD.tutorial_aberto() and not get_tree().paused,
 		"fechado o tutorial, o mundo volta a andar")
 	_checar(FerramentasHUD.ponto_de_entrada().is_equal_approx(antes),
-		"o ponto de entrada do cinto nao se mexe quando uma ferramenta entra")
+		"o ponto de entrada dos equipamentos nao se mexe quando uma ferramenta entra")
 
-	# Usar a ferramenta no mundo pulsa o alveolo (nao pode explodir se a
-	# ferramenta nem estiver no cinto).
+	# Usar a ferramenta no mundo faz a ficha dela pular (nao pode explodir se a
+	# ferramenta nem estiver equipada).
 	FerramentasHUD.destacar("bumerangue")
 	FerramentasHUD.destacar("nao_existe")
 	_checar(true, "destacar() aceita ferramenta ausente sem quebrar")

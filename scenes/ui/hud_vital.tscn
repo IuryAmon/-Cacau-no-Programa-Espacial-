@@ -5,9 +5,9 @@
 
 [node name="HudVital" type="Control"]
 metadata/_edit_lock_ = true
-custom_minimum_size = Vector2(452, 120)
-offset_right = 452.0
-offset_bottom = 120.0
+custom_minimum_size = Vector2(384, 98)
+offset_right = 384.0
+offset_bottom = 98.0
 mouse_filter = 2
 script = ExtResource("1_script")
 modo = 0

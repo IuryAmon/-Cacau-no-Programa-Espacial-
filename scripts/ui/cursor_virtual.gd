@@ -83,7 +83,7 @@ const ESPERA_PRIMEIRO_ALVO := 0.45
 const ESPERA_ALVO_UNICO := 0.3
 
 # --- DESENHO ---
-## Acima de tudo: puzzles (10-15), Dialogic (20) e o cinto (90).
+## Acima de tudo: puzzles (10-15), Dialogic (20) e os equipamentos (90).
 const CAMADA := 110
 const COR_ACENTO := Color(0.42, 0.78, 1.0)
 const COR_TRACO := Color(0.03, 0.05, 0.10)
@@ -561,11 +561,7 @@ func _desenhar_barra(alfa: float) -> void:
 	var tela := _desenho.get_viewport_rect().size
 	var caixa := Rect2(Vector2((tela.x - total) * 0.5 - margem, tela.y - ALTURA_BARRA - 10.0),
 		Vector2(total + margem * 2.0, ALTURA_BARRA))
-	var corpo := EstiloHUD.chanfro(caixa, 12.0)
-	EstiloHUD.sombra(_desenho, corpo, 4.0, alfa)
-	EstiloHUD.vidro(_desenho, corpo, 0.92 * alfa)
-	EstiloHUD.moldura(_desenho, corpo, EstiloHUD.com_alfa(EstiloHUD.BORDA, alfa), 1.5)
-	_desenho.draw_line(corpo[0], corpo[1], EstiloHUD.com_alfa(EstiloHUD.FIO_LUZ, alfa), 1.5, true)
+	EstiloHUD.barra(_desenho, caixa, alfa)
 
 	var x := caixa.position.x + margem
 	var meio := caixa.get_center().y
@@ -575,7 +571,7 @@ func _desenhar_barra(alfa: float) -> void:
 		BotoesControle.desenhar(_desenho, Vector2(x + lado * 0.5, meio), nome, 2.0,
 			Color(1, 1, 1, alfa))
 		EstiloHUD.texto(_desenho, FONTE, Vector2(x + lado + respiro_icone, base),
-			String(dicas[i][1]), TAM_DICA, EstiloHUD.com_alfa(EstiloHUD.TEXTO, alfa), ESPACO_DICA)
+			String(dicas[i][1]), TAM_DICA, EstiloHUD.com_alfa(EstiloHUD.CLARO, alfa), ESPACO_DICA)
 		x += larguras[i] + respiro_itens
 
 

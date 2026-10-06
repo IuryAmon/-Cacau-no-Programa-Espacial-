@@ -3,30 +3,32 @@ extends Control
 
 # --- O ÍCONE INDO DA FICHA PARA A MOCHILA ---
 #
-# O pedaço que amarra as duas telas. Quando a pessoa fecha o popup, o desenho
-# do item não some do centro para reaparecer num slot: ele se desprende do
-# medalhão, faz uma curva pelo alto e encaixa no alvéolo, encolhendo até o
-# tamanho de lá. O anel do slot só estoura quando o ícone chega.
+# O pedaço que amarra as duas telas. Quando a pessoa fecha a ficha de coleta,
+# o desenho do item não some do centro para reaparecer numa casa: ele se solta
+# da ficha, faz uma curva pelo alto e cai na casa dele, encolhendo até o
+# tamanho de lá. A casa só acende quando o ícone chega.
 #
 # É a diferença entre "o jogo guardou alguma coisa em algum lugar" e "eu vi
-# onde isso foi parar" — e é por isso que a mochila precisa ter a mesma forma
-# hexagonal do medalhão: o voo termina num encaixe, não numa caixinha.
+# onde isso foi parar" — e é por isso que a ficha de coleta não precisa
+# escrever o destino.
 #
-# Serve tanto para a mochila quanto para o cinto de ferramentas (que fica no
-# canto de baixo): quem chama diz de onde para onde, e em que tamanho começa e
+# Serve tanto para a mochila quanto para os equipamentos (que ficam no canto
+# de baixo): quem chama diz de onde para onde, e em que tamanho começa e
 # termina.
+#
+# O rastro é de quadradinhos chapados na cor do item, que diminuem para trás:
+# pixel, como o resto do HUD.
 
 signal chegou
 
 ## Rastro: quantas posições anteriores continuam desenhadas atrás do ícone.
-const RASTRO := 14
-const FAISCAS := 7
+const RASTRO := 12
 
 var textura: Texture2D = null
 var cor: Color = EstiloHUD.ACENTO_PADRAO
 var duracao: float = 0.52
-## O ícone chega inteiro ou vai apagando no caminho (usado pelo cinto, que
-## acende o próprio selo na chegada).
+## O ícone chega inteiro ou vai apagando no caminho (usado pelos equipamentos,
+## que fazem a própria ficha brotar na chegada).
 var apagar_ao_chegar: bool = false
 
 var _inicio: Vector2 = Vector2.ZERO
@@ -39,7 +41,7 @@ var _trilha: Array[Vector2] = []
 
 
 ## Cria o voo já pendurado em "pai" (a camada do HUD) e o dispara. Os pontos
-## são em coordenadas de tela — os mesmos que PopupItem.centro_do_medalhao() e
+## são em coordenadas de tela — os mesmos que PopupItem.centro_do_icone() e
 ## MochilaHUD.centro_do_slot() devolvem.
 static func lancar(pai: Node, arte: Texture2D, tinta: Color, de: Vector2, para: Vector2,
 		caixa_de: float, caixa_para: float, tempo: float = 0.52) -> VooDeItem:
@@ -69,7 +71,7 @@ func _ready() -> void:
 func _definir_rota(de: Vector2, para: Vector2) -> void:
 	_inicio = de
 	_fim = para
-	# Ponto de controle acima da reta: a curva sobe antes de cair no slot, que
+	# Ponto de controle acima da reta: a curva sobe antes de cair na casa, que
 	# é como a mão joga alguma coisa dentro de uma mochila — reta seria
 	# transporte de arquivo, não gesto.
 	var meio := de.lerp(para, 0.5)
@@ -124,26 +126,16 @@ func _draw() -> void:
 	var local := get_global_transform().affine_inverse()
 	var ponta: Vector2 = local * _trilha[0]
 
-	# Rastro: pontos da cor do item que vão sumindo atrás da ponta.
-	for i in range(1, _trilha.size()):
+	# Rastro: quadradinhos na cor do item, um sim, um não, diminuindo para trás.
+	for i in range(2, _trilha.size(), 2):
 		var f := 1.0 - float(i) / float(_trilha.size())
-		draw_circle(local * _trilha[i], caixa * 0.075 * f + 1.5,
-			EstiloHUD.com_alfa(cor, f * f * 0.60), true, -1.0, true)
+		var lado := maxf(roundf(caixa * 0.16 * f), 2.0)
+		draw_rect(Rect2((local * _trilha[i] - Vector2(lado, lado) * 0.5).round(),
+			Vector2(lado, lado)), EstiloHUD.com_alfa(cor, f))
 
-	# Faíscas espalhadas em volta do rastro, para o traço não virar um risco só.
-	for i in FAISCAS:
-		var atraso := 2 + i * 2
-		if atraso >= _trilha.size():
-			break
-		var s := float(i)
-		var f := 1.0 - float(atraso) / float(_trilha.size())
-		var desvio := Vector2(sin(_tempo * 9.0 + s * 2.1), cos(_tempo * 7.3 + s * 1.7)) \
-			* (6.0 + s * 2.0) * (1.0 - f)
-		draw_circle(local * _trilha[atraso] + desvio, 1.0 + f * 1.6,
-			EstiloHUD.com_alfa(cor, f * 0.35), true, -1.0, true)
-
-	# Halo à frente e o desenho do item.
+	# O desenho do item, com a sombra dura caída embaixo dele.
 	var vida := 1.0 - (u * u if apagar_ao_chegar else 0.0)
-	EstiloHUD.halo(self, ponta, caixa * 0.8, cor, 6, 0.9 * vida)
+	EstiloHUD.icone(self, textura, ponta + Vector2(0.0, EstiloHUD.QUEDA), caixa,
+		EstiloHUD.com_alfa(Color(0.0, 0.0, 0.0, EstiloHUD.SOMBRA_DURA.a), vida))
 	EstiloHUD.icone(self, textura, ponta, caixa,
 		EstiloHUD.com_alfa(Color.WHITE, vida))

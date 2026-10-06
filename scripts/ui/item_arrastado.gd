@@ -4,9 +4,10 @@ extends Control
 # --- O ITEM NA MÃO (arrastado para fora da mochila) ---
 #
 # Quando a pessoa pega um item da mochila num puzzle de arrastar, o desenho
-# sai do alvéolo e passa a ser este nó: o ícone, maior que no alvéolo (está
-# "na mão", mais perto de quem olha), com o halo da cor do item e uma sombra
-# caída — a sombra é o que dá a sensação de que ele foi erguido da fileira.
+# sai da casa e passa a ser este nó: o ícone, maior que na mochila (está "na
+# mão", mais perto de quem olha), com uma sombra caída — a sombra é o que dá a
+# sensação de que ele foi erguido da fileira — e um aro na cor do item, que
+# respira enquanto ele espera lugar para cair.
 #
 # A posição do nó É o centro do ícone. Quem arrasta só move "position"; quem
 # anima a entrega ou a volta usa "position", "scale" e "modulate" em tween.
@@ -46,8 +47,10 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	if textura == null:
 		return
-	# Halo respirando devagar: o item está "ativo", esperando lugar para cair.
-	EstiloHUD.halo(self, Vector2.ZERO, caixa * 0.8, cor, 7, 0.85 + 0.15 * sin(_tempo * 6.0))
+	# O aro respirando devagar: o item está "ativo", esperando lugar para cair.
+	var lado := roundf(caixa * (1.16 + 0.04 * sin(_tempo * 6.0)))
+	EstiloHUD.aro(self, Rect2(-Vector2(lado, lado) * 0.5, Vector2(lado, lado)),
+		EstiloHUD.com_alfa(cor, 0.9), 3.0, 3.0)
 	EstiloHUD.icone(self, textura, Vector2(caixa * 0.10, caixa * 0.16), caixa,
 		Color(0.0, 0.0, 0.0, 0.35))
 	EstiloHUD.icone(self, textura, Vector2.ZERO, caixa)

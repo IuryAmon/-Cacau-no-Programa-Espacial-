@@ -553,8 +553,8 @@ func alvos_do_cursor() -> Array[Rect2]:
 			if _mao != null:
 				alvos.append(_boca_global())
 			elif _mochila != null and is_instance_valid(_mochila):
-				# O hexágono do alvéolo, na escala em que a mochila está agora.
-				var lado := MochilaHUD.RAIO_CELULA * 1.6 * _mochila.get_global_transform().get_scale().x
+				# A casa da mochila, na escala em que ela está agora.
+				var lado := MochilaHUD.LADO * _mochila.get_global_transform().get_scale().x
 				for i in MochilaHUD.CAPACIDADE:
 					var centro := _mochila.centro_do_slot(i)
 					if _mochila.slot_no_ponto(centro) == i:
@@ -1457,7 +1457,7 @@ func _desenhar_guia():
 	var percurso := de.distance_to(ate)
 
 	var para_local := guia.get_global_transform().affine_inverse()
-	var cor := EstiloHUD.cor_do_item(_mao_id) if _mao != null else EstiloHUD.TEXTO
+	var cor := EstiloHUD.cor_do_item(_mao_id) if _mao != null else EstiloHUD.CLARO
 	var abertura := 18.0
 	var altura := 11.0
 	var quantidade := clampi(int(percurso / 34.0), 2, 6)

@@ -7,10 +7,8 @@
 script = ExtResource("1_bcxjj")
 
 [node name="HudVital" parent="." instance=ExtResource("2_hudvital")]
-offset_left = 36.0
-offset_top = 24.0
-offset_right = 488.0
-offset_bottom = 144.0
+offset_right = 384.0
+offset_bottom = 98.0
 modo = 0
 titulo = "CACAU"
 subtitulo = "VITAL"

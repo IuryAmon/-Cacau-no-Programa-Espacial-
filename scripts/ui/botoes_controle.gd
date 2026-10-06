@@ -5,13 +5,14 @@ extends RefCounted
 #
 # Quem precisa MOSTRAR um botão do controle pergunta aqui: a barra de comandos
 # dos puzzles (cursor_virtual.gd), os textos que trocam "E" por "□" quando a
-# pessoa joga de controle (icones_no_texto.gd), a ficha de coleta e o cinto.
+# pessoa joga de controle (icones_no_texto.gd), a ficha de coleta e os
+# equipamentos.
 # Os desenhos saem da folha gdb-playstation-2.png — a mesma do direcional do
 # tutorial —, então todo botão do jogo tem a mesma cara.
 #
 # Esta classe não sabe QUAL dispositivo está em uso (isso é do autoload
 # Controle): ela só traduz ação -> botão -> desenho. É estática de propósito:
-# o cinto e a ficha de coleta também rodam no editor (@tool), onde autoload
+# os equipamentos e a ficha de coleta também rodam no editor (@tool), onde autoload
 # nenhum existe.
 #
 # MARCAS NOS TEXTOS (ver "traduzir"):
@@ -24,7 +25,7 @@ extends RefCounted
 # TECLAS DESENHADAS: num Label com IconesNoTexto (o "rotular" já põe um), a
 # tecla do teclado também sai desenhada — ESC, E, W, A, S, D, M e F, da folha
 # gdb-keyboard-2.png, a mesma do WASD e do E do world1. Tecla sem desenho
-# (ESPAÇO, ENTER, CLIQUE) continua escrita. O cinto, a ficha de coleta e o
+# (ESPAÇO, ENTER, CLIQUE) continua escrita. Os equipamentos, a ficha de coleta e o
 # tutorial das ferramentas usam as mesmas (ver EstiloHUD.tecla_da_acao).
 #
 # PARA DESENHAR MAIS UMA TECLA: a folha tem o teclado inteiro. Ache a tecla no
@@ -326,7 +327,7 @@ static func nome_para_dica(chave: String) -> String:
 # ─────────────────────────────────────────────────────────────
 
 ## A pessoa está de controle na mão? Sempre falso no editor: as peças @tool
-## (cinto, ficha de coleta, rótulos do blockout) rodam lá, onde o autoload
+## (equipamentos, ficha de coleta, rótulos do blockout) rodam lá, onde o autoload
 ## Controle não existe.
 static func controle_em_uso() -> bool:
 	if Engine.is_editor_hint():

@@ -9,23 +9,24 @@ extends CanvasLayer
 #
 # A coreografia de uma coleta é sempre a mesma:
 #
-#   1. o mundo pausa e escurece; a ficha se monta com o item, o nome, a
-#      categoria, a explicação e — no rodapé — PARA ONDE aquilo vai;
-#   2. no [E], o ícone se desprende do medalhão e voa até o alvéolo da mochila
-#      (ou até o cinto, se for ferramenta), encolhendo no caminho;
-#   3. só quando ele chega o alvéolo estoura, o item entra no inventário de
+#   1. o mundo pausa e escurece; a ficha sobe com o desenho do item, o nome e
+#      a explicação — e mais nada;
+#   2. no [E], o desenho se solta da ficha e voa até a casa da mochila (ou até
+#      os equipamentos, se for ferramenta), encolhendo no caminho. É o voo que
+#      diz para onde aquilo foi;
+#   3. só quando ele chega a casa acende, o item entra no inventário de
 #      verdade e o mundo volta a andar.
 #
 # A ordem importa: "popup_fechado" só é emitido no fim de tudo, porque é nele
-# que o FerramentasHUD se pendura para fazer o selo nascer no cinto — e o selo
-# tem de nascer quando o ícone chega lá, não antes.
+# que o FerramentasHUD se pendura para fazer a ficha do equipamento brotar — e
+# ela tem de brotar quando o ícone chega lá, não antes.
 #
 # A API pública é a mesma de sempre (exibir_popup, exibir_item_na_tela,
 # remover_item_da_tela, popup_fechado): item_coletavel.gd, retorta.gd,
 # Inventario.gd e ferramentas_hud.gd não precisaram mudar uma linha.
 
 ## Avisa quem abriu o popup que a pessoa já leu, fechou, e o item chegou ao
-## destino. É por aqui que o FerramentasHUD sabe a hora de acender o selo.
+## destino. É por aqui que o FerramentasHUD sabe a hora de equipar a ferramenta.
 signal popup_fechado(id: String)
 
 ## Tempo do voo do ícone até o destino.
@@ -35,7 +36,7 @@ const DURACAO_VOO := 0.52
 @onready var _mochila: MochilaHUD = $Mochila
 @onready var _som_guardar: AudioStreamPlayer = $SomGuardar
 
-## id -> índice do alvéolo. Mantido para quem consultava este dicionário.
+## id -> índice da casa. Mantido para quem consultava este dicionário.
 var slots_ocupados: Dictionary = {}
 ## O item fica aqui até a pessoa fechar a ficha: quem não leu ainda não pegou.
 var item_pendente: Dictionary = {}
@@ -93,10 +94,10 @@ func _process(_delta: float) -> void:
 
 ## Abre a ficha do item.
 ##
-## "guardar_no_inventario" é false para o que não ocupa alvéolo: as ferramentas
-## permanentes (maçarico, bumerangue...) viram habilidade no Progresso, mas
-## ganham a mesma apresentação dos cilindros — e o ícone voa para o cinto, no
-## canto de baixo, em vez de para a mochila.
+## "guardar_no_inventario" é false para o que não ocupa casa da mochila: as
+## ferramentas permanentes (maçarico, bumerangue...) viram habilidade no
+## Progresso, mas ganham a mesma apresentação dos cilindros — e o ícone voa
+## para os equipamentos, no canto de baixo, em vez de para a mochila.
 func exibir_popup(nome: String, textura: Texture2D, descricao: String, id: String,
 		guardar_no_inventario: bool = true) -> void:
 	item_pendente = {}
@@ -115,24 +116,10 @@ func exibir_popup(nome: String, textura: Texture2D, descricao: String, id: Strin
 		"nome": nome,
 		"descricao": descricao,
 		"icone": textura,
-		"cor": EstiloHUD.cor_do_item(id),
-		"destino": _texto_do_destino(id, guardar_no_inventario),
 	})
 
 	Inventario.popup_aberto = true
 	get_tree().paused = true
-
-
-## O rodapé da ficha responde "para onde isso foi?" antes de a pessoa fechar —
-## é o que faz o voo do ícone ser confirmação, e não surpresa.
-func _texto_do_destino(id: String, guardar_no_inventario: bool) -> String:
-	if not guardar_no_inventario:
-		return "CINTO DE FERRAMENTAS"
-	if _mochila.tem(id):
-		return "JÁ ESTAVA NA MOCHILA"
-	if _mochila.esta_cheia():
-		return "MOCHILA CHEIA"
-	return "MOCHILA · SLOT %d" % (_mochila.proximo_livre() + 1)
 
 
 func fechar_popup() -> void:
@@ -141,7 +128,7 @@ func fechar_popup() -> void:
 	_fechando = true
 
 	# O ponto de partida do voo é lido ANTES de a ficha começar a apagar.
-	var partida := _popup.centro_do_medalhao()
+	var partida := _popup.centro_do_icone()
 	var caixa_partida := _popup.caixa_do_icone()
 	var id := _id_no_popup
 	var cor := EstiloHUD.cor_do_item(id)
@@ -151,7 +138,7 @@ func fechar_popup() -> void:
 	if item_pendente.size() > 0:
 		await _entregar_na_mochila(partida, caixa_partida, cor)
 	elif CatalogoFerramentas.FERRAMENTAS.has(id):
-		await _entregar_no_cinto(id, partida, caixa_partida, cor)
+		await _entregar_nos_equipamentos(id, partida, caixa_partida, cor)
 
 	# A ficha pode ter terminado de apagar antes do voo; por isso a espera é
 	# por um estado, e não por um "await" no sinal (que já teria passado).
@@ -167,7 +154,7 @@ func fechar_popup() -> void:
 	_id_no_popup = ""
 
 
-## Item comum: entra no inventário de verdade e o ícone voa até o alvéolo.
+## Item comum: entra no inventário de verdade e o ícone voa até a casa dele.
 func _entregar_na_mochila(partida: Vector2, caixa_partida: float, cor: Color) -> void:
 	var id: String = item_pendente["id"]
 	var nome: String = item_pendente["nome"]
@@ -182,26 +169,27 @@ func _entregar_na_mochila(partida: Vector2, caixa_partida: float, cor: Color) ->
 		return
 
 	if _mochila.esta_cheia():
-		push_warning("Mochila cheia: '%s' entrou no inventário sem alvéolo na tela." % nome)
+		push_warning("Mochila cheia: '%s' entrou no inventário sem casa na tela." % nome)
 		return
 
 	await _voar(textura, cor, partida, caixa_partida,
 		_mochila.centro_do_proximo(), _mochila.caixa_do_icone(), false)
-	_guardar_no_alveolo(id, nome, textura, cor)
+	_guardar_na_casa(id, nome, textura, cor)
 
 
-## Ferramenta: não ocupa alvéolo, mas o ícone ainda precisa ir para algum
-## lugar — vai para o cinto, e apaga chegando, porque quem acende o selo lá é
-## o FerramentasHUD assim que "popup_fechado" sai.
-func _entregar_no_cinto(id: String, partida: Vector2, caixa_partida: float,
+## Ferramenta: não ocupa casa da mochila, mas o ícone ainda precisa ir para
+## algum lugar — vai para os equipamentos, e apaga chegando, porque quem faz a
+## ficha brotar lá é o FerramentasHUD assim que "popup_fechado" sai.
+func _entregar_nos_equipamentos(id: String, partida: Vector2, caixa_partida: float,
 		cor: Color) -> void:
 	var ficha := CatalogoFerramentas.dados(id)
 	if ficha.is_empty():
 		return
-	var destino := _ponto_do_cinto()
+	var destino := _ponto_dos_equipamentos()
 	if destino == Vector2.ZERO:
 		return
-	await _voar(ficha["textura"], cor, partida, caixa_partida, destino, 42.0, true)
+	await _voar(ficha["textura"], cor, partida, caixa_partida, destino,
+		EquipamentosHUD.CAIXA_ICONE, true)
 
 
 func _voar(textura: Texture2D, cor: Color, de: Vector2, caixa_de: float,
@@ -215,10 +203,10 @@ func _voar(textura: Texture2D, cor: Color, de: Vector2, caixa_de: float,
 	await voo.chegou
 
 
-func _ponto_do_cinto() -> Vector2:
-	var cinto := get_node_or_null("/root/FerramentasHUD")
-	if cinto != null and cinto.has_method("ponto_de_entrada"):
-		return cinto.ponto_de_entrada()
+func _ponto_dos_equipamentos() -> Vector2:
+	var equipamentos := get_node_or_null("/root/FerramentasHUD")
+	if equipamentos != null and equipamentos.has_method("ponto_de_entrada"):
+		return equipamentos.ponto_de_entrada()
 	return Vector2.ZERO
 
 
@@ -234,7 +222,7 @@ func exibir_item_na_tela(id_do_item: String, nome_do_item: String,
 	if textura == null:
 		push_warning("Item '%s' não tem textura definida no Inspector." % nome_do_item)
 		return
-	_guardar_no_alveolo(id_do_item, nome_do_item, textura, EstiloHUD.cor_do_item(id_do_item))
+	_guardar_na_casa(id_do_item, nome_do_item, textura, EstiloHUD.cor_do_item(id_do_item))
 
 
 func remover_item_da_tela(id_do_item: String) -> void:
@@ -251,11 +239,11 @@ func remover_item_da_tela(id_do_item: String) -> void:
 # ficar perto do lugar onde o item deve cair. O caminho do arrasto fica curto
 # e óbvio — ninguém precisa descobrir que dá para pegar coisas lá do canto.
 #
-# Quem pede recebe a própria MochilaHUD, para medir alvéolos e retirar itens;
+# Quem pede recebe a própria MochilaHUD, para medir as casas e retirar itens;
 # a mochila continua morando aqui, e volta para o canto em "devolver_mochila".
 
-## Leva a mochila para dentro de "area" (coordenadas de tela): o painel fica
-## centrado nela e na maior escala que cabe sem distorcer. É assim que o puzzle
+## Leva a mochila para dentro de "area" (coordenadas de tela): a peça fica
+## centrada nela e na maior escala que cabe sem distorcer. É assim que o puzzle
 ## decide onde e de que tamanho ela aparece — ver o retângulo AreaMochila da
 ## cena do puzzle. A camada acende mesmo em cena que esconde o HUD.
 func emprestar_mochila(area: Rect2, duracao: float = 0.5) -> MochilaHUD:
@@ -270,7 +258,7 @@ func emprestar_mochila(area: Rect2, duracao: float = 0.5) -> MochilaHUD:
 			_visibilidade_antes_do_emprestimo = visible
 	visible = true
 
-	# Painel sem escala, em coordenadas locais da mochila (o pivô é o canto de
+	# A peça sem escala, em coordenadas locais da mochila (o pivô é o canto de
 	# cima à esquerda, então escala e posição se compõem direto).
 	var painel := Rect2(Vector2(maxf(_mochila.size.x - MochilaHUD.LARGURA_TOTAL, 0.0), 0.0),
 		Vector2(MochilaHUD.LARGURA_TOTAL, MochilaHUD.ALTURA_TOTAL))
@@ -319,7 +307,7 @@ func _mover_mochila(destino: Vector2, escala: Vector2, duracao: float) -> Tween:
 	return _tween_mochila
 
 
-func _guardar_no_alveolo(id: String, nome: String, textura: Texture2D, cor: Color) -> void:
+func _guardar_na_casa(id: String, nome: String, textura: Texture2D, cor: Color) -> void:
 	var indice := _mochila.guardar(id, nome, textura, cor)
 	if indice < 0:
 		push_warning("Mochila cheia: '%s' não coube na tela." % nome)

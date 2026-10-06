@@ -16,7 +16,7 @@ extends CanvasLayer
 const COR_CORTINA := Color(0, 0, 0, 1)
 
 ## HUDs que são autoload (vivem FORA da cena) e desenham por cima da cortina:
-## o cinto de ferramentas, a lista de objetivos e o ícone do caderno. Ver
+## os equipamentos, a lista de objetivos e o ícone do caderno. Ver
 ## esconder_huds().
 const HUDS_AUTOLOAD: Array[String] = ["FerramentasHUD", "Objetivos", "Caderno"]
 
@@ -128,7 +128,7 @@ func esconder_huds(raiz: Node) -> void:
 		_camadas_escondidas.append(camada)
 		camada.visible = false
 
-	# O cinto de ferramentas (selo do maçarico etc.) e a lista de objetivos são
+	# Os equipamentos (a ficha do maçarico etc.) e a lista de objetivos são
 	# autoload — vivem FORA da cena, então não aparecem na varredura acima,
 	# mas desenham por cima da cortina igual aos outros HUDs, então também
 	# precisam sumir aqui.
@@ -153,7 +153,7 @@ func restaurar_huds() -> void:
 			camada.visible = true
 	_camadas_escondidas.clear()
 
-	# Sempre religa o cinto e a lista de objetivos, mesmo que quem os escondeu
+	# Sempre religa os equipamentos e a lista de objetivos, mesmo que quem os escondeu
 	# tenha sido outra instância de FadeTela (a da cena anterior — ver
 	# esconder_huds).
 	if is_inside_tree():

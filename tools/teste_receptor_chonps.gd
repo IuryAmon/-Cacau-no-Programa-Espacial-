@@ -107,7 +107,9 @@ func _testar_amostras() -> void:
 	var frasco := AmostraChonps.textura("P")
 	_checar(frasco.get_width() == AmostraChonps.LARGURA_FRASCO
 		and frasco.get_height() == AmostraChonps.ALTURA_FRASCO, "frasco provisorio do P no tamanho")
-	_checar(EstiloHUD.chapeu_do_item("amostra_N") == "AMOSTRA DO CHONPS", "ficha chama de amostra")
+	_checar(EstiloHUD.separar_nome(AmostraChonps.nome_do_item("N"))
+		== {"titulo": "Amostra de Nitrogênio", "etiqueta": "ELEMENTO N"},
+		"ficha chama de amostra, com o elemento na etiqueta")
 	_checar(EstiloHUD.cor_do_item("amostra_N") == AmostraChonps.cor("N"), "mochila usa a cor do N")
 
 

@@ -115,10 +115,8 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 0
-offset_left = 36.0
-offset_top = 24.0
-offset_right = 488.0
-offset_bottom = 144.0
+offset_right = 384.0
+offset_bottom = 98.0
 modo = 1
 titulo = "NAVE MK-I"
 subtitulo = "CASCO"
@@ -128,9 +126,9 @@ mostrar_porcentagem = true
 [node name="Placar" type="VBoxContainer" parent="HUD/HudRaiz" unique_id=213765497]
 layout_mode = 1
 offset_left = 40.0
-offset_top = 150.0
+offset_top = 114.0
 offset_right = 440.0
-offset_bottom = 244.0
+offset_bottom = 208.0
 mouse_filter = 2
 theme_override_constants/separation = 6
 

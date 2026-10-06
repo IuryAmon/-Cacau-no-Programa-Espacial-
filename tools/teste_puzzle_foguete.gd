@@ -102,7 +102,7 @@ func _testar_abandonar_no_meio() -> void:
 	await _esperar(0.6)
 	_checar(not puzzle.visible and not get_tree().paused, "ESC fecha e despausa")
 	_checar(not mochila.esta_retirado(ITEM_H2) and mochila.tem(ITEM_H2),
-		"o cilindro voltou para o alveolo")
+		"o cilindro voltou para a casa dele na mochila")
 	_checar(mochila.global_position.distance_to(canto) < 1.0, "a mochila voltou para o canto")
 	_checar(receptor.get_node("ComputadorAnimado").animation == &"vermelho",
 		"o painel continua vermelho")
@@ -300,7 +300,7 @@ func _testar_caminho_completo() -> void:
 	_checar(not Inventario.tem_item(ITEM_H2) and not Inventario.tem_item(ITEM_O2),
 		"o receptor consumiu os cilindros")
 	_checar(not mochila.tem(ITEM_H2) and not mochila.tem(ITEM_O2) and mochila.tem("lenha"),
-		"os alveolos dos cilindros esvaziaram e a lenha ficou")
+		"as casas dos cilindros esvaziaram e a lenha ficou")
 	_checar(receptor.get_node("ComputadorAnimado").animation == &"azul", "o painel ficou azul")
 	_checar(not get_tree().paused and not puzzle.visible, "o mundo voltou a andar")
 	_checar(mochila.global_position.distance_to(canto) < 1.0

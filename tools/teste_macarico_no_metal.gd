@@ -10,7 +10,7 @@ extends Node
 #      de entrada, então não dá para sair queimando o ar pelo mapa;
 #   2. chegando na chapa/porta de metal, o cenário PEDE o botão: acende o
 #      desenho da tecla E, que vira o desenho do □ de controle na mão;
-#   3. apertando sem a ferramenta no cinto, a Cacau FALA na caixa do Dialogic
+#   3. apertando sem ter a ferramenta, a Cacau FALA na caixa do Dialogic
 #      (a mesma do resto do jogo, com o retrato dela) — e o metal continua
 #      inteiro. A fala CONSTATA o obstáculo sem entregar a solução: se ela
 #      passar a citar maçarico/chama/corte, este teste falha de propósito.
@@ -69,7 +69,7 @@ func _testar_porta() -> void:
 	_checar(dica != null and dica.animation == IconeInteragir.ANIM_TECLADO,
 		"voltando ao teclado, o E volta")
 
-	# Sem o maçarico no cinto: ela fala, e a folha continua em pé.
+	# Sem o maçarico: ela fala, e a folha continua em pé.
 	Progresso._habilidades.erase("macarico")
 	porta.call("_tentar_derreter")
 	await _assentar()

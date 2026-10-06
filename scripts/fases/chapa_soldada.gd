@@ -10,7 +10,7 @@ extends StaticBody2D
 #
 # Chegando perto, o desenho do botão acende em cima dela — a tecla E, ou o □ de
 # controle (a cena componentes/icone_interagir.tscn, a mesma da porta de metal
-# e da samambaia). Sem o maçarico no cinto, a Cacau comenta o obstáculo numa
+# e da samambaia). Sem o maçarico equipado, a Cacau comenta o obstáculo numa
 # fala do Dialogic (com o retrato dela), SEM entregar o que abre a passagem.
 #
 # COMO EDITAR NO EDITOR:
@@ -31,8 +31,8 @@ const CENA := "res://scenes/fases/componentes/chapa_soldada.tscn"
 		rotulo = valor
 		if is_inside_tree():
 			_atualizar_rotulo()
-## Timeline do Dialogic que a Cacau fala ao apertar E sem ter o maçarico no
-## cinto. Ela constata o obstáculo e NÃO entrega a solução.
+## Timeline do Dialogic que a Cacau fala ao apertar E sem ter o maçarico.
+## Ela constata o obstáculo e NÃO entrega a solução.
 @export var fala_sem_macarico: String = "cacau_metal_bloqueado"
 
 var _jogador_perto: bool = false

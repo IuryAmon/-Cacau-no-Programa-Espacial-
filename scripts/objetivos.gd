@@ -28,8 +28,8 @@ const CENAS_SEM_OBJETIVOS: Array[String] = [
 	"res://scenes/fases/final_orbita.tscn",
 ]
 
-## A barra de vida da Cacau mora no mesmo canto: quando ela está na tela, a
-## lista desce para baixo dela.
+## A vida da Cacau mora no mesmo canto: quando ela está na tela, a lista desce
+## para baixo dela.
 const CAMINHO_BARRA_DE_VIDA := "Player/CanvasLayer/HealthHUD/HudVital"
 
 ## Quantas vezes por segundo o roteiro é consultado.
@@ -46,9 +46,9 @@ var _por_id: Dictionary = {}
 
 
 func _ready() -> void:
-	# Abaixo dos puzzles (10+), do cinto (90) e da mochila (95); acima do HUD
-	# de vida (1). A cortina das portas (FadeTela, 0) esconde esta camada como
-	# esconde o cinto.
+	# Abaixo dos puzzles (10+), dos equipamentos (90) e da mochila (95); acima
+	# do HUD de vida (1). A cortina das portas (FadeTela, 0) esconde esta camada
+	# como esconde os equipamentos.
 	layer = 4
 	process_mode = Node.PROCESS_MODE_ALWAYS
 

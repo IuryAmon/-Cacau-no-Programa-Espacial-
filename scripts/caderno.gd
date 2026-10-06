@@ -49,7 +49,7 @@ const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 const DURACAO_VOO_DA_NOTA := 0.62
 
 ## O caderno aberto fica acima de tudo do jogo: puzzles (10-15), Dialogic (20),
-## cinto (90) e mochila (95). O ícone mora na camada do autoload, a mesma da
+## equipamentos (90) e mochila (95). O ícone mora na camada do autoload, a mesma da
 ## lista de objetivos (abaixo dos puzzles).
 const CAMADA_ICONE := 4
 const CAMADA_ABERTO := 100
@@ -377,7 +377,7 @@ func _dicas() -> Array:
 	return [[["tecla_a", "tecla_d"], "FOLHEAR"], [["tecla_m"], "FECHAR"]]
 
 
-## A barra de vidro dos puzzles (a do CursorVirtual), com as dicas do caderno.
+## A barra de comandos dos puzzles (a do CursorVirtual), com as dicas do caderno.
 func _desenhar_rodape() -> void:
 	var alfa := clampf((_abertura - 0.5) * 2.0, 0.0, 1.0)
 	if alfa <= 0.0:
@@ -402,11 +402,7 @@ func _desenhar_rodape() -> void:
 	var tela := _rodape.size
 	var caixa := Rect2(Vector2((tela.x - total) * 0.5 - margem, tela.y - ALTURA_BARRA - 10.0),
 		Vector2(total + margem * 2.0, ALTURA_BARRA))
-	var corpo := EstiloHUD.chanfro(caixa, 12.0)
-	EstiloHUD.sombra(_rodape, corpo, 4.0, alfa)
-	EstiloHUD.vidro(_rodape, corpo, 0.92 * alfa)
-	EstiloHUD.moldura(_rodape, corpo, EstiloHUD.com_alfa(EstiloHUD.BORDA, alfa), 1.5)
-	_rodape.draw_line(corpo[0], corpo[1], EstiloHUD.com_alfa(EstiloHUD.FIO_LUZ, alfa), 1.5, true)
+	EstiloHUD.barra(_rodape, caixa, alfa)
 
 	var x := caixa.position.x + margem
 	var meio := caixa.get_center().y
@@ -420,7 +416,7 @@ func _desenhar_rodape() -> void:
 			x += lado + 4.0
 		if not botoes.is_empty():
 			x += respiro_icone - 4.0
-		var cor := EstiloHUD.TEXTO if not botoes.is_empty() else EstiloHUD.TEXTO_FRACO
+		var cor := EstiloHUD.CLARO if not botoes.is_empty() else EstiloHUD.TECLA_TAMPA
 		EstiloHUD.texto(_rodape, FONTE, Vector2(x, base), String(dicas[i][1]), TAM_DICA,
 			EstiloHUD.com_alfa(cor, alfa), ESPACO_DICA)
 		x = inicio + larguras[i] + respiro_itens

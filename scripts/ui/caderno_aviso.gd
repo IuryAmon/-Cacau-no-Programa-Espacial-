@@ -5,10 +5,10 @@ extends Control
 #
 # Quando a folha que a Cacau pegou chega no ícone do caderno, este aviso sobe
 # logo acima dele: a arte da folha, "NOTA ADICIONADA AO CADERNO", o título da
-# nota e as páginas em que ela foi parar. É a mesma peça de vidro do rodapé do
-# caderno e da ficha de coleta (EstiloHUD), com o fio da base na cor do papel.
+# nota e as páginas em que ela foi parar. É uma ficha de papel (EstiloHUD.ficha),
+# a mesma peça da vida, da mochila e da ficha de coleta.
 #
-#   ENTRANDO   desliza da esquerda aparecendo, e a moldura se desenha
+#   ENTRANDO   desliza da esquerda aparecendo
 #   NA TELA    segura alguns segundos para ser lido
 #   SAINDO     some deslizando de volta
 #
@@ -25,7 +25,7 @@ const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 const ARTE := preload("res://assets/itens/notas diario.png")
 
 const CHAPEU := "NOTA ADICIONADA AO CADERNO"
-## A cor do papel do caderno: o chapéu, o fio da base e o rastro da folha.
+## A cor do papel do caderno: o rastro da folha que voa até o ícone.
 const ACENTO := Color(0.96, 0.84, 0.60)
 
 # --- Medidas ---
@@ -180,13 +180,11 @@ func _draw() -> void:
 		return
 	var alfa := alfa_do_hud
 	var deslize := 0.0
-	var moldura := 1.0
 	match _estado:
 		Estado.ENTRANDO:
 			var p := clampf(_t / T_ENTRAR, 0.0, 1.0)
 			alfa *= _suave(p)
 			deslize = -DESLIZE_ENTRADA * pow(1.0 - p, 3.0)
-			moldura = p
 		Estado.SAINDO:
 			var p := clampf(_t / T_SAIR, 0.0, 1.0)
 			alfa *= 1.0 - _suave(p)
@@ -196,13 +194,7 @@ func _draw() -> void:
 
 	var parada := caixa()
 	var area := Rect2(parada.position + Vector2(roundf(deslize), 0.0), parada.size)
-	var corpo := EstiloHUD.chanfro(area, CORTE)
-	EstiloHUD.sombra(self, corpo, 4.0, alfa)
-	EstiloHUD.vidro(self, corpo, 0.92 * alfa)
-	EstiloHUD.moldura(self, corpo, EstiloHUD.com_alfa(EstiloHUD.BORDA, alfa), 1.5, moldura)
-	draw_line(corpo[0], corpo[1], EstiloHUD.com_alfa(EstiloHUD.FIO_LUZ, alfa), 1.5, true)
-	# O fio da base, na cor do papel (corpo[5] e corpo[4] são os cantos de baixo).
-	draw_line(corpo[5], corpo[4], EstiloHUD.com_alfa(ACENTO, alfa * 0.85), 2.0, true)
+	EstiloHUD.ficha(self, area, alfa)
 
 	var tamanho_arte := Vector2(ARTE.get_size()) * ESCALA_ARTE
 	var canto_arte := Vector2(area.position.x + MARGEM,
@@ -211,14 +203,14 @@ func _draw() -> void:
 
 	var x := canto_arte.x + tamanho_arte.x + RESPIRO_ARTE
 	EstiloHUD.texto(self, FONTE, Vector2(x, area.position.y + BASE_CHAPEU), CHAPEU, TAM_CHAPEU,
-		EstiloHUD.com_alfa(ACENTO, alfa), ESPACO_CHAPEU)
+		EstiloHUD.com_alfa(EstiloHUD.TINTA_FRACA, alfa), ESPACO_CHAPEU)
 	var base := Vector2(x, area.position.y + BASE_TITULO)
 	var titulo := titulo_atual()
 	draw_string(FONTE, base, titulo, HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_TITULO,
-		EstiloHUD.com_alfa(EstiloHUD.TEXTO, alfa))
+		EstiloHUD.com_alfa(EstiloHUD.TINTA, alfa))
 	draw_string(FONTE, base + Vector2(_largura_de(titulo, TAM_TITULO) + RESPIRO_PAGINAS, 0.0),
 		texto_das_paginas(), HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_PAGINAS,
-		EstiloHUD.com_alfa(EstiloHUD.TEXTO_FRACO, alfa))
+		EstiloHUD.com_alfa(EstiloHUD.TINTA_FRACA, alfa))
 
 
 func _largura_de(texto: String, tamanho: int) -> float:

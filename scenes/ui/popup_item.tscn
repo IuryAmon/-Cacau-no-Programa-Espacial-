@@ -24,4 +24,3 @@ previa_nome = "Cilindro de Oxigênio (Comburente)"
 previa_descricao = "Quando combinado ao hidrogênio, libera a força bruta que impulsiona o foguete."
 previa_id = "Cilindro_Oxigenio"
 previa_icone = SubResource("AtlasTexture_previa")
-previa_destino = "MOCHILA · SLOT 1"

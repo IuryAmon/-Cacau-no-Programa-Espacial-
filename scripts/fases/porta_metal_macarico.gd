@@ -6,13 +6,13 @@ extends StaticBody2D
 #
 # Uma folha de aço fechando a passagem. Não tem maçaneta, não tem puzzle e não
 # tem chave: a única forma de passar é DERRETER a porta, e para isso a Cacau
-# precisa já estar com o maçarico oxídrico no cinto.
+# precisa já ter o maçarico oxídrico entre os equipamentos.
 #
 # COMO SE USA NO JOGO: chegue perto e aperte E (□ no controle) — é o ÚNICO
 # lugar em que o maçarico acende, porque ele não tem botão solto. Chegando
 # perto, a porta pede o botão sozinha: o balão de "!" acende e o desenho da
 # tecla E (ou do □, de controle) aparece em cima dela — o mesmo aviso da
-# samambaia do world1. Sem o maçarico no cinto, a Cacau comenta o
+# samambaia do world1. Sem o maçarico equipado, a Cacau comenta o
 # obstáculo numa fala do Dialogic (com o retrato dela), SEM dizer o que abre a
 # porta — descobrir isso é do jogo; com ele, a personagem
 # primeiro RECUA para fora do vão (senão a folha derretendo desceria por cima
@@ -109,8 +109,8 @@ enum Estado { FRIA, DERRETENDO, ABERTA }
 @export var recuo_do_jogador: float = 26.0
 
 @export_group("Texto")
-## Timeline do Dialogic que a Cacau fala ao apertar E sem ter o maçarico no
-## cinto. Ela constata o obstáculo e NÃO entrega a solução.
+## Timeline do Dialogic que a Cacau fala ao apertar E sem ter o maçarico.
+## Ela constata o obstáculo e NÃO entrega a solução.
 @export var fala_sem_macarico: String = "cacau_metal_bloqueado"
 
 var _estado: int = Estado.FRIA

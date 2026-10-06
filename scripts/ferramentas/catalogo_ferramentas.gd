@@ -4,13 +4,13 @@ extends RefCounted
 # --- FICHA DE CADA FERRAMENTA PERMANENTE ---
 #
 # O Progresso guarda só o "tem ou não tem" de cada habilidade. Quem quiser
-# MOSTRAR a ferramenta (a ficha de coleta, o alvéolo do cinto no canto, o
+# MOSTRAR a ferramenta (a ficha de coleta, a ficha dela nos equipamentos, o
 # sprite do pickup no chão) pergunta aqui — assim o nome, a descrição, a cor
 # e a arte vivem em um lugar só.
 #
 # COMO ADICIONAR ARTE: solte o PNG em res://assets/itens/ e escreva o caminho
 # em "icone". Ferramenta sem ícone continua funcionando normalmente; ela só
-# não ganha ficha nem alvéolo (do mesmo jeito que o blockout espera a arte).
+# não aparece na tela (do mesmo jeito que o blockout espera a arte).
 
 static var FERRAMENTAS := {
 	"macarico": {
@@ -42,8 +42,8 @@ static var FERRAMENTAS := {
 		# em múltiplo inteiro, para o pixel não sair esticado.
 		"escala_mapa": 3.0,
 		"cor": Color(0.55, 0.85, 0.45),
-		# O TUTORIAL que sobe logo depois da ficha de coleta, com o ícone já no
-		# cinto (scripts/ui/tutorial_ferramenta.gd). "texto" é a ÚNICA coisa
+		# O TUTORIAL que sobe logo depois da ficha de coleta, com o ícone já nos
+		# equipamentos (scripts/ui/tutorial_ferramenta.gd). "texto" é a ÚNICA coisa
 		# escrita na ficha; "demo" é a cena da telinha animada (a Cacau
 		# arremessando e a caixa elétrica quebrando). Ferramenta sem este campo
 		# simplesmente não tem tutorial.
@@ -147,14 +147,14 @@ static func _recortar_pixels_opacos(bruta: Texture2D) -> Texture2D:
 	return recorte
 
 
-## Cor de destaque da ferramenta (anel do alvéolo, faíscas da ficha).
+## Cor de destaque da ferramenta (o aro da ficha quando ela chega, o rastro do voo).
 static func cor(habilidade: String) -> Color:
 	if not FERRAMENTAS.has(habilidade):
 		return Color(0.95, 0.75, 0.25)
 	return FERRAMENTAS[habilidade].get("cor", Color(0.95, 0.75, 0.25))
 
 
-## Tecla que USA a ferramenta, para o cinto mostrar embaixo do alvéolo. Vazia
+## Tecla que USA a ferramenta, mostrada embaixo da ficha dela. Vazia
 ## em ferramenta passiva (as botas isolantes, que não têm botão: o piso
 ## eletrificado simplesmente para de machucar).
 ##
@@ -167,9 +167,9 @@ static func tecla(habilidade: String) -> String:
 	return FERRAMENTAS[habilidade].get("tecla", "")
 
 
-## Ação do mapa de entrada que usa a ferramenta — é por ela que o cinto mostra
-## o botão do controle (□, ○, △...) no lugar da tecla quando a pessoa joga de
-## controle. Vazia em ferramenta passiva.
+## Ação do mapa de entrada que usa a ferramenta — é por ela que os equipamentos
+## mostram o botão do controle (□, ○, △...) no lugar da tecla quando a pessoa
+## joga de controle. Vazia em ferramenta passiva.
 static func acao(habilidade: String) -> String:
 	if not FERRAMENTAS.has(habilidade):
 		return ""

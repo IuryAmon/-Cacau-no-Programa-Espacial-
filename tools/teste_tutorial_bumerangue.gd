@@ -6,8 +6,8 @@ extends Node
 #
 #   * o catálogo: só o bumerangue tem tutorial, e o texto é uma frase só;
 #   * as teclas são as desenhadas da folha do teclado: o F existe ao lado do E,
-#     com os quatro quadros de apertar, e é ele que o cinto, a ficha e a
-#     telinha mostram (o □, de controle na mão);
+#     com os quatro quadros de apertar, e é ele que os equipamentos, a ficha
+#     e a telinha mostram (o □, de controle na mão);
 #   * a ficha é limpa e se mede sozinha: a telinha, a frase embaixo dela e
 #     mais nada escrito; cabe na tela e a frase não passa da largura;
 #   * a telinha vai para a ficha AMPLIADA (o dobro do tamanho do jogo), e a
@@ -19,8 +19,9 @@ extends Node
 #     quebra, ele volta para a mão, a Cacau volta para a idle, e tudo recomeça
 #     com a caixa inteira;
 #   * na fase 1, de verdade: pegar o bumerangue abre a ficha de coleta; o E
-#     fecha e sobe o tutorial, com o mundo parado; a ficha não desenha tecla de
-#     sair e fecha com qualquer tecla de ação (ESC, E, espaço, enter, shift, F,
+#     fecha e sobe o tutorial, com o mundo parado; a ficha mostra o E no canto
+#     de baixo à direita, igual ao da ficha de coleta, e fecha com ele e com
+#     qualquer outra tecla de ação (ESC, espaço, enter, shift, F,
 #     M, o clique; de controle, ✕ ○ □ △), mas não com as de andar, nem com
 #     tecla sem função, nem cedo demais; e a tecla que fecha não vira ação no
 #     mundo (o □ não arremessa, o espaço não pula, o M não abre o caderno).
@@ -198,9 +199,22 @@ func _testar_ficha() -> void:
 	_checar(fim_da_frase >= topo_frase + (linhas.size() - 1) * float(m["entrelinha"])
 		+ FONTE.get_ascent(TutorialFerramenta.TAM_TEXTO),
 		"e o fim dela conta todas as linhas")
-	# Sem tecla de sair: embaixo da frase vem só a margem da ficha.
-	_checar(not m.has("centro_tecla") and not ficha.has_method("_desenhar_tecla"),
-		"a ficha nao desenha tecla de sair")
+	# O E de continuar: preso na beirada de baixo, no canto direito, no mesmo
+	# lugar em que a ficha de coleta o mostra.
+	var tecla := ficha.centro_da_tecla()
+	_checar(is_equal_approx(tecla.y, quadro.end.y) and tecla.x > quadro_telinha.get_center().x
+		and tecla.x + EstiloHUD.LADO_TECLA_DA_FOLHA * 0.5 < quadro.end.x,
+		"o E fica na beirada de baixo da ficha, no canto direito %s" % tecla)
+	var coleta: PopupItem = (load("res://scenes/ui/popup_item.tscn") as PackedScene).instantiate()
+	add_child(coleta)
+	coleta.abrir({"id": "bumerangue", "nome": "Bumerangue", "descricao": "Vai e volta sozinho..."})
+	var quadro_coleta := coleta.retangulo_da_ficha()
+	_checar((quadro_coleta.end - coleta.centro_da_tecla(quadro_coleta)).is_equal_approx(quadro.end - tecla),
+		"igual ao da ficha de coleta: a mesma distancia do canto %s" % (quadro.end - tecla))
+	coleta.queue_free()
+	_checar(EstiloHUD.desenho_da_tecla("E", &"interact") == "tecla_e",
+		"e e o E desenhado da folha do teclado")
+	# A tecla não ocupa lugar: embaixo da frase vem só a margem da ficha.
 	_checar(is_equal_approx(quadro.end.y - fim_da_frase, TutorialFerramenta.MARGEM),
 		"ela termina logo embaixo da frase, com a mesma margem dos lados (%d px)"
 			% (quadro.end.y - fim_da_frase))
@@ -329,8 +343,8 @@ func _testar_telinha() -> void:
 		and caixa.position.x > cacau.position.x + 100.0 and alvo.x > mao.x + 80.0,
 		"a Cacau fica de um lado e a caixa do outro, com espaco para o voo")
 
-	# A tecla F do tutorial: no meio do quadradinho no eixo x, e maior que a do
-	# cinto (que tem 32 px na tela).
+	# A tecla F do tutorial: no meio do quadradinho no eixo x, e maior que a
+	# dos equipamentos (que tem 32 px na tela).
 	var tecla: Control = demo.get_node("Tecla")
 	var quadro_da_tecla := Rect2(tecla.position, tecla.size)
 	_checar(absf(quadro_da_tecla.get_center().x - demo.size.x * 0.5) < 0.5,
@@ -507,12 +521,13 @@ func _testar_na_fase() -> void:
 	await _apertar_e()
 	await _esperar_ate(FerramentasHUD.tutorial_aberto)
 	_checar(FerramentasHUD.tutorial_aberto(), "o E fecha a ficha e o tutorial sobe em seguida")
-	_checar(not Inventario.popup_aberto and FerramentasHUD.tem_no_cinto("bumerangue"),
-		"com a ficha de coleta ja fechada e o bumerangue no cinto")
-	var cinto: CintoHUD = FerramentasHUD._cinto
-	_checar(cinto._ferramentas[cinto.indice_de("bumerangue")]["tecla"] == "F"
-		and EstiloHUD.desenho_da_tecla("F", cinto._ferramentas[cinto.indice_de("bumerangue")]["acao"]) == "tecla_f",
-		"no cinto, embaixo do bumerangue, a tecla e o F desenhado")
+	_checar(not Inventario.popup_aberto and FerramentasHUD.tem_equipamento("bumerangue"),
+		"com a ficha de coleta ja fechada e o bumerangue nos equipamentos")
+	var equipamentos: EquipamentosHUD = FerramentasHUD._equipamentos
+	var equipado: Dictionary = equipamentos._equipamentos[equipamentos.indice_de("bumerangue")]
+	_checar(equipado["tecla"] == "F"
+		and EstiloHUD.desenho_da_tecla("F", equipado["acao"]) == "tecla_f",
+		"nos equipamentos, embaixo do bumerangue, a tecla e o F desenhado")
 	_checar(get_tree().paused and Interacao.ocupada(), "o mundo continua parado e o E e do tutorial")
 	_checar(not Interacao.livre_para(&"arremessar"), "com ele na tela, o F nao arremessa nada")
 	var ficha: TutorialFerramenta = FerramentasHUD._tutorial
@@ -571,9 +586,10 @@ func _testar_na_fase() -> void:
 	_checar(fechados.size() == saidas and fechados.count("bumerangue") == saidas,
 		"o FerramentasHUD avisou de cada vez que o tutorial do bumerangue fechou (%d)" % fechados.size())
 	await _esperar(3.2)
-	_checar(cinto.is_processing() and cinto._quadro_das_teclas == BotoesControle.quadro_atual(),
-		"com o jogo andando e o cinto quieto, a tecla dele continua afundando em loop")
-	await _capturar("6_jogo_com_o_cinto")
+	_checar(equipamentos.is_processing()
+		and equipamentos._quadro_das_teclas == BotoesControle.quadro_atual(),
+		"com o jogo andando e os equipamentos quietos, a tecla continua afundando em loop")
+	await _capturar("6_jogo_com_os_equipamentos")
 
 	print("  . de controle, os quatro botoes saem e o direcional nao")
 	FerramentasHUD.ensinar("bumerangue")

@@ -4,17 +4,21 @@ extends Control
 # --- A FICHA DE TUTORIAL (como se usa a ferramenta que acabou de chegar) ---
 #
 # Sobe logo depois da ficha de coleta (scripts/ui/popup_item.gd), quando o
-# ícone da ferramenta já voou para o cinto: o mundo continua parado e uma
-# ficha pequena mostra o que aquilo FAZ. É limpa de propósito — duas coisas e
-# mais nada:
+# ícone da ferramenta já voou para os equipamentos: o mundo continua parado e
+# uma folha do caderno (a mesma da ficha de coleta) mostra o que aquilo FAZ. É
+# limpa de propósito — duas coisas e mais nada:
 #
 #   a TELINHA   uma cena animada com a Cacau usando a ferramenta
-#               (a do bumerangue é scenes/ui/demo_bumerangue.tscn);
-#   a FRASE     uma só, embaixo da telinha.
+#               (a do bumerangue é scenes/ui/demo_bumerangue.tscn), colada na
+#               folha como uma foto, com moldura de tinta;
+#   a FRASE     uma só, embaixo da telinha, como a legenda da foto.
 #
-# Nada de título, etiqueta, rodapé escrito nem tecla de sair desenhada: quem
-# conta a história é a telinha, e a frase só diz para que serve. A ficha sai
-# com qualquer tecla de ação (ver "QUEM FECHA A FICHA" no FerramentasHUD).
+# Nada de título, etiqueta nem rodapé escrito: quem conta a história é a
+# telinha, e a frase só diz para que serve. No canto de baixo, à direita, vai
+# o E preso na beirada da folha, IGUAL ao da ficha de coleta
+# (EstiloHUD.tecla_da_folha): a pessoa já viu a tecla ali um instante antes.
+# A ficha sai com ele e com qualquer outra tecla de ação (ver "QUEM FECHA A
+# FICHA" no FerramentasHUD).
 #
 # A frase e a cena da telinha de cada ferramenta ficam no campo "tutorial" do
 # CatalogoFerramentas. A ficha se mede sozinha: a largura vem da telinha e a
@@ -32,7 +36,6 @@ signal fechado
 
 # --- Medidas (espaço de projeto, em pixels de tela) ---
 const MARGEM := 32.0
-const CORTE := 26.0
 ## Largura do texto quando a ferramenta não tem telinha.
 const LARGURA_SEM_TELINHA := 360.0
 ## Vão entre a telinha e a frase.
@@ -42,8 +45,8 @@ const TAM_TEXTO := 26
 const ENTRELINHA := 1.45
 
 # --- Tempos ---
-## Respiro antes de a ficha subir: é o tempo de o alvéolo novo estourar no
-## cinto, à vista, antes de a tela escurecer de novo.
+## Respiro antes de a ficha subir: é o tempo de a ficha do equipamento brotar
+## no canto, à vista, antes de a tela escurecer de novo.
 const ATRASO := 0.35
 const DURACAO_ENTRADA := 0.45
 const DURACAO_SAIDA := 0.24
@@ -148,6 +151,12 @@ func linhas_do_texto() -> PackedStringArray:
 ## Largura em que a frase tem de caber (a da telinha).
 func largura_do_texto() -> float:
 	return _medidas()["largura_texto"]
+
+
+## O centro da tecla de continuar: na beirada de baixo da ficha, no canto
+## direito, como na ficha de coleta.
+func centro_da_tecla() -> Vector2:
+	return EstiloHUD.centro_da_tecla_da_folha(retangulo_da_ficha())
 
 
 # ─────────────────────────────────────────────────────────────
@@ -309,11 +318,9 @@ func _draw() -> void:
 		return
 
 	var m := _medidas()
-	var acento: Color = _ficha["cor"]
 	var alfa := _alfa_da_ficha()
 
-	# O véu só apaga o cenário, sem auréola: a ficha é pequena e a telinha já
-	# é o ponto de luz dela.
+	# O véu só apaga o cenário.
 	var alfa_veu := clampf(_entrada * 2.2, 0.0, 1.0) * (1.0 - _suave(_saida))
 	if alfa_veu > 0.003:
 		draw_rect(Rect2(Vector2.ZERO, size), EstiloHUD.com_alfa(EstiloHUD.VEU, alfa_veu))
@@ -321,29 +328,25 @@ func _draw() -> void:
 		return
 
 	draw_set_transform_matrix(_transformacao(m))
-	_desenhar_ficha(m, acento, alfa)
+	_desenhar_ficha(m, alfa)
 	draw_set_transform_matrix(Transform2D.IDENTITY)
 
 
-func _desenhar_ficha(m: Dictionary, acento: Color, alfa: float) -> void:
+func _desenhar_ficha(m: Dictionary, alfa: float) -> void:
 	var caixa: Rect2 = m["caixa"]
-	var corpo := EstiloHUD.chanfro(caixa, CORTE)
+	EstiloHUD.ficha(self, caixa, alfa, EstiloHUD.PAPEL, EstiloHUD.TINTA, EstiloHUD.MOLDURA, 8.0)
 
-	EstiloHUD.sombra(self, corpo, 7.0, alfa)
-	EstiloHUD.vidro(self, corpo, alfa)
-	EstiloHUD.moldura(self, corpo, EstiloHUD.com_alfa(EstiloHUD.BORDA, alfa), 1.5,
-		_etapa(0.06, 0.5))
-	draw_line(corpo[0], corpo[1], EstiloHUD.com_alfa(EstiloHUD.FIO_LUZ, alfa * _etapa(0.2, 0.5)),
-		1.5, true)
-
-	# Um fio só em volta da telinha, na cor da ferramenta (a cena em si é um nó
-	# filho, desenhado por cima).
+	# A moldura de tinta da telinha (a cena em si é um nó filho, desenhado por
+	# cima): é a foto colada na folha.
 	if _telinha != null:
 		var canto: Vector2 = m["canto_telinha"]
-		draw_rect(Rect2(canto, _tamanho_da_telinha()).grow(2.0),
-			EstiloHUD.com_alfa(acento, alfa * 0.8 * _etapa(0.2, 0.6)), false, 2.0)
+		draw_rect(Rect2(canto, _tamanho_da_telinha()).grow(EstiloHUD.MOLDURA),
+			EstiloHUD.com_alfa(EstiloHUD.TINTA, alfa))
 
 	_desenhar_frase(m, alfa)
+	# O E de continuar, no mesmo canto da ficha de coleta. Chega por último,
+	# quando a ficha já pode ser fechada.
+	EstiloHUD.tecla_da_folha(self, _fonte(), caixa, alfa * _etapa(0.7, ENTRADA_PARA_FECHAR))
 
 
 ## A frase, centrada embaixo da telinha, linha por linha.
@@ -361,8 +364,9 @@ func _desenhar_frase(m: Dictionary, alfa: float) -> void:
 	for i in linhas.size():
 		var largura := f.get_string_size(linhas[i], HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_TEXTO).x
 		var x := roundf(caixa.get_center().x - largura * 0.5)
-		draw_string(f, Vector2(x, topo + f.get_ascent(TAM_TEXTO) + i * entrelinha), linhas[i],
-			HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_TEXTO, EstiloHUD.com_alfa(EstiloHUD.TEXTO, a_frase))
+		draw_string(f, Vector2(x, roundf(topo + f.get_ascent(TAM_TEXTO) + i * entrelinha)),
+			linhas[i], HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_TEXTO,
+			EstiloHUD.com_alfa(EstiloHUD.TINTA, a_frase))
 
 
 # ─────────────────────────────────────────────────────────────

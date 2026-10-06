@@ -273,7 +273,7 @@ func _disparar(particulas: CPUParticles2D) -> void:
 
 # --- A tecla no canto -----------------------------------------------------------
 
-## A mesma tecla desenhada do cinto (o F da folha do teclado) — ou, de controle
+## A mesma tecla desenhada dos equipamentos (o F da folha do teclado) — ou, de controle
 ## na mão, o botão da ação — do tamanho do nó Tecla. Aqui ela não afunda em
 ## loop: afunda UMA vez, no instante em que a Cacau arremessa. É o que liga
 ## "apertei isto" a "ela fez aquilo".
@@ -287,8 +287,7 @@ func _desenhar_tecla() -> void:
 	if desde >= 0.0 and desde < 0.45:
 		var onda := desde / 0.45
 		var anel := Rect2(centro - Vector2(lado, lado) * 0.5, Vector2(lado, lado)).grow(1.0 + onda * 11.0)
-		EstiloHUD.moldura(_tecla, EstiloHUD.chanfro(anel, 7.0 + onda * 4.0, 3.0 + onda * 4.0),
-			EstiloHUD.com_alfa(COR_TECLA, (1.0 - onda) * 0.9), 2.0)
+		EstiloHUD.aro(_tecla, anel, EstiloHUD.com_alfa(COR_TECLA, (1.0 - onda) * 0.9), 2.0)
 
 	var texto := BotoesControle.tecla_da_acao(ACAO)
 	var desenho := EstiloHUD.desenho_da_tecla(texto, ACAO)
@@ -308,6 +307,5 @@ func _desenhar_tecla() -> void:
 	var largura := EstiloHUD.tecla(_tecla, FONTE, centro, texto, cor, 1.0, tamanho)
 	if funda:
 		var tampa := Vector2(largura, lado)
-		_tecla.draw_colored_polygon(
-			EstiloHUD.chanfro(Rect2(centro - tampa * 0.5, tampa), 7.0, 3.0),
+		EstiloHUD.bloco(_tecla, Rect2(centro - tampa * 0.5, tampa),
 			EstiloHUD.com_alfa(COR_TECLA, 0.30))

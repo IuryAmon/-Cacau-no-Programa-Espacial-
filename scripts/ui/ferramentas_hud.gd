@@ -2,22 +2,24 @@ extends CanvasLayer
 
 # --- AUTOLOAD "FerramentasHUD" ---
 #
-# O cinto de ferramentas na tela. Três responsabilidades:
+# Os equipamentos da Cacau na tela. Três responsabilidades:
 #
 #   1. APRESENTAR a ferramenta quando ela é conquistada, com o mesmo ritual
 #      dos cilindros de H₂ e O₂: a ficha de coleta no centro, o mundo pausado,
-#      [E] para fechar, e o ícone voando do medalhão até o canto. A diferença é
-#      que ferramenta não ocupa alvéolo da mochila — ela vira habilidade
-#      permanente no Progresso e mora no cinto.
-#   2. GUARDAR o cinto no canto inferior direito (scripts/ui/cinto_hud.gd),
-#      para a personagem sempre saber o que carrega e com que tecla usa.
+#      [E] para fechar, e o ícone voando da ficha até o canto. A diferença é
+#      que ferramenta não ocupa casa da mochila — ela vira habilidade
+#      permanente no Progresso e mora nos equipamentos.
+#   2. GUARDAR os equipamentos no canto inferior direito
+#      (scripts/ui/equipamentos_hud.gd), para a personagem sempre saber o que
+#      tem e com que tecla usa.
 #   3. ENSINAR a ferramenta que tem tutorial no catálogo (hoje, o bumerangue):
-#      assim que a ficha de coleta fecha e o ícone chega no cinto, sobe a ficha
+#      assim que a ficha de coleta fecha e o ícone chega no canto, sobe a ficha
 #      de tutorial (scripts/ui/tutorial_ferramenta.gd): uma telinha animada e
 #      uma frase. O mundo continua parado até uma tecla de ação qualquer.
 #
-# É autoload porque habilidade atravessa fase: o cinto precisa continuar na
-# tela depois de uma troca de cena ou de uma morte, sem ninguém remontar.
+# É autoload porque habilidade atravessa fase: os equipamentos precisam
+# continuar na tela depois de uma troca de cena ou de uma morte, sem ninguém
+# remontar.
 # Quem quiser destacar uma ferramenta em uso chama FerramentasHUD.destacar().
 
 ## A pessoa leu o tutorial da ferramenta e fechou a ficha.
@@ -33,7 +35,7 @@ const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 ## tela inteira, como o da ficha de coleta.
 const CAMADA_TUTORIAL := 96
 
-var _cinto: CintoHUD = null
+var _equipamentos: EquipamentosHUD = null
 var _tutorial: TutorialFerramenta = null
 var _habilidade_no_tutorial: String = ""
 var _fechando_tutorial: bool = false
@@ -49,10 +51,10 @@ func _ready() -> void:
 	raiz.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(raiz)
 
-	_cinto = CintoHUD.new()
-	_cinto.name = "Cinto"
-	_cinto.fonte = FONTE
-	raiz.add_child(_cinto)
+	_equipamentos = EquipamentosHUD.new()
+	_equipamentos.name = "Equipamentos"
+	_equipamentos.fonte = FONTE
+	raiz.add_child(_equipamentos)
 
 	var camada := CanvasLayer.new()
 	camada.name = "CamadaTutorial"
@@ -64,15 +66,15 @@ func _ready() -> void:
 	camada.add_child(_tutorial)
 
 	Progresso.habilidade_conquistada.connect(_on_habilidade_conquistada)
-	# Trocou de teclado para controle (ou o contrário): as tampas embaixo das
-	# ferramentas trocam a tecla pelo botão.
-	Controle.mudou.connect(func(_em_uso: bool) -> void: _cinto.queue_redraw())
+	# Trocou de teclado para controle (ou o contrário): as teclas embaixo dos
+	# equipamentos viram o botão.
+	Controle.mudou.connect(func(_em_uso: bool) -> void: _equipamentos.queue_redraw())
 
 	# Rede de segurança: se por algum caminho a personagem já tiver ferramenta
-	# antes deste nó existir, o cinto nasce pronto, sem apresentação.
+	# antes deste nó existir, a ficha dela nasce pronta, sem apresentação.
 	for habilidade in Progresso.HABILIDADES:
 		if Progresso.tem_habilidade(habilidade):
-			_pendurar(habilidade, false)
+			_equipar(habilidade, false)
 
 
 # --- APRESENTAÇÃO DA FERRAMENTA NOVA ---
@@ -93,18 +95,18 @@ func _apresentar(habilidade: String, ficha: Dictionary) -> void:
 
 	var hud = Inventario.tela_hud_referencia
 	if hud != null and is_instance_valid(hud) and hud.has_method("exibir_popup"):
-		# O alvéolo só nasce depois que a pessoa lê e fecha a ficha — e o
-		# "popup_fechado" só sai quando o ícone termina o voo até aqui, então
-		# o alvéolo estoura no frame em que o desenho chega no canto.
+		# A ficha do equipamento só nasce depois que a pessoa lê e fecha a de
+		# coleta — e o "popup_fechado" só sai quando o ícone termina o voo até
+		# aqui, então ela brota no frame em que o desenho chega no canto.
 		var ao_fechar := func(_id: String) -> void:
-			_pendurar(habilidade, true)
-			# Com a ferramenta já no cinto, a explicação de como se usa.
+			_equipar(habilidade, true)
+			# Com a ferramenta já equipada, a explicação de como se usa.
 			ensinar(habilidade)
 		hud.popup_fechado.connect(ao_fechar, CONNECT_ONE_SHOT)
 		hud.exibir_popup(ficha["nome"], ficha["textura"], ficha["descricao"],
 			habilidade, false)
 	else:
-		_pendurar(habilidade, true)
+		_equipar(habilidade, true)
 
 
 # --- O TUTORIAL DA FERRAMENTA ---
@@ -145,9 +147,10 @@ func tutorial_aberto() -> bool:
 
 # QUEM FECHA A FICHA
 #   Qualquer tecla de AÇÃO do jogo: espaço, enter, ESC, shift, F, E... e, no
-#   controle, ✕ ○ □ △. A ficha não desenha tecla nenhuma: a pessoa aperta o
-#   que tiver na mão. Só as teclas de ANDAR não fecham (WASD, setas,
-#   direcional e analógico), nem tecla que não faz nada no jogo.
+#   controle, ✕ ○ □ △. A ficha mostra o E no canto (o □, de controle), como
+#   a ficha de coleta, mas a pessoa pode apertar o que tiver na mão. Só as
+#   teclas de ANDAR não fecham (WASD, setas, direcional e analógico), nem
+#   tecla que não faz nada no jogo.
 # Nenhuma fecha com a ficha ainda subindo.
 
 func _input(evento: InputEvent) -> void:
@@ -171,38 +174,42 @@ func _e_tecla_de_acao(evento: InputEvent) -> bool:
 	return false
 
 
-# --- O CINTO ---
+# --- OS EQUIPAMENTOS ---
 
-func _pendurar(habilidade: String, anunciar: bool) -> void:
-	if _cinto == null or not is_instance_valid(_cinto):
+func _equipar(habilidade: String, anunciar: bool) -> void:
+	if _equipamentos == null or not is_instance_valid(_equipamentos):
 		return
 	var ficha := CatalogoFerramentas.dados(habilidade)
 	if ficha.is_empty():
 		return
 	ficha["tecla"] = CatalogoFerramentas.tecla(habilidade)
 	ficha["acao"] = CatalogoFerramentas.acao(habilidade)
-	_cinto.pendurar(ficha, anunciar)
+	_equipamentos.equipar(ficha, anunciar)
 
 
-## Onde o próximo alvéolo do cinto vai nascer, em coordenadas de tela.
+## Onde a ficha do próximo equipamento vai nascer, em coordenadas de tela.
 ##
 ## A ficha de coleta usa isto como destino do voo do ícone: quando a
-## ferramenta é apresentada, o desenho sai do medalhão no centro da tela e cai
-## exatamente aqui, no instante em que o alvéolo estoura.
+## ferramenta é apresentada, o desenho sai do centro da tela e cai exatamente
+## aqui, no instante em que a ficha dela brota.
 func ponto_de_entrada() -> Vector2:
-	if _cinto == null or not is_instance_valid(_cinto):
+	if _equipamentos == null or not is_instance_valid(_equipamentos):
 		return Vector2.ZERO
-	return _cinto.ponto_de_entrada()
+	return _equipamentos.ponto_de_entrada()
 
 
-## Pulsa a ferramenta que acabou de ser usada no mundo (corte de chapa,
-## acender a retorta) e acende o nome dela no cabeçalho do cinto. Silencioso
-## se a ferramenta não estiver no cinto.
+## Tamanho do desenho dentro da ficha do equipamento (é onde o voo termina).
+func caixa_do_icone() -> float:
+	return EquipamentosHUD.CAIXA_ICONE
+
+
+## Faz a ficha do equipamento que acabou de ser usado no mundo dar um pulinho
+## (corte de chapa, acender a retorta). Silencioso se ela ainda não o tiver.
 func destacar(habilidade: String) -> void:
-	if _cinto != null and is_instance_valid(_cinto):
-		_cinto.destacar(habilidade)
+	if _equipamentos != null and is_instance_valid(_equipamentos):
+		_equipamentos.destacar(habilidade)
 
 
-## True se a ferramenta já tem alvéolo na tela.
-func tem_no_cinto(habilidade: String) -> bool:
-	return _cinto != null and is_instance_valid(_cinto) and _cinto.tem(habilidade)
+## True se a ferramenta já tem ficha na tela.
+func tem_equipamento(habilidade: String) -> bool:
+	return _equipamentos != null and is_instance_valid(_equipamentos) 		and _equipamentos.tem(habilidade)

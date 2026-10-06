@@ -2,84 +2,72 @@
 class_name PopupItem
 extends Control
 
-# --- A FICHA DE AQUISIÇÃO (popup de coleta) ---
+# --- A FICHA DE COLETA ---
 #
-# O que aparece quando a Cacau pega alguma coisa: o mundo escurece, uma ficha
-# de equipamento monta-se no centro da tela com o desenho do item, o nome, a
-# categoria e o que aquilo é; o rodapé diz PARA ONDE o item foi e como
-# continuar. No [E], o ícone se desprende do medalhão e VOA até o slot da
-# mochila — quem fecha o popup vê o item chegar no canto, e não some no ar
-# para reaparecer do nada.
+# O que aparece quando a Cacau pega alguma coisa: o mundo escurece e uma folha
+# do caderno sobe no centro da tela com TRÊS coisas, e só elas:
 #
-# Três decisões que valem ser ditas, porque foram elas que sumiram com os
-# problemas da versão anterior:
+#   o DESENHO do item, numa casa de tinta;
+#   o NOME, grande;
+#   o que aquilo É (a descrição que está escrita na cena ou no catálogo).
 #
-#   1. TUDO É DESENHADO (_draw), como no hud_vital.gd e no cinto_hud.gd.
-#      Nada de PanelContainer com tema padrão do Godot, nada de partícula com
-#      gradiente tingido em tempo de execução. A ficha é nítida em qualquer
-#      resolução e a paleta vem inteira do EstiloHUD.
+# A tecla de continuar fica presa na beirada de baixo da folha (a tecla
+# desenhada, afundando; de controle na mão, o botão). No toque, o desenho sai
+# da casa e VOA até onde o item vai ficar — a mochila, no canto de cima, ou os
+# equipamentos, no de baixo. É o voo que diz para onde a coisa foi: a ficha não
+# escreve "ferramenta adquirida", "item coletado" nem o destino.
 #
-#   2. O LAYOUT SE MEDE SOZINHO. A caixa nasce do texto que recebeu: o título
-#      encolhe até caber, a descrição quebra em linhas e a altura da ficha vem
-#      da soma. Antes o enquadramento era ajustado no olho, no editor, com
-#      offsets fixos — e qualquer nome mais comprido escrito numa cena o
-#      desmanchava (havia até teste cobrando que o texto do catálogo fosse
-#      igual, letra por letra, ao texto da cena; não é mais preciso).
+# A única outra linha possível é a ETIQUETA, miúda, embaixo do nome: é o que
+# vem entre parênteses no nome do item ("Cilindro de Oxigênio (Comburente)").
+# "(Ferramenta)" não vira etiqueta.
 #
-#   3. O NOME É SEPARADO DA CATEGORIA. "Cilindro de Oxigênio (Comburente)"
-#      vira título grande + etiqueta pequena. Ver EstiloHUD.separar_nome().
-#
-# Como ajustar: as constantes abaixo são o "guia de estilo" da ficha (largura,
-# respiros, tamanhos de fonte, tempos). Mexer em uma delas muda a peça inteira
-# de forma coerente — não existe mais posição solta para desalinhar.
+# Tudo é desenhado (_draw) com as peças do EstiloHUD, e O LAYOUT SE MEDE
+# SOZINHO: o nome cai para a letra menor (e quebra em linhas) se não couber, a
+# descrição quebra em linhas, a altura da folha vem da soma e a largura
+# encolhe até o texto (uma ficha de uma frase curta não vira uma faixa
+# atravessando a tela). Qualquer texto escrito numa cena cabe sem ajuste no
+# editor.
 
 ## Emitido quando o desenho de saída termina e a ficha já saiu da tela.
 signal fechado
 
-# --- Medidas da ficha (espaço de projeto, em pixels de tela) ---
+# --- Medidas da ficha (em pixels de tela) ---
+## A largura vai do texto que a ficha tem: nunca passa da máxima, nunca fica
+## abaixo da mínima.
 const LARGURA := 720.0
-const MARGEM := 32.0
-## Corte fundo do chanfro (canto superior-esquerdo e inferior-direito).
-const CORTE := 26.0
-const RAIO_MEDALHAO := 66.0
-const CAIXA_ICONE := 82.0
-const ALTURA_RODAPE := 54.0
+const LARGURA_MINIMA := 440.0
+const MARGEM := 28.0
+## A casa do desenho do item, e a caixa em que ele é encaixado dentro dela.
+const LADO_CASA := 112.0
+const CAIXA_ICONE := 80.0
 ## Onde a coluna de texto começa, contada da borda esquerda da ficha.
-const COLUNA_TEXTO := 200.0
+const COLUNA_TEXTO := MARGEM + LADO_CASA + 24.0
 
-# --- Tipografia ---
-const TAM_CHAPEU := 13
-const ESPACO_CHAPEU := 3.4
-const TAM_ETIQUETA := 12
-const ESPACO_ETIQUETA := 2.6
-const TAM_TITULO_MAX := 34
-const TAM_TITULO_MIN := 20
-const ESPACO_TITULO := 1.8
-const TAM_DESCRICAO := 18
-const ENTRELINHA := 1.52
-const TAM_RODAPE := 12
-const ESPACO_RODAPE := 2.8
-const LARGURA_REGUA := 116.0
+# --- Tipografia (a fonte do jogo nos tamanhos inteiros dela: 11, 22, 33) ---
+## O nome tenta o tamanho grande; se não couber numa linha, cai para o menor
+## (e aí quebra em quantas linhas precisar).
+const TAM_TITULO := 33
+const TAM_TITULO_MENOR := 22
+const TAM_ETIQUETA := 11
+const TAM_DESCRICAO := 22
+const ENTRELINHA := 1.36
+## Entre o nome (com a etiqueta) e a descrição.
+const ESPACO_DESCRICAO := 12.0
 
 # --- Tempos ---
-const DURACAO_ENTRADA := 0.55
-const DURACAO_SAIDA := 0.24
-## O véu demora mais que a ficha para apagar: o ícone ainda está voando para a
-## mochila, e é bom que ele voe sobre a tela escura. Casado com o tempo do voo
+const DURACAO_ENTRADA := 0.3
+const DURACAO_SAIDA := 0.2
+## O véu demora mais que a ficha para apagar: o ícone ainda está voando, e é
+## bom que ele voe sobre a tela escura. Casado com o tempo do voo
 ## (InventarioHud.DURACAO_VOO) para o mundo reacender no encaixe.
 const DURACAO_SAIDA_VEU := 0.60
-
-# --- Faíscas ---
-const ORBITANTES := 9
-const ASCENDENTES := 11
 
 @export var fonte: Font:
 	set(valor):
 		fonte = valor
 		_invalidar()
 
-## Fonte do parágrafo. Vazia = usa a mesma do título; existe para o dia em que
-## alguém quiser uma face mais leve no corpo de texto sem tocar em código.
+## Fonte do parágrafo. Vazia = usa a mesma do título.
 @export var fonte_texto: Font:
 	set(valor):
 		fonte_texto = valor
@@ -116,22 +104,19 @@ const ASCENDENTES := 11
 	set(valor):
 		previa_icone = valor
 		_invalidar()
-@export var previa_destino: String = "MOCHILA · SLOT 1":
-	set(valor):
-		previa_destino = valor
-		_invalidar()
 
 # --- Estado ---
 var _ficha: Dictionary = {}
 var _entrada: float = 0.0
 var _saida: float = 0.0
 var _veu_saida: float = 0.0
-var _tempo: float = 0.0
 var _aberto: bool = false
-## O ícone sai do medalhão quando alça voo para a mochila.
+## O ícone sai da casa quando alça voo.
 var _icone_solto: bool = false
 var _clarao_solta: float = 0.0
 var _layout: Dictionary = {}
+## Quadro da tecla no último desenho (ela afunda em loop).
+var _quadro_da_tecla: int = -1
 
 
 func _ready() -> void:
@@ -142,10 +127,9 @@ func _ready() -> void:
 	resized.connect(_invalidar)
 
 	if Engine.is_editor_hint():
-		# No editor a ficha é prévia parada — dá para ver e ajustar sem gastar
-		# CPU animando dentro da janela do editor. Com "previa_visivel"
-		# desligada (o padrão), a ficha fica vazia e o _draw devolve na
-		# primeira linha: é o que mantém o workspace das fases limpo.
+		# No editor a ficha é prévia parada. Com "previa_visivel" desligada (o
+		# padrão), ela fica vazia e o _draw devolve na primeira linha: é o que
+		# mantém o workspace das fases limpo.
 		#
 		# E ESCONDIDA, não só vazia: este Control ocupa a tela inteira, e no
 		# editor das fases a HUD do Player é desenhada em cima do começo do
@@ -155,7 +139,6 @@ func _ready() -> void:
 		_ficha = _ficha_de_previa() if previa_visivel else {}
 		visible = previa_visivel
 		_entrada = 1.0
-		_tempo = 0.7
 		set_process(false)
 		queue_redraw()
 		return
@@ -168,14 +151,12 @@ func _ready() -> void:
 # API
 # ─────────────────────────────────────────────────────────────
 
-## Abre a ficha. "dados" traz nome, descricao, icone, id e destino (o texto do
-## rodapé, que diz para onde o item foi).
+## Abre a ficha. "dados" traz nome, descricao, icone e id.
 func abrir(dados: Dictionary) -> void:
 	_ficha = _normalizar(dados)
 	_entrada = 0.0
 	_saida = 0.0
 	_veu_saida = 0.0
-	_tempo = 0.0
 	_icone_solto = false
 	_clarao_solta = 0.0
 	_aberto = true
@@ -185,7 +166,7 @@ func abrir(dados: Dictionary) -> void:
 
 
 ## Fecha a ficha. Não espera nada: quem chamou continua a coreografia (o voo do
-## ícone) enquanto a caixa apaga, e ouve o sinal "fechado" no fim.
+## ícone) enquanto a folha apaga, e ouve o sinal "fechado" no fim.
 func fechar() -> void:
 	if not _aberto:
 		return
@@ -195,17 +176,17 @@ func fechar() -> void:
 	set_process(true)
 
 
-## Onde o ícone está, em coordenadas de tela — é daqui que ele parte quando
-## voa para a mochila ou para o cinto.
-func centro_do_medalhao() -> Vector2:
+## Onde o desenho do item está, em coordenadas de tela — é daqui que ele parte
+## quando voa para a mochila ou para os equipamentos.
+func centro_do_icone() -> Vector2:
 	var m := _medidas()
 	var origem: Vector2 = m["origem"]
-	var centro: Vector2 = m["centro_medalhao"]
-	return get_global_transform() * (origem + centro)
+	var casa: Rect2 = m["casa"]
+	return get_global_transform() * (origem + casa.get_center())
 
 
 ## Tamanho aparente do ícone na ficha, para o voo começar exatamente do
-## tamanho que a pessoa está vendo e ir diminuindo até o do slot.
+## tamanho que a pessoa está vendo e ir diminuindo até o da casa de destino.
 func caixa_do_icone() -> float:
 	return CAIXA_ICONE
 
@@ -215,12 +196,23 @@ func caixa_do_icone() -> float:
 func retangulo_da_ficha() -> Rect2:
 	var m := _medidas()
 	var origem: Vector2 = m["origem"]
-	var altura: float = m["altura"]
-	return Rect2(origem, Vector2(LARGURA, altura))
+	var caixa: Rect2 = m["caixa"]
+	return Rect2(origem, caixa.size)
 
 
-## O ícone saiu do medalhão (virou o voo). Deixa um clarão no lugar, para a
-## saída não parecer que o desenho simplesmente sumiu.
+## O que a ficha escreve, de cima para baixo: as linhas do nome, a etiqueta (se
+## houver) e as linhas da descrição. Não há mais nada escrito nela.
+func textos() -> PackedStringArray:
+	var m := _medidas()
+	var lista := PackedStringArray(m["linhas_titulo"])
+	if not String(_ficha.get("etiqueta", "")).is_empty():
+		lista.append(String(_ficha["etiqueta"]))
+	lista.append_array(m["linhas"])
+	return lista
+
+
+## O ícone saiu da casa (virou o voo). Deixa um clarão no lugar, para a saída
+## não parecer que o desenho simplesmente sumiu.
 func soltar_icone() -> void:
 	_icone_solto = true
 	_clarao_solta = 1.0
@@ -236,34 +228,41 @@ func esta_aberto() -> bool:
 # ─────────────────────────────────────────────────────────────
 
 func _process(delta: float) -> void:
-	_tempo += delta
+	var mudou := false
 
 	if _aberto:
-		_entrada = minf(_entrada + delta / DURACAO_ENTRADA, 1.0)
+		if _entrada < 1.0:
+			_entrada = minf(_entrada + delta / DURACAO_ENTRADA, 1.0)
+			mudou = true
 	else:
 		_saida = minf(_saida + delta / DURACAO_SAIDA, 1.0)
 		_veu_saida = minf(_veu_saida + delta / DURACAO_SAIDA_VEU, 1.0)
+		mudou = true
 		if _veu_saida >= 1.0:
 			visible = false
 			set_process(false)
 			fechado.emit()
 
-	_clarao_solta = maxf(_clarao_solta - delta * 2.6, 0.0)
-	queue_redraw()
+	if _clarao_solta > 0.0:
+		_clarao_solta = maxf(_clarao_solta - delta * 3.0, 0.0)
+		mudou = true
+
+	# Parada, a ficha só muda quando a tecla troca de quadro.
+	var quadro := BotoesControle.quadro_atual()
+	if mudou or quadro != _quadro_da_tecla:
+		_quadro_da_tecla = quadro
+		queue_redraw()
 
 
-## Curva de entrada: sai rápido e freia — sem "back", sem "bounce". A caixa é
-## um aparelho ligando, não um brinquedo pulando.
 func _suave(t: float) -> float:
 	var u := clampf(t, 0.0, 1.0)
 	return 1.0 - pow(1.0 - u, 3.0)
 
 
-## Fatia da entrada: 0 antes de "inicio", 1 depois de "fim". É com isto que os
-## elementos entram em ordem (chapéu, título, régua, linhas do parágrafo) em
-## vez de aparecerem todos juntos.
-func _etapa(inicio: float, fim: float) -> float:
-	return _suave(clampf((_entrada - inicio) / maxf(fim - inicio, 0.001), 0.0, 1.0))
+## 0 -> 1 passando um pouco de 1 no caminho: a folha é posta na mesa.
+func _passar_e_voltar(t: float) -> float:
+	var u := clampf(t, 0.0, 1.0) - 1.0
+	return 1.0 + 2.2 * u * u * u + 1.2 * u * u
 
 
 # ─────────────────────────────────────────────────────────────
@@ -283,44 +282,67 @@ func _medidas() -> Dictionary:
 	var ft := _fonte_texto()
 	var largura_texto := LARGURA - COLUNA_TEXTO - MARGEM
 
+	# O nome: grande se couber numa linha; senão a letra menor, quebrando.
 	var titulo: String = String(_ficha.get("titulo", "")).to_upper()
-	var tam_titulo := EstiloHUD.tamanho_que_cabe(f, titulo, largura_texto, ESPACO_TITULO,
-		TAM_TITULO_MAX, TAM_TITULO_MIN)
+	var tam_titulo := TAM_TITULO
+	var linhas_titulo := PackedStringArray([titulo])
+	if f != null and f.get_string_size(titulo, HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_TITULO).x \
+			> largura_texto:
+		tam_titulo = TAM_TITULO_MENOR
+		linhas_titulo = EstiloHUD.quebrar(f, titulo, TAM_TITULO_MENOR, largura_texto)
+	var passo_titulo := float(tam_titulo) + 4.0
+	var altura_titulo := linhas_titulo.size() * passo_titulo
+
+	var tem_etiqueta := not String(_ficha.get("etiqueta", "")).is_empty()
+	var altura_etiqueta := float(TAM_ETIQUETA) + 8.0 if tem_etiqueta else 0.0
+
 	var linhas := EstiloHUD.quebrar(ft, String(_ficha.get("descricao", "")),
 		TAM_DESCRICAO, largura_texto)
 	var entrelinha := TAM_DESCRICAO * ENTRELINHA
+	var altura_desc := 0.0
+	if not linhas.is_empty():
+		altura_desc = ESPACO_DESCRICAO + (linhas.size() - 1) * entrelinha + float(TAM_DESCRICAO)
 
-	# Altura da coluna de texto, bloco a bloco.
-	var altura_chapeu := float(TAM_CHAPEU) + 16.0
-	var altura_titulo := float(tam_titulo) + 14.0
-	var altura_regua := 24.0
-	var altura_desc := linhas.size() * entrelinha
-	var altura_texto := altura_chapeu + altura_titulo + altura_regua + altura_desc
+	var altura_texto := altura_titulo + altura_etiqueta + altura_desc
+	var altura := maxf(altura_texto, LADO_CASA) + MARGEM * 2.0
 
-	var altura_medalhao := RAIO_MEDALHAO * 1.7320508
-	var altura_conteudo := maxf(altura_texto, altura_medalhao) + MARGEM * 2.0
-	var altura := altura_conteudo + ALTURA_RODAPE
+	# A largura: a da linha mais comprida que a ficha escreve.
+	var mais_larga := 0.0
+	if f != null:
+		for linha in linhas_titulo:
+			mais_larga = maxf(mais_larga,
+				f.get_string_size(linha, HORIZONTAL_ALIGNMENT_LEFT, -1, tam_titulo).x)
+		mais_larga = maxf(mais_larga, f.get_string_size(String(_ficha.get("etiqueta", "")),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_ETIQUETA).x)
+	if ft != null:
+		for linha in linhas:
+			mais_larga = maxf(mais_larga,
+				ft.get_string_size(linha, HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_DESCRICAO).x)
+	# Em número par, para a ficha centrada cair em pixel inteiro.
+	var largura := clampf(ceilf((COLUNA_TEXTO + mais_larga + MARGEM) * 0.5) * 2.0,
+		LARGURA_MINIMA, LARGURA)
 
-	# A ficha fica um pouco acima do meio da tela: é onde o olho já está, e
-	# sobra caminho para o ícone subir até a mochila no canto de cima.
+	# A ficha fica um pouco acima do meio da tela: é onde o olho já está.
 	var origem := Vector2(
-		roundf((size.x - LARGURA) * 0.5),
+		roundf((size.x - largura) * 0.5),
 		roundf(size.y * 0.46 - altura * 0.5))
 
 	_layout = {
 		"origem": origem,
 		"altura": altura,
-		"caixa": Rect2(Vector2.ZERO, Vector2(LARGURA, altura)),
-		"centro_medalhao": Vector2(MARGEM + RAIO_MEDALHAO, altura_conteudo * 0.5),
-		"topo_texto": (altura_conteudo - altura_texto) * 0.5,
+		"caixa": Rect2(Vector2.ZERO, Vector2(largura, altura)),
+		# A casa do desenho fica no alto da coluna da esquerda.
+		"casa": Rect2(Vector2(MARGEM, MARGEM), Vector2(LADO_CASA, LADO_CASA)),
+		# Texto mais baixo que a casa fica centrado na altura dela.
+		"topo_texto": roundf(MARGEM + maxf(LADO_CASA - altura_texto, 0.0) * 0.5),
 		"largura_texto": largura_texto,
 		"tam_titulo": tam_titulo,
-		"titulo": titulo,
+		"linhas_titulo": linhas_titulo,
+		"passo_titulo": passo_titulo,
+		"altura_titulo": altura_titulo,
+		"altura_etiqueta": altura_etiqueta,
 		"linhas": linhas,
 		"entrelinha": entrelinha,
-		"altura_chapeu": altura_chapeu,
-		"altura_titulo": altura_titulo,
-		"altura_regua": altura_regua,
 	}
 	return _layout
 
@@ -339,174 +361,54 @@ func _draw() -> void:
 		return
 
 	var m := _medidas()
-	var acento: Color = _ficha.get("cor", EstiloHUD.ACENTO_PADRAO)
-	var e := _suave(_entrada)
-	var alfa_ficha := clampf(_entrada * 1.8, 0.0, 1.0) * (1.0 - _suave(_saida))
+	var alfa_ficha := clampf(_entrada * 3.0, 0.0, 1.0) * (1.0 - _suave(_saida))
 	# O véu SEGURA e só então apaga (a ficha é que sai depressa): o ícone voa
-	# para a mochila sobre a tela ainda escura, e o mundo volta exatamente
-	# quando ele encaixa. Com a mesma curva da ficha, o cenário reacendia no
-	# meio do voo e o gesto se perdia.
-	var alfa_veu := clampf(_entrada * 2.2, 0.0, 1.0) \
+	# sobre a tela ainda escura, e o mundo volta exatamente quando ele encaixa.
+	var alfa_veu := clampf(_entrada * 3.0, 0.0, 1.0) \
 		* (1.0 - smoothstep(0.38, 1.0, _veu_saida))
-
-	_desenhar_veu(m, acento, alfa_veu)
-
+	if alfa_veu > 0.003:
+		draw_rect(Rect2(Vector2.ZERO, size), EstiloHUD.com_alfa(EstiloHUD.VEU, alfa_veu))
 	if alfa_ficha <= 0.003:
 		return
 
-	# A ficha inteira entra e sai como um bloco: sobe 26 px na entrada, escorre
-	# 18 px na saída, com um respiro de escala. O transform é aplicado em torno
-	# do centro da caixa para nada "crescer a partir do canto".
+	# A folha entra crescendo um tico além do tamanho e assenta; sai descendo.
 	var caixa: Rect2 = m["caixa"]
 	var origem: Vector2 = m["origem"]
 	var centro := origem + caixa.size * 0.5
-	var deslocamento := Vector2(0.0, (1.0 - e) * 26.0 + _suave(_saida) * 18.0)
-	var escala := lerpf(0.965, 1.0, e) * lerpf(1.0, 0.975, _suave(_saida))
-	# Escalar em torno do centro da ficha: draw_set_transform faz
-	# ponto_final = origem + escala·ponto, logo origem = C - escala·C.
+	var escala := _passar_e_voltar(_entrada) * lerpf(1.0, 0.96, _suave(_saida))
+	var deslocamento := Vector2(0.0, roundf(_suave(_saida) * 14.0))
+	# draw_set_transform faz ponto_final = origem + escala·ponto: para escalar em
+	# torno do centro da ficha, origem = C - escala·C.
 	draw_set_transform(centro + deslocamento - centro * escala, 0.0, Vector2(escala, escala))
-
-	_desenhar_ficha(m, Rect2(origem, caixa.size), acento, alfa_ficha)
-
+	_desenhar_ficha(m, Rect2(origem, caixa.size), alfa_ficha)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-## Véu: apaga o cenário e acende uma auréola na cor do item atrás da ficha.
-##
-## A auréola segue a SILHUETA da ficha, em três camadas. Feita com círculos
-## concêntricos (o caminho óbvio) ela desenhava anéis visíveis no fundo do
-## jogo — banding de manual. Acompanhando a forma da caixa, o mesmo brilho
-## some no escuro e ainda ajuda a descolar a peça do cenário.
-func _desenhar_veu(m: Dictionary, acento: Color, alfa: float) -> void:
-	if alfa <= 0.003:
-		return
-	draw_rect(Rect2(Vector2.ZERO, size), EstiloHUD.com_alfa(EstiloHUD.VEU, alfa))
-
-	var origem: Vector2 = m["origem"]
-	var altura: float = m["altura"]
-	var quadro := Rect2(origem, Vector2(LARGURA, altura))
-	for i in 3:
-		var cresce := 68.0 - i * 26.0
-		draw_colored_polygon(EstiloHUD.chanfro(quadro.grow(cresce), CORTE + cresce * 0.5),
-			EstiloHUD.com_alfa(acento, alfa * (0.022 + i * 0.014)))
+func _desenhar_ficha(m: Dictionary, quadro: Rect2, alfa: float) -> void:
+	EstiloHUD.ficha(self, quadro, alfa, EstiloHUD.PAPEL, EstiloHUD.TINTA, EstiloHUD.MOLDURA, 8.0)
+	_desenhar_casa(m, quadro, alfa)
+	_desenhar_texto(m, quadro, alfa)
+	_desenhar_tecla(quadro, alfa)
 
 
-func _desenhar_ficha(m: Dictionary, quadro: Rect2, acento: Color, alfa: float) -> void:
-	var corpo := EstiloHUD.chanfro(quadro, CORTE)
-
-	EstiloHUD.sombra(self, corpo, 7.0, alfa)
-	EstiloHUD.vidro(self, corpo, alfa)
-
-	# Banho leve do acento no vidro: o painel não é preto morto, ele tem a cor
-	# do que está lá dentro.
-	draw_colored_polygon(corpo, EstiloHUD.com_alfa(acento, alfa * 0.05))
-
-	_desenhar_rodape(m, quadro, acento, alfa)
-
-	# Contorno que se desenha na entrada, fio de luz no topo, acento na base.
-	EstiloHUD.moldura(self, corpo, EstiloHUD.com_alfa(EstiloHUD.BORDA, alfa), 1.5,
-		_etapa(0.06, 0.48))
-	draw_line(corpo[0], corpo[1], EstiloHUD.com_alfa(EstiloHUD.FIO_LUZ, alfa * _etapa(0.2, 0.5)),
-		1.5, true)
-	var brilho_base := alfa * _etapa(0.25, 0.6)
-	draw_line(corpo[4], corpo[5], EstiloHUD.com_alfa(acento, brilho_base * 0.35), 3.0, true)
-	draw_line(corpo[4], corpo[5], EstiloHUD.com_alfa(acento, brilho_base * 0.85), 1.5, true)
-
-	_desenhar_medalhao(m, quadro, acento, alfa)
-	_desenhar_texto(m, quadro, acento, alfa)
-
-
-# --- Medalhão -----------------------------------------------------------------
-
-func _desenhar_medalhao(m: Dictionary, quadro: Rect2, acento: Color, alfa: float) -> void:
-	var centro: Vector2 = quadro.position + m["centro_medalhao"]
-	var hexa := EstiloHUD.hexagono(centro, RAIO_MEDALHAO)
-	var pulso := 0.5 + 0.5 * sin(_tempo * 1.9)
-
-	EstiloHUD.halo(self, centro, RAIO_MEDALHAO * 1.5, acento, 8,
-		alfa * (0.55 + pulso * 0.45) * _etapa(0.15, 0.6))
-
-	EstiloHUD.vidro(self, hexa, alfa, EstiloHUD.ALVEOLO,
-		Color(0.015, 0.020, 0.040, 0.96))
-	draw_colored_polygon(hexa, EstiloHUD.com_alfa(acento, alfa * 0.10))
-
-	# Anel: entra riscando a volta do hexágono, como mira travando no alvo.
-	var volta := _etapa(0.12, 0.62)
-	EstiloHUD.moldura(self, hexa, EstiloHUD.com_alfa(acento, alfa * 0.85), 2.5, volta)
-	# Segundo anel, mais aberto e mais fraco — profundidade sem peso.
-	EstiloHUD.moldura(self, EstiloHUD.hexagono(centro, RAIO_MEDALHAO + 7.0),
-		EstiloHUD.com_alfa(acento, alfa * 0.22 * volta), 1.0)
-
-	_desenhar_faiscas(centro, acento, alfa)
-
-	# Linha de varredura descendo pelo hexágono durante a entrada: é a mesma
-	# ideia do scanner da nave no hud_vital — o aparelho está LENDO o item.
-	var varredura := clampf((_entrada - 0.18) / 0.55, 0.0, 1.0)
-	if varredura > 0.0 and varredura < 1.0:
-		var limite := RAIO_MEDALHAO * 0.8660254
-		var y := lerpf(-limite, limite, varredura)
-		var meia := _meia_largura_hexagono(y, RAIO_MEDALHAO)
-		var forca := sin(varredura * PI)
-		draw_line(centro + Vector2(-meia, y), centro + Vector2(meia, y),
-			EstiloHUD.com_alfa(acento, alfa * forca * 0.9), 2.0, true)
+## A casa do desenho: um quadrado de tinta com o papel mais escuro dentro.
+func _desenhar_casa(m: Dictionary, quadro: Rect2, alfa: float) -> void:
+	var local: Rect2 = m["casa"]
+	var casa := Rect2(quadro.position + local.position, local.size)
+	EstiloHUD.ficha(self, casa, alfa, EstiloHUD.PAPEL_DOBRA, EstiloHUD.TINTA,
+		EstiloHUD.MOLDURA, 0.0)
 
 	if not _icone_solto:
-		var flutuar := sin(_tempo * 1.6) * 2.5 * _etapa(0.5, 1.0)
-		var surgir := _etapa(0.28, 0.68)
-		EstiloHUD.icone(self, _ficha.get("icone", null), centro + Vector2(0.0, flutuar),
-			CAIXA_ICONE, EstiloHUD.com_alfa(Color.WHITE, alfa * surgir),
-			lerpf(0.84, 1.0, surgir))
+		EstiloHUD.icone(self, _ficha.get("icone", null), casa.get_center(), CAIXA_ICONE,
+			EstiloHUD.com_alfa(Color.WHITE, alfa))
 
-	# Clarão do instante em que o ícone se solta e vira voo.
+	# O instante em que o desenho se solta e vira voo.
 	if _clarao_solta > 0.0:
-		var f := _clarao_solta * _clarao_solta
-		draw_colored_polygon(hexa, EstiloHUD.com_alfa(Color(1.0, 1.0, 1.0), f * 0.35))
-		EstiloHUD.moldura(self, EstiloHUD.hexagono(centro, RAIO_MEDALHAO + (1.0 - f) * 22.0),
-			EstiloHUD.com_alfa(acento, f * 0.8), 2.5)
+		draw_rect(casa.grow(-EstiloHUD.MOLDURA),
+			EstiloHUD.com_alfa(Color.WHITE, _clarao_solta * _clarao_solta * 0.8))
 
 
-## Meia-largura do hexágono de topo plano a uma altura dy do centro — é o que
-## permite cortar a linha de varredura exatamente na silhueta.
-func _meia_largura_hexagono(dy: float, raio: float) -> float:
-	var limite := raio * 0.8660254
-	if absf(dy) >= limite:
-		return 0.0
-	return raio * (1.0 - 0.5 * absf(dy) / limite)
-
-
-## Faíscas desenhadas (não são partículas): um punhado orbitando o medalhão e
-## outro subindo por dentro dele. Desenhadas à mão porque assim a cor vem
-## direto do item, sem tingir gradiente de material em tempo de execução, e
-## porque o conjunto todo custa umas vinte circunferências.
-func _desenhar_faiscas(centro: Vector2, acento: Color, alfa: float) -> void:
-	var forca := alfa * _etapa(0.22, 0.7)
-	if forca <= 0.01:
-		return
-
-	for i in ORBITANTES:
-		var s := float(i)
-		var fase := _tempo * (0.5 + fmod(s * 0.37, 1.0) * 0.45) + s * 2.399963
-		var raio := RAIO_MEDALHAO * (1.04 + fmod(s * 0.61, 1.0) * 0.30)
-		var p := centro + Vector2(cos(fase) * raio, sin(fase) * raio * 0.66)
-		var brilho := 0.35 + 0.65 * (0.5 + 0.5 * sin(_tempo * 2.4 + s))
-		draw_circle(p, 1.4 + fmod(s * 0.29, 1.0) * 1.5,
-			EstiloHUD.com_alfa(acento, forca * brilho * 0.7), true, -1.0, true)
-
-	var limite := RAIO_MEDALHAO * 0.8660254
-	for i in ASCENDENTES:
-		var s := float(i)
-		var ciclo := fmod(_tempo * (0.22 + fmod(s * 0.17, 1.0) * 0.18) + s * 0.0909, 1.0)
-		var y := lerpf(limite, -limite, ciclo)
-		var meia := _meia_largura_hexagono(y, RAIO_MEDALHAO) * 0.86
-		var x := sin(_tempo * 0.8 + s * 1.7) * meia * 0.75
-		var vida := sin(ciclo * PI)
-		draw_circle(centro + Vector2(x, y), 1.0 + fmod(s * 0.41, 1.0) * 1.2,
-			EstiloHUD.com_alfa(acento, forca * vida * 0.55), true, -1.0, true)
-
-
-# --- Coluna de texto ----------------------------------------------------------
-
-func _desenhar_texto(m: Dictionary, quadro: Rect2, acento: Color, alfa: float) -> void:
+func _desenhar_texto(m: Dictionary, quadro: Rect2, alfa: float) -> void:
 	var f := _fonte()
 	var ft := _fonte_texto()
 	if f == null:
@@ -515,135 +417,73 @@ func _desenhar_texto(m: Dictionary, quadro: Rect2, acento: Color, alfa: float) -
 	var x := quadro.position.x + COLUNA_TEXTO
 	var y: float = quadro.position.y + m["topo_texto"]
 
-	# Chapéu ("ITEM COLETADO") + etiqueta da categoria ("COMBUSTÍVEL").
-	var a_chapeu := alfa * _etapa(0.3, 0.6)
-	var chapeu := String(_ficha.get("chapeu", ""))
-	var base_chapeu := y + f.get_ascent(TAM_CHAPEU)
-	EstiloHUD.texto(self, f, Vector2(x, base_chapeu), chapeu, TAM_CHAPEU,
-		EstiloHUD.com_alfa(acento, a_chapeu), ESPACO_CHAPEU)
+	# O nome.
+	var tam_titulo: int = m["tam_titulo"]
+	var passo: float = m["passo_titulo"]
+	var linhas_titulo: PackedStringArray = m["linhas_titulo"]
+	for i in linhas_titulo.size():
+		draw_string(f, Vector2(x, roundf(y + i * passo + _altura_da_letra(f, tam_titulo))),
+			linhas_titulo[i], HORIZONTAL_ALIGNMENT_LEFT, -1, tam_titulo,
+			EstiloHUD.com_alfa(EstiloHUD.TINTA, alfa))
+	y += m["altura_titulo"]
 
+	# A etiqueta (o parêntese do nome), miúda.
 	var etiqueta := String(_ficha.get("etiqueta", ""))
 	if not etiqueta.is_empty():
-		var x_etiqueta := x + EstiloHUD.largura_texto(f, chapeu, TAM_CHAPEU, ESPACO_CHAPEU) + 30.0
-		# Divisor entre chapéu e etiqueta: um losango pequeno, não um "·" solto.
-		# O respiro dos dois lados dele é grande de propósito — encostado, o
-		# losango era lido como mais uma letra do chapéu.
-		var cy := base_chapeu - f.get_ascent(TAM_CHAPEU) * 0.42
-		var cx := x_etiqueta - 15.0
-		draw_colored_polygon(PackedVector2Array([
-				Vector2(cx, cy - 3.5), Vector2(cx + 3.5, cy),
-				Vector2(cx, cy + 3.5), Vector2(cx - 3.5, cy)]),
-			EstiloHUD.com_alfa(EstiloHUD.TEXTO_FRACO, a_chapeu))
-		EstiloHUD.texto(self, f, Vector2(x_etiqueta, base_chapeu), etiqueta, TAM_ETIQUETA,
-			EstiloHUD.com_alfa(EstiloHUD.TEXTO_FRACO, a_chapeu), ESPACO_ETIQUETA)
+		draw_string(f, Vector2(x, roundf(y + 3.0 + _altura_da_letra(f, TAM_ETIQUETA))), etiqueta,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_ETIQUETA,
+			EstiloHUD.com_alfa(EstiloHUD.TINTA_FRACA, alfa))
+		y += m["altura_etiqueta"]
 
-	# Título.
-	y += m["altura_chapeu"]
-	var tam_titulo: int = m["tam_titulo"]
-	var a_titulo := alfa * _etapa(0.36, 0.68)
-	EstiloHUD.texto(self, f, Vector2(x, y + f.get_ascent(tam_titulo)), m["titulo"],
-		tam_titulo, EstiloHUD.com_alfa(EstiloHUD.TEXTO, a_titulo), ESPACO_TITULO)
-
-	# Régua: abre da esquerda para a direita, separando nome de explicação.
-	y += m["altura_titulo"]
-	var abertura := _etapa(0.46, 0.78)
-	if abertura > 0.0:
-		var y_regua := roundf(y + 2.0)
-		draw_line(Vector2(x, y_regua), Vector2(x + LARGURA_REGUA * abertura, y_regua),
-			EstiloHUD.com_alfa(acento, alfa * 0.9), 2.0)
-		draw_line(Vector2(x + LARGURA_REGUA * abertura, y_regua),
-			Vector2(x + m["largura_texto"], y_regua),
-			EstiloHUD.com_alfa(EstiloHUD.BORDA, alfa * abertura), 1.0)
-
-	# Parágrafo, linha por linha, entrando em cascata.
-	y += m["altura_regua"]
+	# A descrição, linha por linha.
 	var linhas: PackedStringArray = m["linhas"]
 	var entrelinha: float = m["entrelinha"]
+	y += ESPACO_DESCRICAO
 	for i in linhas.size():
-		var a_linha := alfa * _etapa(0.56 + i * 0.05, 0.86 + i * 0.05)
-		if a_linha <= 0.004:
-			continue
-		var desliza := (1.0 - _etapa(0.56 + i * 0.05, 0.86 + i * 0.05)) * 6.0
-		draw_string(ft, Vector2(x + desliza, y + ft.get_ascent(TAM_DESCRICAO) + i * entrelinha),
+		draw_string(ft, Vector2(x, roundf(y + i * entrelinha + _altura_da_letra(ft, TAM_DESCRICAO))),
 			linhas[i], HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_DESCRICAO,
-			EstiloHUD.com_alfa(EstiloHUD.TEXTO_FRACO.lightened(0.18), a_linha))
+			EstiloHUD.com_alfa(EstiloHUD.TINTA_FRACA, alfa))
 
 
-# --- Rodapé -------------------------------------------------------------------
+## A tecla de continuar, presa na beirada de baixo da folha, no canto direito
+## (EstiloHUD.tecla_da_folha: a mesma do tutorial das ferramentas).
+func _desenhar_tecla(quadro: Rect2, alfa: float) -> void:
+	EstiloHUD.tecla_da_folha(self, _fonte(), quadro,
+		alfa * clampf((_entrada - 0.6) / 0.4, 0.0, 1.0))
 
-func _desenhar_rodape(m: Dictionary, quadro: Rect2, acento: Color, alfa: float) -> void:
-	var f := _fonte()
-	if f == null:
-		return
 
-	var x0 := quadro.position.x
-	var x1 := quadro.end.x
-	var y1 := quadro.end.y
-	var yr := y1 - ALTURA_RODAPE
-	var raso := CORTE * 0.42
+## O centro da tecla de continuar, para uma ficha no retângulo dado.
+func centro_da_tecla(quadro: Rect2) -> Vector2:
+	return EstiloHUD.centro_da_tecla_da_folha(quadro)
 
-	# Faixa mais escura, encaixada nos chanfros de baixo.
-	draw_colored_polygon(PackedVector2Array([
-			Vector2(x0, yr), Vector2(x1, yr),
-			Vector2(x1, y1 - CORTE), Vector2(x1 - CORTE, y1),
-			Vector2(x0 + raso, y1), Vector2(x0, y1 - raso)]),
-		EstiloHUD.com_alfa(Color(0.012, 0.018, 0.038, 0.55), alfa))
-	draw_line(Vector2(x0, yr), Vector2(x1, yr),
-		EstiloHUD.com_alfa(EstiloHUD.BORDA, alfa * 0.9), 1.0)
 
-	var a_rodape := alfa * _etapa(0.62, 0.92)
-	if a_rodape <= 0.004:
-		return
-	var meio := yr + ALTURA_RODAPE * 0.5
-	var base := meio + f.get_ascent(TAM_RODAPE) * 0.5 - 1.0
-
-	# Esquerda: para onde o item foi. O hexágono miúdo é o mesmo do slot da
-	# mochila — quem lê a frase já viu a forma que vai piscar no canto.
-	var x := x0 + MARGEM
-	draw_colored_polygon(EstiloHUD.hexagono(Vector2(x + 5.0, meio), 5.5),
-		EstiloHUD.com_alfa(acento, a_rodape * 0.9))
-	EstiloHUD.texto(self, f, Vector2(x + 20.0, base), String(_ficha.get("destino", "")),
-		TAM_RODAPE, EstiloHUD.com_alfa(EstiloHUD.TEXTO_FRACO, a_rodape), ESPACO_RODAPE)
-
-	# Direita: a tecla. É a MESMA tampa que aparece embaixo de cada ferramenta
-	# no cinto (EstiloHUD.tecla) — a pessoa aprende a forma uma vez. Pulsa
-	# devagar: é convite, não alarme.
-	var rotulo := "CONTINUAR"
-	var largura_rotulo := EstiloHUD.largura_texto(f, rotulo, TAM_RODAPE, ESPACO_RODAPE)
-	var pulso := 0.62 + 0.38 * (0.5 + 0.5 * sin(_tempo * 3.0))
-	var centro_tecla := Vector2(x1 - MARGEM - largura_rotulo - 12.0 - 15.0, meio)
-	# De controle na mão, o "E" vira o □ (a mesma ação "interact").
-	EstiloHUD.tecla_da_acao(self, f, centro_tecla, "E", &"interact",
-		EstiloHUD.com_alfa(acento, pulso), a_rodape)
-	EstiloHUD.texto(self, f, Vector2(centro_tecla.x + 27.0, base), rotulo, TAM_RODAPE,
-		EstiloHUD.com_alfa(EstiloHUD.TEXTO_FRACO, a_rodape), ESPACO_RODAPE)
+## Altura das maiúsculas da fonte neste tamanho: onde a linha de base fica
+## para o topo da letra encostar no topo do bloco.
+func _altura_da_letra(f: Font, tamanho: int) -> float:
+	return roundf(f.get_ascent(tamanho) * 0.86)
 
 
 # ─────────────────────────────────────────────────────────────
 # Ficha
 # ─────────────────────────────────────────────────────────────
 
-## Recebe o que o HUD passou e completa o que faltar: separa nome de
-## categoria, escolhe o chapéu e a cor pelo id. Assim quem chama só precisa
-## saber o que sabe hoje (nome, textura, descrição, id).
+## Recebe o que o HUD passou e completa o que faltar: separa o nome da
+## etiqueta. Assim quem chama só precisa saber o que sabe hoje (nome, textura,
+## descrição, id).
 func _normalizar(dados: Dictionary) -> Dictionary:
 	var id := String(dados.get("id", ""))
 	var partes := EstiloHUD.separar_nome(String(dados.get("nome", "")))
-	var chapeu := String(dados.get("chapeu", EstiloHUD.chapeu_do_item(id)))
 	var etiqueta := String(partes["etiqueta"])
-	# "FERRAMENTA ADQUIRIDA · FERRAMENTA" seria eco; a etiqueta cai fora.
-	if not etiqueta.is_empty() and chapeu.contains(etiqueta):
+	# Ferramenta não leva etiqueta: é o voo até os equipamentos que conta isso.
+	if CatalogoFerramentas.FERRAMENTAS.has(id) or etiqueta == "FERRAMENTA":
 		etiqueta = ""
 	return {
 		"id": id,
 		"nome": String(dados.get("nome", "")),
 		"titulo": partes["titulo"],
 		"etiqueta": etiqueta,
-		"chapeu": chapeu,
 		"descricao": String(dados.get("descricao", "")),
 		"icone": dados.get("icone", null),
-		"cor": dados.get("cor", EstiloHUD.cor_do_item(id)),
-		"destino": String(dados.get("destino", "")),
 	}
 
 
@@ -653,7 +493,6 @@ func _ficha_de_previa() -> Dictionary:
 		"nome": previa_nome,
 		"descricao": previa_descricao,
 		"icone": previa_icone,
-		"destino": previa_destino,
 	})
 
 
