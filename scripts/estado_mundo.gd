@@ -25,6 +25,16 @@ static var revelou_dr_chico: bool = false
 ## consome isso para nascer com o player na saída do próprio laser.
 static var chegando_pelo_laser: bool = false
 
+## True depois que a Cacau viu o foguete do mirante (a ceninha do "nunca tinha
+## visto um tão de perto"). A cena não repete — nem se ela morrer e a fase
+## recarregar antes de chegar ao laboratório.
+static var viu_o_foguete: bool = false
+
+## True depois que o sol se pôs no world1, no fim dessa mesma cena. Daí em
+## diante é noite: o world1 já abre escuro quando ela volta do laboratório (ver
+## Atmosfera.lembrar_da_noite).
+static var anoiteceu: bool = false
+
 
 ## Chamado no fim da cutscene da revelação, no laboratório.
 static func registrar_revelacao() -> void:

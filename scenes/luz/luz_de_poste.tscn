@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/luz/luz_de_poste.gd" id="1_luz"]
+
+[node name="LuzDePoste" type="Node2D"]
+script = ExtResource("1_luz")

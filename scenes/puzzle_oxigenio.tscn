@@ -14,17 +14,13 @@
 atlas = ExtResource("5_po")
 region = Rect2(166, 40, 254, 254)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nucleo"]
-bg_color = Color(0.4, 0.28, 0, 0.5)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(1, 0.82, 0, 1)
-corner_radius_top_left = 45
-corner_radius_top_right = 45
-corner_radius_bottom_right = 45
-corner_radius_bottom_left = 45
+[sub_resource type="AtlasTexture" id="AtlasTexture_proton"]
+atlas = ExtResource("5_po")
+region = Rect2(44, 106, 62, 62)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_neutron"]
+atlas = ExtResource("5_po")
+region = Rect2(43, 177, 62, 62)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_eletron1"]
 atlas = ExtResource("5_po")
@@ -197,27 +193,376 @@ offset_bottom = 619.0
 mouse_filter = 2
 texture = SubResource("AtlasTexture_atombg")
 
-[node name="ZonaNucleo" type="Panel" parent="RootControl" unique_id=-885151923]
+[node name="ZonaNucleo" type="Control" parent="RootControl" unique_id=-885151923]
 layout_mode = 0
 offset_left = 779.0
 offset_top = 447.0
 offset_right = 869.0
 offset_bottom = 537.0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_nucleo")
 
-[node name="HintNucleo" type="Label" parent="RootControl/ZonaNucleo" unique_id=-869786891]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
-theme_override_font_sizes/font_size = 11
-text = "8p + 8n"
-horizontal_alignment = 1
-vertical_alignment = 1
+[node name="Miolo" type="TextureRect" parent="RootControl/ZonaNucleo"]
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 85.0
+offset_bottom = 85.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Proton1" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 44.0
+offset_top = -14.0
+offset_right = 75.0
+offset_bottom = 17.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Proton1"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Neutron1" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 67.0
+offset_top = 2.0
+offset_right = 98.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Neutron1"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Proton2" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 30.0
+offset_right = 107.0
+offset_bottom = 61.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Proton2"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Neutron2" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 67.0
+offset_top = 57.0
+offset_right = 98.0
+offset_bottom = 88.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Neutron2"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Proton3" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 44.0
+offset_top = 73.0
+offset_right = 75.0
+offset_bottom = 104.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Proton3"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Neutron3" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 73.0
+offset_right = 46.0
+offset_bottom = 104.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Neutron3"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Proton4" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = -8.0
+offset_top = 57.0
+offset_right = 23.0
+offset_bottom = 88.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Proton4"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Neutron4" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = -16.0
+offset_top = 30.0
+offset_right = 15.0
+offset_bottom = 61.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Neutron4"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Proton5" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = -8.0
+offset_top = 2.0
+offset_right = 23.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Proton5"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Neutron5" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 15.0
+offset_top = -14.0
+offset_right = 46.0
+offset_bottom = 17.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Neutron5"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Proton6" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 7.0
+offset_right = 61.0
+offset_bottom = 38.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Proton6"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Proton7" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 51.0
+offset_top = 22.0
+offset_right = 82.0
+offset_bottom = 53.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Proton7"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Neutron6" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 43.0
+offset_top = 48.0
+offset_right = 74.0
+offset_bottom = 79.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Neutron6"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Proton8" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 48.0
+offset_right = 47.0
+offset_bottom = 79.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Proton8"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_proton")
+expand_mode = 1
+
+[node name="Neutron7" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 22.0
+offset_right = 39.0
+offset_bottom = 53.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Neutron7"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Neutron8" type="TextureRect" parent="RootControl/ZonaNucleo"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = 61.0
+offset_bottom = 61.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
+
+[node name="Contorno" type="TextureRect" parent="RootControl/ZonaNucleo/Neutron8"]
+show_behind_parent = true
+self_modulate = Color(0, 0, 0, 1)
+layout_mode = 0
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 33.0
+offset_bottom = 33.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_neutron")
+expand_mode = 1
 
 [node name="LabelCamadaK" type="Label" parent="RootControl" unique_id=-294967293]
 layout_mode = 0

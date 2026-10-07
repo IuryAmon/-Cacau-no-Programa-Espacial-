@@ -10,6 +10,7 @@ Tudo é arrastável, redimensionável e trocável direto no editor.
 |---|---|
 | `scenes/fases/fase1_oficina.tscn` | Oficina do Carbono |
 | `scenes/fases/fase1_2_exterior.tscn` | Pátio da Oficina (fase 1.2) — tela única, do outro lado do elevador |
+| `scenes/fases/corredor_torre.tscn` | Corredor entre o laboratório e a fase 2 — a porta da torre dá nele, e o fundo dele dá na fase |
 | `scenes/fases/fase2_torre.tscn` | Fase 2, a do nitrogênio — **em branco**, sendo refeita do zero (só o céu e o chão da área aberta) |
 | `scenes/fases/fase3_subsolo.tscn` | Subsolo em blecaute (P + S) |
 | `scenes/fases/fase_final.tscn` | Torre de lançamento |
@@ -157,6 +158,14 @@ Selecione o nó e use o Inspetor. As propriedades mais usadas:
 - `PortaFase`: sobrou só no alçapão do fosso de ventilação, no laboratório
   (**`no_piso`**, trancado por **`requer_habilidade`** = mochila). Usa o mesmo
   par de tags, e conversa com as portas acima.
+- `PassagemDeCena` (`scripts/fases/passagem_de_cena.gd`): a ponta aberta de um
+  corredor, sem porta. É um Node2D posto em cima da linha de saída: a Cacau
+  cruza a linha andando e a cena troca sozinha (ela segue andando enquanto a
+  tela apaga); vindo da outra cena, entra andando por ali. Mesmas
+  **`cena_destino`** / **`tag_destino`** / **`tag_aqui`** das portas, então uma
+  porta pode mandar para uma passagem e vice-versa. **`sentido`** diz o lado de
+  fora (1 = direita) e **`distancia_entrada`** quanto ela anda para dentro ao
+  chegar. O piso tem de continuar depois da linha.
 - `MesaPuzzle`: **`puzzle_config`** guarda os slots, as peças e os textos do
   puzzle de arrastar.
 
@@ -648,13 +657,16 @@ A antiga Torre de Gases e Estufa saiu inteira de `fase2_torre.tscn`. A cena
 ficou só com o palco, para a fase do nitrogênio ser montada do zero:
 
 - `BG` — o céu de camadas da área aberta (o mesmo do pátio da fase 1.2). O
-  céu e o sol ficam presos na tela; a serra, os morros e as matas andam mais
+  céu e a lua ficam presos na tela; a serra, os morros e as matas andam mais
   devagar que a câmera, só na horizontal, e se repetem sozinhos;
+- `Atmosfera` e `PostesDeLuz` — a hora da fase (noite, com a lua) e a luz dos
+  postes pintados no TileMap. Ver [`docs/ILUMINACAO.md`](ILUMINACAO.md);
 - `Terreno` — o chão de grama da área aberta, reto, de 0 a 3200 px (o topo em
   y = 512). Pinte o resto por cima;
 - `Paredes` — duas paredes invisíveis nas pontas, para a Cacau não cair para
   fora do mapa. Mova junto quando esticar o chão;
-- `PortaHub` — a porta de volta ao laboratório (e por onde ela chega);
+- `PortaHub` — a porta de volta (e por onde ela chega). Ela dá no fundo do
+  corredor da torre, que é o caminho até o laboratório (ver abaixo);
 - `LimitesDaCamera`, `SpawnPadrao` e `Player`, como em toda fase.
 
 O que ainda falta voltar para o jogo fechar: a **mochila de N₂** e a
@@ -665,6 +677,34 @@ chapa do armário e do ciclo do nitrogênio saíram junto com os objetos.
 
 Atenção: o `tools/gerar_cenas_fases.tscn` (logo abaixo) ainda sabe montar a
 Torre antiga e sobrescreveria esta cena.
+
+## O corredor da torre
+
+A porta da torre, no laboratório, não cai direto na fase 2: ela dá em
+`scenes/fases/corredor_torre.tscn`, um corredor curto (1472 px, menos de uma
+tela e meia) com a parede e o piso do laboratório. Andando até o fundo a cena
+troca sozinha para a fase 2; na volta, a porta da fase 2 devolve a Cacau no
+fundo do corredor e a porta de dentro dele leva ao laboratório.
+
+```
+laboratório  PortaTorre  <->  PortaLab  [ corredor ]  SaidaTorre  <->  PortaHub  fase 2
+```
+
+- `Fundo` — a parede azul-clara do laboratório (fonte 14 do tileset_fases);
+- `Estrutura` — piso, teto e a parede da ponta esquerda, com o industrial do
+  laboratório (fonte 13). O teto é o piso de cabeça para baixo, como a viga da
+  entrada do laboratório;
+- `Pilares` e `LuzDaSaida` — enfeite: as três colunas da parede e o clarão da
+  luz de fora no fundo. Pode apagar ou mexer à vontade;
+- `Colisoes/` — as camadas de tile deste corredor são só desenho; quem segura
+  a Cacau são `Piso` (com a superfície "metal", o som de passo do
+  laboratório), `Teto` e `ParedeEsquerda`;
+- `PortaLab` — a porta modelo, de e para o laboratório;
+- `SaidaTorre` — a `PassagemDeCena` do fundo.
+
+Para esticar ou encurtar: pinte mais (ou menos) piso, teto e parede, arraste a
+`SaidaTorre` para a ponta nova e leve a borda direita do `LimitesDaCamera` para
+uns 24 px depois dela.
 
 ## Regerar o blockout do zero
 
@@ -707,10 +747,18 @@ godot --headless --fixed-fps 60 --path . -s res://tools/teste_objetivos.gd
 
 As portas entre as fases têm o delas: a porta modelo, os pares de tags de todas
 as portas (quem sai por uma acha quem a recebe do outro lado) e as viagens de
-verdade — laboratório ↔ Torre e alçapão do fosso ↔ subsolo:
+verdade — laboratório ↔ corredor ↔ Torre e alçapão do fosso ↔ subsolo:
 
 ```
 godot --headless --fixed-fps 60 --path . res://tools/teste_porta_modelo.tscn
+```
+
+O corredor da torre tem o dele: o cenário com os tiles do laboratório, o piso
+de metal, e a ida e a volta correndo de verdade (a cena troca sozinha no fundo,
+e na volta ela entra andando por lá):
+
+```
+godot --headless --fixed-fps 60 --path . res://tools/teste_corredor_torre.tscn
 ```
 
 E os passos da Cacau, com o som de cada chão (grama, concreto e metal):

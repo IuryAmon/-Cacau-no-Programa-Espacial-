@@ -4,6 +4,9 @@ extends StaticBody2D
 # Referências aos nós filhos
 @onready var anim = $AnimatedSprite2D
 @onready var colisor = $CollisionShape2D
+## O clarão vermelho do campo de energia (scripts/luz/luz_pontual.gd): acende
+## com o escuro da fase e apaga junto com o laser.
+@onready var _luz: LuzPontual = get_node_or_null("LuzDoLaser")
 
 func _ready():
 	# Já foi desligada antes (a cena recarregou por morte ou por troca de fase):
@@ -14,6 +17,8 @@ func _ready():
 			colisor.set_deferred("disabled", true)
 		if anim and anim.sprite_frames and anim.sprite_frames.has_animation("desativado"):
 			anim.play("desativado")
+		if _luz:
+			_luz.acesa = false
 		return
 
 	# Assim que o jogo começa, garante que a barreira está na animação "ativado"
@@ -37,6 +42,8 @@ func abrir_passagem():
 	# 2. Toca a animação de transição
 	if anim:
 		anim.play("desativando")
+	if _luz:
+		_luz.acesa = false
 
 func _on_animated_sprite_2d_animation_finished():
 	# Quando a animação de transição ("desativando") chegar ao fim...

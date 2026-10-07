@@ -17,7 +17,7 @@ extends RefCounted
 #
 #   prologo    world1 até a revelação do Dr. Chico
 #   carbono    Ala de Pirólise + Pátio (fase 1 e 1.2)    -> entregar o C
-#   nitrogenio a fase 2 (em branco, sendo refeita)       -> entregar o N
+#   nitrogenio o corredor da torre + a fase 2 (em branco) -> entregar o N
 #   subsolo    Subsolo em blecaute                       -> entregar o P e o S
 #   lancamento Torre de Lançamento                       -> embarque
 #
@@ -60,6 +60,8 @@ const WORLD1 := "res://scenes/world1.tscn"
 const LAB := "res://scenes/laboratório_(world_2).tscn"
 const FASE1 := "res://scenes/fases/fase1_oficina.tscn"
 const FASE1_2 := "res://scenes/fases/fase1_2_exterior.tscn"
+## O corredor entre o laboratório e a fase 2: já é o caminho do nitrogênio.
+const CORREDOR_TORRE := "res://scenes/fases/corredor_torre.tscn"
 const FASE2 := "res://scenes/fases/fase2_torre.tscn"
 const FASE3 := "res://scenes/fases/fase3_subsolo.tscn"
 const FASE_FINAL := "res://scenes/fases/fase_final.tscn"
@@ -146,7 +148,7 @@ func _init(visitou: Callable) -> void:
 		# a chapa soldada do armário, o ciclo do nitrogênio na estufa) saíram
 		# junto com eles. Ficaram só os que não consultam nenhum nó da cena —
 		# os passos novos entram aqui conforme a fase for sendo montada.
-		_trilha("nitrogenio", "NITROGÊNIO", AmostraChonps.CORES["N"], [FASE2], [
+		_trilha("nitrogenio", "NITROGÊNIO", AmostraChonps.CORES["N"], [CORREDOR_TORRE, FASE2], [
 			[_obj("entrar_torre", "Entre na Torre de Gases e Estufa", _visitou.bind(FASE2))],
 			[_obj("mochila", "Pegue a mochila propulsora de N₂", _tem.bind("mochila"))],
 			[_obj("pegar_n", "Pegue a amostra de nitrogênio (N)", _pegou.bind("N"))],

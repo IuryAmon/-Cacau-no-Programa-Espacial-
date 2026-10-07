@@ -14,14 +14,17 @@ extends Node
 #   * Torre de Gases, Torre de Lançamento, as voltas ao laboratório (fases 2, 3
 #     e final) e a cápsula usam a porta modelo; só o alçapão do fosso continua
 #     PortaFase;
-#   * toda porta com destino acha, na outra cena, a porta que a recebe;
+#   * toda porta com destino acha, na outra cena, a porta que a recebe (ou a
+#     passagem: a ponta do corredor da torre é uma PassagemDeCena);
 #   * cada porta nova fica em pé no chão (o vão dela na altura do piso);
-#   * a viagem de verdade: laboratório -> Torre -> laboratório, alçapão do
-#     fosso -> subsolo -> alçapão, e a cápsula não deixa a volta da órbita
-#     sair pela porta do simulador.
+#   * a viagem de verdade: laboratório -> corredor -> Torre e a volta pelo
+#     mesmo caminho (o corredor tem um teste só dele, teste_corredor_torre),
+#     alçapão do fosso -> subsolo -> alçapão, e a cápsula não deixa a volta da
+#     órbita sair pela porta do simulador.
 
 const LAB := "res://scenes/laboratório_(world_2).tscn"
 const FASE1 := "res://scenes/fases/fase1_oficina.tscn"
+const CORREDOR := "res://scenes/fases/corredor_torre.tscn"
 const FASE2 := "res://scenes/fases/fase2_torre.tscn"
 const FASE3 := "res://scenes/fases/fase3_subsolo.tscn"
 const FASE_FINAL := "res://scenes/fases/fase_final.tscn"
@@ -35,6 +38,7 @@ const SCRIPT_PORTA := "res://scripts/porta_simulador.gd"
 ## As portas que ganharam a porta modelo.
 const PORTAS_MODELO := {
 	LAB: ["PortaTorre", "PortaLancamento"],
+	CORREDOR: ["PortaLab"],
 	FASE2: ["PortaHub"],
 	FASE3: ["Atrio/PortaFosso"],
 	FASE_FINAL: ["Portao/PortaHub", "Plataforma/Capsula/PortaCapsula"],
@@ -107,7 +111,7 @@ func _testar_portas_nas_cenas() -> void:
 	# Quem recebe em cada cena: tag_aqui -> porta.
 	var recebe := {}
 	var saidas: Array[Dictionary] = []
-	for caminho in [LAB, FASE1, FASE2, FASE3, FASE_FINAL, SIMULADOR]:
+	for caminho in [LAB, FASE1, CORREDOR, FASE2, FASE3, FASE_FINAL, SIMULADOR]:
 		await _abrir(caminho)
 		var cena := get_tree().current_scene
 		recebe[caminho] = {}
@@ -118,6 +122,13 @@ func _testar_portas_nas_cenas() -> void:
 			if porta.cena_destino != "":
 				saidas.append({"de": caminho, "porta": str(cena.get_path_to(porta)), "para": porta.cena_destino,
 					"tag": porta.tag_destino})
+		# As pontas abertas (PassagemDeCena) entram no mesmo jogo de tags.
+		for passagem in _passagens(cena):
+			if passagem.tag_aqui != "":
+				recebe[caminho][passagem.tag_aqui] = passagem.name
+			if passagem.cena_destino != "":
+				saidas.append({"de": caminho, "porta": str(cena.get_path_to(passagem)),
+					"para": passagem.cena_destino, "tag": passagem.tag_destino})
 		for nome in PORTAS_MODELO.get(caminho, []):
 			var porta := cena.get_node(NodePath(nome))
 			_checar(porta.scene_file_path == MODELO, "%s/%s é a porta modelo" % [caminho.get_file(), nome])
@@ -137,13 +148,32 @@ func _testar_portas_nas_cenas() -> void:
 
 
 func _testar_torre_ida_e_volta() -> void:
-	print("\n--- LABORATÓRIO -> TORRE -> LABORATÓRIO ---")
+	print("\n--- LABORATÓRIO -> CORREDOR -> TORRE -> CORREDOR -> LABORATÓRIO ---")
+	# A porta da Torre dá num corredor, e é o fundo dele que leva à fase.
 	await _abrir(LAB)
 	await _usar(get_tree().current_scene.get_node("PortaTorre"))
+	await _esperar_cena(CORREDOR)
+	await _conferir_saida(get_tree().current_scene.get_node("PortaLab"), "chegou no corredor saindo pela porta dele")
+
+	# Cruzou a linha do fundo, a cena troca sozinha.
+	var saida := get_tree().current_scene.get_node("SaidaTorre") as PassagemDeCena
+	await _quadros(2)
+	_player().global_position.x = saida.global_position.x + 4.0
 	await _esperar_cena(FASE2)
 	await _conferir_saida(get_tree().current_scene.get_node("PortaHub"), "chegou na Torre saindo pela PortaHub")
 
 	await _usar(get_tree().current_scene.get_node("PortaHub"))
+	await _esperar_cena(CORREDOR)
+	saida = get_tree().current_scene.get_node("SaidaTorre") as PassagemDeCena
+	for i in 300:
+		if not saida._chegando:
+			break
+		await get_tree().process_frame
+	_checar(not saida._chegando and _player().pode_se_mover
+		and _player().global_position.x < saida.global_position.x,
+		"voltou pelo fundo do corredor e entrou andando")
+
+	await _usar(get_tree().current_scene.get_node("PortaLab"))
 	await _esperar_cena(LAB)
 	await _conferir_saida(get_tree().current_scene.get_node("PortaTorre"), "voltou ao laboratório saindo pela porta da Torre")
 
@@ -196,6 +226,12 @@ func _portas(cena: Node) -> Array:
 	var script_porta := load(SCRIPT_PORTA)
 	return cena.find_children("*", "Area2D", true, false).filter(func(n: Node) -> bool:
 		return n is PortaFase or n.get_script() == script_porta)
+
+
+## As pontas abertas desta cena (passagem_de_cena.gd).
+func _passagens(cena: Node) -> Array:
+	return cena.find_children("*", "Node2D", true, false).filter(func(n: Node) -> bool:
+		return n is PassagemDeCena)
 
 
 func _chao_abaixo(cena: Node, ponto: Vector2) -> float:

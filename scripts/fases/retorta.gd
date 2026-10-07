@@ -110,6 +110,9 @@ var _pai_das_toras: Node = null
 @onready var _sprite_carvao: Sprite2D = $SpriteCarvao
 @onready var _som_carvao: AudioStreamPlayer2D = $SomCarvaoPronto
 @onready var _som_fogo: AudioStreamPlayer2D = $SomFogo
+## O clarão do fogo no pátio (scripts/luz/luz_pontual.gd). A fornalha queima de
+## noite: sem isto as chamas apareceriam no sprite e não iluminariam nada.
+@onready var _luz_do_fogo: LuzPontual = get_node_or_null("LuzDoFogo")
 
 var _popup_madeira_visivel: bool = false
 
@@ -225,6 +228,8 @@ func _cheia() -> bool:
 
 ## Escolhe o quadro da fornalha: apagada, enchendo (3 estágios) ou em chamas.
 func _atualizar_sprite() -> void:
+	if _luz_do_fogo:
+		_luz_do_fogo.acesa = _acesa
 	if _sprite == null or _sprite.sprite_frames == null:
 		return
 	if _acesa:

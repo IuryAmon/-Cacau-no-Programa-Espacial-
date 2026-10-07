@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://82mg4sy4532r" path="res://assets/Lab/Barrier_Control_Panel/barrier_idle.png" id="1_dw7mk"]
 [ext_resource type="Script" uid="uid://bryax6sb4ver0" path="res://scripts/barreira.gd" id="1_svv03"]
 [ext_resource type="Texture2D" uid="uid://3n7r2wabrnb3" path="res://assets/Lab/Barrier_Control_Panel/barrier_deactivate.png" id="2_t2w1a"]
+[ext_resource type="Script" uid="uid://dx3e4o4vfhvnf" path="res://scripts/luz/luz_pontual.gd" id="3_luz"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_d0w87"]
 atlas = ExtResource("1_dw7mk")
@@ -293,6 +294,17 @@ scale = Vector2(1.4687501, 1.4687501)
 sprite_frames = SubResource("SpriteFrames_f04bs")
 animation = &"desativando"
 autoplay = "ativado"
+
+[node name="LuzDoLaser" type="Node2D" parent="." unique_id=891114170]
+position = Vector2(7, 14)
+script = ExtResource("3_luz")
+segue_o_horario = true
+cor = Color(1, 0.25, 0.2, 1)
+energia = 1.1
+raio = 90.0
+clarao = 0.5
+tamanho_do_clarao = 0.55
+tremor = 0.06
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=794879984]
 position = Vector2(7, 11)

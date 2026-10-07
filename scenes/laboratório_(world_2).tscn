@@ -5516,7 +5516,7 @@ direcao_saida = -1.0
 
 [node name="PortaTorre" parent="." unique_id=957035856 instance=ExtResource("porta_modelo")]
 position = Vector2(1650, 60)
-cena_destino = "res://scenes/fases/fase2_torre.tscn"
+cena_destino = "res://scenes/fases/corredor_torre.tscn"
 tag_destino = "entrada"
 recebe_chegada = true
 tag_aqui = "volta_da_torre"

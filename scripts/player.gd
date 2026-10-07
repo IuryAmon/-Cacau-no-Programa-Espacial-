@@ -44,6 +44,15 @@ var esta_invencivel_dash: bool = false
 const TIMELINE_FOGUETE := "cacau_ve_foguete"
 var _fala_foguete_feita: bool = false
 var _foguete_destino_x: float = 0.0
+## A fala acabou e o balão de coração está subindo. Quem dirige a cena
+## (colisao_cena_foguete.gd) começa o pôr do sol a partir daqui.
+signal fala_do_foguete_terminou
+## O coração já sumiu: a ceninha dela acabou de vez.
+signal cena_do_foguete_terminou
+## Ligado por quem dispara a cena quando ainda vem coisa depois do coração (o
+## pôr do sol): a personagem continua parada, e quem pediu é que devolve o
+## controle.
+var segurar_apos_o_foguete: bool = false
 
 # --- MORTE DESPEDAÇADA (SERRA E ESPINHOS DE LASER) ---
 #
@@ -562,11 +571,14 @@ func reagir_ao_avistar_foguete(colisao_shape: CollisionShape2D) -> void:
 	Dialogic.start(TIMELINE_FOGUETE)
 
 func _on_fala_foguete_terminou() -> void:
-	pode_se_mover = true
+	if not segurar_apos_o_foguete:
+		pode_se_mover = true
+	fala_do_foguete_terminou.emit()
 	if _coracao_foguete:
 		await PopupFX.mostrar(_coracao_foguete)
 		await _coracao_foguete.animation_finished
 		await PopupFX.esconder(_coracao_foguete)
+	cena_do_foguete_terminou.emit()
 
 # Chamada de dentro da timeline do Dialogic (via DialogicBridge, evento "do")
 # para andar sem fechar o diálogo — o Dialogic aguarda esse await antes de

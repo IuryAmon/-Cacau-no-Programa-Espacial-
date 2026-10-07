@@ -30,6 +30,11 @@ var puzzle_ui: CanvasLayer = null
 # Referências aos nós filhos
 @onready var audio_player = $AudioStreamPlayer
 @onready var computador_anim = $ComputadorAnimado
+## O brilho da tela no escuro (scripts/luz/luz_pontual.gd): vermelho trancado,
+## azul liberado, como a própria tela.
+@onready var _luz_da_tela: LuzPontual = get_node_or_null("LuzDaTela")
+const COR_DA_TELA_TRANCADA := Color(1.0, 0.24, 0.2)
+const COR_DA_TELA_LIBERADA := Color(0.3, 0.62, 1.0)
 
 # --- Garante que o computador comece em vermelho e a exclamação escondida ---
 func _ready():
@@ -43,6 +48,7 @@ func _ready():
 
 	if has_node("ComputadorAnimado"):
 		computador_anim.play("azul" if ja_foi_resolvido else "vermelho")
+	_pintar_luz_da_tela()
 
 	if has_node("ExclamacaoAnimada"):
 		get_node("ExclamacaoAnimada").visible = false
@@ -90,6 +96,7 @@ func sucesso_no_puzzle(tocar_som: bool = true):
 	# --- NOVO: Muda a tela do computador para Azul imediatamente ---
 	if has_node("ComputadorAnimado"):
 		computador_anim.play("azul")
+	_pintar_luz_da_tela()
 	
 	# Se estiver configurado para sumir com o item, remove do inventário
 	if consumir_item_ao_usar:
@@ -103,6 +110,11 @@ func sucesso_no_puzzle(tocar_som: bool = true):
 
 	# DISPARA O SINAL! Qualquer objeto conectado a este receptor vai acordar agora
 	puzzle_resolvido.emit()
+
+func _pintar_luz_da_tela() -> void:
+	if _luz_da_tela:
+		_luz_da_tela.cor = COR_DA_TELA_LIBERADA if ja_foi_resolvido else COR_DA_TELA_TRANCADA
+
 
 func erro_no_puzzle():
 	print("Você não tem o item necessário: ", item_necessario)

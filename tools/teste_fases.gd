@@ -141,39 +141,44 @@ func _testar_fase2() -> void:
 		if f.get_node_or_null(nome) != null:
 			sobras.append(nome)
 	_checar(sobras.is_empty(), "nada da antiga Torre sobrou na cena %s" % [sobras])
-	var filhos: Array = f.get_children().map(func(n: Node) -> String: return str(n.name))
-	filhos.sort()
-	_checar(filhos == ["BG", "LimitesDaCamera", "Paredes", "Player", "PortaHub", "SpawnPadrao", "Terreno"],
-		"na cena, so o palco e o que a faz funcionar: %s" % [filhos])
+	# A fase está sendo montada no editor, então o que mora nela muda de um dia
+	# para o outro — o que não pode faltar é o que a faz abrir e funcionar.
+	var faltando := PackedStringArray()
+	for nome in ["Atmosfera", "BG", "LimitesDaCamera", "Paredes", "Player", "PortaHub",
+			"PostesDeLuz", "SpawnPadrao", "Terreno"]:
+		if f.get_node_or_null(nome) == null:
+			faltando.append(nome)
+	_checar(faltando.is_empty(), "o palco e o que faz a cena funcionar estao la %s" % [faltando])
 
-	# O fundo: o céu de camadas da área aberta, o mesmo do pátio da fase 1.2.
+	# O fundo: o céu de camadas da área aberta, o mesmo do pátio da fase 1.2 —
+	# as mesmas quatro camadas de arte, na mesma ordem e no mesmo lugar. (O céu,
+	# a lua e as nuvens são do sistema de luz: quem confere é o teste_atmosfera.)
 	var bg := f.get_node_or_null("BG") as ParallaxBackground
 	_checar(bg != null, "o fundo e o ceu de camadas (ParallaxBackground)")
 	if bg != null:
 		var patio: Node = (load("res://scenes/fases/fase1_2_exterior.tscn") as PackedScene).instantiate()
 		var iguais := true
 		var camadas := PackedStringArray()
-		for camada in patio.get_node("BG").get_children():
-			camadas.append(str(camada.name))
-			var aqui := bg.get_node_or_null(NodePath(camada.name))
-			if aqui == null or aqui.get_child_count() != camada.get_child_count():
+		for nome in ["Serra", "Morros", "MataDistante", "Mata"]:
+			camadas.append(nome)
+			var camada := patio.get_node("BG").get_node_or_null(nome)
+			var aqui := bg.get_node_or_null(nome)
+			if camada == null or aqui == null or aqui.get_child_count() != camada.get_child_count():
 				iguais = false
 				continue
 			for i in camada.get_child_count():
 				var a := camada.get_child(i) as Sprite2D
 				var b := aqui.get_child(i) as Sprite2D
-				var arte_a := a.texture.resource_path
-				var arte_b := b.texture.resource_path
-				# O sol é um degradê guardado dentro de cada cena: aí vale o tipo.
-				if arte_a.contains("::"):
-					arte_a = a.texture.get_class()
-					arte_b = b.texture.get_class()
-				if (arte_a != arte_b or a.position != b.position
+				if (a.texture.resource_path != b.texture.resource_path or a.position != b.position
 						or a.scale != b.scale or a.region_rect != b.region_rect
 						or (a.material == null) != (b.material == null)):
 					iguais = false
+		var ordem_do_patio: Array = patio.get_node("BG").get_children().map(
+			func(n: Node) -> String: return str(n.name))
+		var ordem_daqui: Array = bg.get_children().map(func(n: Node) -> String: return str(n.name))
 		patio.free()
 		_checar(iguais, "com as mesmas camadas e a mesma arte do patio %s" % [camadas])
+		_checar(ordem_daqui == ordem_do_patio, "e o fundo empilhado na mesma ordem %s" % [ordem_daqui])
 		var anda := true
 		for nome in ["Serra", "Morros", "MataDistante", "Mata"]:
 			var camada := bg.get_node(nome) as ParallaxLayer
@@ -215,10 +220,12 @@ func _testar_fase2() -> void:
 		and paredes.get_node("ParedeDireita").position.x > limites.position.x + limites.size.x,
 		"com uma parede invisivel em cada ponta, fora do quadro")
 
-	# A porta de volta ao laboratório continua sendo a chegada da fase.
+	# A porta continua sendo a chegada da fase; a volta agora passa pelo
+	# corredor da torre (ela dá no fundo dele) antes do laboratório.
 	var porta := f.get_node("PortaHub")
-	_checar(porta.cena_destino == "res://scenes/laboratório_(world_2).tscn" and porta.recebe_chegada
-		and porta.tag_aqui == "entrada", "a porta do laboratorio continua de pe (chegada e volta)")
+	_checar(porta.cena_destino == "res://scenes/fases/corredor_torre.tscn" and porta.tag_destino == "fundo"
+		and porta.recebe_chegada and porta.tag_aqui == "entrada",
+		"a porta continua de pe: chegada da fase e volta pelo corredor da torre")
 
 	await _fechar(f)
 

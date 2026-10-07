@@ -252,6 +252,8 @@ position = Vector2(1.333313, 2.6666641)
 shape = SubResource("CapsuleShape2D_lg0pn")
 
 [node name="ExclamacaoAnimada" type="AnimatedSprite2D" parent="." unique_id=998921848]
+z_index = 2
+z_as_relative = false
 position = Vector2(-20.666666, -56)
 scale = Vector2(0.3359375, 0.3359375)
 sprite_frames = SubResource("SpriteFrames_0l81e")

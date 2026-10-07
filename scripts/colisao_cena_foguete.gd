@@ -1,11 +1,45 @@
 extends Area2D
 
+# --- A CENA DO MIRANTE ---
+#
+# A Cacau pisa na plataforma do mirante e vê o foguete pela primeira vez. A
+# parte dela — o susto, a fala, o balão de coração — é do player.gd
+# (reagir_ao_avistar_foguete). Aqui fica quem DIRIGE a cena e o que vem depois
+# da fala: o pôr do sol.
+#
+#   fala termina ──> o coração sobe (como sempre)
+#                    o sol começa a descer atrás da serra: o céu vai do dourado
+#                    ao crepúsculo, o fundo e o mundo escurecem com ele, os
+#                    postes dão a piscada e firmam            (Atmosfera.por_do_sol)
+#                    no fim da descida a tela apaga
+#                    no escuro, a fase vira NOITE
+#                    a tela acende: lua, estrelas, postes com tudo
+#                    o controle volta
+#
+# A Cacau fica parada do começo ao fim, e o HUD some junto: é para olhar.
+#
+# Depois disso é noite para o resto da partida (EstadoMundo.anoiteceu): o
+# world1 abre escuro quando ela volta do laboratório, e a cena não repete —
+# nem se ela morrer antes de chegar lá.
+#
+# Numa cena sem Atmosfera (ou que já abriu de noite) nada disso acontece: a
+# fala e o coração tocam como antes e o controle volta na hora.
+
+## Segundos entre o coração aparecer e o sol começar a descer.
+@export var respiro_antes_do_sol := 0.8
+## Em que ponto da descida do sol (0 a 1) a tela começa a apagar.
+@export_range(0.0, 1.0, 0.01) var hora_da_cortina := 0.78
+@export var duracao_do_escurecer := 2.4
+## Tempo com a tela toda preta, antes de a noite aparecer.
+@export var pausa_no_escuro := 1.0
+@export var duracao_do_clarear := 2.8
+
 var _disparado: bool = false
 
 func _ready() -> void:
-	# Voltando ao world1 pela passagem do laser ela já viu o foguete: a cena de
-	# avistar não repete.
-	_disparado = EstadoMundo.revelou_dr_chico
+	# Ela já viu o foguete (nesta volta ao world1 ou antes de morrer): a cena
+	# de avistar não repete.
+	_disparado = EstadoMundo.revelou_dr_chico or EstadoMundo.viu_o_foguete
 	body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body: Node2D) -> void:
@@ -14,5 +48,55 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.name != "Player":
 		return
 	_disparado = true
-	if body.has_method("reagir_ao_avistar_foguete"):
-		body.reagir_ao_avistar_foguete($CollisionShape2D)
+	if not body.has_method("reagir_ao_avistar_foguete"):
+		return
+
+	var atmosfera := Atmosfera.da_cena(self)
+	if atmosfera != null and atmosfera.pode_anoitecer():
+		body.segurar_apos_o_foguete = true
+		body.fala_do_foguete_terminou.connect(_anoitecer.bind(body, atmosfera), CONNECT_ONE_SHOT)
+	else:
+		body.fala_do_foguete_terminou.connect(_registrar, CONNECT_ONE_SHOT)
+	body.reagir_ao_avistar_foguete($CollisionShape2D)
+
+
+func _registrar() -> void:
+	EstadoMundo.viu_o_foguete = true
+
+
+## O pôr do sol, da descida ao controle de volta.
+func _anoitecer(player: Node2D, atmosfera: Atmosfera) -> void:
+	_registrar()
+	var cena := get_tree().current_scene
+	var cortina := FadeTela.criar(cena)
+
+	# O coração ainda está no ar quando o sol começa a descer.
+	await _esperar(respiro_antes_do_sol)
+	cortina.esconder_huds(cena)
+
+	# A descida não é esperada até o fim: a cortina entra por cima do final
+	# dela, com o último pedaço do sol ainda sumindo atrás da serra. O ponto de
+	# entrada é contado no andamento da própria descida, e não em segundos por
+	# fora — assim as duas coisas não saem do passo se o jogo engasgar.
+	atmosfera.por_do_sol()
+	while atmosfera.andamento_do_por_do_sol() < hora_da_cortina:
+		await get_tree().process_frame
+	await cortina.escurecer(duracao_do_escurecer)
+
+	atmosfera.definir_momento(Atmosfera.Momento.NOITE)
+	await _esperar(pausa_no_escuro)
+	await cortina.clarear(duracao_do_clarear)
+
+	cortina.restaurar_huds()
+	cortina.queue_free()
+	if is_instance_valid(player):
+		player.segurar_apos_o_foguete = false
+		player.pode_se_mover = true
+
+
+## Espera em tempo de JOGO (o mesmo relógio dos tweens da cena).
+func _esperar(segundos: float) -> void:
+	var resta := segundos
+	while resta > 0.0:
+		await get_tree().process_frame
+		resta -= get_process_delta_time()

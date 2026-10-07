@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="PerfilDeLuz" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/luz/perfil_de_luz.gd" id="1_perfil"]
+
+[resource]
+script = ExtResource("1_perfil")
+ceu_zenite = Color(0.37, 0.4, 0.6, 1)
+ceu_alto = Color(0.72, 0.52, 0.56, 1)
+ceu_baixo = Color(0.95, 0.62, 0.42, 1)
+ceu_horizonte = Color(1, 0.78, 0.46, 1)
+estrelas = 0.0
+clarao = 0.28
+sol = 1.0
+lua = 0.0
+tinta_do_sol = Color(1, 0.97, 0.82, 1)
+luz_do_fundo = Color(0.97, 0.85, 0.75, 1)
+cor_do_ar = Color(0.98, 0.72, 0.5, 1)
+neblina = 0.55
+ambiente = Color(0.96, 0.88, 0.82, 1)
+nuvem_luz = Color(1, 0.88, 0.7, 1)
+nuvem_sombra = Color(0.86, 0.54, 0.52, 1)
+nuvem_opacidade = 0.95
+postes = 0.35

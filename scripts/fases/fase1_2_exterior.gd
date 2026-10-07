@@ -36,14 +36,20 @@ extends FaseBase
 # não sair andando para fora do pátio (a câmera não a seguiria e ela sumiria).
 # Ficam FORA do quadro de propósito: mova-os se esticar a fase.
 #
-# O CÉU (BG/)
+# O CÉU (BG/) E A NOITE
 #
-# O mesmo céu de camadas do world1 (as cinco "GandalfHardcore Background
-# layers" com o shader de neblina aérea), só que com todas as camadas em
-# motion_scale = 0: com a câmera parada não existe paralaxe para acontecer, e
-# uma camada que não se move é desenho de fundo puro. Se um dia a fase crescer
-# e a câmera voltar a andar, é só devolver os motion_scale (0.2, 0.4, 0.6, 0.8,
-# de trás para a frente) que a profundidade volta junto.
+# As mesmas quatro camadas de arte do world1 (serra, morros e as duas matas),
+# só que com todas em motion_scale = 0: com a câmera parada não existe paralaxe
+# para acontecer, e uma camada que não se move é desenho de fundo puro. Se um
+# dia a fase crescer e a câmera voltar a andar, é só devolver os motion_scale
+# (0.2, 0.4, 0.6, 0.8, de trás para a frente) que a profundidade volta junto.
+#
+# O pátio é sempre de NOITE: a Cacau só chega aqui depois do pôr do sol do
+# world1. Quem cuida disso é o nó Atmosfera (momento = Noite), que pinta o céu
+# estrelado (BG/Ceu), acende a lua (BG/CamadaDaLua/Lua — arraste para mudar de
+# lugar), tinge as nuvens e as camadas do fundo e escurece o mundo. O fogo da
+# fornalha tem luz própria (Patio/Retorta/LuzDoFogo), e todo poste pintado no
+# TileMap acende sozinho (nó PostesDeLuz). Ver docs/ILUMINACAO.md.
 #
 # DESENHO: o TileMapLayer do terreno está em z_index 10, ACIMA de tudo. É o que
 # faz a cabine do elevador (z_index 3) e a personagem (z_index 2) sumirem

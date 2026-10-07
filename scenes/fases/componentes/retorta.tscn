@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://72n4rv8s0yc4" path="res://assets/itens/Carvão.png" id="12_carvao"]
 [ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="13_pop"]
 [ext_resource type="AudioStream" uid="uid://b1q5n1qckojur" path="res://sounds/FOGO.mp3" id="14_fogo"]
+[ext_resource type="Script" uid="uid://dx3e4o4vfhvnf" path="res://scripts/luz/luz_pontual.gd" id="15_luz"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_forn_off"]
 atlas = ExtResource("6_fdesl")
@@ -180,6 +181,16 @@ sprite_frames = SubResource("SpriteFrames_fornalha")
 animation = &"desligada"
 autoplay = "desligada"
 frame_progress = 0.6542248
+
+[node name="LuzDoFogo" type="Node2D" parent="." unique_id=3820941170]
+position = Vector2(0, -96)
+script = ExtResource("15_luz")
+acesa = false
+cor = Color(1, 0.56, 0.22, 1)
+energia = 1.25
+raio = 330.0
+clarao = 0.4
+tremor = 0.2
 
 [node name="Placeholder" type="Node2D" parent="." unique_id=2118339362]
 visible = false
