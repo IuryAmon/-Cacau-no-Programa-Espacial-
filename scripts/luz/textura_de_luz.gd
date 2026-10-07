@@ -1,18 +1,29 @@
 @tool
 class_name TexturaDeLuz
 extends RefCounted
-## Texturas de luz em pixel art, pintadas por conta.
+## Texturas de luz pintadas por conta: a forma da luz que uma PointLight2D joga
+## no cenário, ou que um sprite soma no ar.
 ##
-## Uma PointLight2D joga no cenário a textura que recebe. Com um degradê liso de
-## foto a luz sai lisa de foto — e destoa de tudo em volta. Estas aqui caem em
-## DEGRAUS, com a emenda entre um degrau e o outro feita em pontilhado, e cada
-## pixel da textura é um pixel de arte do cenário (a luz usa escala 2, a mesma
-## dos tiles).
+## Saem de dois jeitos, conforme os "degraus" pedidos:
+##
+##   LISA (degraus 0)        o degradê contínuo, que é o padrão do jogo: a luz
+##                           clareia o cenário sem deixar marca nenhuma dela.
+##   PIXELADA (degraus > 0)  a luz cai em patamares, com a emenda entre um e o
+##                           outro feita em pontilhado, e cada pixel da textura
+##                           é um pixel de arte do cenário.
+##
+## A conta é sempre feita na resolução da arte (um ponto para cada pixel do
+## cenário, que tem escala 2). A lisa é ampliada ao dobro com interpolação
+## antes de virar textura, para chegar ao tamanho do pixel do mundo sem
+## quadriculado — por isso cada função devolve também a "escala": quantos
+## pixels de arte vale um pixel da textura.
 ##
 ## As texturas são montadas uma vez e ficam guardadas: dez postes iguais usam a
 ## mesma, e trocar de fase não refaz nenhuma.
 
 const BAYER: Array[int] = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
+## Quanto a textura lisa é ampliada depois da conta.
+const AMPLIACAO_DA_LISA := 2
 
 static var _guardadas: Dictionary = {}
 
@@ -21,8 +32,9 @@ static var _guardadas: Dictionary = {}
 ## clarão em volta do tubo e um cone que abre até o chão.
 ##
 ## Medidas em pixels de arte. Devolve {"textura": ImageTexture, "fonte":
-## Vector2} — "fonte" é onde fica o centro do tubo dentro da textura.
-static func cone(largura: int, alcance: int, abertura: float, degraus: int, pontilhado: float) -> Dictionary:
+## Vector2, "escala": float} — "fonte" é onde fica o centro do tubo dentro da
+## textura, e "escala" é quantos pixels de arte vale cada pixel dela.
+static func cone(largura: int, alcance: int, abertura: float, degraus: int = 0, pontilhado: float = 0.5) -> Dictionary:
 	var chave := "cone:%d:%d:%.3f:%d:%.3f" % [largura, alcance, abertura, degraus, pontilhado]
 	if _guardadas.has(chave):
 		return _guardadas[chave]
@@ -65,15 +77,15 @@ static func cone(largura: int, alcance: int, abertura: float, degraus: int, pont
 				valor = maxf(valor, lado * fundo * fim)
 
 			var espelho := w - 1 - x
-			dados[y * w + x] = _em_degraus(valor, x, y, degraus, pontilhado)
-			dados[y * w + espelho] = _em_degraus(valor, espelho, y, degraus, pontilhado)
+			dados[y * w + x] = _byte(valor, x, y, degraus, pontilhado)
+			dados[y * w + espelho] = _byte(valor, espelho, y, degraus, pontilhado)
 
-	return _guardar(chave, w, h, dados, fonte)
+	return _guardar(chave, w, h, dados, fonte, degraus <= 0)
 
 
 ## Um clarão oval em volta de um tubo deitado — o brilho da própria lâmpada no
 ## ar. Mesmas medidas e mesmo retorno do [method cone].
-static func halo(largura: int, raio: int, degraus: int, pontilhado: float) -> Dictionary:
+static func halo(largura: int, raio: int, degraus: int = 0, pontilhado: float = 0.5) -> Dictionary:
 	var chave := "halo:%d:%d:%d:%.3f" % [largura, raio, degraus, pontilhado]
 	if _guardadas.has(chave):
 		return _guardadas[chave]
@@ -96,14 +108,14 @@ static func halo(largura: int, raio: int, degraus: int, pontilhado: float) -> Di
 			var valor := clampf(1.0 - d / float(raio), 0.0, 1.0)
 			valor = valor * valor
 			var espelho := w - 1 - x
-			dados[y * w + x] = _em_degraus(valor, x, y, degraus, pontilhado)
-			dados[y * w + espelho] = _em_degraus(valor, espelho, y, degraus, pontilhado)
+			dados[y * w + x] = _byte(valor, x, y, degraus, pontilhado)
+			dados[y * w + espelho] = _byte(valor, espelho, y, degraus, pontilhado)
 
-	return _guardar(chave, w, h, dados, fonte)
+	return _guardar(chave, w, h, dados, fonte, degraus <= 0)
 
 
 ## Um clarão redondo, para fontes pequenas (uma brasa, uma tela, um farol).
-static func ponto(raio: int, degraus: int, pontilhado: float, queda: float = 1.6) -> Dictionary:
+static func ponto(raio: int, degraus: int = 0, pontilhado: float = 0.5, queda: float = 1.6) -> Dictionary:
 	var chave := "ponto:%d:%d:%.3f:%.3f" % [raio, degraus, pontilhado, queda]
 	if _guardadas.has(chave):
 		return _guardadas[chave]
@@ -122,32 +134,40 @@ static func ponto(raio: int, degraus: int, pontilhado: float, queda: float = 1.6
 			var valor := pow(clampf(1.0 - d / float(raio), 0.0, 1.0), queda)
 			var xe := w - 1 - x
 			var ye := w - 1 - y
-			dados[y * w + x] = _em_degraus(valor, x, y, degraus, pontilhado)
-			dados[y * w + xe] = _em_degraus(valor, xe, y, degraus, pontilhado)
-			dados[ye * w + x] = _em_degraus(valor, x, ye, degraus, pontilhado)
-			dados[ye * w + xe] = _em_degraus(valor, xe, ye, degraus, pontilhado)
+			dados[y * w + x] = _byte(valor, x, y, degraus, pontilhado)
+			dados[y * w + xe] = _byte(valor, xe, y, degraus, pontilhado)
+			dados[ye * w + x] = _byte(valor, x, ye, degraus, pontilhado)
+			dados[ye * w + xe] = _byte(valor, xe, ye, degraus, pontilhado)
 
-	return _guardar(chave, w, w, dados, fonte)
+	return _guardar(chave, w, w, dados, fonte, degraus <= 0)
 
 
-# Derruba um valor liso de 0 a 1 para "degraus" patamares e devolve o byte do
-# pixel. Só o fim de cada patamar é pontilhado (a fração "pontilhado" dele); o
-# resto é chapado.
-static func _em_degraus(valor: float, x: int, y: int, degraus: int, pontilhado: float) -> int:
-	var n := maxi(degraus, 1)
-	var f := clampf(valor, 0.0, 1.0) * n
+# O byte de um pixel, a partir do valor liso de 0 a 1. Sem degraus, é o próprio
+# valor. Com degraus, ele é derrubado para "degraus" patamares, e só o fim de
+# cada patamar é pontilhado (a fração "pontilhado" dele); o resto é chapado.
+static func _byte(valor: float, x: int, y: int, degraus: int, pontilhado: float) -> int:
+	if degraus <= 0:
+		return int(clampf(valor, 0.0, 1.0) * 255.0 + 0.5)
+	var f := clampf(valor, 0.0, 1.0) * degraus
 	var patamar := int(f)
 	var janela := maxf(pontilhado, 0.0001)
 	var emenda := (f - float(patamar) - (1.0 - janela)) / janela
 	if emenda * 16.0 > float(BAYER[(x & 3) + (y & 3) * 4]) + 0.5:
 		patamar += 1
-	return mini(patamar, n) * 255 / n
+	return mini(patamar, degraus) * 255 / degraus
 
 
 # Um canal só (L8): a luz é branca, e quem dá a cor é a PointLight2D ou o
 # `modulate` do sprite.
-static func _guardar(chave: String, w: int, h: int, dados: PackedByteArray, fonte: Vector2) -> Dictionary:
+static func _guardar(chave: String, w: int, h: int, dados: PackedByteArray, fonte: Vector2, lisa: bool) -> Dictionary:
 	var img := Image.create_from_data(w, h, false, Image.FORMAT_L8, dados)
-	var resultado := {"textura": ImageTexture.create_from_image(img), "fonte": fonte}
+	var escala := 1.0
+	if lisa:
+		# Ampliada com interpolação: a luz lisa chega ao tamanho do pixel do
+		# mundo sem o quadriculado do pixel de arte.
+		img.resize(w * AMPLIACAO_DA_LISA, h * AMPLIACAO_DA_LISA, Image.INTERPOLATE_BILINEAR)
+		fonte *= float(AMPLIACAO_DA_LISA)
+		escala = 1.0 / float(AMPLIACAO_DA_LISA)
+	var resultado := {"textura": ImageTexture.create_from_image(img), "fonte": fonte, "escala": escala}
 	_guardadas[chave] = resultado
 	return resultado

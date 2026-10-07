@@ -1,17 +1,22 @@
 @tool
 class_name AstroPixel
 extends Sprite2D
-## O sol ou a lua: um sprite comum (o disco) com um brilho em pixel art em volta.
+## O sol ou a lua: um sprite comum (o disco) com um brilho em volta.
 ##
 ## O disco é a `Texture` do próprio nó — troque a arte por qualquer PNG, mude a
 ## escala, arraste no editor: é um Sprite2D como outro qualquer. O que este
-## script acrescenta é o HALO: anéis chapados, com a emenda em pontilhado, que
-## respiram em quadros secos (ver `shaders/brilho_pixel.gdshader`). Tudo dele se
-## mexe aqui no Inspector, nos grupos Brilho, Pontas e Animação.
+## script acrescenta é o HALO (ver `shaders/brilho_pixel.gdshader`), que sai de
+## dois jeitos:
+##
+##   liso      um degradê contínuo, que respira devagar. É o padrão (a lua).
+##   pixelado  anéis chapados, com a emenda em pontilhado, que respiram em
+##             quadros secos ([member brilho_pixelado] — é o do sol do world1).
+##
+## Tudo dele se mexe aqui no Inspector, nos grupos Brilho, Pixel art, Pontas e
+## Animação.
 ##
 ## As medidas do brilho são em PIXELS DA ARTE do disco (texels), não da tela:
-## aumentar a escala do nó aumenta o halo junto, sempre na mesma granulação do
-## disco.
+## aumentar a escala do nó aumenta o halo junto.
 ##
 ## A [Atmosfera] da cena acende e apaga o astro conforme o horário (o sol some à
 ## noite, a lua só aparece nela) e tinge o sol quando ele desce. Ela faz isso
@@ -36,17 +41,12 @@ const SHADER := preload("res://shaders/brilho_pixel.gdshader")
 	set(v):
 		alcance = v
 		_atualizar()
-## Quantos anéis de luz.
-@export_range(1, 12, 1) var aneis := 5:
-	set(v):
-		aneis = v
-		_atualizar()
-## Cor do anel colado no disco.
+## Cor do brilho colado no disco.
 @export var cor_interna := Color(1.0, 0.95, 0.66):
 	set(v):
 		cor_interna = v
 		_atualizar()
-## Cor do anel de fora.
+## Cor do brilho na beirada de fora.
 @export var cor_externa := Color(1.0, 0.56, 0.38):
 	set(v):
 		cor_externa = v
@@ -56,8 +56,8 @@ const SHADER := preload("res://shaders/brilho_pixel.gdshader")
 		intensidade = v
 		_atualizar()
 ## Como o brilho entra no céu: 0 soma (só clareia — bom em céu escuro, é o da
-## lua), 1 cobre (cada anel é uma tinta por cima — bom em céu claro, onde somar
-## estoura no branco e os anéis somem; é o do sol).
+## lua), 1 cobre (uma tinta por cima — bom em céu claro, onde somar estoura no
+## branco; é o do sol).
 @export_range(0.0, 1.0, 0.01) var cobertura := 1.0:
 	set(v):
 		cobertura = v
@@ -67,15 +67,29 @@ const SHADER := preload("res://shaders/brilho_pixel.gdshader")
 	set(v):
 		queda = v
 		_atualizar()
-## Quanto de cada anel é pontilhado na emenda. 0 = anéis secos.
-@export_range(0.0, 1.0, 0.01) var pontilhado := 0.5:
-	set(v):
-		pontilhado = v
-		_atualizar()
 ## Achata o halo na vertical (1 = redondo, maior que 1 = deitado).
 @export_range(0.3, 3.0, 0.05) var achatamento := 1.0:
 	set(v):
 		achatamento = v
+		_atualizar()
+
+@export_group("Pixel art")
+## Desligado (o padrão), o brilho é um degradê liso. Ligado, ele vira anéis
+## chapados com a emenda pontilhada, no tamanho do pixel da arte do disco.
+@export var brilho_pixelado := false:
+	set(v):
+		brilho_pixelado = v
+		_atualizar()
+## Quantos anéis de luz. Só vale com [member brilho_pixelado] ligado.
+@export_range(1, 12, 1) var aneis := 5:
+	set(v):
+		aneis = v
+		_atualizar()
+## Quanto de cada anel é pontilhado na emenda (0 = anéis secos). Só vale com
+## [member brilho_pixelado] ligado.
+@export_range(0.0, 1.0, 0.01) var pontilhado := 0.5:
+	set(v):
+		pontilhado = v
 		_atualizar()
 
 @export_group("Pontas")
@@ -95,12 +109,13 @@ const SHADER := preload("res://shaders/brilho_pixel.gdshader")
 		_atualizar()
 
 @export_group("Animação")
-## Quadros por segundo da respiração do brilho. 0 = parado.
+## Ritmo da respiração do brilho: quadros por segundo no pixelado, e o mesmo
+## compasso, em onda, no liso. 0 = parado.
 @export_range(0.0, 12.0, 0.1) var quadros_por_segundo := 2.0:
 	set(v):
 		quadros_por_segundo = v
 		_atualizar()
-## Quanto os anéis andam de um quadro para o outro.
+## Quanto o brilho cresce e encolhe a cada compasso.
 @export_range(0.0, 1.0, 0.01) var respiro := 0.18:
 	set(v):
 		respiro = v
@@ -205,6 +220,7 @@ func _atualizar() -> void:
 
 	_material.set_shader_parameter(&"raio_do_disco", disco)
 	_material.set_shader_parameter(&"raio", fora)
+	_material.set_shader_parameter(&"pixelado", 1.0 if brilho_pixelado else 0.0)
 	_material.set_shader_parameter(&"aneis", float(aneis))
 	_material.set_shader_parameter(&"cor_interna", cor_interna)
 	_material.set_shader_parameter(&"cor_externa", cor_externa)

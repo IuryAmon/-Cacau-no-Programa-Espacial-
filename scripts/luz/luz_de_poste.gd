@@ -18,8 +18,9 @@ extends Node2D
 ## poça      uma PointLight2D: ilumina de verdade o chão, o poste e quem passa.
 ## [/codeblock]
 ##
-## As três de luz usam texturas em degraus e pontilhado ([TexturaDeLuz]), com o
-## pixel do tamanho do pixel do cenário.
+## A luz é LISA: um degradê contínuo, que clareia o cenário sem deixar a marca
+## dela por cima da arte. Quem quiser a luz em degraus pontilhados, no tamanho
+## do pixel do cenário, liga [member pixelada].
 ##
 ## A [Atmosfera] regula a força pela hora ([member intensidade]): fraca ao
 ## entardecer, com tudo à noite.
@@ -55,12 +56,19 @@ const PIXEL := 2.0
 		_montar()
 
 @export_group("Pixel art")
-## Em quantos degraus a luz cai.
+## Desligado (o padrão), a luz é um degradê liso. Ligado, ela cai em degraus
+## com a emenda pontilhada, no tamanho do pixel do cenário.
+@export var pixelada := false:
+	set(v):
+		pixelada = v
+		_montar()
+## Em quantos degraus a luz cai. Só vale com [member pixelada] ligado.
 @export_range(2, 16, 1) var degraus := 6:
 	set(v):
 		degraus = v
 		_montar()
-## Quanto de cada degrau é pontilhado na emenda.
+## Quanto de cada degrau é pontilhado na emenda. Só vale com [member pixelada]
+## ligado.
 @export_range(0.0, 1.0, 0.01) var pontilhado := 0.5:
 	set(v):
 		pontilhado = v
@@ -127,7 +135,6 @@ func _ready() -> void:
 	_poca = PointLight2D.new()
 	_poca.name = "Poca"
 	_poca.blend_mode = Light2D.BLEND_MODE_ADD
-	_poca.texture_scale = PIXEL
 	_poca.set_meta(&"_edit_lock_", true)
 	add_child(_poca, false, Node.INTERNAL_MODE_BACK)
 
@@ -208,9 +215,7 @@ func _novo_sprite(nome: String) -> Sprite2D:
 	var s := Sprite2D.new()
 	s.name = nome
 	s.material = _material_do_ar
-	s.scale = Vector2(PIXEL, PIXEL)
 	s.centered = false
-	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	s.set_meta(&"_edit_lock_", true)
 	add_child(s, false, Node.INTERNAL_MODE_BACK)
 	return s
@@ -222,24 +227,32 @@ func _montar() -> void:
 	var tubo := maxi(int(round(largura / PIXEL)), 2)
 	var fundo := maxi(int(round(alcance / PIXEL)), 8)
 
-	var poca := TexturaDeLuz.cone(tubo, fundo, abertura, degraus, pontilhado)
+	# Lisa (degraus 0) ou em degraus: a mesma forma, pintada de dois jeitos.
+	var poca := TexturaDeLuz.cone(tubo, fundo, abertura, degraus if pixelada else 0, pontilhado)
 	var textura: Texture2D = poca["textura"]
-	var fonte: Vector2 = poca["fonte"]
+	var passo: float = PIXEL * float(poca["escala"])
 	_poca.texture = textura
+	_poca.texture_scale = passo
 	# O "offset" da luz conta do centro da textura; a fonte fica no nó.
-	_poca.offset = (textura.get_size() * 0.5 - fonte) * PIXEL
+	_poca.offset = (textura.get_size() * 0.5 - (poca["fonte"] as Vector2)) * passo
 
-	# O feixe no ar é o mesmo cone com menos degraus: lê como luz atravessando
-	# o ar, em faixas, e não como um plástico amarelo.
-	var ar := TexturaDeLuz.cone(tubo, fundo, abertura, 4, 0.4)
-	_feixe.texture = ar["textura"]
-	_feixe.position = -(ar["fonte"] as Vector2) * PIXEL
-
-	var brilho := TexturaDeLuz.halo(tubo, 22, 5, 0.35)
-	_clarao.texture = brilho["textura"]
-	_clarao.position = -(brilho["fonte"] as Vector2) * PIXEL
+	# O feixe no ar é o mesmo cone. Pixelado, ele leva menos degraus, para ler
+	# como luz atravessando o ar em faixas e não como um plástico amarelo.
+	_vestir_sprite(_feixe, TexturaDeLuz.cone(tubo, fundo, abertura, 4, 0.4) if pixelada else poca)
+	_vestir_sprite(_clarao, TexturaDeLuz.halo(tubo, 22, 5 if pixelada else 0, 0.35))
 
 	_aplicar()
+
+
+## Põe num dos sprites do ar a textura pedida, com a fonte de luz em cima do nó.
+func _vestir_sprite(sprite: Sprite2D, luz: Dictionary) -> void:
+	var passo: float = PIXEL * float(luz["escala"])
+	sprite.texture = luz["textura"]
+	sprite.scale = Vector2(passo, passo)
+	sprite.position = -(luz["fonte"] as Vector2) * passo
+	# A lisa é esticada com interpolação; a pixelada, com o pixel seco.
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if pixelada \
+		else CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 func _aplicar() -> void:

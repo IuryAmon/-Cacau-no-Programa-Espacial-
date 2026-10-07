@@ -55,7 +55,6 @@
 [ext_resource type="Script" uid="uid://b7y477ivg3f42" path="res://scripts/luz/nuvens.gd" id="63_nuvens"]
 [ext_resource type="Script" uid="uid://c2bbsa80lmr8h" path="res://scripts/luz/postes_de_luz.gd" id="64_postes"]
 [ext_resource type="Texture2D" uid="uid://b63bgq1lbb2ag" path="res://assets/Area Aberta/GandalfHardcore Background layers/sun.png" id="65_sol"]
-[ext_resource type="Texture2D" uid="uid://cpv5w27wyng8l" path="res://assets/Area Aberta/Lua/2.png" id="66_lua"]
 [ext_resource type="Script" uid="uid://mp078kyxvex1" path="res://scripts/luz/arte_iluminada.gd" id="67_arte"]
 [ext_resource type="Script" uid="uid://nqdju8uq5xek" path="res://scripts/luz/foco_de_luz.gd" id="68_foco"]
 
@@ -7703,36 +7702,18 @@ script = ExtResource("61_ceu")
 motion_scale = Vector2(0, 0.2)
 
 [node name="Sol" type="Sprite2D" parent="BG/CamadaDoSol" unique_id=92000003]
-position = Vector2(255, 170)
+position = Vector2(231, 171)
 scale = Vector2(2, 2)
 texture = ExtResource("65_sol")
 script = ExtResource("62_astro")
 alcance = 76.0
-aneis = 4
 cor_interna = Color(1, 0.97, 0.74, 1)
 cor_externa = Color(1, 0.78, 0.42, 1)
 intensidade = 0.85
 queda = 1.0
-pontilhado = 0.4
-
-[node name="CamadaDaLua" type="ParallaxLayer" parent="BG" unique_id=92000007]
-motion_scale = Vector2(0, 0)
-
-[node name="Lua" type="Sprite2D" parent="BG/CamadaDaLua" unique_id=92000004]
-position = Vector2(918, 120)
-scale = Vector2(1.5, 1.5)
-texture = ExtResource("66_lua")
-region_enabled = true
-region_rect = Rect2(229, 64, 139, 139)
-script = ExtResource("62_astro")
-tipo = 1
-alcance = 124.0
+brilho_pixelado = true
 aneis = 4
-cor_interna = Color(0.7, 0.76, 1, 1)
-cor_externa = Color(0.3, 0.4, 0.95, 1)
-intensidade = 0.32
-cobertura = 0.0
-queda = 1.8
+pontilhado = 0.4
 
 [node name="NuvensDoFundo" type="ParallaxLayer" parent="BG" unique_id=92000005]
 motion_scale = Vector2(0.02, 0.2)

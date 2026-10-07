@@ -936,20 +936,20 @@ y_do_zenite = -20.0
 motion_scale = Vector2(0, 0)
 
 [node name="Lua" type="Sprite2D" parent="BG/CamadaDaLua" unique_id=92000003]
-position = Vector2(850, 122)
-scale = Vector2(1.5, 1.5)
+position = Vector2(880, 100)
+scale = Vector2(0.8, 0.8)
 texture = ExtResource("66_lua")
 region_enabled = true
 region_rect = Rect2(229, 64, 139, 139)
 script = ExtResource("62_astro")
 tipo = 1
 alcance = 124.0
-aneis = 4
 cor_interna = Color(0.7, 0.76, 1, 1)
 cor_externa = Color(0.3, 0.4, 0.95, 1)
 intensidade = 0.32
 cobertura = 0.0
 queda = 1.8
+aneis = 4
 
 [node name="NuvensDoFundo" type="ParallaxLayer" parent="BG" unique_id=92000004]
 motion_scale = Vector2(0.02, 0)

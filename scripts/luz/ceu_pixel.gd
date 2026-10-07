@@ -64,10 +64,17 @@ const SHADER := preload("res://shaders/ceu_pixel.gdshader")
 		_atualizar()
 
 @export_group("Estrelas")
-## Fração das células do céu que tem estrela.
-@export_range(0.0, 0.1, 0.001) var densidade := 0.014:
+## Fração das células do céu que tem estrela. As grandes (em cruz) rareiam
+## junto com as miúdas.
+@export_range(0.0, 0.1, 0.001) var densidade := 0.002:
 	set(v):
 		densidade = v
+		_atualizar()
+## Tamanho do pixel das estrelas, em pixels da camada. Menor que o `pixel` do
+## céu, elas ficam mais finas que a granulação dele; a quantidade não muda.
+@export_range(0.5, 8.0, 0.5) var tamanho_das_estrelas := 1.0:
+	set(v):
+		tamanho_das_estrelas = v
 		_atualizar()
 @export var cor_das_estrelas := Color(0.75, 0.79, 1.0):
 	set(v):
@@ -139,6 +146,7 @@ func _atualizar() -> void:
 	_material.set_shader_parameter(&"pontilhado", pontilhado)
 	_material.set_shader_parameter(&"trama", float(trama))
 	_material.set_shader_parameter(&"densidade", densidade)
+	_material.set_shader_parameter(&"pixel_das_estrelas", tamanho_das_estrelas)
 	_material.set_shader_parameter(&"cor_das_estrelas", cor_das_estrelas)
 	_material.set_shader_parameter(&"cintilar", cintilar)
 	_material.set_shader_parameter(&"raio_do_clarao", raio_do_clarao)

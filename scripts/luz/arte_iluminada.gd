@@ -10,7 +10,8 @@ extends Node2D
 ## holofote, o hangar ganha portão iluminado e a antena ganha farol, sem
 ## ninguém pintar uma segunda arte "de noite".
 ##
-## Para acender outro ponto: duplique um FocoDeLuz e arraste. Cabem até 8.
+## Para acender outro ponto: duplique um FocoDeLuz e arraste. Cabem até 8. A
+## luz dos focos é lisa; [member pixelada] troca por degraus pontilhados.
 ##
 ## A força acompanha o horário, pela mesma régua dos postes
 ## ([member PerfilDeLuz.postes]): quase nada ao entardecer, com tudo à noite.
@@ -19,18 +20,26 @@ const SHADER := preload("res://shaders/arte_iluminada.gdshader")
 const MAXIMO := 8
 
 @export_group("Pixel art")
-## Em quantos degraus cada foco cai.
+## Desligado (o padrão), cada foco é um degradê liso. Ligado, a luz cai em
+## degraus com a emenda pontilhada.
+@export var pixelada := false:
+	set(v):
+		pixelada = v
+		_atualizar()
+## Em quantos degraus cada foco cai. Só vale com [member pixelada] ligado.
 @export_range(2, 12, 1) var degraus := 5:
 	set(v):
 		degraus = v
 		_atualizar()
-## Quanto de cada degrau é pontilhado na emenda.
+## Quanto de cada degrau é pontilhado na emenda. Só vale com [member pixelada]
+## ligado.
 @export_range(0.0, 1.0, 0.01) var pontilhado := 0.5:
 	set(v):
 		pontilhado = v
 		_atualizar()
-## Tamanho do pixel de arte, em pixels da textura do pai. O padrão compensa a
-## escala da arte da base, para o pontilhado sair do tamanho do resto do fundo.
+## Tamanho do pixel de arte, em pixels da textura do pai (só vale com
+## [member pixelada] ligado). O padrão compensa a escala da arte da base, para
+## o pontilhado sair do tamanho do resto do fundo.
 @export_range(1.0, 12.0, 0.5) var pixel := 3.0:
 	set(v):
 		pixel = v
@@ -82,6 +91,7 @@ func receber_perfil(perfil: PerfilDeLuz) -> void:
 func _atualizar() -> void:
 	if _material == null:
 		return
+	_material.set_shader_parameter(&"pixelado", 1.0 if pixelada else 0.0)
 	_material.set_shader_parameter(&"degraus", float(degraus))
 	_material.set_shader_parameter(&"pontilhado", pontilhado)
 	_material.set_shader_parameter(&"pixel", pixel)

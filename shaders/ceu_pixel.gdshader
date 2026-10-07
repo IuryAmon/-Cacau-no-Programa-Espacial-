@@ -46,7 +46,10 @@ group_uniforms;
 group_uniforms estrelas_do_ceu;
 uniform float estrelas : hint_range(0.0, 1.0) = 0.0;
 /// Fração das células que tem estrela.
-uniform float densidade : hint_range(0.0, 0.1) = 0.014;
+uniform float densidade : hint_range(0.0, 0.1) = 0.002;
+/// Tamanho do pixel das estrelas, em unidades da camada. Menor que `pixel`, elas
+/// ficam mais finas que a granulação do céu; a quantidade não muda.
+uniform float pixel_das_estrelas = 1.0;
 /// Uma estrela grande (em cruz) a cada tantas células.
 uniform float malha_das_grandes = 26.0;
 uniform vec4 cor_das_estrelas : source_color = vec4(0.75, 0.79, 1.0, 1.0);
@@ -112,25 +115,33 @@ void fragment() {
 		// Rareiam rumo ao horizonte e somem no clarão do astro.
 		float mascara = smoothstep(1.0, 0.5, t) * (1.0 - clamp(perto * clarao * 2.2, 0.0, 1.0));
 
+		// As estrelas têm a grade delas, mais fina que a do céu. `densidade` e
+		// `malha_das_grandes` continuam contadas em células do céu, então mudar o
+		// tamanho da estrela não muda quantas são.
+		float pe = max(pixel_das_estrelas, 0.01);
+		float razao = pe / pixel;
+		vec2 ce = floor(local / pe);
+		float malha = max(floor(malha_das_grandes / razao), 6.0);
+
 		// Miúdas: um pixel só. A grandeza decide o brilho e a ordem de acender.
-		float grandeza = sorteio(cel + 71.7);
-		float tem = step(sorteio(cel), densidade * mascara) * step(1.0 - estrelas, grandeza);
-		float fase = sorteio(cel + 13.1);
-		float ritmo = mix(0.25, 0.9, sorteio(cel + 5.3)) * cintilar;
+		float grandeza = sorteio(ce + 71.7);
+		float tem = step(sorteio(ce), densidade * razao * razao * mascara) * step(1.0 - estrelas, grandeza);
+		float fase = sorteio(ce + 13.1);
+		float ritmo = mix(0.25, 0.9, sorteio(ce + 5.3)) * cintilar;
 		// Metade delas pisca, em dois tons secos — nada de brilho ondulando.
 		float pisca = mix(1.0, step(0.22, fract(TIME * ritmo + fase)), step(0.5, fase));
 		float brilho = tem * mix(0.3, 1.0, grandeza * grandeza) * mix(0.45, 1.0, pisca);
 
 		// Grandes: uma por bloco, em cruz, com os braços piscando.
-		vec2 bloco = floor(cel / malha_das_grandes);
+		vec2 bloco = floor(ce / malha);
 		float sb = sorteio(bloco + 3.3);
-		vec2 miolo = bloco * malha_das_grandes + 2.0
-			+ floor(vec2(sorteio(bloco + 9.1), sorteio(bloco + 4.7)) * (malha_das_grandes - 4.0));
-		vec2 dc = abs(cel - miolo);
+		vec2 miolo = bloco * malha + 2.0
+			+ floor(vec2(sorteio(bloco + 9.1), sorteio(bloco + 4.7)) * (malha - 4.0));
+		vec2 dc = abs(ce - miolo);
 		float dist = dc.x + dc.y;
 		// A máscara é a do miolo, senão a cruz sairia cortada na divisa.
-		float tg = clamp(((miolo.y + 0.5) * pixel - y_zenite) / (y_horizonte - y_zenite), 0.0, 1.0);
-		float tem_grande = step(sb, 0.55 * smoothstep(0.9, 0.35, tg)) * step(1.0 - estrelas, 0.55 + 0.45 * sb);
+		float tg = clamp(((miolo.y + 0.5) * pe - y_zenite) / (y_horizonte - y_zenite), 0.0, 1.0);
+		float tem_grande = step(sb, min(densidade * 40.0, 1.0) * smoothstep(0.9, 0.35, tg)) * step(1.0 - estrelas, 0.55 + 0.45 * sb);
 		float acesa = step(0.4, fract(TIME * 0.35 * cintilar + sb * 7.0));
 		float grande = tem_grande * (step(dist, 0.5) + (step(dist, 1.5) - step(dist, 0.5)) * 0.5 * acesa);
 		grande *= 1.0 - clamp(perto * clarao * 2.2, 0.0, 1.0);

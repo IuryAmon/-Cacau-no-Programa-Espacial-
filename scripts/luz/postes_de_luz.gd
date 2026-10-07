@@ -4,6 +4,7 @@ extends Node2D
 ## Acende sozinho todo poste pintado nos TileMapLayers da cena.
 ##
 ## Poste aqui é tile: pinta-se no TileMap como qualquer outro pedaço de cenário.
+## (A luz é lisa; [member pixelada] troca por luz em degraus pontilhados.)
 ## Este nó varre as camadas atrás das células que são a LÂMPADA (o braço do
 ## poste do `Props-01.png`) e põe uma [LuzDePoste] no tubo de cada uma. Pintou
 ## um poste novo, ele acende; apagou, a luz vai embora. No editor a varredura
@@ -55,12 +56,19 @@ const LAMPADAS := {
 		_repassar()
 
 @export_group("Pixel art")
-## Em quantos degraus a luz cai.
+## Desligado (o padrão), a luz dos postes é um degradê liso. Ligado, ela cai em
+## degraus com a emenda pontilhada, no tamanho do pixel do cenário.
+@export var pixelada := false:
+	set(v):
+		pixelada = v
+		_repassar()
+## Em quantos degraus a luz cai. Só vale com [member pixelada] ligado.
 @export_range(2, 16, 1) var degraus := 6:
 	set(v):
 		degraus = v
 		_repassar()
-## Quanto de cada degrau é pontilhado na emenda.
+## Quanto de cada degrau é pontilhado na emenda. Só vale com [member pixelada]
+## ligado.
 @export_range(0.0, 1.0, 0.01) var pontilhado := 0.5:
 	set(v):
 		pontilhado = v
@@ -222,6 +230,7 @@ func _vestir(luz: LuzDePoste) -> void:
 	luz.energia = energia
 	luz.alcance = alcance
 	luz.abertura = abertura
+	luz.pixelada = pixelada
 	luz.degraus = degraus
 	luz.pontilhado = pontilhado
 	luz.clarao = clarao

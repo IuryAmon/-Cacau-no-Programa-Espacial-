@@ -79,10 +79,18 @@ func _ready() -> void:
 
 # --- APRESENTAÇÃO DA FERRAMENTA NOVA ---
 
+## Desligado, a ferramenta nova vai direto para os equipamentos, sem a ficha de
+## coleta nem o tutorial. É o atalho de debug do player (tecla P) que desliga,
+## para não empilhar uma ficha por ferramenta.
+var apresentar_ferramentas: bool = true
+
 func _on_habilidade_conquistada(habilidade: String) -> void:
 	var ficha := CatalogoFerramentas.dados(habilidade)
 	if ficha.is_empty():
 		return  # Ferramenta ainda sem arte: nada a mostrar.
+	if not apresentar_ferramentas:
+		_equipar(habilidade, true)
+		return
 	_apresentar(habilidade, ficha)
 
 

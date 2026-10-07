@@ -4,19 +4,19 @@
 
 [resource]
 script = ExtResource("1_perfil")
-ceu_zenite = Color(0, 0.02, 0.125, 1)
-ceu_alto = Color(0, 0.032, 0.18, 1)
-ceu_baixo = Color(0.02, 0.07, 0.27, 1)
-ceu_horizonte = Color(0.09, 0.17, 0.4, 1)
+ceu_zenite = Color(0.015, 0.04, 0.16, 1)
+ceu_alto = Color(0.02, 0.055, 0.215, 1)
+ceu_baixo = Color(0.04, 0.095, 0.305, 1)
+ceu_horizonte = Color(0.11, 0.2, 0.43, 1)
 estrelas = 1.0
 clarao = 0.45
 sol = 0.0
 lua = 1.0
 tinta_do_sol = Color(1, 0.62, 0.4, 1)
-luz_do_fundo = Color(0.2, 0.27, 0.5, 1)
-cor_do_ar = Color(0.07, 0.13, 0.34, 1)
+luz_do_fundo = Color(0.25, 0.32, 0.56, 1)
+cor_do_ar = Color(0.09, 0.15, 0.37, 1)
 neblina = 0.8
-ambiente = Color(0.36, 0.43, 0.66, 1)
+ambiente = Color(0.42, 0.49, 0.72, 1)
 nuvem_luz = Color(0.34, 0.42, 0.7, 1)
 nuvem_sombra = Color(0.09, 0.13, 0.32, 1)
 nuvem_opacidade = 0.9

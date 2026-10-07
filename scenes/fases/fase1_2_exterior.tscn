@@ -487,8 +487,8 @@ y_do_zenite = -20.0
 motion_scale = Vector2(0, 0)
 
 [node name="Lua" type="Sprite2D" parent="BG/CamadaDaLua" unique_id=92000003]
-position = Vector2(925, 118)
-scale = Vector2(1.5, 1.5)
+position = Vector2(950, 95)
+scale = Vector2(0.8, 0.8)
 texture = ExtResource("66_lua")
 region_enabled = true
 region_rect = Rect2(229, 64, 139, 139)

@@ -7,7 +7,7 @@ extends Node
 # Casos:
 #   * os postes: todo poste pintado no world1 tem a altura do poste da
 #     fase2_torre (8 tiles, na mesma sequência), e cada lâmpada pintada ganhou
-#     uma luz em cima do tubo;
+#     uma luz em cima do tubo — lisa, sem degraus nem pontilhado;
 #   * o world1 abre ao ENTARDECER: sol no céu, lua fora, sem estrelas, postes
 #     fracos, o fundo vestido com a luz do horário — e nada disso gravado nos
 #     nós da cena;
@@ -97,6 +97,15 @@ func _testar_postes() -> void:
 	_checar(postes.get_child_count() == 0 and postes.get_child_count(true) == postes.quantidade(),
 		"as luzes são filhas internas: não entram no .tscn")
 
+	# A luz é lisa: um degradê contínuo, e não meia dúzia de patamares.
+	var tons := _tons_da_poca(postes.luzes()[0])
+	_checar(postes.luzes().all(func(l: LuzDePoste) -> bool: return not l.pixelada) and tons > 64,
+		"a luz dos postes é lisa (%d tons na poça)" % tons)
+	postes.pixelada = true
+	var em_degraus := _tons_da_poca(postes.luzes()[0])
+	_checar(em_degraus <= postes.degraus + 1, "ligando \"pixelada\" ela volta a cair em degraus (%d tons)" % em_degraus)
+	postes.pixelada = false
+
 
 func _testar_entardecer() -> void:
 	print("\n--- O WORLD1 ABRE AO ENTARDECER ---")
@@ -107,9 +116,9 @@ func _testar_entardecer() -> void:
 	await _quadros(4)
 
 	var sol := cena.get_node("BG/CamadaDoSol/Sol") as AstroPixel
-	var lua := cena.get_node("BG/CamadaDaLua/Lua") as AstroPixel
 	_checar(sol.tipo == AstroPixel.Tipo.SOL and is_equal_approx(sol.presenca(), 1.0), "o sol está no céu")
-	_checar(lua.tipo == AstroPixel.Tipo.LUA and is_zero_approx(lua.presenca()), "a lua ainda não")
+	_checar(cena.get_node_or_null("BG/CamadaDaLua") == null, "o world1 não tem lua")
+	_checar(sol.brilho_pixelado, "o brilho do sol é em pixel art")
 	_checar(atm.perfil_atual() == atm.entardecer and is_zero_approx(atm.perfil_atual().estrelas),
 		"o perfil é o do entardecer, sem estrelas")
 	_checar(atm.pode_anoitecer(), "e ainda dá para anoitecer")
@@ -146,7 +155,6 @@ func _testar_por_do_sol() -> void:
 	var atm := Atmosfera.da_cena(cena)
 	await _quadros(4)
 	var sol := cena.get_node("BG/CamadaDoSol/Sol") as AstroPixel
-	var lua := cena.get_node("BG/CamadaDaLua/Lua") as AstroPixel
 	var y_antes := sol.position.y
 	var postes := cena.get_node("PostesDeLuz") as PostesDeLuz
 
@@ -162,7 +170,7 @@ func _testar_por_do_sol() -> void:
 	_checar(not EstadoMundo.anoiteceu, "ainda não é noite")
 
 	atm.definir_momento(Atmosfera.Momento.NOITE)
-	_checar(is_zero_approx(sol.presenca()) and is_equal_approx(lua.presenca(), 1.0), "virou a noite: sai o sol, entra a lua")
+	_checar(is_zero_approx(sol.presenca()), "virou a noite: o sol saiu do céu")
 	_checar(is_equal_approx(atm.perfil_atual().estrelas, 1.0), "céu estrelado")
 	_checar(_ambiente(atm).color.is_equal_approx(atm.noite.ambiente)
 		and atm.noite.ambiente.get_luminance() < atm.entardecer.ambiente.get_luminance() * 0.7,
@@ -261,6 +269,7 @@ func _testar_fases_de_noite() -> void:
 		_checar(lua != null and lua.tipo == AstroPixel.Tipo.LUA and is_equal_approx(lua.presenca(), 1.0)
 			and lua.texture.resource_path == "res://assets/Area Aberta/Lua/2.png",
 			"   quem ilumina é a lua (Lua/2.png)")
+		_checar(lua != null and not lua.brilho_pixelado and lua.scale.x < 1.0, "   pequena e de brilho liso")
 		var sois := 0
 		for astro in get_tree().get_nodes_in_group(Atmosfera.GRUPO_DE_CLIENTES):
 			if astro is AstroPixel and (astro as AstroPixel).tipo == AstroPixel.Tipo.SOL:
@@ -295,6 +304,8 @@ func _testar_luzes_proprias() -> void:
 	var laser := cena.get_node("Barreira/LuzDoLaser") as LuzPontual
 	var tela := cena.get_node("ReceptorItemGeral/LuzDaTela") as LuzPontual
 	_checar(laser != null and laser.acesa and is_equal_approx(laser.intensidade, 1.0), "o laser brilha no escuro")
+	_checar(not laser.pixelada and not (cena.get_node("BG/BASE/SpritesTiros(4)/Holofotes") as ArteIluminada).pixelada,
+		"com luz lisa, como os holofotes do fundo")
 	_checar(tela != null and is_equal_approx(tela.intensidade, 1.0), "a tela do painel também")
 	cena.get_node("Barreira").abrir_passagem()
 	_checar(not laser.acesa, "desligado o laser, o clarão dele apaga")
@@ -341,6 +352,19 @@ func _mastros(raiz: Node) -> Array:
 					celula += Vector2i.DOWN
 				mastros.append(mastro)
 	return mastros
+
+
+## Quantos tons diferentes tem a textura da poça de luz de um poste.
+func _tons_da_poca(luz: LuzDePoste) -> int:
+	for filho in luz.get_children(true):
+		if filho is PointLight2D:
+			var img := ((filho as PointLight2D).texture as ImageTexture).get_image()
+			var tons := {}
+			for y in range(0, img.get_height(), 3):
+				for x in range(0, img.get_width(), 3):
+					tons[img.get_pixel(x, y).r8] = true
+			return tons.size()
+	return 0
 
 
 func _camadas_de_tiles(no: Node) -> Array[TileMapLayer]:

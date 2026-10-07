@@ -337,6 +337,8 @@ func _input(event: InputEvent) -> void:
 		_debug_resolver_puzzle_combustao()
 	elif _e_tecla_cedilha(tecla):
 		_debug_pegar_todas_amostras()
+	elif tecla.physical_keycode == KEY_P:
+		_debug_pegar_todas_ferramentas()
 
 
 ## O Ç tem tecla própria no teclado ABNT2, mas cada sistema a informa de um
@@ -872,6 +874,22 @@ func _debug_resolver_puzzle_combustao() -> void:
 # um degrau a cada entrega): pega a amostra de todo elemento que ainda não está
 # aceso no painel, como se tivesse coletado nas fases. Aí é só ir ao baú e
 # apertar E uma vez por amostra. Fora de build de debug não faz nada.
+## Atalho de debug (tecla P, em qualquer mapa): entrega de uma vez todas as
+## ferramentas — maçarico, bumerangue, mochila, sinalizador, botas e lanterna.
+## Vão direto para os equipamentos, sem ficha de coleta nem tutorial.
+func _debug_pegar_todas_ferramentas() -> void:
+	if not OS.is_debug_build():
+		return
+	var pegas := PackedStringArray()
+	FerramentasHUD.apresentar_ferramentas = false
+	for habilidade in Progresso.HABILIDADES:
+		if not Progresso.tem_habilidade(habilidade):
+			Progresso.dar_habilidade(habilidade)
+			pegas.append(habilidade)
+	FerramentasHUD.apresentar_ferramentas = true
+	print("DEBUG [Player]: ferramentas pegas via tecla P -> ", pegas if not pegas.is_empty() else "nenhuma (já tinha todas)")
+
+
 func _debug_pegar_todas_amostras() -> void:
 	if not OS.is_debug_build():
 		return

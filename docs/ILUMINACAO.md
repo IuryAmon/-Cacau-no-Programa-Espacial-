@@ -5,11 +5,15 @@ no mirante o sol se põe e a fase vira **noite**; o pátio da oficina (fase 1.2)
 a `fase2_torre` já são noite, com a lua. Tudo isso sai de um sistema só, em
 `scripts/luz/`, com uma regra de estilo:
 
-> **A luz cai em degraus.**
-> Nada de degradê liso de foto. O céu é feito de faixas, o brilho do sol e da
-> lua é feito de anéis, a luz do poste cai em patamares — e a emenda entre um
-> degrau e o outro é pontilhada, no tamanho do pixel do cenário. É o que faz a
-> luz parecer pintada junto com o resto.
+> **O céu é pixel art; a luz é lisa.**
+> O céu é feito de faixas com a emenda pontilhada, e o brilho do sol é feito de
+> anéis, no tamanho do pixel do cenário — são desenho, como o resto do fundo.
+> Já a LUZ (postes, fogo, laser, holofotes, o brilho da lua) é um degradê
+> contínuo: ela clareia a arte sem deixar a marca dela por cima.
+
+Quem quiser a luz em degraus pontilhados também tem a chave: `pixelada` no
+`PostesDeLuz`, nas luzes soltas e nos `Holofotes`; `brilho_pixelado` no sol e
+na lua.
 
 ## As peças
 
@@ -18,7 +22,7 @@ a `fase2_torre` já são noite, com a lua. Tudo isso sai de um sistema só, em
 | `Atmosfera` | `atmosfera.gd` | O regente: guarda a hora e distribui as cores dela para todo mundo. |
 | `BG/Ceu` | `ceu_pixel.gd` | O céu: degradê em faixas, estrelas, clarão em volta do astro. |
 | `BG/CamadaDoSol/Sol` | `astro_pixel.gd` | O sol: um sprite comum + o halo em anéis. |
-| `BG/CamadaDaLua/Lua` | `astro_pixel.gd` | A lua (`assets/Area Aberta/Lua/2.png`) + o halo dela. |
+| `BG/CamadaDaLua/Lua` | `astro_pixel.gd` | A lua (`assets/Area Aberta/Lua/2.png`) + o halo dela. Só no pátio e na torre: o `world1` não tem lua. |
 | `BG/NuvensDoFundo`, `BG/Nuvens` | `nuvens.gd` | Duas faixas de nuvens passando (cloud1 a cloud6). |
 | `PostesDeLuz` | `postes_de_luz.gd` | Acende todo poste pintado no TileMap. |
 | `BG/BASE/.../Holofotes` | `arte_iluminada.gd` | Os holofotes do foguete lá no fundo, à noite. |
@@ -42,14 +46,21 @@ do céu e o halo vão junto.
 **Mudar a cara do sol.** Selecione o `Sol` e use o Inspector:
 
 - a arte do disco é a `Texture` (é um Sprite2D: troque o PNG, mude a escala);
-- grupo **Brilho** — `alcance`, `aneis`, as duas cores, `intensidade`,
-  `pontilhado` (0 = anéis secos, 1 = todo pontilhado) e `cobertura` (1 cobre o
-  céu com a tinta do anel, 0 só clareia);
+- grupo **Brilho** — `alcance`, as duas cores, `intensidade` e `cobertura`
+  (1 cobre o céu com a tinta do brilho, 0 só clareia);
+- grupo **Pixel art** — `brilho_pixelado` (ligado no sol do `world1`: o halo
+  em anéis; desligado, um degradê liso), `aneis` e `pontilhado` (0 = anéis
+  secos, 1 = todo pontilhado);
 - grupo **Pontas** — `pontas` acima de 0 dá raios ao sol;
-- grupo **Animação** — os anéis respiram em quadros (`quadros_por_segundo`).
+- grupo **Animação** — o brilho respira (`quadros_por_segundo`, `respiro`).
 
-**A lua** é igual: `BG/CamadaDaLua/Lua`. No `world1` ela só aparece de noite;
-para vê-la no editor, ponha `previa_no_editor` da `Atmosfera` em **Noite**.
+**A lua** é igual: `BG/CamadaDaLua/Lua`, com o brilho liso. Ela existe no pátio
+e na `fase2_torre`; a noite do `world1` é só de estrelas. O tamanho é a `Scale`
+do nó.
+
+**Estrelas.** `BG/Ceu` → `densidade`: quanto maior, mais estrelas (as grandes,
+em cruz, acompanham). `tamanho_das_estrelas`: o pixel delas — 1 é metade do
+pixel do céu; 2 volta ao tamanho da granulação.
 
 **Mudar as cores de um horário.** Abra `assets/luz/entardecer.tres` (ou
 `crepusculo`, ou `noite`) no Inspector com a fase aberta: a prévia acompanha.
@@ -72,7 +83,8 @@ desenho: nuvem acima da serra na árvore = atrás da serra na tela.
 **Postes.** Poste é tile: pinte o braço da lâmpada (as três células do
 `Props-01.png`) em qualquer TileMapLayer e a luz aparece sozinha — no editor,
 enquanto você pinta. Cor, força, alcance, tremor e mariposas são do nó
-`PostesDeLuz`, e valem para todos os postes da fase. O poste tem **8 tiles** de
+`PostesDeLuz`, e valem para todos os postes da fase; `pixelada` troca a luz
+lisa pela luz em degraus. O poste tem **8 tiles** de
 altura (o braço em cima, a base embaixo); os do `world1` foram acertados para
 esse tamanho.
 
@@ -96,7 +108,7 @@ Quem dirige é `scripts/colisao_cena_foguete.gd` (a Area2D `ColisaoCenaFoguete`)
    escurecem, os postes dão a piscada e os holofotes do foguete acendem;
 3. no fim da descida a tela apaga;
 4. no escuro, a fase vira noite;
-5. a tela acende: lua, céu estrelado, postes com tudo. O controle volta.
+5. a tela acende: céu estrelado, postes com tudo. O controle volta.
 
 Ela fica parada do começo ao fim e o HUD some junto. Os tempos estão no
 Inspector da `ColisaoCenaFoguete` (`respiro_antes_do_sol`, `hora_da_cortina`,
@@ -136,8 +148,9 @@ verdade em qualquer altura. A lua está numa camada presa na tela — ela é
 grande, e presa ao horizonte sairia do quadro lá embaixo.
 
 **O mundo.** A luz ambiente é um `CanvasModulate` interno da `Atmosfera`. As
-luzes dos postes e as pontuais são `PointLight2D` com textura em degraus
-(`textura_de_luz.gd`, montada por conta e guardada: dez postes usam a mesma).
+luzes dos postes e as pontuais são `PointLight2D` com a textura pintada por
+conta (`textura_de_luz.gd`: lisa por padrão, em degraus com `pixelada`; ela é
+guardada, e dez postes usam a mesma).
 
 **A interface não escurece.** No jogo, tudo o que desenha uma arte de
 `res://assets/UI/` (balões, teclas), todo `Label` e todo nó do grupo
@@ -162,6 +175,6 @@ O jeito mais rápido é copiar esses nós da `fase2_torre.tscn`.
 godot --headless --path . res://tools/teste_atmosfera.tscn
 ```
 
-Confere os postes (altura e luz), os três horários, a cena do mirante inteira
+Confere os postes (altura, luz e a luz lisa), os três horários, a cena do mirante inteira
 com o diálogo de verdade, a volta ao `world1` já de noite, o pátio e a torre, a
 interface fora da luz e as luzes próprias.

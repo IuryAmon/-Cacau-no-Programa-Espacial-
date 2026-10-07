@@ -6,8 +6,8 @@ extends Node2D
 ##
 ## São duas peças: a POÇA (uma PointLight2D, que ilumina de verdade o que está
 ## em volta) e o CLARÃO (um brilho somado no ar, que é o que se vê contra o
-## escuro). As duas caem em degraus com emenda pontilhada ([TexturaDeLuz]), no
-## tamanho do pixel do cenário.
+## escuro). As duas são LISAS, um degradê contínuo; com [member pixelada] ligado
+## elas caem em degraus com emenda pontilhada, no tamanho do pixel do cenário.
 ##
 ## [b]Sozinha ou com o horário.[/b] Com [member segue_o_horario] desligado ela
 ## brilha sempre que estiver [member acesa] — é o caso do fogo. Ligado, ela
@@ -47,10 +47,19 @@ const PIXEL := 2.0
 		_montar()
 
 @export_group("Pixel art")
+## Desligado (o padrão), a luz é um degradê liso. Ligado, ela cai em degraus
+## com a emenda pontilhada, no tamanho do pixel do cenário.
+@export var pixelada := false:
+	set(v):
+		pixelada = v
+		_montar()
+## Em quantos degraus a luz cai. Só vale com [member pixelada] ligado.
 @export_range(2, 16, 1) var degraus := 6:
 	set(v):
 		degraus = v
 		_montar()
+## Quanto de cada degrau é pontilhado na emenda. Só vale com [member pixelada]
+## ligado.
 @export_range(0.0, 1.0, 0.01) var pontilhado := 0.5:
 	set(v):
 		pontilhado = v
@@ -106,15 +115,12 @@ func _ready() -> void:
 	_clarao = Sprite2D.new()
 	_clarao.name = "Clarao"
 	_clarao.material = _material_do_ar
-	_clarao.scale = Vector2(PIXEL, PIXEL)
-	_clarao.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_clarao.set_meta(&"_edit_lock_", true)
 	add_child(_clarao, false, Node.INTERNAL_MODE_BACK)
 
 	_poca = PointLight2D.new()
 	_poca.name = "Poca"
 	_poca.blend_mode = Light2D.BLEND_MODE_ADD
-	_poca.texture_scale = PIXEL
 	_poca.set_meta(&"_edit_lock_", true)
 	add_child(_poca, false, Node.INTERNAL_MODE_BACK)
 
@@ -145,11 +151,20 @@ func _process(delta: float) -> void:
 func _montar() -> void:
 	if _poca == null:
 		return
-	var poca := TexturaDeLuz.ponto(maxi(int(round(raio / PIXEL)), 4), degraus, pontilhado, queda)
+	# Lisa (degraus 0) ou em degraus: a mesma forma, pintada de dois jeitos.
+	var poca := TexturaDeLuz.ponto(maxi(int(round(raio / PIXEL)), 4),
+		degraus if pixelada else 0, pontilhado, queda)
 	_poca.texture = poca["textura"]
-	var brilho := TexturaDeLuz.ponto(
-		maxi(int(round(raio * tamanho_do_clarao / PIXEL)), 3), maxi(degraus - 2, 2), pontilhado, 1.2)
+	_poca.texture_scale = PIXEL * float(poca["escala"])
+
+	var brilho := TexturaDeLuz.ponto(maxi(int(round(raio * tamanho_do_clarao / PIXEL)), 3),
+		maxi(degraus - 2, 2) if pixelada else 0, pontilhado, 1.2)
+	var passo: float = PIXEL * float(brilho["escala"])
 	_clarao.texture = brilho["textura"]
+	_clarao.scale = Vector2(passo, passo)
+	# A lisa é esticada com interpolação; a pixelada, com o pixel seco.
+	_clarao.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if pixelada \
+		else CanvasItem.TEXTURE_FILTER_LINEAR
 	_aplicar()
 
 
