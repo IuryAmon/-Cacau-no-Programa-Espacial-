@@ -44,12 +44,20 @@ extends FaseBase
 # dia a fase crescer e a câmera voltar a andar, é só devolver os motion_scale
 # (0.2, 0.4, 0.6, 0.8, de trás para a frente) que a profundidade volta junto.
 #
-# O pátio é sempre de NOITE: a Cacau só chega aqui depois do pôr do sol do
-# world1. Quem cuida disso é o nó Atmosfera (momento = Noite), que pinta o céu
-# estrelado (BG/Ceu), acende a lua (BG/CamadaDaLua/Lua — arraste para mudar de
-# lugar), tinge as nuvens e as camadas do fundo e escurece o mundo. O fogo da
-# fornalha tem luz própria (Patio/Retorta/LuzDoFogo), e todo poste pintado no
-# TileMap acende sozinho (nó PostesDeLuz). Ver docs/ILUMINACAO.md.
+# O pátio abre no CREPÚSCULO: a Cacau só chega aqui depois do pôr do sol do
+# world1, com o céu um pouco mais escuro, sem sol e ainda sem lua. É AQUI que a
+# noite cai: resolvido o painel da fornalha, com ela ainda pegando fogo, o
+# tempo avança — o céu escurece, as estrelas acendem e a lua sobe de trás da serra
+# (ver retorta.gd, _cair_a_noite). Depois disso o pátio — e o world1 — abrem
+# sempre de noite.
+#
+# Quem cuida disso é o nó Atmosfera — que, como em toda fase, abre na hora da
+# partida (o momento = Crepúsculo do Inspector é só o que o editor mostra) —,
+# que pinta o céu (BG/Ceu), acende a lua (BG/CamadaDaLua/Lua — arraste
+# para mudar o lugar em que ela PARA; de quanto ela sobe é `subida_da_lua`, na
+# Atmosfera), tinge as nuvens e as camadas do fundo e escurece o mundo. O fogo
+# da fornalha tem luz própria (Patio/Retorta/LuzDoFogo), e todo poste pintado
+# no TileMap acende sozinho (nó PostesDeLuz). Ver docs/ILUMINACAO.md.
 #
 # DESENHO: o TileMapLayer do terreno está em z_index 10, ACIMA de tudo. É o que
 # faz a cabine do elevador (z_index 3) e a personagem (z_index 2) sumirem

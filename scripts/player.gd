@@ -146,6 +146,10 @@ var _arremesso_restante : float = 0.0
 # encerra a pose — pulo e queda mandam mais na leitura do que o braço.
 var _arremesso_no_chao : bool = false
 
+## Zoom da câmera nesta fase. 0 = o da cena do player (1,5). Menor que isso, a
+## câmera fica mais longe.
+@export var zoom_da_camera : float = 0.0
+
 @onready var _animated_sprite = $AnimatedSprite2D
 @onready var _luz_macarico: PointLight2D = get_node_or_null("LuzMacarico")
 @onready var _exclamacao_foguete = $ExclamacaoFoguete
@@ -155,7 +159,13 @@ func _ready() -> void:
 	current_health = max_health
 	add_to_group("player")
 	print("DIAGNÓSTICO [Player]: Iniciado.")
-	
+
+	if zoom_da_camera > 0.0:
+		var camera := get_node_or_null("Camera2D") as CameraJogador
+		if camera:
+			camera.zoom = Vector2(zoom_da_camera, zoom_da_camera)
+			camera.zoom_padrao = camera.zoom
+
 	# 1. Conexão do HUD de vida
 	var hud = find_child("HealthHUD", true, false)
 	if hud and hud.has_method("update_health"):

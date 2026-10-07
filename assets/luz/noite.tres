@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="PerfilDeLuz" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="PerfilDeLuz" format=3 uid="uid://8dtmongqfds1"]
 
-[ext_resource type="Script" path="res://scripts/luz/perfil_de_luz.gd" id="1_perfil"]
+[ext_resource type="Script" uid="uid://cb734pivjjar3" path="res://scripts/luz/perfil_de_luz.gd" id="1_perfil"]
 
 [resource]
 script = ExtResource("1_perfil")
@@ -19,5 +19,4 @@ neblina = 0.8
 ambiente = Color(0.42, 0.49, 0.72, 1)
 nuvem_luz = Color(0.34, 0.42, 0.7, 1)
 nuvem_sombra = Color(0.09, 0.13, 0.32, 1)
-nuvem_opacidade = 0.9
 postes = 1.0

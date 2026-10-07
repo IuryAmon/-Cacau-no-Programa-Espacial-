@@ -1,8 +1,10 @@
 # A iluminação das fases ao ar livre
 
 O jogo tem hora. O `world1` começa ao **entardecer**, com o sol quase se pondo;
-no mirante o sol se põe e a fase vira **noite**; o pátio da oficina (fase 1.2) e
-a `fase2_torre` já são noite, com a lua. Tudo isso sai de um sistema só, em
+no mirante o sol se põe e a fase fica no **crepúsculo** — só um pouco mais
+escura; a **noite** cai no pátio da oficina (fase 1.2), com a fornalha
+queimando depois do painel, e a lua subindo; daí em diante é noite em todas as fases (a Cacau só chega à `fase2_torre` de
+noite). A hora é uma só para o jogo inteiro. Tudo isso sai de um sistema só, em
 `scripts/luz/`, com uma regra de estilo:
 
 > **O céu é pixel art; a luz é lisa.**
@@ -68,8 +70,15 @@ Cada arquivo tem o céu (quatro cores, de cima para baixo), as estrelas, a luz
 que bate no fundo, a cor do ar, a luz ambiente do mundo, as nuvens e a força
 dos postes. Os três arquivos valem para todas as fases.
 
-**Em que hora a fase começa.** `Atmosfera` → `momento`. O `world1` é
-*Entardecer*; o pátio e a torre são *Noite*.
+**Em que hora a fase começa.** Na **hora da partida**, que é uma só para o
+jogo inteiro e só anda para a frente: *entardecer* até o sol se pôr no mirante,
+*crepúsculo* até a noite cair no pátio, *noite* daí em diante. Toda fase ao ar
+livre abre nessa hora — se é tarde, é tarde em todas; se é noite, é noite em
+todas — e um pôr do sol ou anoitecer que aconteça numa vale para as outras.
+O `momento` da `Atmosfera` é só o que o editor mostra (o `world1` em
+*Entardecer*, o pátio em *Crepúsculo*, a torre em *Noite*: a hora em que a
+Cacau costuma estar lá). Para prender uma fase numa hora, desligue
+`segue_a_partida`: aí ela abre no `momento` e não mexe na hora do jogo.
 
 **Ver a noite sem mudar a fase.** `Atmosfera` → `previa_no_editor`. É só o que
 o editor mostra — não é gravado na cena.
@@ -105,19 +114,37 @@ Quem dirige é `scripts/colisao_cena_foguete.gd` (a Area2D `ColisaoCenaFoguete`)
 1. a Cacau pisa no mirante: susto, fala, balão de coração — como sempre;
 2. com o coração ainda no ar, o sol começa a descer atrás da serra. O céu vai
    do dourado ao roxo, as primeiras estrelas aparecem, o fundo e o mundo
-   escurecem, os postes dão a piscada e os holofotes do foguete acendem;
-3. no fim da descida a tela apaga;
-4. no escuro, a fase vira noite;
-5. a tela acende: céu estrelado, postes com tudo. O controle volta.
+   escurecem um pouco e os postes dão a piscada;
+3. o sol some, a fase fica no crepúsculo e o controle volta.
 
-Ela fica parada do começo ao fim e o HUD some junto. Os tempos estão no
-Inspector da `ColisaoCenaFoguete` (`respiro_antes_do_sol`, `hora_da_cortina`,
-`duracao_do_escurecer`, `pausa_no_escuro`, `duracao_do_clarear`) e da
+Não há tela preta e **não fica de noite**: só escurece de leve. Ela fica parada
+do começo ao fim e o HUD some junto. Os tempos estão no Inspector da
+`ColisaoCenaFoguete` (`respiro_antes_do_sol`, `respiro_depois_do_sol`) e da
 `Atmosfera` (`duracao_do_por_do_sol`, `descida_do_sol`, `hora_dos_postes`).
+O quanto escurece é o `crepusculo.tres` (`ambiente`, `luz_do_fundo`).
 
-Depois disso é noite pelo resto da partida (`EstadoMundo.anoiteceu`): o
-`world1` abre escuro quando ela volta do laboratório, e a cena não repete — nem
-se ela morrer antes de chegar lá (`EstadoMundo.viu_o_foguete`).
+Depois disso é crepúsculo (`EstadoMundo.sol_se_pos`): o `world1` abre assim
+quando ela volta do laboratório, e a cena não repete — nem se ela morrer antes
+de chegar lá (`EstadoMundo.viu_o_foguete`).
+
+## A noite caindo, no pátio
+
+Quem dirige é a fornalha (`scripts/fases/retorta.gd`, `_cair_a_noite`). Quando
+o **painel da temperatura é resolvido** e fecha, com a fornalha ainda pegando
+fogo, o tempo avança:
+
+1. a Cacau para e o HUD sai de cena;
+2. o céu vai do crepúsculo à noite, as estrelas acendem, o fundo e o mundo
+   escurecem e os postes firmam (`Atmosfera.anoitecer`);
+3. a lua sobe de trás da serra até o lugar em que o nó `Lua` foi deixado;
+4. a brasa apaga, o carvão pula para fora e o controle volta — já de noite.
+
+Se a queima falhar ou a pessoa sair do painel, a hora não muda.
+
+Só acontece uma vez. Os tempos e a altura da subida estão na `Atmosfera` do
+pátio, grupo **Anoitecer** (`duracao_do_anoitecer`, `subida_da_lua`). Depois
+disso é noite pelo resto da partida (`EstadoMundo.anoiteceu`): o pátio e o
+`world1` já abrem escuros.
 
 ## Como funciona por dentro
 
@@ -176,5 +203,6 @@ godot --headless --path . res://tools/teste_atmosfera.tscn
 ```
 
 Confere os postes (altura, luz e a luz lisa), os três horários, a cena do mirante inteira
-com o diálogo de verdade, a volta ao `world1` já de noite, o pátio e a torre, a
+com o diálogo de verdade, a volta ao `world1` no crepúsculo, a noite caindo no
+pátio com a lua subindo, a torre, a
 interface fora da luz e as luzes próprias.

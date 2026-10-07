@@ -52,19 +52,24 @@ const PREVIA_COMO_NO_JOGO := -1
 
 ## A hora mudou (inclusive a cada passo de uma transição).
 signal perfil_mudou(perfil: PerfilDeLuz)
-## A noite caiu (fim do pôr do sol, ou a fase já abriu de noite).
+## A noite caiu (fim do anoitecer, ou a fase já abriu de noite).
 signal anoiteceu
 
-## Em que hora a fase começa.
+## A hora que o EDITOR mostra nesta fase — e a hora em que ela abre se
+## [member segue_a_partida] estiver desligado. No jogo, com ele ligado, quem
+## manda é a hora da partida.
 @export var momento := Momento.ENTARDECER:
 	set(v):
 		momento = v
 		if Engine.is_editor_hint() and is_inside_tree():
 			_mostrar_previa()
-## Ligado, a fase abre de noite se a noite já caiu nesta partida (o pôr do sol
-## do mirante) — é o que mantém o world1 escuro quando a Cacau volta do
-## laboratório.
-@export var lembrar_da_noite := false
+## Ligado (o normal), a fase está sempre na HORA DA PARTIDA, que é uma só para
+## o jogo inteiro: entardecer até o sol se pôr (a cena do mirante), crepúsculo
+## até a noite cair (a fornalha do pátio), noite daí em diante. Toda fase abre
+## nessa hora, e um pôr do sol ou um anoitecer que aconteça aqui vale para
+## todas as outras. Desligue só para uma fase presa numa hora (um sonho, uma
+## lembrança): ela abre em [member momento] e não mexe na hora de ninguém.
+@export var segue_a_partida := true
 
 @export_group("Perfis")
 @export var entardecer: PerfilDeLuz = preload("res://assets/luz/entardecer.tres")
@@ -84,6 +89,14 @@ signal anoiteceu
 @export_range(0.0, 600.0, 1.0) var descida_do_sol := 190.0
 ## Em que ponto da descida (0 a 1) os postes dão a piscada e ganham força.
 @export_range(0.0, 1.0, 0.01) var hora_dos_postes := 0.5
+
+@export_group("Anoitecer")
+## Quanto dura a noite caindo (do crepúsculo à noite, com a lua subindo), em
+## segundos. No pátio ela cai com a fornalha queimando, depois do painel.
+@export_range(1.0, 30.0, 0.1) var duracao_do_anoitecer := 7.0
+## De quantos pixels abaixo do lugar dela a lua sobe. Tem de bastar para ela
+## sair de trás da serra.
+@export_range(0.0, 600.0, 1.0) var subida_da_lua := 280.0
 
 var _perfil: PerfilDeLuz
 var _ambiente: CanvasModulate
@@ -117,8 +130,8 @@ func _ready() -> void:
 		bg.child_order_changed.connect(_pedir_vestir)
 
 	if not Engine.is_editor_hint():
-		if lembrar_da_noite and EstadoMundo.anoiteceu:
-			momento = Momento.NOITE
+		if segue_a_partida:
+			momento = hora_da_partida()
 		_material_da_interface = CanvasItemMaterial.new()
 		_material_da_interface.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 		get_tree().node_added.connect(_ao_entrar_um_no)
@@ -152,8 +165,8 @@ func _arrumar_a_cena() -> void:
 	if not Engine.is_editor_hint():
 		_soltar_a_interface(_raiz_da_cena())
 		aplicar(perfil_de(momento))
+		_por_os_astros_no_lugar()
 		if momento == Momento.NOITE:
-			_sol_ja_desceu()
 			anoiteceu.emit()
 	else:
 		_mostrar_previa()
@@ -166,6 +179,15 @@ static func da_cena(no: Node) -> Atmosfera:
 	if no == null or not no.is_inside_tree():
 		return null
 	return no.get_tree().get_first_node_in_group(GRUPO) as Atmosfera
+
+
+## Que horas são no jogo (ver [member segue_a_partida]).
+static func hora_da_partida() -> Momento:
+	if EstadoMundo.anoiteceu:
+		return Momento.NOITE
+	if EstadoMundo.sol_se_pos:
+		return Momento.CREPUSCULO
+	return Momento.ENTARDECER
 
 
 ## O perfil de um momento.
@@ -188,13 +210,18 @@ func nivel_dos_postes() -> float:
 	return _perfil.postes if _perfil != null else 1.0
 
 
+## O sol ainda está no céu para se pôr aqui? (Só uma vez.)
+func pode_por_o_sol() -> bool:
+	return momento == Momento.ENTARDECER and not _em_transicao
+
+
 ## Ainda dá para anoitecer aqui? (Só uma vez, e só se a fase não abriu de noite.)
 func pode_anoitecer() -> bool:
 	return momento != Momento.NOITE and not _em_transicao
 
 
-## Troca a hora na hora, sem transição. Se o sol ainda estava descendo, a
-## descida para ali.
+## Troca a hora na hora, sem transição. Se o sol ainda estava descendo (ou a
+## lua subindo), o movimento para ali.
 func definir_momento(m: Momento) -> void:
 	if _descida != null and _descida.is_valid():
 		_descida.kill()
@@ -202,18 +229,16 @@ func definir_momento(m: Momento) -> void:
 	_em_transicao = false
 	momento = m
 	aplicar(perfil_de(m))
+	_por_os_astros_no_lugar()
+	_anotar_a_hora()
 	if m == Momento.NOITE:
-		_sol_ja_desceu()
-		if lembrar_da_noite:
-			EstadoMundo.anoiteceu = true
 		anoiteceu.emit()
 
 
 ## O sol se põe: ele desce atrás da serra enquanto o céu, o fundo e o mundo
 ## passam do entardecer ao crepúsculo, e os postes dão a piscada e firmam.
-## Devolve quando a descida termina — a fase continua no crepúsculo; quem
-## chama é que decide a hora de virar a noite ([method definir_momento]),
-## normalmente com a tela apagada.
+## Devolve quando a descida termina — e a fase FICA no crepúsculo: um pouco
+## mais escura, ainda sem lua. A noite é outra cena ([method anoitecer]).
 func por_do_sol(duracao: float = -1.0) -> void:
 	if _em_transicao or Engine.is_editor_hint():
 		return
@@ -226,6 +251,21 @@ func por_do_sol(duracao: float = -1.0) -> void:
 	await _descida.finished
 	momento = Momento.CREPUSCULO
 	_em_transicao = false
+	_anotar_a_hora()
+
+
+## A noite cai: o céu, o fundo e o mundo vão da hora que está valendo até a
+## noite, as estrelas acendem, os postes firmam e a lua sobe de trás da serra
+## até o lugar em que foi deixada na cena. Devolve quando termina, já de noite.
+func anoitecer(duracao: float = -1.0) -> void:
+	if not pode_anoitecer() or Engine.is_editor_hint():
+		return
+	_em_transicao = true
+	_descida = create_tween()
+	_descida.tween_method(_passo_do_anoitecer.bind(_perfil), 0.0, 1.0,
+		duracao if duracao > 0.0 else duracao_do_anoitecer)
+	await _descida.finished
+	definir_momento(Momento.NOITE)
 
 
 ## Quanto do pôr do sol já passou, de 0 a 1, em TEMPO (1 = o sol sumiu). Quem
@@ -291,13 +331,42 @@ func _piscar_os_postes() -> void:
 			i += 1
 
 
-func _sol_ja_desceu() -> void:
-	_andamento = 1.0
+## [param t] é o tempo do anoitecer, de 0 a 1; [param de] é o perfil de onde
+## ele partiu.
+func _passo_do_anoitecer(t: float, de: PerfilDeLuz) -> void:
+	var andado := t * t * (3.0 - 2.0 * t)
+	var perfil := PerfilDeLuz.misturar(de, noite, andado)
+	if perfil != de and perfil != noite:
+		# A lua já aparece inteira cedo: ela nasce atrás da serra, não do nada
+		# no meio do céu.
+		perfil.lua = maxf(perfil.lua, smoothstep(0.0, 0.3, t))
+	aplicar(perfil)
+	for astro in _astros():
+		if astro.tipo == AstroPixel.Tipo.LUA:
+			astro.descida = subida_da_lua * (1.0 - andado)
+
+
+## Sol e lua onde a hora da fase manda, sem movimento: o sol posto de quem não
+## está mais no entardecer, a lua embaixo da serra de quem ainda não anoiteceu.
+func _por_os_astros_no_lugar() -> void:
+	_andamento = 0.0 if momento == Momento.ENTARDECER else 1.0
 	if Engine.is_editor_hint():
 		return
 	for astro in _astros():
 		if astro.tipo == AstroPixel.Tipo.SOL:
-			astro.descida = descida_do_sol
+			astro.descida = 0.0 if momento == Momento.ENTARDECER else descida_do_sol
+		else:
+			astro.descida = 0.0 if momento == Momento.NOITE else subida_da_lua
+
+
+## A hora que passou aqui passa a ser a da partida (ver [member segue_a_partida]).
+func _anotar_a_hora() -> void:
+	if not segue_a_partida:
+		return
+	if momento != Momento.ENTARDECER:
+		EstadoMundo.sol_se_pos = true
+	if momento == Momento.NOITE:
+		EstadoMundo.anoiteceu = true
 
 
 # ───────────────────────────────────────────────────────────── céu e astros

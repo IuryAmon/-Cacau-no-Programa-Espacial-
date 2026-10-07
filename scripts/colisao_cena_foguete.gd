@@ -8,31 +8,25 @@ extends Area2D
 # da fala: o pôr do sol.
 #
 #   fala termina ──> o coração sobe (como sempre)
-#                    o sol começa a descer atrás da serra: o céu vai do dourado
-#                    ao crepúsculo, o fundo e o mundo escurecem com ele, os
-#                    postes dão a piscada e firmam            (Atmosfera.por_do_sol)
-#                    no fim da descida a tela apaga
-#                    no escuro, a fase vira NOITE
-#                    a tela acende: lua, estrelas, postes com tudo
+#                    o sol desce atrás da serra: o céu vai do dourado ao
+#                    crepúsculo, o fundo e o mundo escurecem um pouco com ele,
+#                    os postes dão a piscada e firmam         (Atmosfera.por_do_sol)
 #                    o controle volta
 #
 # A Cacau fica parada do começo ao fim, e o HUD some junto: é para olhar.
 #
-# Depois disso é noite para o resto da partida (EstadoMundo.anoiteceu): o
-# world1 abre escuro quando ela volta do laboratório, e a cena não repete —
-# nem se ela morrer antes de chegar lá.
+# NÃO fica de noite aqui: a fase só escurece de leve e continua no crepúsculo
+# (EstadoMundo.sol_se_pos — é assim que o world1 abre quando ela volta, e a
+# cena não repete, nem se ela morrer antes de chegar ao laboratório). A noite
+# cai depois, no pátio, com a fornalha queimando o carvão (ver retorta.gd).
 #
-# Numa cena sem Atmosfera (ou que já abriu de noite) nada disso acontece: a
+# Numa cena sem Atmosfera (ou em que o sol já se pôs) nada disso acontece: a
 # fala e o coração tocam como antes e o controle volta na hora.
 
 ## Segundos entre o coração aparecer e o sol começar a descer.
 @export var respiro_antes_do_sol := 0.8
-## Em que ponto da descida do sol (0 a 1) a tela começa a apagar.
-@export_range(0.0, 1.0, 0.01) var hora_da_cortina := 0.78
-@export var duracao_do_escurecer := 2.4
-## Tempo com a tela toda preta, antes de a noite aparecer.
-@export var pausa_no_escuro := 1.0
-@export var duracao_do_clarear := 2.8
+## Segundos olhando o crepúsculo, com o sol já posto, antes de o controle voltar.
+@export var respiro_depois_do_sol := 1.2
 
 var _disparado: bool = false
 
@@ -52,9 +46,9 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 
 	var atmosfera := Atmosfera.da_cena(self)
-	if atmosfera != null and atmosfera.pode_anoitecer():
+	if atmosfera != null and atmosfera.pode_por_o_sol():
 		body.segurar_apos_o_foguete = true
-		body.fala_do_foguete_terminou.connect(_anoitecer.bind(body, atmosfera), CONNECT_ONE_SHOT)
+		body.fala_do_foguete_terminou.connect(_por_o_sol.bind(body, atmosfera), CONNECT_ONE_SHOT)
 	else:
 		body.fala_do_foguete_terminou.connect(_registrar, CONNECT_ONE_SHOT)
 	body.reagir_ao_avistar_foguete($CollisionShape2D)
@@ -65,27 +59,18 @@ func _registrar() -> void:
 
 
 ## O pôr do sol, da descida ao controle de volta.
-func _anoitecer(player: Node2D, atmosfera: Atmosfera) -> void:
+func _por_o_sol(player: Node2D, atmosfera: Atmosfera) -> void:
 	_registrar()
 	var cena := get_tree().current_scene
+	# Sem apagar a tela: a cortina está aqui só para tirar o HUD de cena.
 	var cortina := FadeTela.criar(cena)
 
 	# O coração ainda está no ar quando o sol começa a descer.
 	await _esperar(respiro_antes_do_sol)
 	cortina.esconder_huds(cena)
 
-	# A descida não é esperada até o fim: a cortina entra por cima do final
-	# dela, com o último pedaço do sol ainda sumindo atrás da serra. O ponto de
-	# entrada é contado no andamento da própria descida, e não em segundos por
-	# fora — assim as duas coisas não saem do passo se o jogo engasgar.
-	atmosfera.por_do_sol()
-	while atmosfera.andamento_do_por_do_sol() < hora_da_cortina:
-		await get_tree().process_frame
-	await cortina.escurecer(duracao_do_escurecer)
-
-	atmosfera.definir_momento(Atmosfera.Momento.NOITE)
-	await _esperar(pausa_no_escuro)
-	await cortina.clarear(duracao_do_clarear)
+	await atmosfera.por_do_sol()
+	await _esperar(respiro_depois_do_sol)
 
 	cortina.restaurar_huds()
 	cortina.queue_free()

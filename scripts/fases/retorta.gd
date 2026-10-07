@@ -20,6 +20,9 @@ extends Node2D
 #   4. no painel da fornalha (scripts/ui/painel_fornalha.gd): segurar E até o
 #      termômetro chegar na marca e, no ponto, vedar a entrada de ar (S) —
 #      se o ar continuar entrando, a madeira queima e vira cinza;
+#      Resolvido o painel, O TEMPO AVANÇA: com a fornalha ainda pegando
+#      fogo, o céu escurece e a lua sobe (ver _cair_a_noite). Só acontece uma
+#      vez na partida; quando a brasa apaga já é noite;
 #   5. com o carvão pronto, E na fornalha novamente retira a célula C.
 #
 # COMO EDITAR NO EDITOR:
@@ -52,6 +55,10 @@ const ESPERA_ANTES_DO_PAINEL := 0.8
 ## Depois que a pirólise termina, a fornalha ainda fica acesa este tanto antes
 ## de apagar — e é só depois que ela apaga que dá pra retirar o carvão.
 const BRASA_APOS_CONCLUIR := 4.0
+
+## Na vez em que a noite cai com a fornalha queimando (ver _cair_a_noite), a
+## brasa dura a noite caindo e mais este tanto, olhando a lua já no alto.
+const BRASA_APOS_A_NOITE := 1.2
 
 ## Quantos estágios de enchimento o sprite "fornalhaComMadeira" tem.
 const ESTAGIOS_DE_MADEIRA := 3
@@ -389,6 +396,34 @@ func _area_da_cena() -> Rect2:
 	return area
 
 
+## A pirólise deu certo e a fornalha continua pegando fogo: o tempo avança. O
+## céu vai do crepúsculo à noite, as estrelas acendem e a lua sobe de trás da
+## serra (Atmosfera.anoitecer); a Cacau fica parada e o HUD sai de cena
+## enquanto isso. Daí em diante é noite pelo resto da partida. Devolve se a
+## noite caiu agora — numa fase sem Atmosfera, ou onde já é noite, não
+## acontece nada.
+func _cair_a_noite() -> bool:
+	var atmosfera := Atmosfera.da_cena(self)
+	if atmosfera == null or not atmosfera.pode_anoitecer():
+		return false
+	var player := get_tree().get_first_node_in_group("player")
+	if player:
+		player.pode_se_mover = false
+	var cena := get_tree().current_scene
+	# Sem apagar a tela: a cortina está aqui só para tirar o HUD de cena.
+	var cortina := FadeTela.criar(cena)
+	cortina.esconder_huds(cena)
+
+	await atmosfera.anoitecer()
+	await get_tree().create_timer(BRASA_APOS_A_NOITE).timeout
+
+	cortina.restaurar_huds()
+	cortina.queue_free()
+	if is_instance_valid(player):
+		player.pode_se_mover = true
+	return true
+
+
 ## Liga/desliga a pose do maçarico na personagem (ela fica virada para o forno).
 ## som_offset só importa ao ligar: de onde tocar o maçarico_sound dessa vez.
 func _segurar_macarico(ligado: bool, som_offset: float = 0.1) -> void:
@@ -476,8 +511,10 @@ func _concluir() -> void:
 	EstadoMundo.guardar(self, "carbono_pronto", true)
 
 	# A célula só pode ser retirada depois que a brasa apaga: a fornalha
-	# continua queimando um tempo antes de o sprite voltar ao forno frio.
-	await get_tree().create_timer(BRASA_APOS_CONCLUIR).timeout
+	# continua queimando um tempo antes de o sprite voltar ao forno frio. Na
+	# primeira vez esse tempo é a noite caindo.
+	if not await _cair_a_noite():
+		await get_tree().create_timer(BRASA_APOS_CONCLUIR).timeout
 	if not is_instance_valid(self) or not is_inside_tree():
 		return
 	_acesa = false

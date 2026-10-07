@@ -11,13 +11,20 @@ extends Node
 #   * o world1 abre ao ENTARDECER: sol no céu, lua fora, sem estrelas, postes
 #     fracos, o fundo vestido com a luz do horário — e nada disso gravado nos
 #     nós da cena;
-#   * o pôr do sol: o sol desce, a fase chega ao crepúsculo, os postes ganham
-#     força; virar a noite acende a lua e as estrelas e fica lembrado;
+#   * o pôr do sol: o sol desce, a fase chega ao crepúsculo — só um pouco mais
+#     escura, sem noite — e os postes ganham força; virar a noite acende as
+#     estrelas e fica lembrado;
 #   * a cena do mirante inteira, com o diálogo de verdade: a Cacau fica parada
-#     do começo ao fim, a noite cai, o controle e o HUD voltam, e a cena não
-#     repete;
-#   * de volta ao world1 depois disso, a fase já abre de noite;
-#   * o pátio (fase 1.2) e a fase2_torre são sempre noite, com a lua;
+#     do começo ao fim, a tela não apaga, a fase fica no crepúsculo, o controle
+#     e o HUD voltam, e a cena não repete;
+#   * de volta ao world1 depois disso, a fase abre no crepúsculo;
+#   * o pátio (fase 1.2) abre no crepúsculo, sem lua; encher e acender a
+#     fornalha não muda a hora — é depois do painel resolvido, com ela ainda
+#     queimando, que a noite cai com a lua subindo, uma vez só; daí em diante
+#     o pátio e o world1 abrem de noite;
+#   * a hora é uma só para o jogo inteiro: na tarde, no crepúsculo e na noite,
+#     as três fases ao ar livre abrem na mesma hora;
+#   * a fase2_torre, de noite, tem a lua no alto;
 #   * a interface do mundo (balões, teclas, textos) fica fora da luz ambiente,
 #     e a placa da estrada não;
 #   * as luzes que seguem o horário (o laser) ficam apagadas numa cena sem
@@ -47,8 +54,10 @@ func _rodar() -> void:
 	await _testar_entardecer()
 	await _testar_por_do_sol()
 	await _testar_cena_do_mirante()
-	await _testar_volta_de_noite()
-	await _testar_fases_de_noite()
+	await _testar_volta_no_crepusculo()
+	await _testar_noite_no_patio()
+	await _testar_hora_sincronizada()
+	await _testar_torre_de_noite()
 	await _testar_luzes_proprias()
 	print("\n>>> %s <<<" % ("TUDO OK" if _falhas == 0 else "%d FALHA(S)" % _falhas))
 	get_tree().quit(1 if _falhas > 0 else 0)
@@ -56,6 +65,7 @@ func _rodar() -> void:
 
 func _zerar_a_partida() -> void:
 	EstadoMundo.anoiteceu = false
+	EstadoMundo.sol_se_pos = false
 	EstadoMundo.viu_o_foguete = false
 	EstadoMundo.revelou_dr_chico = false
 
@@ -121,7 +131,7 @@ func _testar_entardecer() -> void:
 	_checar(sol.brilho_pixelado, "o brilho do sol é em pixel art")
 	_checar(atm.perfil_atual() == atm.entardecer and is_zero_approx(atm.perfil_atual().estrelas),
 		"o perfil é o do entardecer, sem estrelas")
-	_checar(atm.pode_anoitecer(), "e ainda dá para anoitecer")
+	_checar(atm.pode_por_o_sol(), "e o sol ainda está para se pôr")
 
 	var ambiente := _ambiente(atm)
 	_checar(ambiente != null and ambiente.color.is_equal_approx(atm.entardecer.ambiente),
@@ -167,7 +177,13 @@ func _testar_por_do_sol() -> void:
 		and atm.perfil_atual().estrelas > 0.0, "com a luz do crepúsculo e as primeiras estrelas")
 	_checar(postes.luzes().all(func(l: LuzDePoste) -> bool: return l.intensidade > atm.entardecer.postes),
 		"os postes ganharam força")
-	_checar(not EstadoMundo.anoiteceu, "ainda não é noite")
+	_checar(atm.crepusculo.ambiente.get_luminance() > atm.entardecer.ambiente.get_luminance() * 0.75
+		and atm.crepusculo.ambiente.get_luminance() > atm.noite.ambiente.get_luminance() * 1.3,
+		"escureceu só de leve (%.2f, contra %.2f do entardecer e %.2f da noite)" % [
+			atm.crepusculo.ambiente.get_luminance(), atm.entardecer.ambiente.get_luminance(),
+			atm.noite.ambiente.get_luminance()])
+	_checar(not EstadoMundo.anoiteceu and EstadoMundo.sol_se_pos and not atm.pode_por_o_sol(),
+		"ainda não é noite: o que ficou lembrado é o sol posto")
 
 	atm.definir_momento(Atmosfera.Momento.NOITE)
 	_checar(is_zero_approx(sol.presenca()), "virou a noite: o sol saiu do céu")
@@ -195,9 +211,7 @@ func _testar_cena_do_mirante() -> void:
 	# A cena é a de verdade; só os tempos de olhar é que são encurtados.
 	atm.duracao_do_por_do_sol = 0.8
 	gatilho.respiro_antes_do_sol = 0.1
-	gatilho.duracao_do_escurecer = 0.25
-	gatilho.pausa_no_escuro = 0.1
-	gatilho.duracao_do_clarear = 0.25
+	gatilho.respiro_depois_do_sol = 0.1
 
 	var hud := player.get_node("CanvasLayer") as CanvasLayer
 	var forma := gatilho.get_node("CollisionShape2D") as CollisionShape2D
@@ -208,15 +222,19 @@ func _testar_cena_do_mirante() -> void:
 	var solta_cedo := false
 	var hud_sumiu := false
 	var viu_crepusculo := false
+	var tela_apagou := false
 	var espera := 0.0
-	while espera < 40.0 and not (EstadoMundo.anoiteceu and player.pode_se_mover):
+	while espera < 40.0 and not (EstadoMundo.sol_se_pos and player.pode_se_mover):
 		await get_tree().process_frame
 		espera += get_process_delta_time()
 		if Dialogic.current_timeline != null:
 			falou = true
 			Dialogic.Inputs.handle_input()
-		if EstadoMundo.viu_o_foguete and not EstadoMundo.anoiteceu:
-			# Entre a fala e a noite ela não pode sair andando.
+		var cortina := cena.get_node_or_null("FadeTela")
+		if cortina != null and (cortina.get_child(0) as ColorRect).visible:
+			tela_apagou = true
+		if EstadoMundo.viu_o_foguete and not EstadoMundo.sol_se_pos:
+			# Entre a fala e o sol posto ela não pode sair andando.
 			solta_cedo = solta_cedo or player.pode_se_mover
 			hud_sumiu = hud_sumiu or not hud.visible
 			viu_crepusculo = viu_crepusculo or atm.andamento_do_por_do_sol() > 0.5
@@ -224,9 +242,11 @@ func _testar_cena_do_mirante() -> void:
 	_checar(gatilho._disparado and falou, "pisar no mirante dispara a fala do foguete")
 	_checar(EstadoMundo.viu_o_foguete, "ela viu o foguete")
 	_checar(viu_crepusculo, "depois da fala o sol desceu")
-	_checar(not solta_cedo, "a Cacau ficou parada do coração até a noite")
+	_checar(not solta_cedo, "a Cacau ficou parada do coração até o sol sumir")
 	_checar(hud_sumiu, "e o HUD saiu de cena enquanto isso")
-	_checar(EstadoMundo.anoiteceu and atm.momento == Atmosfera.Momento.NOITE, "a noite caiu (%.1f s)" % espera)
+	_checar(EstadoMundo.sol_se_pos and atm.momento == Atmosfera.Momento.CREPUSCULO
+		and atm.perfil_atual() == atm.crepusculo, "o sol se pôs e a fase ficou no crepúsculo (%.1f s)" % espera)
+	_checar(not EstadoMundo.anoiteceu and not tela_apagou, "sem tela preta e sem virar noite")
 	_checar(player.pode_se_mover and not player.segurar_apos_o_foguete, "o controle voltou")
 	await _quadros(3)
 	_checar(hud.visible and cena.get_node_or_null("FadeTela") == null, "o HUD voltou e a cortina saiu")
@@ -239,49 +259,179 @@ func _testar_cena_do_mirante() -> void:
 	_checar(player.pode_se_mover and Dialogic.current_timeline == null, "pisar de novo no mirante não repete a cena")
 
 
-func _testar_volta_de_noite() -> void:
+func _testar_volta_no_crepusculo() -> void:
 	print("\n--- DE VOLTA AO WORLD1, DEPOIS ---")
-	# (EstadoMundo.anoiteceu e viu_o_foguete vêm do caso anterior.)
+	# (EstadoMundo.sol_se_pos e viu_o_foguete vêm do caso anterior.)
 	await _abrir(MUNDO)
 	var cena := get_tree().current_scene
 	var atm := Atmosfera.da_cena(cena)
 	await _quadros(4)
-	_checar(atm.momento == Atmosfera.Momento.NOITE and atm.perfil_atual() == atm.noite, "a fase já abre de noite")
+	_checar(atm.momento == Atmosfera.Momento.CREPUSCULO and atm.perfil_atual() == atm.crepusculo,
+		"a fase abre no crepúsculo, não de noite")
 	var sol := cena.get_node("BG/CamadaDoSol/Sol") as AstroPixel
-	_checar(is_zero_approx(sol.presenca()) and is_equal_approx(sol.descida, atm.descida_do_sol),
-		"com o sol posto")
+	_checar(is_equal_approx(sol.descida, atm.descida_do_sol), "com o sol posto")
 	_checar((cena.get_node("ColisaoCenaFoguete") as Area2D)._disparado, "e a cena do mirante desarmada")
-	_checar(not atm.pode_anoitecer(), "não há outro pôr do sol para acontecer")
+	_checar(not atm.pode_por_o_sol(), "não há outro pôr do sol para acontecer")
 
 
-func _testar_fases_de_noite() -> void:
-	print("\n--- O PÁTIO E A TORRE SÃO NOITE ---")
+func _testar_noite_no_patio() -> void:
+	print("\n--- A NOITE CAI NO PÁTIO, COM A FORNALHA QUEIMANDO ---")
 	_zerar_a_partida()
-	for caminho: String in [PATIO, TORRE]:
-		await _abrir(caminho)
-		var cena := get_tree().current_scene
-		var atm := Atmosfera.da_cena(cena)
-		var nome := caminho.get_file().get_basename()
-		await _quadros(4)
-		_checar(atm != null and atm.momento == Atmosfera.Momento.NOITE and atm.perfil_atual() == atm.noite,
-			"%s: é noite" % nome)
-		var lua := cena.get_node_or_null("BG/CamadaDaLua/Lua") as AstroPixel
-		_checar(lua != null and lua.tipo == AstroPixel.Tipo.LUA and is_equal_approx(lua.presenca(), 1.0)
-			and lua.texture.resource_path == "res://assets/Area Aberta/Lua/2.png",
-			"   quem ilumina é a lua (Lua/2.png)")
-		_checar(lua != null and not lua.brilho_pixelado and lua.scale.x < 1.0, "   pequena e de brilho liso")
-		var sois := 0
-		for astro in get_tree().get_nodes_in_group(Atmosfera.GRUPO_DE_CLIENTES):
-			if astro is AstroPixel and (astro as AstroPixel).tipo == AstroPixel.Tipo.SOL:
-				sois += 1
-		_checar(sois == 0, "   sem sol nenhum")
-		_checar(cena.get_node("BG").get_child(0) is CeuPixel and is_equal_approx(atm.perfil_atual().estrelas, 1.0),
-			"   céu estrelado")
-		_checar(cena.get_node_or_null("PostesDeLuz") is PostesDeLuz, "   pronta para poste pintado acender")
-		_checar(not EstadoMundo.anoiteceu, "   e ela não mexe na hora do world1")
-	var torre := get_tree().current_scene
+	EstadoMundo.sol_se_pos = true
+	await _abrir(PATIO)
+	var cena := get_tree().current_scene
+	var atm := Atmosfera.da_cena(cena)
+	var player := _player()
+	await _quadros(4)
+	_checar(atm != null and atm.momento == Atmosfera.Momento.CREPUSCULO and atm.perfil_atual() == atm.crepusculo,
+		"o pátio abre no crepúsculo")
+	var lua := cena.get_node_or_null("BG/CamadaDaLua/Lua") as AstroPixel
+	var lugar_da_lua := lua._base.y
+	_checar(lua != null and lua.tipo == AstroPixel.Tipo.LUA and is_zero_approx(lua.presenca())
+		and is_equal_approx(lua.position.y, lugar_da_lua + atm.subida_da_lua),
+		"sem lua no céu: ela espera embaixo da serra")
+	_checar(lua.texture.resource_path == "res://assets/Area Aberta/Lua/2.png"
+		and not lua.brilho_pixelado and lua.scale.x < 1.0, "   (Lua/2.png, pequena e de brilho liso)")
+	_checar(cena.get_node_or_null("PostesDeLuz") is PostesDeLuz, "pronto para poste pintado acender")
+
+	var retorta := cena.get_node("Patio/Retorta") as RetortaCarbonizacao
+	atm.duracao_do_anoitecer = 1.0
+	var no_forno: int = retorta._madeiras_no_forno
+
+	# Encher a fornalha não mexe na hora.
+	for i in retorta.madeiras_necessarias - no_forno:
+		_dar_uma_tora()
+		retorta._abastecer()
 	await _quadros(3)
-	_checar((torre.get_node("PostesDeLuz") as PostesDeLuz).quantidade() == 1, "o poste da torre acende")
+	_checar(retorta._cheia() and atm.momento == Atmosfera.Momento.CREPUSCULO
+		and atm.pode_anoitecer() and player.pode_se_mover,
+		"com a fornalha cheia, mas apagada, a hora não muda")
+
+	# Aceso o fogo (o painel aberto), a hora continua a mesma.
+	retorta._acesa = true
+	retorta._atualizar_sprite()
+	await _quadros(3)
+	_checar(atm.momento == Atmosfera.Momento.CREPUSCULO and atm.pode_anoitecer(),
+		"com o fogo aceso, antes de o painel ser resolvido, também não")
+
+	# O painel foi resolvido: com a fornalha queimando, o tempo avança.
+	var hud := player.get_node("CanvasLayer") as CanvasLayer
+	retorta._concluir()
+	var lua_subindo := false
+	var tela_apagou := false
+	var parada := true
+	var hud_sumiu := false
+	var fogo_aceso := true
+	var espera := 0.0
+	await _quadros(2)
+	_checar(not atm.pode_anoitecer() and atm.momento != Atmosfera.Momento.NOITE and not player.pode_se_mover,
+		"resolvido o painel, a noite começa a cair e a Cacau para")
+	while espera < 20.0 and atm.momento != Atmosfera.Momento.NOITE:
+		await get_tree().process_frame
+		espera += get_process_delta_time()
+		if atm.momento == Atmosfera.Momento.NOITE:
+			break
+		parada = parada and not player.pode_se_mover
+		hud_sumiu = hud_sumiu or not hud.visible
+		fogo_aceso = fogo_aceso and retorta._acesa and not retorta._carbono_pronto
+		var cortina := cena.get_node_or_null("FadeTela")
+		if cortina != null and (cortina.get_child(0) as ColorRect).visible:
+			tela_apagou = true
+		if lua.presenca() > 0.9 and lua.position.y > lugar_da_lua + 20.0 \
+				and lua.position.y < lugar_da_lua + atm.subida_da_lua - 20.0:
+			lua_subindo = true
+	_checar(fogo_aceso, "a fornalha ficou pegando fogo enquanto a noite caía")
+	_checar(parada and hud_sumiu, "ela ficou parada e o HUD saiu de cena")
+	_checar(lua_subindo, "a lua subiu de trás da serra, já acesa")
+	_checar(not tela_apagou, "sem tela preta")
+	_checar(atm.momento == Atmosfera.Momento.NOITE and atm.perfil_atual() == atm.noite
+		and is_equal_approx(atm.perfil_atual().estrelas, 1.0), "a noite caiu: céu estrelado (%.1f s)" % espera)
+	_checar(is_equal_approx(lua.position.y, lugar_da_lua) and is_equal_approx(lua.presenca(), 1.0),
+		"a lua parou no lugar em que foi deixada na cena")
+	_checar(EstadoMundo.anoiteceu and not atm.pode_anoitecer(), "e a noite ficou lembrada")
+	await _segundos(RetortaCarbonizacao.BRASA_APOS_A_NOITE + 0.4)
+	_checar(not retorta._acesa and retorta._carbono_pronto, "a brasa apagou e o carvão saiu, já de noite")
+	_checar(player.pode_se_mover and hud.visible and cena.get_node_or_null("FadeTela") == null,
+		"o controle e o HUD voltaram")
+	# (O carvão do teste não fica anotado para os casos seguintes.)
+	retorta._carbono_pronto = false
+	retorta._madeiras_no_forno = no_forno
+	retorta._guardar_carga()
+
+	# Daí em diante o pátio e o world1 abrem de noite.
+	await _abrir(PATIO)
+	atm = Atmosfera.da_cena(get_tree().current_scene)
+	await _quadros(4)
+	lua = get_tree().current_scene.get_node("BG/CamadaDaLua/Lua") as AstroPixel
+	_checar(atm.momento == Atmosfera.Momento.NOITE and is_equal_approx(lua.presenca(), 1.0)
+		and is_zero_approx(lua.descida), "voltando ao pátio, já é noite, com a lua no alto")
+	await _abrir(MUNDO)
+	atm = Atmosfera.da_cena(get_tree().current_scene)
+	await _quadros(4)
+	var sol := get_tree().current_scene.get_node("BG/CamadaDoSol/Sol") as AstroPixel
+	_checar(atm.momento == Atmosfera.Momento.NOITE and atm.perfil_atual() == atm.noite
+		and is_zero_approx(sol.presenca()), "e o world1 também abre de noite")
+
+
+var _toras_dadas := 0
+
+func _dar_uma_tora() -> void:
+	_toras_dadas += 1
+	Inventario.adicionar_item("%steste_%d" % [Madeira.PREFIXO_ID, _toras_dadas], "Madeira", null)
+
+
+func _testar_hora_sincronizada() -> void:
+	print("\n--- A HORA É A MESMA EM TODAS AS FASES ---")
+	var horas := [
+		["de tarde", false, false, Atmosfera.Momento.ENTARDECER],
+		["no crepúsculo", true, false, Atmosfera.Momento.CREPUSCULO],
+		["de noite", true, true, Atmosfera.Momento.NOITE],
+	]
+	for hora: Array in horas:
+		_zerar_a_partida()
+		EstadoMundo.sol_se_pos = hora[1]
+		EstadoMundo.anoiteceu = hora[2]
+		var iguais := true
+		var luas_certas := true
+		for caminho: String in [MUNDO, PATIO, TORRE]:
+			await _abrir(caminho)
+			var cena := get_tree().current_scene
+			var atm := Atmosfera.da_cena(cena)
+			await _quadros(4)
+			iguais = iguais and atm != null and atm.segue_a_partida and atm.momento == hora[3] \
+				and atm.perfil_atual() == atm.perfil_de(hora[3])
+			var lua := cena.get_node_or_null("BG/CamadaDaLua/Lua") as AstroPixel
+			if lua != null:
+				luas_certas = luas_certas and is_equal_approx(lua.presenca(), 1.0 if hora[2] else 0.0)
+		_checar(iguais, "%s, é %s no world1, no pátio e na torre" % [hora[0], hora[0]])
+		_checar(luas_certas, "   e a lua %s" % ("está no céu" if hora[2] else "ainda não apareceu em nenhuma"))
+
+
+func _testar_torre_de_noite() -> void:
+	print("\n--- A TORRE, DE NOITE ---")
+	_zerar_a_partida()
+	EstadoMundo.sol_se_pos = true
+	EstadoMundo.anoiteceu = true
+	await _abrir(TORRE)
+	var cena := get_tree().current_scene
+	var atm := Atmosfera.da_cena(cena)
+	await _quadros(4)
+	_checar(atm != null and atm.momento == Atmosfera.Momento.NOITE and atm.perfil_atual() == atm.noite,
+		"fase2_torre: é noite")
+	var lua := cena.get_node_or_null("BG/CamadaDaLua/Lua") as AstroPixel
+	_checar(lua != null and lua.tipo == AstroPixel.Tipo.LUA and is_equal_approx(lua.presenca(), 1.0)
+		and is_zero_approx(lua.descida) and lua.texture.resource_path == "res://assets/Area Aberta/Lua/2.png",
+		"   quem ilumina é a lua (Lua/2.png), já no alto")
+	_checar(lua != null and not lua.brilho_pixelado and lua.scale.x < 1.0, "   pequena e de brilho liso")
+	var sois := 0
+	for astro in get_tree().get_nodes_in_group(Atmosfera.GRUPO_DE_CLIENTES):
+		if astro is AstroPixel and (astro as AstroPixel).tipo == AstroPixel.Tipo.SOL:
+			sois += 1
+	_checar(sois == 0, "   sem sol nenhum")
+	_checar(cena.get_node("BG").get_child(0) is CeuPixel and is_equal_approx(atm.perfil_atual().estrelas, 1.0),
+		"   céu estrelado")
+	await _quadros(3)
+	_checar((cena.get_node("PostesDeLuz") as PostesDeLuz).quantidade() == 1, "o poste da torre acende")
 
 
 func _testar_luzes_proprias() -> void:

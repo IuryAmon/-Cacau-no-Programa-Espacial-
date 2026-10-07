@@ -640,7 +640,7 @@ max_jumps = 10
 
 [node name="Atmosfera" type="Node" parent="." unique_id=92000020]
 script = ExtResource("60_atmosfera")
-momento = 2
+momento = 1
 
 [node name="PostesDeLuz" type="Node2D" parent="." unique_id=92000021]
 script = ExtResource("64_postes")

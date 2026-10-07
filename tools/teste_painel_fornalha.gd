@@ -247,9 +247,18 @@ func _testar_na_fase() -> void:
 		Input.action_release("ui_down")
 		_checar(retorta._acesa, "vedada: a brasa continua acesa um tempo")
 		_checar(retorta._sprite.speed_scale < 1.0, "com as chamas abafadas")
-		_checar(player.pode_se_mover, "a Cacau volta a andar")
-		await _esperar(RetortaCarbonizacao.BRASA_APOS_CONCLUIR + 0.5)
+		# No pátio, a primeira queima que dá certo é a noite caindo: a Cacau
+		# olha, parada, e a brasa só apaga com a lua no alto.
+		var atmosfera := Atmosfera.da_cena(retorta)
+		_checar(not player.pode_se_mover and atmosfera != null and not atmosfera.pode_anoitecer(),
+			"com a fornalha queimando, a noite cai e a Cacau fica olhando")
+		var limite := 30.0
+		while limite > 0.0 and not retorta._carbono_pronto:
+			await get_tree().process_frame
+			limite -= get_process_delta_time()
+		_checar(atmosfera.momento == Atmosfera.Momento.NOITE, "a brasa apaga já de noite")
 		_checar(retorta._carbono_pronto, "e o carvão fica pronto para retirar")
+		_checar(player.pode_se_mover, "a Cacau volta a andar")
 		_checar(retorta._sprite.speed_scale == 1.0, "apagada, as chamas voltam ao ritmo normal")
 
 	fase.queue_free()

@@ -7310,7 +7310,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_docyl"]
-size = Vector2(109, 96)
+size = Vector2(124, 96)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0n6n4"]
 atlas = ExtResource("19_eo7bd")
@@ -7697,6 +7697,7 @@ metadata/_edit_vertical_guides_ = [5817.0]
 [node name="Ceu" type="ParallaxLayer" parent="BG" unique_id=92000001]
 motion_scale = Vector2(0, 0.2)
 script = ExtResource("61_ceu")
+densidade = 0.004
 
 [node name="CamadaDoSol" type="ParallaxLayer" parent="BG" unique_id=92000002]
 motion_scale = Vector2(0, 0.2)
@@ -7891,8 +7892,9 @@ debug_color = Color(7.508397e-06, 0.58071315, 0.8015938, 0.41960785)
 
 [node name="Player" parent="." unique_id=392803900 instance=ExtResource("7_o24d1")]
 z_index = 2
-position = Vector2(2659, -85)
+position = Vector2(5993, -56)
 max_jumps = 20
+zoom_da_camera = 1.35
 
 [node name="Area2D" type="Area2D" parent="." unique_id=70551546]
 script = ExtResource("14_bu1hf")
@@ -7926,7 +7928,7 @@ position = Vector2(-1106, 184)
 script = ExtResource("24_jsfht")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteracaoSamambaia" unique_id=255205635]
-position = Vector2(2710, -51)
+position = Vector2(2736, -51)
 shape = SubResource("RectangleShape2D_docyl")
 
 [node name="interactballon2" type="AnimatedSprite2D" parent="InteracaoSamambaia" unique_id=1458848011]
@@ -8188,9 +8190,14 @@ position = Vector2(-66, 30)
 [node name="LimiteDeAltura" type="Marker2D" parent="PassagemLaser" unique_id=1407988178]
 position = Vector2(0, -705)
 
+[node name="LimiteDoTelhado" type="Marker2D" parent="PassagemLaser" unique_id=1407988179]
+position = Vector2(920, -642)
+
+[node name="Inicio" type="Marker2D" parent="PassagemLaser/LimiteDoTelhado" unique_id=1407988180]
+position = Vector2(-1305, 0)
+
 [node name="Atmosfera" type="Node" parent="." unique_id=92000020]
 script = ExtResource("60_atmosfera")
-lembrar_da_noite = true
 
 [node name="PostesDeLuz" type="Node2D" parent="." unique_id=92000021]
 script = ExtResource("64_postes")

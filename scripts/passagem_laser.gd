@@ -26,7 +26,12 @@ extends Node2D
 #   PassagemLaser (Node2D, este script)  <- posicione-o EM CIMA do laser: a
 #   │                                       linha da porta é o X dele
 #   ├── PontoDeEntrada   <- Marker2D: onde o player nasce ao CHEGAR nesta cena
-#   └── LimiteDeAltura   <- Marker2D opcional: acima dele a passagem não existe
+#   ├── LimiteDeAltura   <- Marker2D opcional: acima dele a passagem não existe
+#   └── LimiteDoTelhado  <- Marker2D opcional: canto da câmera no telhado. Com o
+#                           player acima do LimiteDeAltura, a câmera não passa
+#                           do X dele para fora nem do Y dele para baixo
+#       └── Inicio       <- Marker2D opcional: o telhado só vale do X dele em
+#                           diante (antes disso — o mirante — a câmera é livre)
 
 @export_group("Destino")
 ## Cena do outro lado da passagem.
@@ -52,12 +57,16 @@ var _armada: bool = false
 
 var _camera: Camera2D = null
 var _camera_presa: bool = false
+var _camera_no_telhado: bool = false
 # Até onde a câmera podia ir antes da passagem existir, para devolver esse
 # valor quando o player sobe acima do limite de altura.
 var _limite_camera_solto: int = 0
+var _limite_de_baixo_solto: int = 0
 
 @onready var _ponto_entrada: Marker2D = get_node_or_null("PontoDeEntrada")
 @onready var _limite_altura: Marker2D = get_node_or_null("LimiteDeAltura")
+@onready var _limite_telhado: Marker2D = get_node_or_null("LimiteDoTelhado")
+@onready var _inicio_telhado: Marker2D = get_node_or_null("LimiteDoTelhado/Inicio")
 
 
 func _ready() -> void:
@@ -100,7 +109,7 @@ func _process(_delta: float) -> void:
 	# Em cima do telhado o mapa continua: a linha não existe lá e a câmera
 	# volta a seguir livre.
 	var na_altura_da_porta := _na_altura_da_porta(player)
-	_prender_camera(na_altura_da_porta)
+	_prender_camera(na_altura_da_porta, not na_altura_da_porta and _no_telhado(player))
 	if not na_altura_da_porta or not EstadoMundo.passagem_laser_aberta:
 		return
 
@@ -120,6 +129,17 @@ func _na_altura_da_porta(player: Node2D) -> bool:
 	if _limite_altura == null:
 		return true
 	return player.global_position.y > _limite_altura.global_position.y
+
+
+## True do começo do telhado em diante (sem o marcador Inicio, em todo lugar
+## acima do limite de altura).
+func _no_telhado(player: Node2D) -> bool:
+	if _limite_telhado == null:
+		return false
+	if _inicio_telhado == null:
+		return true
+	var x := player.global_position.x
+	return x > _inicio_telhado.global_position.x if sentido > 0.0 		else x < _inicio_telhado.global_position.x
 
 
 # --- SAÍDA: ELE CRUZOU A LINHA DO LASER ---
@@ -188,19 +208,27 @@ func _preparar_camera() -> void:
 	if _camera == null:
 		return
 	_limite_camera_solto = _camera.limit_right if sentido > 0.0 else _camera.limit_left
-	_prender_camera(true)
+	_limite_de_baixo_solto = _camera.limit_bottom
+	_prender_camera(true, false)
 
 
 ## O mapa acaba na linha: a câmera não mostra o vazio depois dela. Mas isso só
-## vale na altura da porta — no telhado ela volta a seguir o player livremente.
-func _prender_camera(prender: bool) -> void:
-	if _camera == null or prender == _camera_presa:
+## vale na altura da porta — acima dela a câmera volta a seguir o player, e no
+## telhado vai só até o canto marcado pelo LimiteDoTelhado.
+func _prender_camera(prender: bool, no_telhado: bool) -> void:
+	if _camera == null or (prender == _camera_presa and no_telhado == _camera_no_telhado):
 		return
 	_camera_presa = prender
+	_camera_no_telhado = no_telhado
 
 	var borda := _limite_camera_solto
+	var base := _limite_de_baixo_solto
 	if prender:
 		borda = int(global_position.x + sentido * margem_camera)
+	elif no_telhado:
+		borda = roundi(_limite_telhado.global_position.x)
+		base = roundi(_limite_telhado.global_position.y)
+	_camera.limit_bottom = base
 	if sentido > 0.0:
 		_camera.limit_right = borda
 	else:

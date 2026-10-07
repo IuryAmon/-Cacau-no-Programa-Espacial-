@@ -30,9 +30,20 @@ static var chegando_pelo_laser: bool = false
 ## recarregar antes de chegar ao laboratório.
 static var viu_o_foguete: bool = false
 
-## True depois que o sol se pôs no world1, no fim dessa mesma cena. Daí em
-## diante é noite: o world1 já abre escuro quando ela volta do laboratório (ver
-## Atmosfera.lembrar_da_noite).
+# --- A HORA DA PARTIDA ---
+#
+# O jogo tem uma hora só, igual em todas as fases ao ar livre: entardecer,
+# depois crepúsculo, depois noite. Ela só anda para a frente, e quem a lê é a
+# Atmosfera de cada fase (Atmosfera.hora_da_partida).
+
+## True depois que o sol se pôs, no fim da cena do mirante do world1. Daí em
+## diante é crepúsculo em toda fase: um pouco mais escuro, sem o sol, ainda sem
+## a lua.
+static var sol_se_pos: bool = false
+
+## True depois que a noite caiu, com a fornalha do pátio queimando depois do
+## painel (ver RetortaCarbonizacao._cair_a_noite). Daí em diante é noite em
+## toda fase.
 static var anoiteceu: bool = false
 
 
