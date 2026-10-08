@@ -16,7 +16,8 @@ extends RefCounted
 # única — são TRILHAS, uma por ala, cada uma com a sua fila de etapas:
 #
 #   prologo    world1 até a revelação do Dr. Chico
-#   carbono    Ala de Pirólise + Pátio (fase 1 e 1.2)    -> entregar o C
+#   carbono    Ala de Pirólise + o corredor do pátio + Pátio (fase 1 e 1.2)
+#                                                         -> entregar o C
 #   nitrogenio o corredor da torre + a fase 2 (em branco) -> entregar o N
 #   subsolo    Subsolo em blecaute                       -> entregar o P e o S
 #   lancamento Torre de Lançamento                       -> embarque
@@ -60,6 +61,8 @@ const WORLD1 := "res://scenes/world1.tscn"
 const LAB := "res://scenes/laboratório_(world_2).tscn"
 const FASE1 := "res://scenes/fases/fase1_oficina.tscn"
 const FASE1_2 := "res://scenes/fases/fase1_2_exterior.tscn"
+## O corredor entre o elevador da oficina e o pátio: é o caminho do carbono.
+const CORREDOR_PATIO := "res://scenes/fases/corredor_patio.tscn"
 ## O corredor entre o laboratório e a fase 2: já é o caminho do nitrogênio.
 const CORREDOR_TORRE := "res://scenes/fases/corredor_torre.tscn"
 const FASE2 := "res://scenes/fases/fase2_torre.tscn"
@@ -122,7 +125,7 @@ func _init(visitou: Callable) -> void:
 			_portao(_revelou_dr_chico),
 		]),
 
-		_trilha("carbono", "CARBONO", AmostraChonps.CORES["C"], [FASE1, FASE1_2], [
+		_trilha("carbono", "CARBONO", AmostraChonps.CORES["C"], [FASE1, CORREDOR_PATIO, FASE1_2], [
 			[_obj("entrar_oficina", "Entre na Ala de Pirólise", _visitou.bind(FASE1))],
 			[
 				_obj("bumerangue", "Pegue o bumerangue no domo de vidro", _tem.bind("bumerangue")),

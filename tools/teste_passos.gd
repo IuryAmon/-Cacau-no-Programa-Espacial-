@@ -10,8 +10,9 @@ extends Node
 #   * fase 1 (oficina): o piso todo é concreto; as plataformas laranja que
 #     caem, a plataforma móvel, a de viagem e a do guincho são metal;
 #   * laboratório (world 2): todo o chão é metal;
-#   * fase 1.2: grama no pátio, concreto no piso do laboratório, e o
-#     industrial (ainda sem som) fica mudo;
+#   * fase 1.2: o pátio é grama de ponta a ponta (o prédio do elevador saiu);
+#     no corredor do pátio o piso é concreto; e o industrial (ainda sem som)
+#     fica mudo onde nem a camada diz que chão ele é;
 #   * correndo de verdade, sai um passo para cada quadro 1 e 7 da "run" — um a
 #     cada 6 quadros, 0,25 s —, um tiquinho antes de o pé tocar (o
 #     "adiantamento"), e nenhum no ar nem com a pose parada do dash;
@@ -23,6 +24,7 @@ const PLAYER := "res://scenes/player.tscn"
 const MUNDO := "res://scenes/world1.tscn"
 const FASE1 := "res://scenes/fases/fase1_oficina.tscn"
 const FASE := "res://scenes/fases/fase1_2_exterior.tscn"
+const CORREDOR_PATIO := "res://scenes/fases/corredor_patio.tscn"
 const LAB := "res://scenes/laboratório_(world_2).tscn"
 const CHAO_DO_PATIO := 512.0
 ## Do centro da cápsula até a sola (72 de altura, centrada na origem).
@@ -248,7 +250,7 @@ func _testar_laboratorio() -> void:
 
 
 func _testar_fase_superficies() -> void:
-	print("\n--- FASE 1.2: GRAMA E LABORATÓRIO ---")
+	print("\n--- FASE 1.2 E O CORREDOR DELA: GRAMA, CONCRETO E O INDUSTRIAL ---")
 	var fase := await _abrir(FASE)
 	var player := fase.get_node("Player") as CharacterBody2D
 	var som := player.get_node("SomPassos") as SomPassos
@@ -263,25 +265,54 @@ func _testar_fase_superficies() -> void:
 	await get_tree().physics_frame
 	_checar(_pisar(som).is_empty(), "no ar, nenhum passo")
 
-	# O piso do laboratório, à esquerda do pátio (tiles -3..6).
+	# O prédio do elevador saiu do pátio: a ponta esquerda, por onde ela entra
+	# andando, é grama como o resto.
 	var terreno := fase.get_node("Terreno") as TileMapLayer
-	# Quase todo ele fica debaixo da cabine do elevador e da porta de metal:
-	# vale um tile em que o pé encosta no próprio piso.
-	_checar(terreno.get_cell_source_id(Vector2i(3, 16)) == 12, "o piso da esquerda é o do laboratório")
-	_checar(_ficar_sobre_o_tile(player, som, terreno, 12), "achou um pedaço do piso do laboratório à mostra")
-	_checar(_pisar(som) == [&"concreto"], "no piso do laboratório (x = %.0f), concreto" % player.global_position.x)
+	_checar(terreno.get_cell_source_id(Vector2i(1, 16)) == 3 and terreno.get_used_cells_by_id(12).is_empty(),
+		"o chão da ponta esquerda também é grama (o piso de pedra saiu)")
+	player.global_position = Vector2(40, CHAO_DO_PATIO - ATE_A_SOLA)
+	await get_tree().physics_frame
+	_checar(_pisar(som) == [&"grama"], "na beirada por onde ela entra, grama")
+	await _fechar(fase)
+
+	# O piso de pedra do laboratório agora é o do corredor do pátio, onde o
+	# elevador chega.
+	var corredor := await _abrir(CORREDOR_PATIO)
+	player = corredor.get_node("Player") as CharacterBody2D
+	som = player.get_node("SomPassos") as SomPassos
+	player.set_physics_process(false)
+	var piso := corredor.get_node("Estrutura") as TileMapLayer
+	# Parte dele fica debaixo da cabine do elevador: vale um tile em que o pé
+	# encosta no próprio piso.
+	_checar(_ficar_sobre_o_tile(player, som, piso, 12), "achou um pedaço do piso do corredor à mostra")
+	_checar(_pisar(som) == [&"concreto"], "no piso do corredor do pátio (x = %.0f), concreto" % player.global_position.x)
 	_checar(som.stream == som.sons_por_superficie[&"concreto"], "com o som do concreto")
 
-	# Chão que não diz o que é fica mudo: o industrial das fases 2, 3 e final,
-	# que aqui só aparece na marquise lá em cima.
-	var industrial := _chao_descoberto(terreno, 13)
-	_checar(industrial != Vector2i(-99999, -99999), "achou o industrial descoberto")
-	player.global_position = _em_cima_de(terreno, industrial)
+	# Chão que não diz o que é fica mudo: o industrial das fases 2, 3 e final.
+	# Um tile dele sozinho, numa camada que também não diz nada.
+	var industrial := Vector2i(-1, -1)
+	var fonte := piso.tile_set.get_source(13) as TileSetAtlasSource
+	for i in fonte.get_tiles_count():
+		var coords := fonte.get_tile_id(i)
+		if fonte.get_tile_data(coords, 0).get_collision_polygons_count(0) > 0:
+			industrial = coords
+			break
+	_checar(industrial != Vector2i(-1, -1), "o industrial tem tile com colisão")
+	var solta := TileMapLayer.new()
+	solta.tile_set = piso.tile_set
+	solta.scale = piso.scale
+	solta.position = Vector2(0, -3000)
+	solta.set_cell(Vector2i(0, 0), 13, industrial)
+	corredor.add_child(solta)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	player.global_position = _em_cima_de(solta, Vector2i(0, 0))
 	await get_tree().physics_frame
 	som.stream = null
-	_checar(_pisar(som) == [&""], "o industrial das fases não diz o que é")
+	_checar(som._chao_sob_os_pes().get("collider") == solta and _pisar(som) == [&""],
+		"o industrial das fases não diz o que é")
 	_checar(som.stream == null, "e fica mudo")
-	await _fechar(fase)
+	await _fechar(corredor)
 
 
 func _testar_corrida_na_grama() -> void:

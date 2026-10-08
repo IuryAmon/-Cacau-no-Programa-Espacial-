@@ -1,7 +1,8 @@
 extends Node
 
-# Teste automático do ELEVADOR entre fases (scripts/fases/elevador_fase.gd) e
-# do pátio da fase1.2, que é a fase de tela única para onde ele leva.
+# Teste automático do ELEVADOR entre fases (scripts/fases/elevador_fase.gd): o
+# par que liga a oficina (fase 1) ao corredor do pátio — e do pátio da fase
+# 1.2, a fase de tela única do outro lado desse corredor.
 #
 #   godot --headless --path . res://tools/teste_elevador.tscn
 #
@@ -10,17 +11,28 @@ extends Node
 # levando a passageira junto SEM levar a câmera, e a chegada encenada — que é
 # a parte que roda sozinha no _ready() do elevador de destino.
 #
-# A troca de cena em si (o FadeTela.trocar_cena no fim da partida) fica de
-# fora: ela derrubaria a própria cena do teste. O que este arquivo garante é
-# que tudo ANTES dela acontece direito.
+# A viagem inteira, com as trocas de cena de verdade (oficina <-> corredor <->
+# pátio), tem um teste só dela: tools/teste_corredor_patio.tscn.
+
+const OFICINA := "res://scenes/fases/fase1_oficina.tscn"
+const CORREDOR := "res://scenes/fases/corredor_patio.tscn"
+const PATIO := "res://scenes/fases/fase1_2_exterior.tscn"
 
 var _falhas := 0
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	await get_tree().process_frame
+	# O teste sai de cena: a chegada é testada com uma troca de cena de verdade
+	# (o elevador procura a passageira na cena atual), e ela não pode apagar o
+	# próprio teste.
+	get_tree().current_scene = null
+
 	await _testar_fiacao()
 	await _testar_patio()
 	await _testar_estrado()
+	await _testar_grade()
 	await _testar_portas()
 	await _testar_percurso()
 	await _testar_chegada()
@@ -67,13 +79,13 @@ func _elevador(raiz: Node, caminho: String) -> ElevadorFase:
 func _testar_fiacao() -> void:
 	print("\n--- FIACAO DOS DOIS ELEVADORES ---")
 
-	var oficina := await _abrir("res://scenes/fases/fase1_oficina.tscn")
+	var oficina := await _abrir(OFICINA)
 	var sobe := _elevador(oficina, "Entrada/ElevadorPatio")
 	_checar(sobe != null, "elevador na entrada da fase1")
 	if sobe:
 		_checar(sobe.direcao == ElevadorFase.Direcao.SOBE, "o da oficina sobe")
-		_checar(sobe.cena_destino == "res://scenes/fases/fase1_2_exterior.tscn",
-			"o da oficina leva para a fase1.2")
+		_checar(sobe.cena_destino == CORREDOR,
+			"o da oficina leva para o corredor do patio (e nao mais direto para a fase1.2)")
 		_checar(sobe.tag_aqui == "oficina" and sobe.tag_destino == "patio",
 			"tags da oficina apontam para o patio")
 		_checar(sobe.recebe_chegada, "o da oficina tambem recebe quem volta")
@@ -84,29 +96,37 @@ func _testar_fiacao() -> void:
 	_checar(get_tree().get_nodes_in_group("madeira").is_empty(), "as toras sairam da oficina")
 	await _fechar(oficina)
 
-	var patio := await _abrir("res://scenes/fases/fase1_2_exterior.tscn")
-	var desce := _elevador(patio, "Elevador")
-	_checar(desce != null, "elevador no patio da fase1.2")
+	var corredor := await _abrir(CORREDOR)
+	var desce := _elevador(corredor, "Elevador")
+	_checar(desce != null, "elevador na ponta do corredor do patio")
 	if desce and sobe:
-		_checar(desce.direcao == ElevadorFase.Direcao.DESCE, "o do patio desce")
+		_checar(desce.direcao == ElevadorFase.Direcao.DESCE, "o do corredor desce")
 		_checar(desce.tag_aqui == sobe.tag_destino and desce.tag_destino == sobe.tag_aqui,
 			"as tags das duas pontas se cruzam")
-		_checar(desce.cena_destino == "res://scenes/fases/fase1_oficina.tscn",
-			"o do patio volta para a oficina")
-	await _fechar(patio)
+		_checar(desce.cena_destino == OFICINA, "o do corredor volta para a oficina")
+	if desce:
+		# O piso na frente de tudo é o que esconde a cabine dentro do poço.
+		var piso: TileMapLayer = corredor.get_node_or_null("Estrutura")
+		var player: Node2D = corredor.get_node("Player")
+		_checar(piso != null and piso.z_index > desce.z_index,
+			"o piso do corredor desenha NA FRENTE da cabine (o poco esconde ela)")
+		_checar(piso != null and piso.z_index > player.z_index,
+			"e NA FRENTE da passageira")
+	await _fechar(corredor)
 
 
 # --- O PÁTIO (fase 1.2) ---
 
 func _testar_patio() -> void:
 	print("\n--- PATIO: A FASE DE TELA UNICA ---")
-	var f := await _abrir("res://scenes/fases/fase1_2_exterior.tscn")
+	var f := await _abrir(PATIO)
 
 	var player: CharacterBody2D = f.get_node_or_null("Player")
 	_checar(player != null, "player na cena")
 
 	# A câmera parada é só isto: limites do tamanho de UM quadro (1600x900
-	# dividido pelo zoom 1.5). Se o retângulo crescer, ela volta a andar.
+	# dividido pelo zoom da fase — 1,35, o do world1). Se o retângulo crescer,
+	# ela volta a andar.
 	var camera: Camera2D = player.get_node_or_null("Camera2D")
 	var largura_visivel: float = 1600.0 / camera.zoom.x
 	var altura_visivel: float = 900.0 / camera.zoom.y
@@ -115,9 +135,9 @@ func _testar_patio() -> void:
 	_checar(camera.limit_bottom - camera.limit_top <= ceili(altura_visivel) + 1,
 		"limites travam a camera na vertical")
 
-	# O retângulo é 0,33px mais largo que o quadro (1067 contra 1066,67), então
-	# sobra essa fração de folga — o bastante para o limite CONTER a tela
-	# inteira e pouco demais para alguém enxergar.
+	# O retângulo não tem como ser do tamanho exato do quadro (1185 x 667 contra
+	# 1185,19 x 666,67): sobra uma fração de pixel de diferença em cada eixo,
+	# pouco demais para a câmera andar ou para alguém enxergar.
 	var antes := camera.get_screen_center_position()
 	player.global_position.x += 400.0
 	CameraJogador.encaixar(player)
@@ -138,13 +158,12 @@ func _testar_patio() -> void:
 	_checar(arvore != null and arvore.toras_na_copa() == 3, "as tres toras estao na copa da arvore")
 	_checar(get_tree().get_nodes_in_group("madeira").is_empty(), "nenhuma tora largada no chao")
 
-	# O terreno na frente de tudo é o que esconde a cabine dentro do poço.
-	var terreno: TileMapLayer = f.get_node_or_null("Terreno")
-	var elevador := _elevador(f, "Elevador")
-	_checar(terreno != null and terreno.z_index > elevador.z_index,
-		"terreno desenha NA FRENTE da cabine (o poco esconde ela)")
-	_checar(terreno != null and terreno.z_index > player.z_index,
-		"terreno desenha NA FRENTE da passageira")
+	# O elevador não chega mais aqui: ele dá no corredor, e do corredor se entra
+	# no pátio andando, pela ponta esquerda.
+	_checar(f.get_node_or_null("Elevador") == null, "o patio nao tem mais elevador")
+	var passagem := f.get_node_or_null("PassagemCorredor") as PassagemDeCena
+	_checar(passagem != null and passagem.cena_destino == CORREDOR and passagem.sentido < 0.0,
+		"entra-se e sai-se dele andando, pela ponta esquerda (passagem para o corredor)")
 
 	await _fechar(f)
 
@@ -153,7 +172,7 @@ func _testar_patio() -> void:
 
 func _testar_estrado() -> void:
 	print("\n--- O ESTRADO: onde se pisa dentro da cabine ---")
-	var f := await _abrir("res://scenes/fases/fase1_2_exterior.tscn")
+	var f := await _abrir(CORREDOR)
 	var elevador := _elevador(f, "Elevador")
 	var player: CharacterBody2D = f.get_node("Player")
 
@@ -192,11 +211,130 @@ func _testar_estrado() -> void:
 	await _fechar(f)
 
 
+# --- A GRADE DA CABINE E A PAREDE DA ESQUERDA DA OFICINA ---
+#
+# Na oficina o elevador fica na ponta esquerda do mapa, e o chão acaba logo
+# depois dele, fora da tela. Andando reto pela cabine, a Cacau saía pelo lado
+# esquerdo e caía do mundo. Agora a cabine tem a GRADE (uma colisão baixa na
+# beirada esquerda do estrado: andando não passa, pulando passa) e a oficina
+# tem a PAREDE DA ESQUERDA, que segura quem pulou a grade.
+
+func _testar_grade() -> void:
+	print("\n--- A GRADE DA CABINE E A PAREDE DA ESQUERDA (oficina) ---")
+	# A oficina abre com o rádio do Dr. Chico chamando, e a conversa prenderia a
+	# Cacau no lugar: aqui ele fica calado.
+	var f: Node = (load(OFICINA) as PackedScene).instantiate()
+	f.get_node("Entrada/RadioDrChico").set("falar_ao_entrar", false)
+	get_tree().root.add_child.call_deferred(f)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().physics_frame
+
+	var elevador := _elevador(f, "Entrada/ElevadorPatio")
+	var player: CharacterBody2D = f.get_node("Player")
+	var grade := elevador.get_node_or_null("Cabine/Piso/Grade") as CollisionShape2D
+	var parede := f.get_node_or_null("Colisoes/ParedeEsquerda/Colisao") as CollisionShape2D
+	_checar(grade != null and grade.shape is RectangleShape2D, "a cabine tem a grade, na beirada esquerda do estrado")
+	_checar(parede != null and parede.shape is RectangleShape2D, "a oficina tem a parede da esquerda")
+	if grade == null or parede == null:
+		await _fechar(f)
+		return
+
+	# As medidas, no mundo.
+	var meia_grade: Vector2 = (grade.shape as RectangleShape2D).size * 0.5 * grade.global_scale.abs()
+	var grade_por_dentro: float = grade.global_position.x + meia_grade.x
+	var grade_por_fora: float = grade.global_position.x - meia_grade.x
+	var estrado: float = elevador.global_position.y + elevador._altura_do_piso()
+	var face_da_parede: float = parede.global_position.x \
+		+ (parede.shape as RectangleShape2D).size.x * 0.5 * parede.global_scale.x
+	var raio_do_corpo: float = (player.get_node("CollisionShape2D").shape as CapsuleShape2D).radius
+	var camera: Camera2D = player.get_node("Camera2D")
+
+	_checar(absf(grade.global_position.y + meia_grade.y - estrado) < 1.0,
+		"a grade nasce no estrado (%.0f)" % estrado)
+	var altura_da_grade: float = meia_grade.y * 2.0
+	var pulo: float = player.jump_velocity * player.jump_velocity / (2.0 * player.gravity)
+	_checar(altura_da_grade > 20.0 and altura_da_grade < pulo * 0.6,
+		"e e baixa: %.0f px, contra os %.0f de um pulo" % [altura_da_grade, pulo])
+	_checar(grade_por_fora - face_da_parede > raio_do_corpo * 2.0,
+		"entre a parede e a cabine cabe a Cacau (%.1f px de vao, ela tem %.0f)"
+			% [grade_por_fora - face_da_parede, raio_do_corpo * 2.0])
+	_checar(face_da_parede > camera.limit_left - raio_do_corpo,
+		"e a parede fica na beirada da tela: encostada nela, a Cacau ainda aparece")
+
+	# O chão do vão, à esquerda da cabine.
+	var espaco := (f as Node2D).get_world_2d().direct_space_state
+	var raio := PhysicsRayQueryParameters2D.create(
+		Vector2((grade_por_fora + face_da_parede) * 0.5, estrado - 4.0),
+		Vector2((grade_por_fora + face_da_parede) * 0.5, estrado + 200.0), 1, [player.get_rid()])
+	var achou := espaco.intersect_ray(raio)
+	_checar(not achou.is_empty(), "ha chao no vao entre a parede e a cabine")
+	var chao: float = (achou.position as Vector2).y if not achou.is_empty() else estrado
+
+	# 1. Andando para a esquerda por dentro da cabine: a grade segura.
+	player.global_position = elevador._ponto_de_embarque(player)
+	player.velocity = Vector2.ZERO
+	await _pousar(player)
+	Input.action_press("ui_left")
+	for _i in 90:
+		await get_tree().physics_frame
+	Input.action_release("ui_left")
+	var pes: float = player.global_position.y + elevador._altura_dos_pes(player)
+	_checar(player.global_position.x > grade_por_dentro and player.is_on_floor() and absf(pes - estrado) < 3.0,
+		"andando para a esquerda ela para na grade, ainda em cima do estrado (x = %.0f)" % player.global_position.x)
+
+	# 2. Pulando por cima da grade: desce pelo lado esquerdo, e não cai do mundo.
+	await _pular_para(player, "ui_left", func() -> bool:
+		return player.is_on_floor() and player.global_position.x < grade_por_fora)
+	pes = player.global_position.y + elevador._altura_dos_pes(player)
+	_checar(player.global_position.x < grade_por_fora and player.is_on_floor() and absf(pes - chao) < 3.0,
+		"pulando a grade ela desce pelo lado esquerdo e pisa no chao da oficina (x = %.0f)" % player.global_position.x)
+
+	# 3. Insistindo para a esquerda: a parede segura.
+	Input.action_press("ui_left")
+	for _i in 90:
+		await get_tree().physics_frame
+	Input.action_release("ui_left")
+	pes = player.global_position.y + elevador._altura_dos_pes(player)
+	_checar(player.global_position.x - raio_do_corpo >= face_da_parede - 0.5 and player.is_on_floor()
+		and absf(pes - chao) < 3.0 and player.current_health == player.max_health,
+		"e a parede da esquerda a segura: ela nao cai do mundo (x = %.0f)" % player.global_position.x)
+	_checar(player.global_position.x > camera.limit_left,
+		"encostada na parede, mais da metade dela continua dentro da tela")
+
+	# 4. De volta, pulando a grade para o lado de dentro. (O pulo dela é
+	# comprido: segurando o lado, ela passa por cima da cabine inteira e pousa
+	# depois da rampa — o que importa é que saiu do vão.)
+	await _pular_para(player, "ui_right", func() -> bool:
+		return player.is_on_floor() and player.global_position.x > grade_por_dentro)
+	pes = player.global_position.y + elevador._altura_dos_pes(player)
+	_checar(player.global_position.x > grade_por_dentro and player.is_on_floor() and pes <= chao + 3.0,
+		"e sai do vao do mesmo jeito, pulando a grade de volta (x = %.0f)" % player.global_position.x)
+
+	await _fechar(f)
+
+
+## Segura o lado pedido e pula (de novo, se pousar antes de chegar) até a
+## condição valer.
+func _pular_para(player: CharacterBody2D, lado: StringName, chegou: Callable) -> void:
+	Input.action_press(lado)
+	for _i in 240:
+		if chegou.call():
+			break
+		if player.is_on_floor():
+			Input.action_press("jump")
+			await get_tree().physics_frame
+			await get_tree().physics_frame
+			Input.action_release("jump")
+		await get_tree().physics_frame
+	Input.action_release(lado)
+
+
 # --- OS 13 QUADROS ---
 
 func _testar_portas() -> void:
 	print("\n--- A PORTA: 13 QUADROS PARA FECHAR, OS MESMOS PARA ABRIR ---")
-	var f := await _abrir("res://scenes/fases/fase1_2_exterior.tscn")
+	var f := await _abrir(CORREDOR)
 	var elevador := _elevador(f, "Elevador")
 	elevador.duracao_das_portas = 0.2
 
@@ -213,7 +351,7 @@ func _testar_portas() -> void:
 
 func _testar_percurso() -> void:
 	print("\n--- O PERCURSO: leva a passageira, deixa a camera ---")
-	var f := await _abrir("res://scenes/fases/fase1_2_exterior.tscn")
+	var f := await _abrir(CORREDOR)
 	var elevador := _elevador(f, "Elevador")
 	var player: CharacterBody2D = f.get_node("Player")
 	elevador.duracao_do_percurso = 0.2
@@ -254,11 +392,19 @@ func _testar_chegada() -> void:
 	ElevadorFase.chegando_de_elevador = true
 	ElevadorFase.tag_chegada = "patio"
 
-	var f := await _abrir("res://scenes/fases/fase1_2_exterior.tscn")
+	# Troca de cena de verdade: o elevador que recebe procura a passageira na
+	# cena atual (o _ready() dele roda antes de o player entrar no grupo).
+	get_tree().change_scene_to_file(CORREDOR)
+	for _i in 120:
+		await get_tree().process_frame
+		if get_tree().current_scene and get_tree().current_scene.scene_file_path == CORREDOR:
+			break
+	var f := get_tree().current_scene
+	await get_tree().process_frame
 	var elevador := _elevador(f, "Elevador")
 	var player: CharacterBody2D = f.get_node("Player")
 
-	_checar(not ElevadorFase.chegando_de_elevador, "o elevador do patio assumiu a chegada")
+	_checar(not ElevadorFase.chegando_de_elevador, "o elevador do corredor assumiu a chegada")
 	_checar(elevador._sprite.frame == 12, "a tela abre com a cabine FECHADA")
 	_checar(elevador._cabine.position.y > 0.0, "a cabine comeca la embaixo, no poco")
 	_checar(not player.pode_se_mover, "a passageira chega sem o controle na mao")
@@ -280,6 +426,7 @@ func _testar_chegada() -> void:
 		"ela chegou em pe dentro da cabine")
 
 	await _pousar(player)
-	_checar(player.is_on_floor(), "e sai do elevador pisando no chao do patio")
+	_checar(player.is_on_floor(), "e sai do elevador pisando no chao do corredor")
 
+	get_tree().current_scene = null
 	await _fechar(f)

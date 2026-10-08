@@ -1,0 +1,211 @@
+[gd_scene format=3 uid="uid://hh5m5ow4cwea"]
+
+[ext_resource type="Script" uid="uid://dw5afrbauwkev" path="res://scripts/fases/morcego.gd" id="1_morcego"]
+[ext_resource type="Texture2D" uid="uid://de55ac18p6ek3" path="res://assets/Inimigos/enemy-03-32x32.png" id="2_folha"]
+[ext_resource type="Shader" uid="uid://tgld300rvggq" path="res://shaders/morcego.gdshader" id="3_shader"]
+[ext_resource type="Script" uid="uid://b161e46rjyl1o" path="res://scripts/fases/hitbox_bumerangue.gd" id="4_hitbox"]
+[ext_resource type="AudioStream" uid="uid://chnw5qdderset" path="res://sounds/morcego/morcego_ameaca.wav" id="som_ameaca"]
+[ext_resource type="AudioStream" uid="uid://8qwvfuqemotb" path="res://sounds/morcego/morcego_asa.wav" id="som_asa"]
+[ext_resource type="AudioStream" uid="uid://crciwjbda8t32" path="res://sounds/morcego/morcego_golpe.wav" id="som_golpe"]
+[ext_resource type="AudioStream" uid="uid://demv5qkpimk84" path="res://sounds/morcego/morcego_guincho.wav" id="som_guincho"]
+[ext_resource type="AudioStream" uid="uid://jyf07h2jth23" path="res://sounds/morcego/morcego_mergulho.wav" id="som_mergulho"]
+[ext_resource type="AudioStream" uid="uid://bniadyrd2ykf0" path="res://sounds/morcego/morcego_morte.wav" id="som_morte"]
+[ext_resource type="AudioStream" uid="uid://b76f4o3fc4a6h" path="res://sounds/morcego/morcego_pof.wav" id="som_pof"]
+[ext_resource type="AudioStream" uid="uid://cinv7giq62khv" path="res://sounds/morcego/morcego_queda.wav" id="som_queda"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_corpo"]
+radius = 9.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_morcego"]
+resource_local_to_scene = true
+shader = ExtResource("3_shader")
+shader_parameter/cor_contorno = Color(0.62, 0.54, 0.78, 1)
+shader_parameter/contorno = 0.4
+shader_parameter/olho_na_arte = Color(0.267, 0.204, 0.267, 1)
+shader_parameter/cor_dos_olhos = Color(1, 0.45, 0.5, 1)
+shader_parameter/olhos = 0.0
+shader_parameter/cor_clarao = Color(0.925, 0.831, 0.816, 1)
+shader_parameter/clarao = 0.0
+
+[sub_resource type="AtlasTexture" id="voar_2"]
+atlas = ExtResource("2_folha")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="golpe_claro"]
+atlas = ExtResource("2_folha")
+region = Rect2(32, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="golpe_escuro"]
+atlas = ExtResource("2_folha")
+region = Rect2(0, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="ataque_3"]
+atlas = ExtResource("2_folha")
+region = Rect2(96, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="morte_0"]
+atlas = ExtResource("2_folha")
+region = Rect2(0, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="morte_1"]
+atlas = ExtResource("2_folha")
+region = Rect2(32, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="morte_2"]
+atlas = ExtResource("2_folha")
+region = Rect2(64, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="ataque_0"]
+atlas = ExtResource("2_folha")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="ataque_1"]
+atlas = ExtResource("2_folha")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="ataque_2"]
+atlas = ExtResource("2_folha")
+region = Rect2(64, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="ataque_4"]
+atlas = ExtResource("2_folha")
+region = Rect2(128, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="voar_0"]
+atlas = ExtResource("2_folha")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="voar_1"]
+atlas = ExtResource("2_folha")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="voar_3"]
+atlas = ExtResource("2_folha")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_morcego"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("voar_2")
+}],
+"loop": true,
+"name": &"dormindo",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("golpe_claro")
+}, {
+"duration": 1.0,
+"texture": SubResource("golpe_escuro")
+}, {
+"duration": 1.0,
+"texture": SubResource("golpe_claro")
+}, {
+"duration": 1.0,
+"texture": SubResource("golpe_escuro")
+}],
+"loop": false,
+"name": &"golpe",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("ataque_3")
+}],
+"loop": true,
+"name": &"mergulho",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("morte_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("morte_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("morte_2")
+}],
+"loop": true,
+"name": &"morrendo",
+"speed": 12.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("ataque_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("ataque_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("ataque_2")
+}],
+"loop": false,
+"name": &"preparando",
+"speed": 9.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("ataque_4")
+}],
+"loop": true,
+"name": &"recuperando",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("voar_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("voar_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("voar_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("voar_3")
+}],
+"loop": true,
+"name": &"voando",
+"speed": 11.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_alvo"]
+size = Vector2(44, 34)
+
+[node name="Morcego" type="CharacterBody2D" unique_id=1927592566 groups=["morcego"]]
+z_index = 3
+collision_layer = 0
+motion_mode = 1
+script = ExtResource("1_morcego")
+som_guincho = ExtResource("som_guincho")
+som_ameaca = ExtResource("som_ameaca")
+som_mergulho = ExtResource("som_mergulho")
+som_asa = ExtResource("som_asa")
+som_golpe = ExtResource("som_golpe")
+som_morte = ExtResource("som_morte")
+som_queda = ExtResource("som_queda")
+som_pof = ExtResource("som_pof")
+
+[node name="Colisao" type="CollisionShape2D" parent="." unique_id=619244449]
+shape = SubResource("CircleShape2D_corpo")
+
+[node name="Visual" type="AnimatedSprite2D" parent="." unique_id=1197539273]
+material = SubResource("ShaderMaterial_morcego")
+rotation = 3.1415927
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_morcego")
+animation = &"dormindo"
+
+[node name="AreaAlvo" type="Area2D" parent="." unique_id=140904622 groups=["alvo_bumerangue"]]
+position = Vector2(0, -8)
+script = ExtResource("4_hitbox")
+
+[node name="Colisao" type="CollisionShape2D" parent="AreaAlvo" unique_id=619449026]
+shape = SubResource("RectangleShape2D_alvo")
+debug_color = Color(1, 0.42, 0.2, 0.32)
+
+[node name="Voz" type="AudioStreamPlayer2D" parent="." unique_id=46991792]
+max_distance = 1300.0

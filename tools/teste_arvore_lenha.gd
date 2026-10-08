@@ -79,14 +79,21 @@ func _testar_arremesso_de_verdade() -> void:
 		var ret_frente := Rect2(frente.position, frente.texture.get_size())
 		_checar(ret_frente.encloses(ret_tiles) and ret_frente.position == ret_tiles.position,
 			"a frente está alinhada com os tiles da árvore (%s, %s)" % [ret_frente, ret_tiles])
+		# A árvore fica afastada da fornalha: os galhos da frente não chegam em
+		# quem está de maçarico na mão, trabalhando no fogo.
+		var fim_da_copa := (desenho.to_global(ret_tiles.end)).x
+		var no_fogo: float = fase.get_node("Patio/Retorta/PosicaoDoMacarico").global_position.x
+		_checar(fim_da_copa < no_fogo - 40.0,
+			"a copa acaba antes da fornalha (em x = %.0f; a Cacau trabalha no fogo em %.0f)" % [fim_da_copa, no_fogo])
 	var frente_parada := frente.global_transform if frente else Transform2D.IDENTITY
 	var ferramentas: FerramentasPlayer = player.get_node("Ferramentas")
 	Progresso._habilidades["bumerangue"] = true
 	# Parada à esquerda do tronco, de pé no chão, arremesso reto na altura da
 	# mão. Sem física: o teste é da árvore, não do chão (a cápsula do corpo tem
 	# 72 de altura centrada na origem, então o centro fica 36 acima do chão).
+	# A distância é contada do pé do tronco: a árvore pode mudar de lugar.
 	player.set_physics_process(false)
-	player.global_position = Vector2(440, CHAO_DO_PATIO - 36)
+	player.global_position = Vector2(arvore.global_position.x - 126.0, CHAO_DO_PATIO - 36)
 	player.velocity = Vector2.ZERO
 	await _capturar("1_antes")
 	var bumerangue := Bumerangue.lancar(player, ferramentas, Vector2.RIGHT)

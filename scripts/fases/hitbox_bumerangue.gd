@@ -30,8 +30,25 @@ extends Area2D
 ## significa — estragar, abrir, acender, contar ponto.
 signal atingida
 
+## O mesmo acerto, para quem precisa saber COMO ele veio: `rumo` é para onde o
+## bumerangue ia naquele instante (já normalizado) e `forca` é a do arremesso
+## (0 = parada, 1 = no teto do momento herdado). É o que o morcego escuta para
+## ser jogado para o lado certo. Num acerto sem bumerangue nenhum (um teste
+## chamando atingir_bumerangue() na mão) o rumo vem zerado.
+signal atingida_com_rumo(rumo: Vector2, forca: float)
+
 
 ## Chamado pelo bumerangue, na ida E na volta (ele atravessa alvos de
 ## propósito, para o puzzle de dois alvos num arremesso só).
 func atingir_bumerangue() -> void:
 	atingida.emit()
+	atingida_com_rumo.emit(Vector2.ZERO, 0.0)
+
+
+## A versão que o bumerangue prefere quando ela existe (ver _on_area_entered em
+## bumerangue.gd): ele se entrega junto, e daqui saem o rumo e a força.
+func atingir_bumerangue_com(bumerangue: Node) -> void:
+	atingida.emit()
+	var rumo: Vector2 = bumerangue.rumo() if bumerangue.has_method("rumo") else Vector2.ZERO
+	var forca: float = bumerangue.forca if "forca" in bumerangue else 0.0
+	atingida_com_rumo.emit(rumo, forca)

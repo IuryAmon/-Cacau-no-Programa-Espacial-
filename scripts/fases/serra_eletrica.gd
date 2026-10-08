@@ -89,6 +89,11 @@ func desarmar(com_animacao: bool = true) -> void:
 		PARANDO_INICIO, PARANDO_FIM)
 
 
+## Serra é lâmina de metal, não laser: não joga clarão nenhum em volta.
+func _cor_do_brilho() -> Color:
+	return Color(0, 0, 0, 0)
+
+
 ## A lâmina pegou alguém (gancho do EspinhosLaser).
 func _ao_ferir(_corpo: Node2D) -> void:
 	_fade_corte = _tocar_trecho(_som_corte, _volume_corte, _fade_corte,

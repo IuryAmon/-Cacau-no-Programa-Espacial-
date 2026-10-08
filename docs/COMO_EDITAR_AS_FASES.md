@@ -9,7 +9,8 @@ Tudo é arrastável, redimensionável e trocável direto no editor.
 | Arquivo | O que é |
 |---|---|
 | `scenes/fases/fase1_oficina.tscn` | Oficina do Carbono |
-| `scenes/fases/fase1_2_exterior.tscn` | Pátio da Oficina (fase 1.2) — tela única, do outro lado do elevador |
+| `scenes/fases/corredor_patio.tscn` | Corredor entre o elevador da oficina e o pátio — o elevador chega nele, e o fundo dele dá no pátio |
+| `scenes/fases/fase1_2_exterior.tscn` | Pátio da Oficina (fase 1.2) — tela única, a céu aberto; entra-se andando pela esquerda, vindo do corredor do pátio |
 | `scenes/fases/corredor_torre.tscn` | Corredor entre o laboratório e a fase 2 — a porta da torre dá nele, e o fundo dele dá na fase |
 | `scenes/fases/fase2_torre.tscn` | Fase 2, a do nitrogênio — **em branco**, sendo refeita do zero (só o céu e o chão da área aberta) |
 | `scenes/fases/fase3_subsolo.tscn` | Subsolo em blecaute (P + S) |
@@ -226,15 +227,24 @@ Selecione o nó e use o Inspetor. As propriedades mais usadas:
 
 A **fase 1.2** (`fase1_2_exterior.tscn`) é uma tela só: a câmera não anda,
 como na casa do Yoshi. Não há script travando nada — o truque é o
-`LimitesDaCamera` ter **exatamente o tamanho de um quadro**: 1067 × 600, que é
-a janela de 1600 × 900 dividida pelo zoom 1,5 da câmera do player. Como a
+`LimitesDaCamera` ter **exatamente o tamanho de um quadro**: 1185 × 667, que é
+a janela de 1600 × 900 dividida pelo zoom da câmera nesta fase — 1,35, o mesmo
+do `world1` (`Zoom Da Camera`, no Inspector do `Player` da cena). Como a
 Camera2D nunca mostra nada fora dos limites e o retângulo tem o tamanho da
 tela, só existe um enquadramento possível.
 
 - Para deixar QUALQUER fase de tela parada, é só encolher o `LimitesDaCamera`
-  até esse tamanho.
-- No instante em que o retângulo passar de 1067 × 600, a câmera volta a
+  até o tamanho do quadro dela: 1067 × 600 no zoom padrão do player (1,5),
+  1185 × 667 no 1,35.
+- No instante em que o retângulo passar desse tamanho, a câmera volta a
   acompanhar a personagem — não há exceção escondida em lugar nenhum.
+- Mudou o zoom de uma fase de tela única? Refaça o retângulo. No pátio a base
+  ficou onde estava (y = 580, para a grama continuar na mesma faixa de baixo da
+  tela) e ele cresceu para a direita e **para cima** — e o fundo teve de
+  acompanhar: camada de `ParallaxBackground` com `motion_scale` 0 fica presa ao
+  canto de cima da tela, não ao chão, então cada camada do `BG` ganhou
+  `motion_offset.y = 67` (o quanto o topo subiu) para a mata continuar
+  encostada na grama.
 - Fase de tela única não tem para onde a personagem andar embora: a 1.2 tem
   dois `StaticBody2D` invisíveis (`Paredes/`) logo fora do quadro. Se esticar a
   fase, arraste as paredes junto.
@@ -376,7 +386,7 @@ fase percorre sozinho:
 - **Final — guindastes:** `Guindastes/Conjuntos/GuindasteN` com `Alvo` e
   `Lanca`.
 
-### O elevador entre fases (fase 1 ↔ fase 1.2)
+### O elevador entre fases (fase 1 ↔ corredor do pátio)
 
 `scenes/fases/componentes/elevador_fase.tscn` é uma cabine de carga que liga
 dois andares que são **cenas diferentes**. Ela fica sempre aberta (a rampa
@@ -400,6 +410,16 @@ pixels da arte, então mudar a `escala_da_arte` leva o polígono junto. A altura
 em que a personagem embarca sai sozinha do **ponto mais alto** do polígono —
 redesenhe a rampa e o embarque acompanha, sem mexer em número nenhum.
 
+**A grade:** `Cabine/Piso/Grade` é a gradinha da beirada **esquerda** da
+cabine, o lado oposto ao da rampa: um retângulo fino que nasce no estrado e
+sobe até o corrimão do desenho (33 px na tela). Andando, a Cacau para nela e
+não desce pelo lado esquerdo; **pulando**, passa por cima. É um
+`CollisionShape2D` comum, irmão do polígono: arraste as alças para mudar a
+altura (mais alta que um pulo, uns 90 px, e ela vira parede) ou apague o nó
+para a cabine voltar a ser aberta dos dois lados. Fica separada do polígono de
+propósito — dentro dele, ela viraria o "ponto mais alto" e a Cacau embarcaria
+em cima da grade.
+
 No Inspetor:
 
 | Propriedade | O que faz |
@@ -414,14 +434,24 @@ No Inspetor:
 | `requer_habilidade` | Deixa o elevador travado até a habilidade existir |
 
 As duas pontas montadas hoje são `Entrada/ElevadorPatio` (na Oficina, sobe,
-tag `oficina` → `patio`) e `Elevador` (no Pátio, desce, tag `patio` →
-`oficina`).
+tag `oficina` → `patio`) e `Elevador` (no corredor do pátio,
+`corredor_patio.tscn`, desce, tag `patio` → `oficina`). O elevador não chega
+mais dentro do pátio: do corredor sai-se andando para ele (ver "O corredor do
+pátio", mais abaixo).
+
+**Na Oficina o elevador fica na ponta esquerda do mapa**, e o chão acaba logo
+depois dele, já fora da tela. Quem segura a Cacau ali é
+`Colisoes/ParedeEsquerda`, uma parede invisível com a face em x = -8: são 8 px
+para fora da tela, o mínimo para ela caber em pé no vão entre a parede e a
+grade da cabine (ela tem 26 px de largura, o vão tem 29,5). Pulando a grade ela
+desce nesse vão, não cai do mundo, e volta pulando de novo. Se mudar o elevador
+de lugar, leve a parede junto.
 
 **Ordem de desenho:** a cena do componente vem em `z_index` 3, na frente da
 personagem (que anda em `z_index` 2), para ela aparecer *atrás* da grade. Para
 a cabine sumir dentro do poço em vez de deslizar por cima do chão, é o
-**cenário** que precisa estar na frente: na fase 1.2 o `TileMapLayer` do
-terreno está em `z_index` 10 só por causa disso. Se você puser um elevador
+**cenário** que precisa estar na frente: no corredor do pátio a camada do piso
+(`Estrutura`) está em `z_index` 10 só por causa disso. Se você puser um elevador
 numa fase nova, faça o mesmo com o chão dela — ou aceite que a cabine passe
 por cima até sair de quadro.
 
@@ -635,9 +665,11 @@ e voltar — ou morrer e recarregar — encontra a fase como ficou:
 - painéis do portão, barreira, caixa das serras (serras recolhidas) e o
   terminal do guincho (o elevador volta a funcionar sozinho);
 - **toras de madeira recolhidas** (não reaparecem; a lenha fica no inventário);
-- **a retorta**: quantas toras estão dentro do forno, o carvão esperando para
-  ser retirado e, claro, a célula C já retirada. Se a queima der errado, as
-  toras voltam ao depósito e continuam lá mesmo saindo e voltando;
+- **a retorta**: quantas toras estão dentro do forno, o forno pegando fogo à
+  espera da porta (e a porta, se já foi apanhada, segue na mochila), o carvão
+  esperando para ser retirado e, claro, a célula C já retirada. Se a queima
+  der errado, as toras voltam ao depósito e continuam lá mesmo saindo e
+  voltando;
 - **a caixa empurrável**: fica onde estava quando você **saiu pela porta**.
   Morrer não conta — a fase recarrega com a caixa na posição da última saída,
   o que desencalha uma caixa empurrada para onde não devia.
@@ -661,12 +693,18 @@ ficou só com o palco, para a fase do nitrogênio ser montada do zero:
   devagar que a câmera, só na horizontal, e se repetem sozinhos;
 - `Atmosfera` e `PostesDeLuz` — a hora da fase (noite, com a lua) e a luz dos
   postes pintados no TileMap. Ver [`docs/ILUMINACAO.md`](ILUMINACAO.md);
-- `Terreno` — o chão de grama da área aberta, reto, de 0 a 3200 px (o topo em
-  y = 512). Pinte o resto por cima;
-- `Paredes` — duas paredes invisíveis nas pontas, para a Cacau não cair para
-  fora do mapa. Mova junto quando esticar o chão;
-- `PortaHub` — a porta de volta (e por onde ela chega). Ela dá no fundo do
-  corredor da torre, que é o caminho até o laboratório (ver abaixo);
+- `Terreno` — o chão de grama da área aberta, reto (o topo em y = 512). Ele
+  começa ANTES da beirada esquerda da tela, em x = -448: é nesse trecho de
+  fora do quadro que a Cacau nasce e some. Pinte o resto por cima;
+- `Paredes` — duas paredes invisíveis, para a Cacau não cair para fora do
+  mapa. A da esquerda fica recuada (x = -420), para lá do trecho em que ela
+  chega e sai andando. Mova junto quando esticar o chão;
+- `PassagemCorredor` — a fase **não tem porta**. Esta é a ponta esquerda dela,
+  uma `PassagemDeCena` (`scripts/fases/passagem_de_cena.gd`): a Cacau chega do
+  corredor da torre vindo de fora do quadro e entrando andando; andando para a
+  esquerda e cruzando a linha, a cena troca sozinha e ela volta para o fundo
+  do corredor (ver abaixo). A linha fica em x = 24, logo depois da beirada da
+  câmera;
 - `LimitesDaCamera`, `SpawnPadrao` e `Player`, como em toda fase.
 
 O que ainda falta voltar para o jogo fechar: a **mochila de N₂** e a
@@ -681,30 +719,165 @@ Torre antiga e sobrescreveria esta cena.
 ## O corredor da torre
 
 A porta da torre, no laboratório, não cai direto na fase 2: ela dá em
-`scenes/fases/corredor_torre.tscn`, um corredor curto (1472 px, menos de uma
-tela e meia) com a parede e o piso do laboratório. Andando até o fundo a cena
-troca sozinha para a fase 2; na volta, a porta da fase 2 devolve a Cacau no
-fundo do corredor e a porta de dentro dele leva ao laboratório.
+`scenes/fases/corredor_torre.tscn`. Andando até o fundo do corredor a cena
+troca sozinha para a fase 2, onde a Cacau entra andando pela esquerda; na
+volta é o mesmo caminho ao contrário, e a porta de dentro do corredor leva ao
+laboratório. Entre o corredor e a fase 2 não há porta: são duas pontas abertas.
 
 ```
-laboratório  PortaTorre  <->  PortaLab  [ corredor ]  SaidaTorre  <->  PortaHub  fase 2
+laboratório  PortaTorre  <->  PortaLab  [ corredor ]  SaidaTorre  <->  PassagemCorredor  fase 2
 ```
 
-- `Fundo` — a parede azul-clara do laboratório (fonte 14 do tileset_fases);
-- `Estrutura` — piso, teto e a parede da ponta esquerda, com o industrial do
-  laboratório (fonte 13). O teto é o piso de cabeça para baixo, como a viga da
-  entrada do laboratório;
-- `Pilares` e `LuzDaSaida` — enfeite: as três colunas da parede e o clarão da
-  luz de fora no fundo. Pode apagar ou mexer à vontade;
-- `Colisoes/` — as camadas de tile deste corredor são só desenho; quem segura
-  a Cacau são `Piso` (com a superfície "metal", o som de passo do
-  laboratório), `Teto` e `ParedeEsquerda`;
-- `PortaLab` — a porta modelo, de e para o laboratório;
-- `SaidaTorre` — a `PassagemDeCena` do fundo.
+O corredor é pintado à mão, e o que cada nó dele faz (o cenário, a colisão
+pelos tiles, a camada de pilastras que passa na frente, a câmera mais perto e
+presa na vertical) está no cabeçalho de `scripts/fases/corredor_torre.gd`.
 
-Para esticar ou encurtar: pinte mais (ou menos) piso, teto e parede, arraste a
-`SaidaTorre` para a ponta nova e leve a borda direita do `LimitesDaCamera` para
-uns 24 px depois dela.
+Uma `PassagemDeCena` é uma linha vertical: cruzou, troca de cena. No Inspector,
+`sentido` diz para que lado fica o lado de fora (1 = direita, no fundo do
+corredor; -1 = esquerda, na fase 2), `cena_destino` e `tag_destino` dizem para
+onde ela manda e `tag_aqui` é o nome pelo qual a outra ponta a procura. O chão
+tem de continuar uns 300 px para fora da linha, sem parede no caminho — a Cacau
+ainda corre uns passos enquanto a tela apaga, e é de lá que ela vem na chegada.
+
+Para esticar ou encurtar o corredor: pinte mais (ou menos) piso, teto e parede,
+arraste a `SaidaTorre` para a ponta nova e leve a borda direita do
+`LimitesDaCamera` para uns 24 px depois dela.
+
+## O corredor do pátio
+
+O elevador de carga da oficina não sobe mais direto para o pátio: ele chega em
+`scenes/fases/corredor_patio.tscn`, e é andando até o fundo desse corredor que
+se sai para o pátio — onde a Cacau entra andando pela esquerda, na grama. Na
+volta é o mesmo caminho ao contrário.
+
+```
+oficina  Entrada/ElevadorPatio  <->  Elevador  [ corredor ]  SaidaPatio  <->  PassagemCorredor  pátio
+```
+
+É o mesmo corredor da torre, copiado (as duas cenas são independentes: pintar
+uma não muda a outra), um terço mais curto. O que muda são as pontas:
+
+- `Elevador` — a cabine, na ponta esquerda, no lugar da porta. A camada
+  `Estrutura` (piso e teto) fica em `z_index` 10 para a cabine sumir no poço;
+- `SaidaPatio` — a `PassagemDeCena` do fundo, que leva ao pátio.
+
+No pátio (`fase1_2_exterior.tscn`) o prédio do elevador saiu: não há mais
+cabine, porta de metal, parede nem piso de pedra — o chão é grama desde antes
+da beirada esquerda da tela, e a ponta esquerda é a `PassagemCorredor` (igual
+à da fase 2).
+
+O teste da viagem inteira, com as trocas de cena de verdade:
+
+```
+godot --headless --fixed-fps 60 --path . res://tools/teste_corredor_patio.tscn
+```
+
+## Os morcegos dos corredores
+
+O inimigo dos dois corredores é `scenes/fases/componentes/morcego.tscn`
+(`scripts/fases/morcego.gd` — a luta inteira está explicada no cabeçalho).
+Ele dorme pendurado no teto, acorda quando a Cacau chega perto, vem voando e
+dá botes. Morre no bumerangue, com **dois acertos** — e como o bumerangue
+acerta na ida e na volta, um arremesso bem dado resolve: o primeiro toque o
+deixa tonto, o segundo mata.
+
+Eles moram no nó `Morcegos` de cada corredor: três no da torre (um sozinho e
+depois uma dupla) e dois no do pátio. Para mexer:
+
+- **mudar de lugar** — arraste o morcego. No editor ele já aparece de cabeça
+  para baixo; solte-o logo abaixo do teto e no jogo ele sobe e se pendura
+  sozinho, com os pés na face do tile (procura até 200 px para cima). Onde não
+  houver teto com colisão, fica pendurado exatamente onde você deixou;
+- **mais um** — `Ctrl+D` num deles, ou arraste `morcego.tscn` para a cena.
+  Deixe uns 300 px livres perto das pontas do corredor, para ninguém acordar em
+  cima de quem acabou de chegar. Dois a menos de 260 px um do outro acordam
+  juntos e fazem fila na mesma diagonal — é o arremesso que pega os dois;
+- **tirar** — apague o nó.
+
+No Inspector de cada morcego:
+
+- **Vida** — `Vida` (2 = ida e volta; 1 = morre no primeiro toque) e
+  `Persistir` (ligado, o morcego morto não volta quando a fase recarrega;
+  desligado, que é o padrão, o bando volta ao teto a cada visita);
+- **Ninho** — `Dorme No Teto` (desligado, ele fica voando em volta do lugar);
+- **Vigia** — `Raio De Alerta` (de que distância ele acorda) e
+  `Raio De Desistencia` (de que distância ele larga dela e volta a dormir);
+- **Voo** — `Velocidade De Voo` e `Posto` (onde ele fica em relação a ela: os
+  dois números iguais = na diagonal, que é onde o arremesso em 8 direções
+  alcança);
+- **Bote** — `Dano`, `Tempo De Preparo` (o aviso: quanto ele pisca em vermelho
+  antes de mergulhar), `Velocidade Do Mergulho` e o intervalo entre um bote e
+  outro;
+- **Arte** — a cor do contorno e a dos olhos;
+- **Sons** — os oito arquivos. Os que estão lá (`sounds/morcego/`) são
+  sintetizados por `tools/gerar_sons_morcego.gd`; para usar uma gravação, é só
+  soltar o arquivo no campo.
+
+Dentro da cena do morcego: `Visual` tem as sete animações (velocidade e
+quadros no painel SpriteFrames), `AreaAlvo` é onde o bumerangue pega (aumente
+as alças para ficar mais fácil de acertar) e `Voz` é o volume e o alcance de
+todos os sons dele.
+
+O teste dele — a luta inteira numa salinha, com a Cacau e o bumerangue de
+verdade, e depois os dois corredores:
+
+```
+godot --headless --path . res://tools/teste_morcego.tscn
+```
+
+## A fornalha do pátio e a porta dela
+
+A fornalha é `scenes/fases/componentes/retorta.tscn` (`scripts/fases/retorta.gd`,
+com o passo a passo no cabeçalho). O carvão sai em duas partes:
+
+1. **a temperatura**, no painel (`scripts/ui/painel_fornalha.gd`): segurar E
+   até o líquido do termômetro entrar na região amarela e mantê-lo lá dentro
+   até a barra ao lado encher. O painel fecha sozinho;
+2. **tampar o forno**, no cenário: a fornalha fica pegando fogo de boca aberta,
+   esperando. A Cacau apanha a porta encostada ao lado (E — ela vai para a
+   mochila) e, com a porta na mochila, E na fornalha fecha a boca do forno.
+   **Enquanto a porta não fecha o tempo não passa**: a noite não cai e o
+   carvão não sai. Não há como perder nessa parte.
+
+Se ela demorar, a Cacau fala sozinha: *"Talvez eu deva tampar o forno, evita a
+entrada de oxigênio..."*.
+
+**Com o forno aceso ninguém sai do pátio.** Do instante em que o fogo pega até
+a brasa apagar e o carvão sair, a passagem da ponta esquerda não deixa a Cacau
+ir embora: ela para na beirada da tela e diz *"Preciso terminar de fazer o
+carvão primeiro..."*. A fala sai uma vez por tentativa (para ouvir de novo é
+preciso se afastar e voltar). Com o fogo apagado a saída é livre — antes de
+acender, depois de desistir no painel (ESC) ou de a carga virar cinza, e com o
+carvão já pronto.
+
+O que dá para mexer, tudo dentro de `retorta.tscn`:
+
+- `Porta` — a porta encostada ao lado do forno. Arraste para mudar o lugar (é
+  para lá que ela volta quando o carvão sai). A arte é o `Sprite` dela:
+  `assets/Lab/fornalha/PortaDaFornalha.png`, 16 × 18 px na paleta da fornalha;
+- `PortaFechada` — a mesma arte, já na boca do forno. Só aparece com o forno
+  tampado; se a arte da fornalha mudar, é este nó que tem de cobrir a boca;
+- `SomPorta` e `SomConcluido` — a batida da porta e o som de puzzle resolvido;
+- no Inspector da `Retorta`, grupo **Porta**: `Espera Antes Da Dica` (segundos
+  até a fala; 12 por padrão, 0 desliga) e `Fala Da Porta` (a timeline);
+- o texto da fala: `timelines/cacau_tampar_forno.dtl`;
+- no grupo **Saída**: `Fala Ao Sair`, a timeline de quando ela tenta sair com
+  o forno aceso (vazio = é barrada do mesmo jeito, calada). O texto está em
+  `timelines/cacau_terminar_carvao.dtl`. Quem barra é a própria passagem
+  (`PassagemCorredor`): ela pergunta a quem estiver no grupo `segura_a_saida`
+  — o cabeçalho de `scripts/fases/passagem_de_cena.gd` explica o contrato;
+- a região do termômetro: em `scripts/ui/painel_fornalha.gd`, `LINHA_DA_REGIAO`
+  é a linha do meio dela e `MEIA_REGIAO` quantas linhas ela tem para cada
+  lado (6 hoje: 13 linhas ao todo). Aumentar alarga a faixa e facilita o
+  puzzle; mantendo o número par, as bordas caem em cima dos traços da escala.
+  O desenho acompanha sozinho.
+
+O teste do painel, da porta e da fala (com `-- --capturas=<pasta>`, e sem
+`--headless`, ele salva uma imagem de cada momento):
+
+```
+godot --headless --path . res://tools/teste_painel_fornalha.tscn
+```
 
 ## Regerar o blockout do zero
 
@@ -729,7 +902,7 @@ godot --headless --path . res://tools/teste_fases.tscn
 Ele imprime `>>> TUDO OK <<<` ou aponta exatamente qual ligação sumiu — útil
 se você renomear ou apagar um nó que o script da fase procura pelo nome.
 
-O elevador entre a fase 1 e a 1.2 tem um teste só dele, com a mecânica miúda
+O elevador entre a fase 1 e o corredor do pátio tem um teste só dele, com a mecânica miúda
 (os 13 quadros da porta, o percurso levando a passageira sem levar a câmera, a
 chegada que se encena sozinha):
 
@@ -765,4 +938,12 @@ E os passos da Cacau, com o som de cada chão (grama, concreto e metal):
 
 ```
 godot --headless --path . res://tools/teste_passos.tscn
+```
+
+Os morcegos dos corredores têm o deles (acordar, o bote e o aviso, o desvio, o
+arremesso que acerta na ida e mata na volta, o corpo, e onde eles estão em
+cada corredor):
+
+```
+godot --headless --path . res://tools/teste_morcego.tscn
 ```

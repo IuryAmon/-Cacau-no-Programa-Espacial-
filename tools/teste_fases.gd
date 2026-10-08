@@ -97,13 +97,14 @@ func _testar_fase1() -> void:
 		_checar(not grade.solido, "alvo duplo abriu a grade")
 
 	# A carbonização mudou de endereço: a fornalha e a lenha moraram no pátio
-	# desta fase até virarem a fase1.2, lá em cima, do outro lado do elevador.
+	# desta fase até virarem a fase1.2, lá em cima — do outro lado do elevador
+	# e do corredor do pátio, que é onde o elevador chega.
 	_checar(f.get_node_or_null("Patio/Retorta") == null, "fornalha nao esta mais na oficina")
 	var elevador := f.get_node_or_null("Entrada/ElevadorPatio")
 	_checar(elevador != null, "elevador de carga na entrada")
 	if elevador:
-		_checar(elevador.cena_destino == "res://scenes/fases/fase1_2_exterior.tscn",
-			"o elevador leva para o patio (fase1.2)")
+		_checar(elevador.cena_destino == "res://scenes/fases/corredor_patio.tscn",
+			"o elevador leva para o corredor do patio (e dele se sai andando para a fase1.2)")
 
 	await _fechar(f)
 
@@ -117,13 +118,31 @@ func _testar_fase1_2() -> void:
 	var arvore: ArvoreLenha = f.get_node_or_null("Patio/ArvoreLenha")
 	_checar(arvore != null and arvore.toras_na_copa() == 3,
 		"as tres toras estao na copa da arvore (caem no bumerangue)")
-	_checar(f.get_node_or_null("Elevador") != null, "elevador de volta para a oficina")
+	# O elevador não chega mais aqui: ele dá no corredor do pátio, e do corredor
+	# se entra andando, pela ponta esquerda — que é grama, como o resto.
+	var passagem := f.get_node_or_null("PassagemCorredor") as PassagemDeCena
+	_checar(f.get_node_or_null("Elevador") == null and passagem != null
+		and passagem.cena_destino == "res://scenes/fases/corredor_patio.tscn"
+		and passagem.tag_destino == "fundo" and passagem.tag_aqui == "entrada" and passagem.sentido < 0.0,
+		"sem elevador: a ponta esquerda e a passagem de ida e volta do corredor do patio")
+	var chao := f.get_node("Terreno") as TileMapLayer
+	_checar(chao.get_cell_source_id(Vector2i(0, 16)) == 3 and chao.get_used_cells_by_id(12).is_empty()
+		and chao.get_used_cells_by_id(13).is_empty() and f.get_node_or_null("fundo") == null,
+		"o predio do elevador saiu: o chao e grama desde a beirada")
 
 	# A câmera parada é o LimitesDaCamera do tamanho de um quadro; a mecânica
-	# miúda do elevador tem teste próprio (tools/teste_elevador.tscn).
+	# miúda do elevador tem teste próprio (tools/teste_elevador.tscn), e a
+	# viagem inteira também (tools/teste_corredor_patio.tscn).
 	var camera: Camera2D = f.get_node("Player/Camera2D")
 	_checar(camera.limit_right - camera.limit_left <= ceili(1600.0 / camera.zoom.x) + 1,
 		"camera travada em uma tela so")
+	# O pátio é visto de tão longe quanto o world1: o mesmo zoom de câmera.
+	var mundo: Node = (load("res://scenes/world1.tscn") as PackedScene).instantiate()
+	var zoom_do_mundo: float = mundo.get_node("Player").zoom_da_camera
+	mundo.free()
+	_checar(zoom_do_mundo > 0.0 and is_equal_approx(camera.zoom.x, zoom_do_mundo)
+		and is_equal_approx(camera.zoom.y, zoom_do_mundo),
+		"com o mesmo zoom de camera do world1 (%.2f, la %.2f)" % [camera.zoom.x, zoom_do_mundo])
 
 	await _fechar(f)
 
@@ -144,7 +163,7 @@ func _testar_fase2() -> void:
 	# A fase está sendo montada no editor, então o que mora nela muda de um dia
 	# para o outro — o que não pode faltar é o que a faz abrir e funcionar.
 	var faltando := PackedStringArray()
-	for nome in ["Atmosfera", "BG", "LimitesDaCamera", "Paredes", "Player", "PortaHub",
+	for nome in ["Atmosfera", "BG", "LimitesDaCamera", "Paredes", "PassagemCorredor", "Player",
 			"PostesDeLuz", "SpawnPadrao", "Terreno"]:
 		if f.get_node_or_null(nome) == null:
 			faltando.append(nome)
@@ -220,12 +239,16 @@ func _testar_fase2() -> void:
 		and paredes.get_node("ParedeDireita").position.x > limites.position.x + limites.size.x,
 		"com uma parede invisivel em cada ponta, fora do quadro")
 
-	# A porta continua sendo a chegada da fase; a volta agora passa pelo
-	# corredor da torre (ela dá no fundo dele) antes do laboratório.
-	var porta := f.get_node("PortaHub")
-	_checar(porta.cena_destino == "res://scenes/fases/corredor_torre.tscn" and porta.tag_destino == "fundo"
-		and porta.recebe_chegada and porta.tag_aqui == "entrada",
-		"a porta continua de pe: chegada da fase e volta pelo corredor da torre")
+	# A fase não tem porta: a Cacau chega do corredor da torre entrando andando
+	# pela ponta esquerda (uma PassagemDeCena) e volta para ele saindo por ali.
+	var passagem := f.get_node_or_null("PassagemCorredor") as PassagemDeCena
+	_checar(f.get_node_or_null("PortaHub") == null and passagem != null
+		and passagem.cena_destino == "res://scenes/fases/corredor_torre.tscn" and passagem.tag_destino == "fundo"
+		and passagem.tag_aqui == "entrada" and passagem.sentido < 0.0,
+		"sem porta: a ponta esquerda e a passagem de ida e volta do corredor da torre")
+	_checar(passagem != null and paredes.get_node("ParedeEsquerda").position.x
+		< passagem.global_position.x - passagem.recuo_fora_da_tela - 300.0,
+		"e a parede da esquerda fica bem para la de onde ela chega e sai andando")
 
 	await _fechar(f)
 

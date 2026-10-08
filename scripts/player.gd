@@ -53,6 +53,9 @@ signal cena_do_foguete_terminou
 ## pôr do sol): a personagem continua parada, e quem pediu é que devolve o
 ## controle.
 var segurar_apos_o_foguete: bool = false
+## Ligado por quem dirige a cena do foguete: o balão de coração não some
+## sozinho no fim da animação, fica batendo até soltar_coracao_do_foguete().
+var segurar_coracao_do_foguete: bool = false
 
 # --- MORTE DESPEDAÇADA (SERRA E ESPINHOS DE LASER) ---
 #
@@ -346,6 +349,8 @@ func _input(event: InputEvent) -> void:
 	if tecla.keycode == KEY_K:
 		_debug_resolver_puzzle_combustao()
 	elif _e_tecla_cedilha(tecla):
+		_debug_avancar_a_hora()
+	elif tecla.physical_keycode == KEY_O:
 		_debug_pegar_todas_amostras()
 	elif tecla.physical_keycode == KEY_P:
 		_debug_pegar_todas_ferramentas()
@@ -589,8 +594,20 @@ func _on_fala_foguete_terminou() -> void:
 	if _coracao_foguete:
 		await PopupFX.mostrar(_coracao_foguete)
 		await _coracao_foguete.animation_finished
+		# Com o pôr do sol na sequência, o coração fica batendo, uma volta
+		# atrás da outra, até a fala do anoitecer.
+		while segurar_coracao_do_foguete:
+			_coracao_foguete.play("default")
+			await _coracao_foguete.animation_finished
 		await PopupFX.esconder(_coracao_foguete)
 	cena_do_foguete_terminou.emit()
+
+
+## Encerra o balão de coração que estava batendo (ver segurar_coracao_do_foguete).
+func soltar_coracao_do_foguete() -> void:
+	segurar_coracao_do_foguete = false
+	if _coracao_foguete:
+		await PopupFX.esconder(_coracao_foguete)
 
 # Chamada de dentro da timeline do Dialogic (via DialogicBridge, evento "do")
 # para andar sem fechar o diálogo — o Dialogic aguarda esse await antes de
@@ -879,7 +896,21 @@ func _debug_resolver_puzzle_combustao() -> void:
 		print("DEBUG [Player]: puzzle da combustão resolvido via tecla K, laser liberado")
 		return
 
-# --- DEBUG: TODAS AS AMOSTRAS DO CHONPS NA MÃO (tecla Ç) ---
+# --- DEBUG: MUDAR A HORA DO DIA (tecla Ç) ---
+# Cada toque passa para a hora seguinte, em qualquer mapa: tarde -> crepúsculo
+# -> noite -> tarde de novo. É a hora do JOGO que muda (a mesma de todas as
+# fases): a fase aberta troca na hora, sem cena, e as outras abrem assim. Num
+# mapa fechado (o laboratório) nada muda na tela, mas a hora anda do mesmo
+# jeito. Fora de build de debug não faz nada.
+func _debug_avancar_a_hora() -> void:
+	if not OS.is_debug_build():
+		return
+	var proxima := (Atmosfera.hora_da_partida() + 1) % Atmosfera.Momento.size() as Atmosfera.Momento
+	Atmosfera.definir_hora_da_partida(self, proxima)
+	print("DEBUG [Player]: hora do dia via tecla Ç -> ", Atmosfera.Momento.keys()[proxima])
+
+
+# --- DEBUG: TODAS AS AMOSTRAS DO CHONPS NA MÃO (tecla O) ---
 # Para testar o receptor do painel (o arremesso e o som de cada letra, que sobe
 # um degrau a cada entrega): pega a amostra de todo elemento que ainda não está
 # aceso no painel, como se tivesse coletado nas fases. Aí é só ir ao baú e
@@ -912,7 +943,7 @@ func _debug_pegar_todas_amostras() -> void:
 			AmostraChonps.nome_do_item(letra), AmostraChonps.textura(letra),
 			AmostraChonps.descricao(letra))
 		pegas.append(letra)
-	print("DEBUG [Player]: amostras pegas via tecla Ç -> ", pegas if not pegas.is_empty() else "nenhuma (já estavam na mão ou no painel)")
+	print("DEBUG [Player]: amostras pegas via tecla O -> ", pegas if not pegas.is_empty() else "nenhuma (já estavam na mão ou no painel)")
 
 func _on_area_2d_body_entered(body: Node2D) -> void:
 	if body == self:

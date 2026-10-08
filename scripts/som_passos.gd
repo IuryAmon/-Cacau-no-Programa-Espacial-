@@ -179,7 +179,13 @@ static func superficie_do_chao(colisor: Object, ponto: Vector2) -> StringName:
 		var dados := camada.get_cell_tile_data(celula)
 		if dados == null:
 			return &""
-		return StringName(dados.get_custom_data(CAMADA_DO_TILESET))
+		var do_tile := StringName(dados.get_custom_data(CAMADA_DO_TILESET))
+		# Tile que não diz o que é: vale o que a CAMADA disser (o metadado
+		# "superficie" do TileMapLayer) — é como uma fase dá som a um tile que
+		# em outras fases é outro chão.
+		if do_tile == &"" and camada.has_meta(META_DO_CORPO):
+			return StringName(camada.get_meta(META_DO_CORPO))
+		return do_tile
 	var corpo := colisor as Node
 	if corpo and corpo.has_meta(META_DO_CORPO):
 		return StringName(corpo.get_meta(META_DO_CORPO))

@@ -11,7 +11,9 @@ extends Node2D
 # são as mesmas ("tag_destino" de quem manda = "tag_aqui" de quem recebe), então
 # uma porta pode mandar para uma passagem e uma passagem para uma porta. É assim
 # que o corredor da torre funciona: a porta de dentro dele leva ao laboratório e
-# a ponta do fundo, esta passagem, leva à fase do nitrogênio.
+# a ponta do fundo, esta passagem, leva à fase do nitrogênio — onde a ponta
+# esquerda é outra passagem (com "sentido" = -1): ela sai andando de uma cena e
+# entra andando na outra, sem porta nenhuma no meio.
 #
 # COMO USAR NO EDITOR
 #   * ponha o nó EM CIMA da linha de saída, em qualquer altura acima do piso (a
@@ -20,8 +22,26 @@ extends Node2D
 #   * o piso tem de continuar depois da linha — ela ainda anda uns passos
 #     enquanto a tela apaga — e o LimitesDaCamera pode acabar logo depois da
 #     linha, para ela sair de quadro.
+#
+# QUANDO NÃO DÁ PARA SAIR
+#
+# Alguma coisa na cena pode segurar a Cacau lá dentro por um tempo — a fornalha
+# do pátio, enquanto queima (ver retorta.gd). Quem segura entra no grupo
+# GRUPO_DE_QUEM_SEGURA e responde a duas perguntas:
+#   segura_a_saida() -> bool   está segurando agora?
+#   ao_barrar_a_saida()        ela tentou sair: é a hora de dizer por quê
+# Com alguém segurando, a linha vira parede: a Cacau para nela, ainda dentro do
+# quadro, e a cena não troca. O aviso sai uma vez por tentativa — para ouvir de
+# novo ela tem de se afastar da linha e voltar.
 
 const PORTA := preload("res://scripts/porta_simulador.gd")
+
+## Grupo de quem pode segurar a Cacau dentro da cena (ver o cabeçalho).
+const GRUPO_DE_QUEM_SEGURA := &"segura_a_saida"
+## Barrada, ela fica este tanto para DENTRO da linha.
+const RECUO_AO_BARRAR := 1.0
+## Depois de barrada, só há aviso de novo se ela se afastar isto da linha.
+const DISTANCIA_PARA_AVISAR_DE_NOVO := 48.0
 
 @export_group("Destino")
 ## Cena do outro lado da passagem.
@@ -56,6 +76,8 @@ var _chegando: bool = false
 # A linha só arma depois de ver a Cacau do lado de dentro: assim ela nunca é
 # mandada de volta no mesmo instante em que chega.
 var _armada: bool = false
+# Já avisou nesta tentativa de sair (ver _barrar).
+var _avisou: bool = false
 
 
 func _ready() -> void:
@@ -79,12 +101,41 @@ func _process(_delta: float) -> void:
 		return
 	if not _do_lado_de_fora(player.global_position.x):
 		_armada = true
+		if absf(player.global_position.x - global_position.x) > DISTANCIA_PARA_AVISAR_DE_NOVO:
+			_avisou = false
 	elif _armada:
-		_sair(player)
+		var quem_segura := _quem_segura()
+		if quem_segura != null:
+			_barrar(player, quem_segura)
+		else:
+			_sair(player)
 
 
 func _do_lado_de_fora(x: float) -> bool:
 	return (x - global_position.x) * sentido > 0.0
+
+
+# --- BARRADA: ALGUÉM ESTÁ SEGURANDO A SAÍDA ---
+
+## Quem está segurando a Cacau nesta cena agora (null = ninguém, pode sair).
+func _quem_segura() -> Node:
+	for no in get_tree().get_nodes_in_group(GRUPO_DE_QUEM_SEGURA):
+		if no.has_method("segura_a_saida") and no.segura_a_saida():
+			return no
+	return null
+
+
+## Ela cruzou a linha com a saída segurada: volta para o lado de dentro,
+## encostada na linha, e quem segura explica (uma vez por tentativa).
+func _barrar(player: Node2D, quem_segura: Node) -> void:
+	player.global_position.x = global_position.x - sentido * RECUO_AO_BARRAR
+	if "velocity" in player:
+		player.velocity.x = 0.0
+	if _avisou:
+		return
+	_avisou = true
+	if quem_segura.has_method("ao_barrar_a_saida"):
+		quem_segura.ao_barrar_a_saida()
 
 
 # --- SAÍDA: ELA CRUZOU A LINHA ---

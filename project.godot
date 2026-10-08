@@ -36,7 +36,10 @@ directories/dch_directory={
 "cientista": "res://timelines/cientista.dch"
 }
 directories/dtl_directory={
+"cacau_anoitecendo": "res://timelines/cacau_anoitecendo.dtl",
 "cacau_metal_bloqueado": "res://timelines/cacau_metal_bloqueado.dtl",
+"cacau_tampar_forno": "res://timelines/cacau_tampar_forno.dtl",
+"cacau_terminar_carvao": "res://timelines/cacau_terminar_carvao.dtl",
 "cacau_ve_foguete": "res://timelines/cacau_ve_foguete.dtl",
 "cientista_balanceamento_1": "res://timelines/cientista_balanceamento_1.dtl",
 "cientista_balanceamento_2": "res://timelines/cientista_balanceamento_2.dtl",

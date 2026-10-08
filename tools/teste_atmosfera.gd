@@ -15,15 +15,17 @@ extends Node
 #     escura, sem noite — e os postes ganham força; virar a noite acende as
 #     estrelas e fica lembrado;
 #   * a cena do mirante inteira, com o diálogo de verdade: a Cacau fica parada
-#     do começo ao fim, a tela não apaga, a fase fica no crepúsculo, o controle
-#     e o HUD voltam, e a cena não repete;
+#     do começo ao fim, a tela não apaga, a fase fica no crepúsculo, ela fala
+#     do anoitecer, o controle e o HUD voltam, e a cena não repete;
 #   * de volta ao world1 depois disso, a fase abre no crepúsculo;
 #   * o pátio (fase 1.2) abre no crepúsculo, sem lua; encher e acender a
-#     fornalha não muda a hora — é depois do painel resolvido, com ela ainda
-#     queimando, que a noite cai com a lua subindo, uma vez só; daí em diante
-#     o pátio e o world1 abrem de noite;
+#     fornalha não muda a hora, e resolver o painel da temperatura também não:
+#     com o forno de boca aberta o tempo não passa. É quando a porta do forno
+#     fecha, com ele ainda queimando lá dentro, que a noite cai com a lua
+#     subindo, uma vez só; daí em diante o pátio e o world1 abrem de noite;
 #   * a hora é uma só para o jogo inteiro: na tarde, no crepúsculo e na noite,
 #     as três fases ao ar livre abrem na mesma hora;
+#   * a tecla Ç (debug) passa para a hora seguinte, na fase e na partida;
 #   * a fase2_torre, de noite, tem a lua no alto;
 #   * a interface do mundo (balões, teclas, textos) fica fora da luz ambiente,
 #     e a placa da estrada não;
@@ -33,6 +35,7 @@ extends Node
 const MUNDO := "res://scenes/world1.tscn"
 const PATIO := "res://scenes/fases/fase1_2_exterior.tscn"
 const TORRE := "res://scenes/fases/fase2_torre.tscn"
+const OFICINA := "res://scenes/fases/fase1_oficina.tscn"
 const ARTE_DO_POSTE := "Props-01.png"
 ## O mastro do poste da fase2_torre, de cima para baixo (linhas do atlas).
 const MASTRO := [9, 10, 11, 12, 10, 11, 12, 13]
@@ -57,7 +60,9 @@ func _rodar() -> void:
 	await _testar_volta_no_crepusculo()
 	await _testar_noite_no_patio()
 	await _testar_hora_sincronizada()
+	await _testar_tecla_da_hora()
 	await _testar_torre_de_noite()
+	await _testar_oficina()
 	await _testar_luzes_proprias()
 	print("\n>>> %s <<<" % ("TUDO OK" if _falhas == 0 else "%d FALHA(S)" % _falhas))
 	get_tree().quit(1 if _falhas > 0 else 0)
@@ -223,12 +228,41 @@ func _testar_cena_do_mirante() -> void:
 	var hud_sumiu := false
 	var viu_crepusculo := false
 	var tela_apagou := false
+	var falou_do_anoitecer := false
+	var coracao := player.get_node("CoracaoFoguete") as AnimatedSprite2D
+	var coracao_no_por_do_sol := true
+	var coracao_na_fala := false
+	var retrato := ""
+	var falas_a_direita := true
+	var uau_so_com_o_retrato := false
+	var presa_na_fala := true
 	var espera := 0.0
 	while espera < 40.0 and not (EstadoMundo.sol_se_pos and player.pode_se_mover):
 		await get_tree().process_frame
 		espera += get_process_delta_time()
 		if Dialogic.current_timeline != null:
 			falou = true
+			var quem := load("res://timelines/cacau.dch") as DialogicCharacter
+			if Dialogic.Portraits.is_character_joined(quem) and Dialogic.current_state_info.get("speaker", "") != "":
+				var nomes := get_tree().get_nodes_in_group("dialogic_name_label")
+				var a_direita := not nomes.is_empty() and is_equal_approx((nomes[0].get_parent() as Control).anchor_left, 1.0)
+				# O "Uau..." é a primeira fala da timeline do foguete (eventos 1 e 2:
+				# a fala e a caminhada que vem com ela ainda na tela).
+				var uau := Dialogic.current_event_idx <= 2 \
+					and Dialogic.current_timeline.resource_path.get_file() == "cacau_ve_foguete.dtl"
+				if uau and str(Dialogic.current_state_info.get("text", "")).begins_with("Uau"):
+					uau_so_com_o_retrato = not a_direita
+				falas_a_direita = falas_a_direita \
+					and str(Dialogic.current_state_info["portraits"][quem.resource_path].get("position_id", "")) == "right" \
+					and (uau or a_direita)
+			if EstadoMundo.sol_se_pos:
+				falou_do_anoitecer = falou_do_anoitecer \
+					or Dialogic.current_timeline.resource_path.get_file() == "cacau_anoitecendo.dtl"
+				presa_na_fala = presa_na_fala and not player.pode_se_mover
+				coracao_na_fala = coracao_na_fala or coracao.visible
+				var cacau := load("res://timelines/cacau.dch") as DialogicCharacter
+				if Dialogic.Portraits.is_character_joined(cacau):
+					retrato = Dialogic.current_state_info["portraits"][cacau.resource_path].get("portrait", "")
 			Dialogic.Inputs.handle_input()
 		var cortina := cena.get_node_or_null("FadeTela")
 		if cortina != null and (cortina.get_child(0) as ColorRect).visible:
@@ -238,6 +272,8 @@ func _testar_cena_do_mirante() -> void:
 			solta_cedo = solta_cedo or player.pode_se_mover
 			hud_sumiu = hud_sumiu or not hud.visible
 			viu_crepusculo = viu_crepusculo or atm.andamento_do_por_do_sol() > 0.5
+			if atm.andamento_do_por_do_sol() > 0.1 and atm.andamento_do_por_do_sol() < 1.0:
+				coracao_no_por_do_sol = coracao_no_por_do_sol and coracao.visible and coracao.is_playing()
 
 	_checar(gatilho._disparado and falou, "pisar no mirante dispara a fala do foguete")
 	_checar(EstadoMundo.viu_o_foguete, "ela viu o foguete")
@@ -247,6 +283,12 @@ func _testar_cena_do_mirante() -> void:
 	_checar(EstadoMundo.sol_se_pos and atm.momento == Atmosfera.Momento.CREPUSCULO
 		and atm.perfil_atual() == atm.crepusculo, "o sol se pôs e a fase ficou no crepúsculo (%.1f s)" % espera)
 	_checar(not EstadoMundo.anoiteceu and not tela_apagou, "sem tela preta e sem virar noite")
+	_checar(falou_do_anoitecer and presa_na_fala, "com o sol posto ela fala do anoitecer, ainda parada")
+	_checar(coracao_no_por_do_sol, "o coração ficou batendo o pôr do sol inteiro")
+	_checar(not coracao_na_fala and not coracao.visible, "e saiu na hora da fala")
+	_checar(falas_a_direita, "nas falas da cena o retrato e o nome ficam do lado direito")
+	_checar(uau_so_com_o_retrato, "menos no \"Uau...\": ali só o retrato vai para a direita")
+	_checar(retrato == "cacau_superneutro", "a fala usa o retrato superneutro (%s)" % retrato)
 	_checar(player.pode_se_mover and not player.segurar_apos_o_foguete, "o controle voltou")
 	await _quadros(3)
 	_checar(hud.visible and cena.get_node_or_null("FadeTela") == null, "o HUD voltou e a cortina saiu")
@@ -314,18 +356,33 @@ func _testar_noite_no_patio() -> void:
 	_checar(atm.momento == Atmosfera.Momento.CREPUSCULO and atm.pode_anoitecer(),
 		"com o fogo aceso, antes de o painel ser resolvido, também não")
 
-	# O painel foi resolvido: com a fornalha queimando, o tempo avança.
+	# O painel foi resolvido, mas a boca do forno continua aberta: a fornalha
+	# fica pegando fogo à espera da porta, e a hora NÃO anda.
+	retorta.espera_antes_da_dica = 0.0
+	retorta._on_painel_terminado(true, false)
+	await _segundos(2.5)
+	_checar(retorta._esperando_porta and retorta._acesa and not retorta._carbono_pronto
+		and atm.momento == Atmosfera.Momento.CREPUSCULO and atm.pode_anoitecer() and player.pode_se_mover,
+		"resolvido o painel, com o forno de boca aberta, o tempo não passa")
+
+	# A porta fechou: com o fogo abafado lá dentro, o tempo avança.
 	var hud := player.get_node("CanvasLayer") as CanvasLayer
-	retorta._concluir()
+	var porta_na_boca := retorta.get_node("PortaFechada") as Sprite2D
+	(retorta.get_node("Porta") as PortaDaFornalha).apanhar()
+	retorta._fechar_a_porta()
 	var lua_subindo := false
 	var tela_apagou := false
 	var parada := true
 	var hud_sumiu := false
 	var fogo_aceso := true
 	var espera := 0.0
+	while espera < 5.0 and atm.pode_anoitecer():
+		await get_tree().process_frame
+		espera += get_process_delta_time()
 	await _quadros(2)
 	_checar(not atm.pode_anoitecer() and atm.momento != Atmosfera.Momento.NOITE and not player.pode_se_mover,
-		"resolvido o painel, a noite começa a cair e a Cacau para")
+		"fechada a porta do forno, a noite começa a cair e a Cacau para (%.1f s depois)" % espera)
+	espera = 0.0
 	while espera < 20.0 and atm.momento != Atmosfera.Momento.NOITE:
 		await get_tree().process_frame
 		espera += get_process_delta_time()
@@ -333,14 +390,14 @@ func _testar_noite_no_patio() -> void:
 			break
 		parada = parada and not player.pode_se_mover
 		hud_sumiu = hud_sumiu or not hud.visible
-		fogo_aceso = fogo_aceso and retorta._acesa and not retorta._carbono_pronto
+		fogo_aceso = fogo_aceso and retorta._acesa and not retorta._carbono_pronto and porta_na_boca.visible
 		var cortina := cena.get_node_or_null("FadeTela")
 		if cortina != null and (cortina.get_child(0) as ColorRect).visible:
 			tela_apagou = true
 		if lua.presenca() > 0.9 and lua.position.y > lugar_da_lua + 20.0 \
 				and lua.position.y < lugar_da_lua + atm.subida_da_lua - 20.0:
 			lua_subindo = true
-	_checar(fogo_aceso, "a fornalha ficou pegando fogo enquanto a noite caía")
+	_checar(fogo_aceso, "a fornalha ficou acesa, de porta fechada, enquanto a noite caía")
 	_checar(parada and hud_sumiu, "ela ficou parada e o HUD saiu de cena")
 	_checar(lua_subindo, "a lua subiu de trás da serra, já acesa")
 	_checar(not tela_apagou, "sem tela preta")
@@ -407,6 +464,34 @@ func _testar_hora_sincronizada() -> void:
 		_checar(luas_certas, "   e a lua %s" % ("está no céu" if hora[2] else "ainda não apareceu em nenhuma"))
 
 
+func _testar_tecla_da_hora() -> void:
+	print("\n--- A TECLA Ç MUDA A HORA ---")
+	_zerar_a_partida()
+	await _abrir(PATIO)
+	var cena := get_tree().current_scene
+	var atm := Atmosfera.da_cena(cena)
+	var player := _player()
+	await _quadros(4)
+	var lua := cena.get_node("BG/CamadaDaLua/Lua") as AstroPixel
+	var tecla := InputEventKey.new()
+	tecla.pressed = true
+	tecla.physical_keycode = KEY_SEMICOLON
+	var esperadas := [Atmosfera.Momento.CREPUSCULO, Atmosfera.Momento.NOITE, Atmosfera.Momento.ENTARDECER]
+	var nomes := ["crepúsculo", "noite", "tarde de novo"]
+	for i in esperadas.size():
+		player._input(tecla)
+		await _quadros(2)
+		_checar(atm.momento == esperadas[i] and atm.perfil_atual() == atm.perfil_de(esperadas[i])
+			and Atmosfera.hora_da_partida() == esperadas[i]
+			and is_equal_approx(lua.presenca(), 1.0 if esperadas[i] == Atmosfera.Momento.NOITE else 0.0),
+			"um toque: %s, na fase e na partida" % nomes[i])
+	player._input(tecla)
+	await _abrir(MUNDO)
+	await _quadros(4)
+	_checar(Atmosfera.da_cena(get_tree().current_scene).momento == Atmosfera.Momento.CREPUSCULO,
+		"e a outra fase abre na hora escolhida")
+
+
 func _testar_torre_de_noite() -> void:
 	print("\n--- A TORRE, DE NOITE ---")
 	_zerar_a_partida()
@@ -432,6 +517,145 @@ func _testar_torre_de_noite() -> void:
 		"   céu estrelado")
 	await _quadros(3)
 	_checar((cena.get_node("PostesDeLuz") as PostesDeLuz).quantidade() == 1, "o poste da torre acende")
+
+
+## A fase 1 é um galpão fechado: tem a luz DELA (um perfil fixo), que não muda
+## com a hora do jogo, e as lâmpadas pintadas no cenário acendem como os postes.
+func _testar_oficina() -> void:
+	print("\n--- A OFICINA (FASE 1), POR DENTRO ---")
+	var ambientes: Array[Color] = []
+	for noite: bool in [false, true]:
+		_zerar_a_partida()
+		EstadoMundo.sol_se_pos = noite
+		EstadoMundo.anoiteceu = noite
+		await _abrir(OFICINA)
+		await _quadros(5)
+		# (O rádio do Dr. Chico pode chamar na chegada: o teste não é dele.)
+		if Dialogic.current_timeline != null:
+			Dialogic.end_timeline()
+			await _quadros(2)
+		var atm := Atmosfera.da_cena(get_tree().current_scene)
+		var onde := "de noite" if noite else "de tarde"
+		_checar(atm != null and atm.e_interior() and atm.perfil_atual() == atm.perfil_fixo
+			and atm.perfil_fixo.resource_path.get_file() == "oficina.tres",
+			"%s lá fora, a oficina está na luz dela (oficina.tres)" % onde)
+		if atm == null:
+			return
+		_checar(not atm.pode_por_o_sol() and not atm.pode_anoitecer(), "   lá dentro não há pôr do sol nem anoitecer")
+		_checar(EstadoMundo.sol_se_pos == noite and EstadoMundo.anoiteceu == noite,
+			"   e entrar nela não mexe na hora do jogo")
+		ambientes.append(_ambiente(atm).color)
+	_checar(ambientes.size() == 2 and ambientes[0].is_equal_approx(ambientes[1]),
+		"a luz ambiente da oficina é a mesma a qualquer hora %s" % [ambientes])
+
+	var cena := get_tree().current_scene
+	var atm := Atmosfera.da_cena(cena)
+	var ambiente := _ambiente(atm).color
+	# Só um pouco: com 0,62 a fase ficou "muito escura" — a maior parte dela não
+	# tem lâmpada nenhuma, então quem manda no que se enxerga é o ambiente.
+	_checar(ambiente.is_equal_approx(atm.perfil_fixo.ambiente) and ambiente.get_luminance() < 0.95
+		and ambiente.get_luminance() > 0.75,
+		"um pouco mais escura que o dia, e só um pouco (luminância %.2f)" % ambiente.get_luminance())
+	_checar(ambiente.b > ambiente.r, "e fria, para as lâmpadas quentes aparecerem")
+
+	# As lâmpadas: as duas pontas do braço do poste, pintadas lado a lado.
+	var postes := cena.get_node_or_null("PostesDeLuz") as PostesDeLuz
+	var pintadas := _lampadas_pintadas(cena)
+	_checar(postes != null and pintadas.size() >= 6 and postes.quantidade() == pintadas.size(),
+		"cada lâmpada pintada na fase ganhou uma luz (%d de %d)" % [postes.quantidade() if postes else -1, pintadas.size()])
+	if postes == null:
+		return
+	var acesas := postes.luzes().all(func(l: LuzDePoste) -> bool:
+		return is_equal_approx(l.intensidade, 1.0) and not l.pixelada)
+	_checar(acesas, "todas acesas com tudo, de luz lisa")
+	var nos_tubos := 0
+	for luz in postes.luzes():
+		for ponto: Vector2 in pintadas:
+			if luz.global_position.distance_to(ponto) < 24.0:
+				nos_tubos += 1
+				break
+	_checar(nos_tubos == postes.quantidade(), "e cada luz sai do tubo da sua lâmpada (%d)" % nos_tubos)
+	_checar(postes.mariposas == 0, "sem mariposas: é do lado de dentro")
+	var nascimento := (cena.get_node("SpawnPadrao") as Marker2D).global_position
+	var na_entrada := postes.luzes().any(func(l: LuzDePoste) -> bool:
+		return absf(l.global_position.x - nascimento.x) < 160.0 and l.global_position.y < nascimento.y)
+	_checar(na_entrada, "a Cacau já chega debaixo de uma lâmpada")
+
+	# As luzes soltas (a placa da porta, os domos) são nós da cena, acesos.
+	var soltas := cena.get_node_or_null("Luzes")
+	var todas_acesas := soltas != null and soltas.get_child_count() >= 1
+	if soltas != null:
+		for luz in soltas.get_children():
+			todas_acesas = todas_acesas and luz is LuzPontual and (luz as LuzPontual).acesa
+	_checar(todas_acesas, "as luzes soltas da cena (%d) estão acesas" % (soltas.get_child_count() if soltas else 0))
+
+	# O laser dos espinhos joga clarão vermelho; a serra, que é metal, não.
+	var espinhos: Array[EspinhosLaser] = []
+	var serras: Array[SerraEletrica] = []
+	for no in get_tree().get_nodes_in_group("espinhos_laser") + get_tree().get_nodes_in_group("serra_eletrica"):
+		if no is SerraEletrica:
+			serras.append(no)
+		elif no is EspinhosLaser and not espinhos.has(no):
+			espinhos.append(no)
+	var com_clarao := espinhos.size() >= 1
+	for fileira in espinhos:
+		com_clarao = com_clarao and fileira._brilho != null and fileira._brilho.acesa == (not fileira._recolhido) \
+			and is_equal_approx(fileira._brilho.intensidade, 1.0)
+	_checar(com_clarao, "cada fileira de espinhos de laser de pé joga o clarão dela (%d)" % espinhos.size())
+	_checar(serras.size() >= 1 and serras.all(func(s: SerraEletrica) -> bool: return s._brilho == null),
+		"as serras (%d) não: são lâmina, não luz" % serras.size())
+	var de_pe: EspinhosLaser = null
+	for fileira in espinhos:
+		if not fileira._recolhido:
+			de_pe = fileira
+	if de_pe != null:
+		de_pe.desarmar(false)
+		_checar(not de_pe._brilho.acesa, "recolhidos os espinhos, o clarão apaga")
+
+	# Interface do mundo continua fora do escuro; o cenário e a Cacau, dentro.
+	_checar(atm._e_interface(cena.get_node("Salas/Sala448")), "os textos do mundo ficam fora da luz ambiente")
+	_checar(not atm._e_interface(cena.get_node("Terreno")) and not atm._e_interface(_player().get_node("AnimatedSprite2D")),
+		"o cenário e a personagem escurecem")
+
+	# Fora de uma fase escura (sem Atmosfera) os espinhos não jogam clarão nenhum.
+	if Dialogic.current_timeline != null:
+		Dialogic.end_timeline()
+	get_tree().current_scene = null
+	cena.queue_free()
+	await _quadros(2)
+	var soltos := (load("res://scenes/fases/componentes/espinhos_laser.tscn") as PackedScene).instantiate() as EspinhosLaser
+	get_tree().root.add_child(soltos)
+	await _quadros(2)
+	_checar(soltos._brilho != null and is_zero_approx(soltos._brilho.intensidade),
+		"sem Atmosfera na cena, o clarão dos espinhos fica apagado")
+	soltos.queue_free()
+	await _quadros(2)
+
+
+## O centro do tubo de cada lâmpada pintada com o braço do poste (qualquer
+## camada de tiles da cena), em coordenadas do mundo.
+func _lampadas_pintadas(raiz: Node) -> Array[Vector2]:
+	var pontos: Array[Vector2] = []
+	for camada in _camadas_de_tiles(raiz):
+		for i in camada.tile_set.get_source_count():
+			var id := camada.tile_set.get_source_id(i)
+			var fonte := camada.tile_set.get_source(id) as TileSetAtlasSource
+			if fonte == null or fonte.texture == null or fonte.texture.resource_path.get_file() != ARTE_DO_POSTE:
+				continue
+			var celulas := {}
+			for x in [1, 2, 3]:
+				for celula in camada.get_used_cells_by_id(id, Vector2i(x, 9)):
+					celulas[celula] = true
+			for celula: Vector2i in celulas:
+				if celulas.has(celula + Vector2i.LEFT):
+					continue
+				var comprimento := 1
+				while celulas.has(celula + Vector2i(comprimento, 0)):
+					comprimento += 1
+				var lado := Vector2(camada.tile_set.tile_size)
+				var meio := camada.map_to_local(celula) + Vector2(lado.x * (comprimento - 1) * 0.5, 0.0)
+				pontos.append(camada.to_global(meio))
+	return pontos
 
 
 func _testar_luzes_proprias() -> void:

@@ -12,18 +12,26 @@ extends Node2D
 # forno não podem ficar em fases diferentes.
 #
 # Pirólise de verdade: madeira aquecida SEM oxigênio vira carvão. O puzzle
-# segue cinco passos:
+# segue seis passos:
 #   1. derrubar as três toras da árvore com o bumerangue (uma por arremesso)
 #      e recolhê-las do chão (elas ficam no inventário);
 #   2. abastecer a fornalha com E — uma tora por toque, até encher;
 #   3. acender com o maçarico oxídrico (E na fornalha cheia);
 #   4. no painel da fornalha (scripts/ui/painel_fornalha.gd): segurar E até o
-#      termômetro chegar na marca e, no ponto, vedar a entrada de ar (S) —
-#      se o ar continuar entrando, a madeira queima e vira cinza;
-#      Resolvido o painel, O TEMPO AVANÇA: com a fornalha ainda pegando
-#      fogo, o céu escurece e a lua sobe (ver _cair_a_noite). Só acontece uma
-#      vez na partida; quando a brasa apaga já é noite;
-#   5. com o carvão pronto, E na fornalha novamente retira a célula C.
+#      líquido do termômetro entrar na região marcada e mantê-lo lá dentro um
+#      instante — aquecer demais queima a madeira e ela vira cinza;
+#   5. TAMPAR O FORNO. A temperatura está no ponto, mas a boca do forno segue
+#      aberta e o ar entra: a fornalha fica pegando fogo, À ESPERA. A Cacau
+#      apanha a porta encostada ao lado (o nó Porta, com E — vai para a
+#      mochila) e, com ela na mochila, E na fornalha fecha a boca do forno.
+#      Não há relógio correndo contra ninguém: enquanto a porta não fecha, O
+#      TEMPO NÃO PASSA — a noite não cai e o carvão não sai. Se ela demorar,
+#      a Cacau comenta sozinha que devia tampar o forno (`fala_da_porta`).
+#      Fechada a porta, O TEMPO AVANÇA: com o fogo abafado lá dentro, o céu
+#      escurece e a lua sobe (ver _cair_a_noite). Só acontece uma vez na
+#      partida; quando a brasa apaga já é noite, a porta salta de volta para o
+#      lugar dela e o carvão sai;
+#   6. com o carvão pronto, E na fornalha novamente retira a célula C.
 #
 # COMO EDITAR NO EDITOR:
 #   Sprite            -> AnimatedSprite2D da fornalha, com as animações
@@ -34,6 +42,17 @@ extends Node2D
 #                        anda sozinha até aqui e só então acende o maçarico,
 #                        virada para o forno. Arraste o marcador para mudar o
 #                        lugar (o x é o que vale; ela anda no chão)
+#   Porta             -> a porta encostada ao lado do forno, que a Cacau
+#                        apanha (ver porta_da_fornalha.gd). Arraste para mudar
+#                        o lugar dela. Sem este nó a fornalha pula o passo 5:
+#                        resolvido o painel, o tempo já avança
+#   PortaFechada      -> a mesma porta, já na boca do forno (só aparece com o
+#                        forno tampado). Se a arte da fornalha mudar, é este nó
+#                        que tem de voltar a cobrir a boca
+#   SomPorta          -> a batida da porta fechando
+#   SomConcluido      -> o som de puzzle resolvido, logo depois da batida
+#   Inspector         -> `espera_antes_da_dica` (segundos até a fala) e
+#                        `fala_da_porta` (a timeline do Dialogic)
 #
 # As toras NÃO ficam dentro desta cena. No pátio quem as cria é a ArvoreLenha
 # (arraste os marcadores Galho1..3 dela para mudar onde caem), e é para ela
@@ -42,10 +61,17 @@ extends Node2D
 # instâncias de madeira.tscn soltas no chão (grupo "madeira") e a fornalha
 # anota onde estavam, para repô-las no mesmo lugar.
 #
+# COM O FORNO ACESO NINGUÉM SAI DA FASE: do instante em que o fogo pega até a
+# brasa apagar e o carvão sair, a passagem do pátio não deixa a Cacau ir
+# embora — ela para na beirada e diz que precisa terminar o carvão primeiro
+# (`fala_ao_sair`; ver segura_a_saida, lá embaixo). Com o fogo apagado a saída
+# é livre: antes de acender, depois de desistir no painel ou de a carga virar
+# cinza, e com o carvão já pronto.
+#
 # SAIR DA FASE NÃO PERDE NADA: a carga do forno e o carvão esperando para ser
-# retirado ficam no EstadoMundo (cada tora também lembra que foi recolhida).
-# Só o fogo aceso no meio da temperatura não sobrevive — é uma tela na frente,
-# não dá para sair por uma porta com ela aberta.
+# retirado ficam no EstadoMundo (cada tora também lembra que foi recolhida). O
+# forno pegando fogo à espera da porta fica anotado do mesmo jeito, para o
+# caso de a fase recarregar com ele assim (a porta apanhada segue na mochila).
 
 const CENA := "res://scenes/fases/componentes/retorta.tscn"
 
@@ -77,19 +103,40 @@ const PICO_SALTO_CARVAO := 20.0
 
 ## Boca da fornalha: de onde sobe a cinza quando a carga queima.
 const POSICAO_DAS_CINZAS := Vector2(0, -100)
-## Comporta fechada: as chamas do sprite andam neste ritmo e o som do fogo
-## baixa isto (dB) até a brasa apagar.
+## Porta fechada: as chamas do sprite andam neste ritmo, o som do fogo baixa
+## isto (dB) e a luz que escapa para o pátio cai para esta fração, até a brasa
+## apagar.
 const RITMO_DO_FOGO_ABAFADO := 0.5
 const ABAFAMENTO_DO_SOM := 9.0
+const LUZ_COM_A_PORTA := 0.5
+## Da batida da porta ao som de puzzle resolvido, e dele até o tempo começar a
+## andar (ver _fechar_a_porta).
+const PAUSA_DEPOIS_DA_PORTA := 0.45
+const PAUSA_ANTES_DE_CONCLUIR := 1.1
+## A porta entra na boca do forno um pouco maior e assenta com um tranco.
+const TRANCO_DA_PORTA := 1.3
+const TREMOR_DA_PORTA := 2.0
 
 ## Arte e ficha do item que vai para a mochila (canto superior direito) ao
 ## retirar o carvão — mesma ficha de coleta dos cilindros de H₂/O₂.
 const TEXTURA_CARVAO := preload("res://assets/itens/Carvão.png")
 const ID_CARVAO := AmostraChonps.ID_CARVAO
 const NOME_CARVAO := "Carvão Vegetal"
-const DESCRICAO_CARVAO := "Amostra sólida de carbono, sobra da pirólise da madeira sem oxigênio, o que faltava para acender o C no painel CHONPS."
+const DESCRICAO_CARVAO := "Amostra sólida de carbono, sobra da pirólise da madeira sem oxigênio."
 
 @export var madeiras_necessarias: int = 3
+
+@export_group("Porta")
+## Segundos com a fornalha pegando fogo de boca aberta até a Cacau comentar
+## que devia tampar o forno. Zero desliga a fala.
+@export var espera_antes_da_dica: float = 12.0
+## Timeline do Dialogic com a fala dela. Vazio desliga a fala.
+@export var fala_da_porta: String = "cacau_tampar_forno"
+
+@export_group("Saída")
+## Timeline do Dialogic com o que a Cacau diz quando tenta sair da fase com o
+## forno aceso. Vazio = ela é barrada do mesmo jeito, só que calada.
+@export var fala_ao_sair: String = "cacau_terminar_carvao"
 
 var _madeiras_no_forno: int = 0
 var _acesa: bool = false
@@ -100,6 +147,20 @@ var _painel_aberto: bool = false
 var _macarico_na_mao: bool = false
 var _painel: PainelFornalha = null
 var _volume_do_fogo: float = 0.0
+
+# A temperatura chegou no ponto e a fornalha segue pegando fogo, de boca
+# aberta: enquanto a porta não fecha, o tempo não passa e o carvão não sai.
+var _esperando_porta: bool = false
+# A porta está na boca do forno, com a carga carbonizando lá dentro.
+var _porta_fechada: bool = false
+# Há quanto tempo o forno espera pela porta, e se a Cacau já comentou.
+var _tempo_esperando: float = 0.0
+var _dica_dada: bool = false
+# A luz do fogo e a porta na boca do forno como estão na cena (ver _abafar_fogo
+# e _encaixar_a_porta, que mexem nelas e depois devolvem).
+var _energia_do_fogo: float = 0.0
+var _clarao_do_fogo: float = 0.0
+var _escala_da_porta: Vector2 = Vector2.ONE
 
 # As toras da fase como estavam quando ela abriu (nome, posição e caminho),
 # para repô-las depois de uma queima malsucedida — com o MESMO nome, que é a
@@ -120,6 +181,12 @@ var _pai_das_toras: Node = null
 ## O clarão do fogo no pátio (scripts/luz/luz_pontual.gd). A fornalha queima de
 ## noite: sem isto as chamas apareceriam no sprite e não iluminariam nada.
 @onready var _luz_do_fogo: LuzPontual = get_node_or_null("LuzDoFogo")
+## A porta encostada ao lado do forno (a que a Cacau apanha) e a mesma porta já
+## na boca dele. Sem o nó Porta a fornalha funciona sem o passo de tampar.
+@onready var _porta := get_node_or_null("Porta") as PortaDaFornalha
+@onready var _porta_na_boca: Sprite2D = get_node_or_null("PortaFechada")
+@onready var _som_porta: AudioStreamPlayer = get_node_or_null("SomPorta")
+@onready var _som_concluido: AudioStreamPlayer = get_node_or_null("SomConcluido")
 
 var _popup_madeira_visivel: bool = false
 
@@ -144,13 +211,29 @@ func _ready() -> void:
 
 	if _som_fogo:
 		_volume_do_fogo = _som_fogo.volume_db
+	if _luz_do_fogo:
+		_energia_do_fogo = _luz_do_fogo.energia
+		_clarao_do_fogo = _luz_do_fogo.clarao
+	if _porta_na_boca:
+		_escala_da_porta = _porta_na_boca.scale
+	# É por este grupo que a passagem da fase pergunta se pode deixar a Cacau
+	# sair (ver segura_a_saida).
+	add_to_group(PassagemDeCena.GRUPO_DE_QUEM_SEGURA)
 	_resolvida = EstadoMundo.ja_feito(self)
 	# O que estava dentro da fornalha na última visita: sair da fase não
 	# esvazia a carga nem some com o carvão que esperava ser retirado.
 	_madeiras_no_forno = EstadoMundo.ler(self, "madeiras_no_forno", 0)
 	_carbono_pronto = EstadoMundo.ler(self, "carbono_pronto", false)
+	# Ela saiu com o forno no ponto e de boca aberta: ele continua pegando
+	# fogo, do jeito que ficou, à espera da porta.
+	_esperando_porta = _porta != null and not _resolvida and not _carbono_pronto and _cheia() \
+		and EstadoMundo.ler(self, "esperando_porta", false)
+	_acesa = _esperando_porta
 	_memorizar_toras()
 	_atualizar_sprite()
+	_atualizar_porta()
+	if _porta:
+		_porta.apanhada.connect(_atualizar_exclamacao)
 	if _carbono_pronto and _sprite_carvao:
 		_sprite_carvao.position = POSICAO_CARVAO_FORA
 		_sprite_carvao.visible = true
@@ -258,12 +341,15 @@ func _atualizar_sprite() -> void:
 		_sprite.play("madeira%d" % estagio)
 
 
-## Mostra o "!" na fornalha quando dá pra retirar o carvão: só depois que a
-## brasa apaga (fornalha desligada) E o jogador está por perto.
+## Mostra o "!" na fornalha quando o E faz alguma coisa nela e não é óbvio:
+## retirar o carvão (só depois que a brasa apaga) ou fechar a boca do forno
+## (com a porta já na mochila). Sempre com o jogador por perto.
 func _atualizar_exclamacao() -> void:
 	if _exclamacao == null:
 		return
-	if _jogador_perto and _carbono_pronto and not _acesa:
+	var retirar := _carbono_pronto and not _acesa
+	var tampar := _esperando_porta and PortaDaFornalha.na_mochila()
+	if _jogador_perto and (retirar or tampar):
 		PopupFX.mostrar(_exclamacao)
 	else:
 		PopupFX.esconder(_exclamacao)
@@ -288,17 +374,23 @@ func _atualizar_popup_madeira() -> void:
 		PopupFX.esconder(_popup_madeira)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if Engine.is_editor_hint() or _resolvida:
 		return
 	_atualizar_popup_madeira()
 	if _painel_aberto:
 		# Com o painel na tela, a pose segue o fogo: atiçando (E) ela aponta o
-		# maçarico para o forno, largando ela volta ao idle — e na hora de
-		# vedar o ar ela já baixou o maçarico. Enquanto o painel não abriu (o
-		# fogo pegando), a chama fica acesa direto.
+		# maçarico para o forno, largando ela volta ao idle. Enquanto o painel
+		# não abriu (o fogo pegando), a chama fica acesa direto.
 		if is_instance_valid(_painel):
 			_segurar_macarico(_painel.soprando(), 1.0)
+		return
+	if _esperando_porta:
+		_vigiar_a_porta(delta)
+		return
+	if _porta_fechada:
+		# Tampado e carbonizando: não há nada para fazer aqui até a brasa
+		# apagar (ver _concluir).
 		return
 	if _carbono_pronto:
 		# A pirólise terminou: em vez de pular em cima de um item flutuante,
@@ -378,7 +470,6 @@ func _tentar_acender() -> void:
 
 	_painel = PainelFornalha.abrir(self, _area_da_cena())
 	_painel.terminado.connect(_on_painel_terminado)
-	_painel.vedada.connect(_abafar_fogo)
 
 
 ## O que o painel não pode tapar: a fornalha e a Cacau parada na frente dela.
@@ -424,6 +515,23 @@ func _cair_a_noite() -> bool:
 	return true
 
 
+# --- NINGUÉM SAI COM O FORNO ACESO ---
+
+## A passagem da fase pergunta isto antes de deixar a Cacau sair (ver "QUANDO
+## NÃO DÁ PARA SAIR" em passagem_de_cena.gd). Do instante em que o fogo pega
+## até a brasa apagar e o carvão sair, ela fica no pátio. Desistir no painel
+## ou deixar a carga virar cinza apaga o fogo — e aí a saída volta a ser livre.
+func segura_a_saida() -> bool:
+	return _acesa
+
+
+## Ela tentou sair com o forno aceso: a Cacau diz por que não vai. (Com outra
+## conversa já no ar, a fala simplesmente não abre — ela é barrada calada.)
+func ao_barrar_a_saida() -> void:
+	if not fala_ao_sair.is_empty():
+		DialogicBridge.falar(fala_ao_sair)
+
+
 ## Liga/desliga a pose do maçarico na personagem (ela fica virada para o forno).
 ## som_offset só importa ao ligar: de onde tocar o maçarico_sound dessa vez.
 func _segurar_macarico(ligado: bool, som_offset: float = 0.1) -> void:
@@ -452,7 +560,10 @@ func _on_painel_terminado(sucesso: bool, cancelado: bool) -> void:
 		_atualizar_sprite()
 		return
 	if sucesso:
-		_concluir()
+		if _porta != null:
+			_esperar_pela_porta()
+		else:
+			_concluir()
 	else:
 		# Feedback honesto e imediato: cinzas, e lenha nova logo ali.
 		_acesa = false
@@ -463,14 +574,119 @@ func _on_painel_terminado(sucesso: bool, cancelado: bool) -> void:
 		_repor_toras()
 
 
-## Comporta fechada: sem ar, as chamas baixam e o fogo fica abafado até a
-## brasa apagar (ver _concluir).
+# --- A PORTA ---
+
+## A temperatura está no ponto, mas a boca do forno continua aberta e o ar
+## entra. A fornalha fica pegando fogo À ESPERA da porta: não há relógio
+## correndo contra a jogadora — enquanto a porta não fecha, o tempo não passa
+## (a noite não cai) e o carvão não sai.
+func _esperar_pela_porta() -> void:
+	_esperando_porta = true
+	_tempo_esperando = 0.0
+	_dica_dada = false
+	EstadoMundo.guardar(self, "esperando_porta", true)
+	_atualizar_porta()
+	_atualizar_exclamacao()
+
+
+## Um quadro do forno à espera: fecha a porta se a Cacau a trouxe e, se ela
+## estiver demorando, solta a fala (uma vez por espera).
+func _vigiar_a_porta(delta: float) -> void:
+	# Interacao.pediu() queima o toque de E, então fica por ÚLTIMO: sem a porta
+	# na mochila o E é de quem estiver por perto (a própria porta, no chão).
+	if _jogador_perto and PortaDaFornalha.na_mochila() and Interacao.pediu():
+		_fechar_a_porta()
+		return
+	if _dica_dada or espera_antes_da_dica <= 0.0 or fala_da_porta.is_empty():
+		return
+	# O relógio da fala só anda com a Cacau solta no pátio, sem tela na frente.
+	if Interacao.ocupada():
+		return
+	_tempo_esperando += delta
+	# Se já houver outra conversa no ar, a fala fica para o quadro em que couber.
+	if _tempo_esperando >= espera_antes_da_dica and DialogicBridge.falar(fala_da_porta):
+		_dica_dada = true
+
+
+## A Cacau põe a porta na boca do forno. Sem ar o fogo abafa — e é AGORA que a
+## madeira vira carvão e o tempo anda (ver _concluir).
+func _fechar_a_porta() -> void:
+	if not PortaDaFornalha.tirar_da_mochila():
+		return
+	_esperando_porta = false
+	_porta_fechada = true
+	# Anotado já: quem sair da fase nestes segundos volta com o carvão
+	# esperando para ser retirado, e não com o forno de boca aberta.
+	_anotar_carvao()
+	_atualizar_porta()
+	_atualizar_exclamacao()
+	_encaixar_a_porta()
+	_abafar_fogo()
+
+	await get_tree().create_timer(PAUSA_DEPOIS_DA_PORTA).timeout
+	if not is_instance_valid(self) or not is_inside_tree():
+		return
+	if _som_concluido and _som_concluido.stream:
+		_som_concluido.play()
+	await get_tree().create_timer(PAUSA_ANTES_DE_CONCLUIR).timeout
+	if not is_instance_valid(self) or not is_inside_tree():
+		return
+	_concluir()
+
+
+## A porta entra na boca do forno com um tranco: chega um pouco maior, assenta,
+## bate (som) e sacode a câmera.
+func _encaixar_a_porta() -> void:
+	if _som_porta and _som_porta.stream:
+		_som_porta.play()
+	var camera := get_viewport().get_camera_2d()
+	if camera and camera.has_method("disparar_tremor"):
+		camera.disparar_tremor(TREMOR_DA_PORTA)
+	if _porta_na_boca == null:
+		return
+	_porta_na_boca.scale = _escala_da_porta * TRANCO_DA_PORTA
+	_porta_na_boca.modulate.a = 0.0
+	_porta_na_boca.visible = true
+	var tween := create_tween().set_parallel()
+	tween.tween_property(_porta_na_boca, "scale", _escala_da_porta, 0.16)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_porta_na_boca, "modulate:a", 1.0, 0.06)
+
+
+## A brasa apagou: a porta salta da boca do forno de volta para o lugar dela —
+## é por ali que o carvão sai logo atrás (ver _saltar_carvao).
+func _abrir_a_porta() -> void:
+	if not _porta_fechada:
+		return
+	_porta_fechada = false
+	var boca := _porta_na_boca.global_position if _porta_na_boca else global_position
+	_atualizar_porta()
+	if _porta:
+		_porta.voltar_de(boca)
+
+
+## Quem manda na porta é o estado da fornalha: só dá para apanhá-la enquanto o
+## forno espera por ela, e na boca do forno ela é outro desenho (PortaFechada).
+func _atualizar_porta() -> void:
+	if _porta_na_boca:
+		_porta_na_boca.visible = _porta_fechada
+		_porta_na_boca.scale = _escala_da_porta
+		_porta_na_boca.modulate.a = 1.0
+	if _porta:
+		_porta.disponivel = _esperando_porta
+
+
+## Porta fechada: sem ar, as chamas baixam, o fogo soa abafado e escapa menos
+## luz para o pátio, até a brasa apagar (ver _concluir).
 func _abafar_fogo() -> void:
 	var tween := create_tween().set_parallel()
 	if _sprite:
 		tween.tween_property(_sprite, "speed_scale", RITMO_DO_FOGO_ABAFADO, 0.6)
 	if _som_fogo:
 		tween.tween_property(_som_fogo, "volume_db", _volume_do_fogo - ABAFAMENTO_DO_SOM, 0.6)
+	if _luz_do_fogo:
+		tween.tween_property(_luz_do_fogo, "energia", _energia_do_fogo * LUZ_COM_A_PORTA, 0.6)
+		tween.tween_property(_luz_do_fogo, "clarao", _clarao_do_fogo * LUZ_COM_A_PORTA, 0.6)
 
 
 ## A carga queimou: um punhado de cinza sobe da boca do forno.
@@ -503,12 +719,21 @@ func _soltar_cinzas() -> void:
 	cinzas.finished.connect(cinzas.queue_free)
 
 
-func _concluir() -> void:
+## A carga já é carvão, ainda dentro do forno. Anotado antes de a brasa apagar:
+## quem sair da fase nesses segundos volta com o carvão esperando para ser
+## retirado.
+func _anotar_carvao() -> void:
 	_madeiras_no_forno = 0
-	# Anotado já, antes da brasa apagar: quem sair da fase nesses segundos
-	# volta com o carvão esperando para ser retirado.
 	EstadoMundo.guardar(self, "madeiras_no_forno", 0)
 	EstadoMundo.guardar(self, "carbono_pronto", true)
+	EstadoMundo.guardar(self, "esperando_porta", false)
+
+
+## A pirólise deu certo (o forno foi tampado no ponto): o tempo anda, a brasa
+## apaga e o carvão sai.
+func _concluir() -> void:
+	_esperando_porta = false
+	_anotar_carvao()
 
 	# A célula só pode ser retirada depois que a brasa apaga: a fornalha
 	# continua queimando um tempo antes de o sprite voltar ao forno frio. Na
@@ -520,8 +745,17 @@ func _concluir() -> void:
 	_acesa = false
 	_carbono_pronto = true
 	_atualizar_sprite()
+	_abrir_a_porta()
 	_atualizar_exclamacao()
 	_saltar_carvao()
+	# A luz do fogo volta ao que era para a próxima queima — depois de apagar,
+	# senão ela daria um clarão na saída.
+	if _luz_do_fogo:
+		var devolver := create_tween()
+		devolver.tween_interval(0.5)
+		devolver.tween_callback(func() -> void:
+			_luz_do_fogo.energia = _energia_do_fogo
+			_luz_do_fogo.clarao = _clarao_do_fogo)
 
 
 ## O carvão pula para fora da fornalha assim que a brasa apaga: som "POP" e

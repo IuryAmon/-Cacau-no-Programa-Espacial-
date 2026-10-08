@@ -3,35 +3,69 @@ extends FaseBase
 # --- CORREDOR DA TORRE (entre o laboratório e a fase do nitrogênio) ---
 #
 # A porta da torre, no laboratório, não cai mais direto na fase 2: ela dá neste
-# corredor curto, e é andando até o fundo dele que se chega à torre de
-# destilação. Na volta é o mesmo caminho ao contrário.
+# corredor, e é andando até o fundo dele que se chega à torre de destilação. Na
+# volta é o mesmo caminho ao contrário.
 #
-#   laboratório  PortaTorre  <->  PortaLab  [ corredor ]  SaidaTorre  <->  PortaHub  fase 2
+#   laboratório  PortaTorre  <->  PortaLab  [ corredor ]  SaidaTorre  <->  PassagemCorredor  fase 2
 #
-# O cenário é o do laboratório: a parede azul-clara e o piso de metal, os
-# mesmos tiles com os mesmos ids no tileset_fases.tres (14 e 13). O teto é o
-# piso de cabeça para baixo, como a viga da entrada do laboratório, e a parede
-# da ponta esquerda e os pilares são a coluna de lá.
+# Entre o corredor e a fase 2 não há porta: são duas pontas abertas. Ela sai
+# andando pelo fundo daqui e entra andando pela esquerda de lá — e a volta é o
+# mesmo ao contrário.
 #
-#   Fundo       a parede azul-clara.
+# O cenário é pintado à mão, todo com o tileset_fases.tres.
+#
+#   Fundo       a parede.
 #   LuzDaSaida  o clarão da luz de fora no fundo do corredor (um degradê branco
-#               por cima da parede, atrás dos pilares).
-#   Pilares     as três colunas da parede do fundo. É só enfeite: apague ou
-#               mude de lugar à vontade.
-#   Estrutura   piso, teto e a parede da ponta esquerda.
-#   Colisoes/   as três camadas acima são só desenho; quem segura a Cacau são
-#               Piso, Teto e ParedeEsquerda. É assim porque o industrial do
-#               tileset_fases não diz que chão é (o passo ficaria mudo): o Piso
-#               carrega a superfície "metal", o som de passo do laboratório. Ele
-#               passa da ponta direita de propósito — a Cacau ainda anda uns
-#               passos enquanto a tela apaga.
+#               por cima da parede, atrás das pilastras).
+#   Pilares     as pilastras e as peças encostadas na parede. É só enfeite:
+#               apague ou mude de lugar à vontade.
+#   Estrutura   piso e teto. A colisão é a dos PRÓPRIOS TILES: pintou piso, tem
+#               chão. O som do passo sai do tile (a camada "superficie" do
+#               tileset); para um tile que não diz que chão é, vale o metadado
+#               "superficie" da camada (ver som_passos.gd).
+#   ParalaxeDaFrente   a camada que passa NA FRENTE de tudo (ver
+#               paralaxe_da_frente.gd): pilastras pretas que cruzam a tela por
+#               cima da Cacau, maiores e mais rápidas que o cenário.
+#               Cada uma é a GÊMEA de uma pilastra da camada Pilares: a mesma
+#               pilastra, pintada no mesmo lugar, na camada PilaresDaFrente
+#               (travada, para não roubar clique: selecione-a pela árvore de
+#               cena). NO EDITOR a gêmea aparece meio transparente, bem em cima
+#               da pilastra dela — a pilastra só fica mais escura. NO JOGO ela
+#               cresce a partir do centro da tela: tapa a pilastra dela quando
+#               as duas estão no meio da tela e, longe do meio, se adianta.
+#               PILASTRA NOVA: para ela ganhar a gêmea, selecione-a no editor
+#               de tiles (camada Pilares), copie, troque para a camada
+#               PilaresDaFrente e cole no mesmo lugar. (Nas gêmeas o fuste usa
+#               o tile cheio do miolo do capitel: os dois tiles do fuste têm um
+#               dente de 1 px no canto, que apareceria no contorno preto.)
+#               OS NÚMEROS ficam no nó ParalaxeDaFrente: `aproximacao` é a
+#               largura e a velocidade com que a gêmea cruza a tela;
+#               `aproximacao_vertical` é a altura — a tela mostra 520 px e a
+#               pilastra tem 384 (520 ÷ 384 = 1,36), então ela cabe inteira, o
+#               capitel no alto e a base embaixo.
+#   Colisoes/   só a ParedeEsquerda: um batente invisível na beirada esquerda
+#               da tela, onde não há tile de parede para segurar a Cacau.
 #   PortaLab    a porta por onde ela chega do laboratório (e volta para ele).
 #   SaidaTorre  a ponta aberta, uma PassagemDeCena (passagem_de_cena.gd): cruzou
 #               a linha, troca de cena. É também por onde ela entra andando
-#               quando volta da torre.
-#   LimitesDaCamera, SpawnPadrao, Player   o de sempre (ver fase_base.gd). A
-#               câmera tem exatamente uma tela de altura, então só anda de lado.
+#               quando volta da torre. O par dela na fase 2 é a
+#               PassagemCorredor, na ponta esquerda de lá.
+#   Morcegos/   os inimigos do corredor (morcego.gd): dormem pendurados no teto
+#               e acordam quando ela chega perto. São três — um sozinho, para
+#               ela aprender a briga, e mais adiante uma dupla, que acorda junta
+#               e faz fila na mesma diagonal (o arremesso que pega os dois). Para
+#               mudar um de lugar é só arrastar; Ctrl+D cria outro. Deixe as
+#               duas pontas do corredor livres (uns 300 px), para ninguém
+#               acordar em cima de quem acabou de chegar.
+#   LimitesDaCamera, SpawnPadrao, Player   o de sempre (ver fase_base.gd).
+#
+# A CÂMERA fica mais perto aqui que nas outras fases, e parada na vertical: o
+# `zoom_da_camera` do Player é 900 ÷ a altura do LimitesDaCamera (520 px, de
+# y = 60 a y = 580), para a tela mostrar exatamente essa faixa. Mexeu no topo
+# ou na base do LimitesDaCamera, refaça as duas contas: a do zoom e a da
+# `aproximacao_vertical` da camada da frente.
 #
 # PARA ESTICAR OU ENCURTAR: pinte mais (ou menos) piso, teto e parede, arraste a
 # SaidaTorre para a ponta nova e leve a borda direita do LimitesDaCamera para
-# uns 24 px depois dela. O Piso e o Teto de Colisoes/ já sobram para a direita.
+# uns 24 px depois dela. Pinte o piso passando da ponta direita: a Cacau ainda
+# anda uns passos enquanto a tela apaga.

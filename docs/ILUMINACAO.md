@@ -1,4 +1,7 @@
-# A iluminação das fases ao ar livre
+# A iluminação das fases
+
+Este documento cobre as fases ao ar livre, que têm hora, e — mais abaixo, em
+"Fase fechada" — as de dentro, como a oficina (fase 1), que têm luz própria.
 
 O jogo tem hora. O `world1` começa ao **entardecer**, com o sol quase se pondo;
 no mirante o sol se põe e a fase fica no **crepúsculo** — só um pouco mais
@@ -42,8 +45,9 @@ E os três horários, que são arquivos de cor: `assets/luz/entardecer.tres`,
 ## O que você mexe, e onde
 
 **Mudar o sol de lugar.** Arraste `BG/CamadaDoSol/Sol` no editor. O quadro da
-tela, para as camadas do fundo, é o retângulo de (0, 0) a (1067, 600). O clarão
-do céu e o halo vão junto.
+tela, para as camadas do fundo, é o retângulo de (0, 0) a (1185, 667) — a
+janela de 1600 × 900 dividida pelo zoom 1,35 do `world1`. O clarão do céu e o
+halo vão junto.
 
 **Mudar a cara do sol.** Selecione o `Sol` e use o Inspector:
 
@@ -58,7 +62,9 @@ do céu e o halo vão junto.
 
 **A lua** é igual: `BG/CamadaDaLua/Lua`, com o brilho liso. Ela existe no pátio
 e na `fase2_torre`; a noite do `world1` é só de estrelas. O tamanho é a `Scale`
-do nó.
+do nó. No pátio (zoom 1,35, com as camadas do fundo descidas 67 px — ver o
+cabeçalho de `fase1_2_exterior.gd`) o quadro da tela, para ela, vai de
+(0, -67) a (1185, 600).
 
 **Estrelas.** `BG/Ceu` → `densidade`: quanto maior, mais estrelas (as grandes,
 em cruz, acompanham). `tamanho_das_estrelas`: o pixel delas — 1 é metade do
@@ -80,8 +86,13 @@ O `momento` da `Atmosfera` é só o que o editor mostra (o `world1` em
 Cacau costuma estar lá). Para prender uma fase numa hora, desligue
 `segue_a_partida`: aí ela abre no `momento` e não mexe na hora do jogo.
 
+**Mudar a hora jogando (debug).** A tecla **Ç** passa para a hora seguinte, em
+qualquer mapa: tarde → crepúsculo → noite → tarde. Muda a hora do jogo inteiro,
+na hora e sem cena. Só funciona rodando pelo editor (build de debug).
+
 **Ver a noite sem mudar a fase.** `Atmosfera` → `previa_no_editor`. É só o que
-o editor mostra — não é gravado na cena.
+o editor mostra — não é gravado na cena. A última opção, *Tudo claro (para
+pintar)*, tira o escuro e apaga as lâmpadas enquanto você trabalha.
 
 **Nuvens.** Cada nó `Nuvens` é uma faixa. No Inspector: `quantidade`, de que
 tamanho (`menor` / `maior`, de 1 a 6), a `faixa` de altura, o `vento` (negativo
@@ -112,10 +123,12 @@ outro ponto da base, duplique um foco (cabem 8).
 Quem dirige é `scripts/colisao_cena_foguete.gd` (a Area2D `ColisaoCenaFoguete`):
 
 1. a Cacau pisa no mirante: susto, fala, balão de coração — como sempre;
-2. com o coração ainda no ar, o sol começa a descer atrás da serra. O céu vai
+2. com o coração batendo (ele fica no ar até a fala do passo 4), o sol começa a descer atrás da serra. O céu vai
    do dourado ao roxo, as primeiras estrelas aparecem, o fundo e o mundo
    escurecem um pouco e os postes dão a piscada;
-3. o sol some, a fase fica no crepúsculo e o controle volta.
+3. o sol some e a fase fica no crepúsculo;
+4. ela fala: "Está anoitecendo, amei essa paisagem mas preciso ir..."
+   (`timelines/cacau_anoitecendo.dtl`), e o controle volta.
 
 Não há tela preta e **não fica de noite**: só escurece de leve. Ela fica parada
 do começo ao fim e o HUD some junto. Os tempos estão no Inspector da
@@ -129,22 +142,73 @@ de chegar lá (`EstadoMundo.viu_o_foguete`).
 
 ## A noite caindo, no pátio
 
-Quem dirige é a fornalha (`scripts/fases/retorta.gd`, `_cair_a_noite`). Quando
-o **painel da temperatura é resolvido** e fecha, com a fornalha ainda pegando
-fogo, o tempo avança:
+Quem dirige é a fornalha (`scripts/fases/retorta.gd`, `_cair_a_noite`).
+Resolver o painel da temperatura ainda não muda a hora: com a boca do forno
+aberta, a fornalha fica pegando fogo e **o tempo não passa**. É quando a Cacau
+**fecha a porta do forno** (a que fica encostada ao lado dele), com o fogo
+ainda aceso lá dentro, que o tempo avança:
 
 1. a Cacau para e o HUD sai de cena;
 2. o céu vai do crepúsculo à noite, as estrelas acendem, o fundo e o mundo
    escurecem e os postes firmam (`Atmosfera.anoitecer`);
 3. a lua sobe de trás da serra até o lugar em que o nó `Lua` foi deixado;
-4. a brasa apaga, o carvão pula para fora e o controle volta — já de noite.
+4. a brasa apaga, a porta salta de volta para o lugar dela, o carvão pula para
+   fora e o controle volta — já de noite.
 
-Se a queima falhar ou a pessoa sair do painel, a hora não muda.
+Se a queima falhar, se a pessoa sair do painel ou enquanto a porta não for
+fechada, a hora não muda.
 
 Só acontece uma vez. Os tempos e a altura da subida estão na `Atmosfera` do
 pátio, grupo **Anoitecer** (`duracao_do_anoitecer`, `subida_da_lua`). Depois
 disso é noite pelo resto da partida (`EstadoMundo.anoiteceu`): o pátio e o
 `world1` já abrem escuros.
+
+## Fase fechada (a oficina, fase 1)
+
+Dentro de um galpão a hora do jogo não entra: a fase tem a luz DELA, sempre a
+mesma. É o mesmo sistema, com três nós na raiz de `fase1_oficina.tscn`:
+
+| Nó | O que faz |
+|---|---|
+| `Atmosfera` | Escurece o mundo. Em vez dos três horários, usa o **`Perfil Fixo`** (grupo *Interior*): `assets/luz/oficina.tres`. |
+| `PostesDeLuz` | Acende as lâmpadas pintadas no cenário. |
+| `Luzes/` | Luzes redondas soltas (`luz_pontual.gd`): a placa da porta e os dois domos de vidro. |
+
+**As lâmpadas são tiles.** São as do `Props-01.png` — o braço do poste. Na
+oficina você usou as duas pontas dele lado a lado (uma luminária de 2 tiles);
+com o pedaço do meio ela fica com 3. Pinte onde quiser, em qualquer camada, e a
+luz aparece na hora, no editor mesmo: embaixo de plataforma e de teto baixo é
+onde ela rende mais, porque a poça de luz chega no chão. Apagou os tiles, a luz
+some.
+
+**O que dá para mexer.**
+
+- *O quanto a fase é escura e de que cor:* abra `assets/luz/oficina.tres` e
+  mude `Ambiente` (grupo *Mundo*) com a fase aberta — a prévia acompanha. Mais
+  perto do branco = mais clara. `Postes` (grupo *Luzes artificiais*) é a força
+  de todas as lâmpadas de uma vez.
+- *A cara das lâmpadas:* nó `PostesDeLuz` — `cor`, `energia`, `alcance` (até
+  onde a luz desce), `abertura` (a largura do cone), `feixe` (o facho no ar).
+  Vale para todas.
+- *Uma luz a mais em algum canto:* duplique um filho de `Luzes` e arraste, ou
+  ponha um Node2D novo com o script `luz_pontual.gd` (`cor`, `energia`,
+  `raio`). Serve para o que não é lâmpada: uma tela, uma placa, um objeto que
+  merece destaque.
+- *Pintar enxergando:* a fase fica escura no editor também (é a prévia do
+  jogo). Na `Atmosfera`, `previa_no_editor` → **Tudo claro (para pintar)**
+  mostra o cenário sem escuro nenhum. Não é gravado: ao reabrir a cena volta a
+  prévia do jogo.
+
+**O que acende sozinho.** Os espinhos de laser jogam um clarão vermelho em
+volta enquanto estão de pé, e ele apaga quando recolhem (`espinhos_laser.gd`;
+as serras não, são lâmina). O laser da barreira e o tiro das torretas já tinham
+a luz deles. Balões, teclas e textos do mundo continuam fora do escuro, como
+nas outras fases.
+
+**Outra fase fechada.** Copie os nós `Atmosfera` e `PostesDeLuz` da oficina.
+Para uma luz diferente, duplique o `oficina.tres`, mude as cores e aponte o
+`Perfil Fixo` para a cópia. Do perfil, num interior, só valem `Ambiente` e
+`Postes` — sol, lua e céu não existem lá dentro.
 
 ## Como funciona por dentro
 
@@ -204,5 +268,6 @@ godot --headless --path . res://tools/teste_atmosfera.tscn
 
 Confere os postes (altura, luz e a luz lisa), os três horários, a cena do mirante inteira
 com o diálogo de verdade, a volta ao `world1` no crepúsculo, a noite caindo no
-pátio com a lua subindo, a torre, a
+pátio com a lua subindo, a torre, a oficina por dentro (a luz que não muda com
+a hora, uma luz para cada lâmpada pintada, o clarão dos espinhos), a
 interface fora da luz e as luzes próprias.

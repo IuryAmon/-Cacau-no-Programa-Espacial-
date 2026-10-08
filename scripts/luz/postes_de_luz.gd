@@ -108,6 +108,14 @@ func _ready() -> void:
 	_pedir_busca()
 
 
+func _enter_tree() -> void:
+	# No editor, cada aba de cena sai da árvore quando se troca para outra e
+	# volta quando se volta para ela — e ao abrir o projeto as abas de trás
+	# nascem e já saem. A busca pedida no _ready() cairia com o nó fora da
+	# árvore e não haveria outra: por isso ela é pedida de novo a cada entrada.
+	_pedir_busca()
+
+
 func _exit_tree() -> void:
 	for camada in _camadas_ouvidas:
 		if is_instance_valid(camada) and camada.changed.is_connected(_pedir_busca):

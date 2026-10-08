@@ -7,12 +7,21 @@ extends FaseBase
 #                que só abre com o átomo de carbono montado no computador
 #                (puzzle_carbono). É aqui também que
 #                fica o ELEVADOR DE CARGA (Entrada/ElevadorPatio): entre nele e
-#                aperte E para subir ao PÁTIO, que é a fase1.2
+#                aperte E para subir. Ele chega no CORREDOR DO PÁTIO
+#                (scenes/fases/corredor_patio.tscn), e do fundo do corredor se
+#                sai andando para o PÁTIO, que é a fase1.2
 #                (scenes/fases/fase1_2_exterior.tscn) — a parte de fora do
 #                laboratório, onde a FORNALHA de carbonização passou a morar.
 #                Na parede ao lado da porta de chegada, o RÁDIO do Dr. Chico
 #                (Entrada/RadioDrChico) chama assim que a Cacau entra na fase —
 #                a conversa é a timeline radio_fase1 (ver radio_comunicacao.gd)
+#                O elevador é a ponta ESQUERDA do mapa: o chão acaba logo
+#                depois dele, já fora da tela. A cabine tem uma gradinha desse
+#                lado (andando a Cacau não passa; pulando, passa — ver
+#                elevador_fase.gd) e, para quem pulou, Colisoes/ParedeEsquerda:
+#                uma parede invisível na beirada da tela (face em x = -8, o
+#                mínimo para ela caber no vão entre a parede e a cabine), que é
+#                o que não deixa ninguém cair do mundo por ali
 #   ② TREINO     escola do arremesso — em construção manual no editor; só a
 #                caixa elétrica AlvoFixo1 ficou de placeholder
 #   ②b PORTÃO    no meio do mapa, uma BARREIRA fecha a passagem e só cai com os
@@ -69,6 +78,24 @@ extends FaseBase
 # Todas vivem sob o nó ArmadilhasFixas, então arrastar ESSE nó move o conjunto
 # inteiro de uma vez; para mudar uma só, arraste ela dentro do grupo. Ctrl+D em
 # qualquer uma cria outra igual, já sem caixa.
+#
+# A LUZ (Atmosfera, PostesDeLuz e Luzes/)
+#
+# A oficina é um galpão fechado, um pouco mais escuro e frio que o dia, com luz
+# própria — a hora do jogo não entra aqui. Quem escurece é o nó Atmosfera, com
+# o "Perfil Fixo" assets/luz/oficina.tres (o `Ambiente` dele é o quanto e de
+# que cor). É pouco de propósito: quase toda a fase não tem lâmpada, e lá quem
+# decide o que se enxerga é só o ambiente.
+#   AS LÂMPADAS SÃO TILES: o braço do poste do Props-01.png, aqui de luminária
+#   (as duas pontas lado a lado). O nó PostesDeLuz acha cada uma pintada em
+#   qualquer camada e a acende, no editor inclusive: pintou embaixo de uma
+#   plataforma, a luz aparece. Cor, força, alcance e abertura são dele e valem
+#   para todas.
+#   Luzes/ guarda as luzes redondas soltas (luz_pontual.gd): a placa da porta
+#   do hub e os dois domos de vidro. Duplique uma para acender outro canto.
+#   Os espinhos de laser jogam o próprio clarão vermelho (espinhos_laser.gd).
+# Para pintar enxergando: Atmosfera -> previa_no_editor -> "Tudo claro".
+# O passo a passo está em docs/ILUMINACAO.md, "Fase fechada".
 #
 # Este script só liga os componentes uns nos outros. Mover, trocar sprites,
 # repintar tiles ou acrescentar salas é tudo feito no editor, na cena.

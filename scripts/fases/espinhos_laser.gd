@@ -50,6 +50,14 @@ const FADE_SOM := 0.3
 ## jogador tem naquele momento.
 const GOLPE_LETAL := 9999
 
+## O clarão que a fileira joga em volta enquanto está de pé (ver _criar_brilho):
+## a cor, a força, quanto ele passa das pontas da fileira (px do mundo) e o
+## quanto treme.
+const COR_DO_BRILHO := Color(1.0, 0.2, 0.18)
+const FORCA_DO_BRILHO := 0.85
+const SOBRA_DO_BRILHO := 70.0
+const TREMOR_DO_BRILHO := 0.1
+
 @export_group("Fileira")
 ## Quantos módulos de espinho, lado a lado. A fileira cresce para os dois
 ## lados, mantendo o nó no centro.
@@ -105,6 +113,8 @@ var _pecas: Array[AnimatedSprite2D] = []
 ## valor original fica guardado aqui para o som voltar sempre no mesmo nível.
 var _volume_som: float = 0.0
 var _fade: Tween = null
+## O clarão do laser (ver _criar_brilho). Não é nó da cena: nasce no jogo.
+var _brilho: LuzPontual = null
 
 @onready var _visual: AnimatedSprite2D = get_node_or_null("Visual")
 @onready var _extras: Node2D = get_node_or_null("Segmentos")
@@ -136,6 +146,7 @@ func _ready() -> void:
 	if _atraso and not _atraso.timeout.is_connected(_ao_fim_do_atraso):
 		_atraso.timeout.connect(_ao_fim_do_atraso)
 
+	_criar_brilho()
 	_ligar_na_caixa()
 
 	# Estado inicial sem animação: quem entra na sala já vê a armadilha do
@@ -171,6 +182,46 @@ func _montar() -> void:
 		# Sem owner de propósito: as cópias são geradas, não salvas no .tscn.
 		_extras.add_child(copia)
 		_pecas.append(copia)
+
+
+# --- O CLARÃO DO LASER ---
+
+## A cor do clarão desta armadilha. Transparente = não brilha (é o caso da
+## serra, que herda tudo daqui mas é lâmina de metal, não luz).
+func _cor_do_brilho() -> Color:
+	return COR_DO_BRILHO
+
+
+## Laser é luz: numa fase escura a fileira tinge de vermelho o que está em
+## volta — e é o que faz a armadilha continuar bem à vista no escuro. O clarão
+## é uma LuzPontual que segue o horário: só acende onde a cena tem Atmosfera
+## (numa fase clara, sem ela, fica apagado e nada muda). Acende com os espinhos
+## subindo e apaga quando eles recolhem (ver armar e desarmar).
+func _criar_brilho() -> void:
+	var cor := _cor_do_brilho()
+	if cor.a <= 0.0 or _visual == null or _brilho != null:
+		return
+	var largura: float = LARGURA_QUADRO * absf(_visual.scale.x) * segmentos
+	var colisao := get_node_or_null("Colisao") as Node2D
+	_brilho = LuzPontual.new()
+	_brilho.name = "Brilho"
+	# Antes de entrar na árvore: é isto que põe a luz no grupo do horário.
+	_brilho.segue_o_horario = true
+	_brilho.acesa = false
+	_brilho.cor = cor
+	_brilho.energia = FORCA_DO_BRILHO
+	_brilho.raio = largura * 0.5 + SOBRA_DO_BRILHO
+	_brilho.clarao = 0.3
+	_brilho.tamanho_do_clarao = 0.5
+	_brilho.tremor = TREMOR_DO_BRILHO
+	# No meio da fileira, na altura das pontas (a do hitbox).
+	_brilho.position = Vector2(0.0, colisao.position.y if colisao else -16.0)
+	add_child(_brilho)
+
+
+func _acender_brilho(aceso: bool) -> void:
+	if _brilho != null:
+		_brilho.acesa = aceso
 
 
 # --- LIGAÇÃO COM A CAIXA ELÉTRICA ---
@@ -236,6 +287,7 @@ func armar(com_animacao: bool = true) -> void:
 		return
 	_recolhido = false
 	_ligar_som()
+	_acender_brilho(true)
 	if com_animacao and _tem_animacao(ANIM_ATIVANDO):
 		# O dano só entra quando as pontas terminam de subir.
 		_tocar(ANIM_ATIVANDO)
@@ -251,6 +303,8 @@ func desarmar(com_animacao: bool = true) -> void:
 	_recolhido = true
 	perigoso = false
 	_corpos.clear()
+	# O clarão apaga junto com o perigo, já no começo do recolhimento.
+	_acender_brilho(false)
 	if _atraso:
 		_atraso.stop()
 	if desligar_para_sempre:

@@ -7,10 +7,12 @@ extends Area2D
 # (reagir_ao_avistar_foguete). Aqui fica quem DIRIGE a cena e o que vem depois
 # da fala: o pôr do sol.
 #
-#   fala termina ──> o coração sobe (como sempre)
+#   fala termina ──> o coração sobe e fica batendo até a fala do anoitecer
 #                    o sol desce atrás da serra: o céu vai do dourado ao
 #                    crepúsculo, o fundo e o mundo escurecem um pouco com ele,
 #                    os postes dão a piscada e firmam         (Atmosfera.por_do_sol)
+#                    com o sol posto, ela fala: "Está anoitecendo, amei essa
+#                    paisagem mas preciso ir..."     (timelines/cacau_anoitecendo.dtl)
 #                    o controle volta
 #
 # A Cacau fica parada do começo ao fim, e o HUD some junto: é para olhar.
@@ -25,8 +27,11 @@ extends Area2D
 
 ## Segundos entre o coração aparecer e o sol começar a descer.
 @export var respiro_antes_do_sol := 0.8
-## Segundos olhando o crepúsculo, com o sol já posto, antes de o controle voltar.
+## Segundos olhando o crepúsculo, com o sol já posto, antes de ela falar.
 @export var respiro_depois_do_sol := 1.2
+
+## A fala dela depois que o sol se põe.
+const TIMELINE_ANOITECENDO := "cacau_anoitecendo"
 
 var _disparado: bool = false
 
@@ -48,6 +53,7 @@ func _on_body_entered(body: Node2D) -> void:
 	var atmosfera := Atmosfera.da_cena(self)
 	if atmosfera != null and atmosfera.pode_por_o_sol():
 		body.segurar_apos_o_foguete = true
+		body.segurar_coracao_do_foguete = true
 		body.fala_do_foguete_terminou.connect(_por_o_sol.bind(body, atmosfera), CONNECT_ONE_SHOT)
 	else:
 		body.fala_do_foguete_terminou.connect(_registrar, CONNECT_ONE_SHOT)
@@ -71,6 +77,11 @@ func _por_o_sol(player: Node2D, atmosfera: Atmosfera) -> void:
 
 	await atmosfera.por_do_sol()
 	await _esperar(respiro_depois_do_sol)
+
+	if is_instance_valid(player):
+		await player.soltar_coracao_do_foguete()
+	Dialogic.start(TIMELINE_ANOITECENDO)
+	await Dialogic.timeline_ended
 
 	cortina.restaurar_huds()
 	cortina.queue_free()

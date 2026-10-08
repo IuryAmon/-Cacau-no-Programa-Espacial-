@@ -430,8 +430,25 @@ func _marcar_rastro() -> void:
 func _on_area_entered(area: Area2D) -> void:
 	if not (area.is_in_group("alvo_bumerangue") and area.has_method("atingir_bumerangue")):
 		return
-	area.atingir_bumerangue()
+	# Quem precisa saber COMO veio a pancada (o morcego, que é jogado no rumo
+	# dela) recebe o próprio bumerangue; para os outros alvos nada muda.
+	if area.has_method("atingir_bumerangue_com"):
+		area.atingir_bumerangue_com(self)
+	else:
+		area.atingir_bumerangue()
 	_impacto()
+
+
+## Para onde ele está indo AGORA, já normalizado: na ida é a mira; do ápice em
+## diante, o caminho de volta para a mão. Quem apanha lê isto para saber de que
+## lado veio a pancada.
+func rumo() -> Vector2:
+	if _fase == Fase.IDA or not is_instance_valid(_dono):
+		return _direcao
+	var ate_mao: Vector2 = _mao() - global_position
+	if ate_mao.length_squared() < 1.0:
+		return -_direcao
+	return ate_mao.normalized()
 
 
 ## Peso do acerto: o mundo trava por dois frames, a câmera treme e a lâmina dá

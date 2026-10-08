@@ -11,9 +11,10 @@ extends Node
 # Casos:
 #   * a cena é a porta da ala de eletrólise com o "porta modelo.png": 12
 #     quadros de 148x134, abrindo 0->11 e fechando ao contrário;
-#   * Torre de Gases, Torre de Lançamento, as voltas ao laboratório (fases 2, 3
-#     e final) e a cápsula usam a porta modelo; só o alçapão do fosso continua
-#     PortaFase;
+#   * Torre de Gases, Torre de Lançamento, as voltas ao laboratório (fases 3 e
+#     final) e a cápsula usam a porta modelo; só o alçapão do fosso continua
+#     PortaFase. A fase 2 não tem porta: entra-se e sai-se dela andando, por
+#     uma PassagemDeCena na ponta esquerda;
 #   * toda porta com destino acha, na outra cena, a porta que a recebe (ou a
 #     passagem: a ponta do corredor da torre é uma PassagemDeCena);
 #   * cada porta nova fica em pé no chão (o vão dela na altura do piso);
@@ -39,7 +40,6 @@ const SCRIPT_PORTA := "res://scripts/porta_simulador.gd"
 const PORTAS_MODELO := {
 	LAB: ["PortaTorre", "PortaLancamento"],
 	CORREDOR: ["PortaLab"],
-	FASE2: ["PortaHub"],
 	FASE3: ["Atrio/PortaFosso"],
 	FASE_FINAL: ["Portao/PortaHub", "Plataforma/Capsula/PortaCapsula"],
 }
@@ -160,9 +160,19 @@ func _testar_torre_ida_e_volta() -> void:
 	await _quadros(2)
 	_player().global_position.x = saida.global_position.x + 4.0
 	await _esperar_cena(FASE2)
-	await _conferir_saida(get_tree().current_scene.get_node("PortaHub"), "chegou na Torre saindo pela PortaHub")
+	# A Torre não tem porta: ela entra andando pela ponta esquerda (outra
+	# PassagemDeCena) e volta cruzando a mesma linha.
+	var entrada := get_tree().current_scene.get_node("PassagemCorredor") as PassagemDeCena
+	for i in 400:
+		if not entrada._chegando:
+			break
+		await get_tree().process_frame
+	_checar(not entrada._chegando and _player().pode_se_mover
+		and _player().global_position.x > entrada.global_position.x,
+		"chegou na Torre entrando andando pela ponta esquerda")
 
-	await _usar(get_tree().current_scene.get_node("PortaHub"))
+	await _quadros(3)
+	_player().global_position.x = entrada.global_position.x - 4.0
 	await _esperar_cena(CORREDOR)
 	saida = get_tree().current_scene.get_node("SaidaTorre") as PassagemDeCena
 	for i in 300:

@@ -14,18 +14,31 @@ extends FaseBase
 #              para mudar de lugar), céu estrelado e nuvens. É ela que escurece
 #              o mundo e tinge o fundo. Ver docs/ILUMINACAO.md.
 #   PostesDeLuz  acende sozinho todo poste pintado no TileMap.
-#   Terreno    o chão de grama da área aberta, reto, de 0 a 3200 px (o topo
-#              fica em y = 512). Pinte o resto por cima dele.
-#   Paredes/   dois corpos invisíveis nas pontas, para a Cacau não cair para
-#              fora do mapa. Mova-os junto quando esticar o chão.
-#   PortaHub   a porta de volta — é também onde ela chega. Entre esta fase e o
-#              laboratório fica o corredor da torre (corredor_torre.tscn): a
-#              ponta do fundo dele procura por esta "tag_aqui", e a porta
-#              devolve a Cacau para aquela ponta.
-#   LimitesDaCamera, SpawnPadrao, Player   o de sempre (ver fase_base.gd).
+#   Terreno    o chão de grama da área aberta, reto (o topo fica em y = 512).
+#              Ele começa ANTES da beirada esquerda da tela, em x = -448: é
+#              nesse trecho de fora do quadro que a Cacau nasce e some (ver
+#              PassagemCorredor). Pinte o resto por cima dele.
+#   Paredes/   dois corpos invisíveis, para a Cacau não cair para fora do mapa.
+#              O da esquerda fica recuado (x = -420), para lá do trecho em que
+#              ela chega e sai andando. Mova-os junto quando esticar o chão.
+#   PassagemCorredor   a fase NÃO TEM PORTA. Esta é a ponta esquerda dela, uma
+#              PassagemDeCena (passagem_de_cena.gd), o par da ponta do fundo do
+#              corredor da torre (corredor_torre.tscn):
+#                * NA CHEGADA a Cacau vem de fora do quadro e entra andando
+#                  pela esquerda, até uns 150 px para dentro, e o controle
+#                  volta;
+#                * NA VOLTA basta andar para a esquerda: cruzou a linha (x = 24,
+#                  logo depois da beirada da câmera), a tela apaga com ela
+#                  ainda correndo e a cena troca para o fundo do corredor.
+#              "sentido" = -1 diz que o lado de fora é o esquerdo. O chão tem
+#              de continuar uns 300 px para fora da linha, sem parede no meio.
+#   LimitesDaCamera, SpawnPadrao, Player   o de sempre (ver fase_base.gd). O
+#              SpawnPadrao só vale quando a cena é aberta direto, sem vir do
+#              corredor.
 #
-# Este script não liga nada: a FaseBase já cuida da câmera e de pôr a Cacau na
-# porta. A lógica da fase nova entra aqui conforme ela for sendo montada.
+# Este script não liga nada: a FaseBase já cuida da câmera, e a passagem de pôr
+# a Cacau no lugar. A lógica da fase nova entra aqui conforme ela for sendo
+# montada.
 #
 # O QUE O RESTO DO JOGO AINDA ESPERA DESTA FASE
 #   * a MOCHILA DE N₂ (Progresso "mochila"), que era pega aqui;

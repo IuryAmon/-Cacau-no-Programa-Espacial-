@@ -1,59 +1,63 @@
 class_name PainelFornalha
 extends CanvasLayer
 
-# --- PAINEL DA FORNALHA (a pirólise: temperatura e entrada de ar) ---
+# --- PAINEL DA FORNALHA (a pirólise: a temperatura) ---
 #
-# A tela que a retorta abre depois que o fogo pega. São duas etapas, na ordem
-# em que o carvão é feito de verdade:
+# A tela que a retorta abre depois que o fogo pega. É uma etapa só:
 #
-#   1. AQUECER   segurando E, o maçarico atiça o fogo e o líquido do
-#                termômetro sobe; solto, ele esfria devagar. O fogo tem
-#                inércia: não arranca nem apaga na hora. É preciso levar o
-#                líquido até a marca (a seta amarela ao lado da escala) e
-#                segurá-lo ali um instante — a seta vai se acendendo.
-#   2. VEDAR     no ponto, a entrada de ar precisa ser fechada: segurando S, a
-#                comporta desce sobre a grade. Enquanto ela está aberta, o O₂
-#                que entra alimenta a queima e a temperatura dispara sozinha.
-#                Vedada, a madeira carboniza e a tela fecha com sucesso.
+#   AQUECER   segurando E, o maçarico atiça o fogo e o líquido do termômetro
+#             sobe; solto, ele esfria devagar. O fogo tem inércia: não arranca
+#             nem apaga na hora. É preciso levar o líquido até a REGIÃO marcada
+#             no termômetro e segurá-lo lá dentro um instante — a barra ao
+#             lado vai enchendo. Cheia, a temperatura está NO PONTO: a tela
+#             avisa e fecha com sucesso.
 #
-# Líquido no topo do tubo por TEMPO_ATE_QUEIMAR (aquecer demais ou demorar a
-# vedar): a carga queimou e virou cinza. O líquido fica cinza e a tela fecha
-# com sucesso = false. ESC/△ desiste a qualquer momento (cancelado = true).
+# A REGIÃO é uma faixa, não uma linha: qualquer altura dentro dela vale. Ela é
+# pintada no próprio tubo (o fundo âmbar atrás do líquido, que clareia com ele
+# lá dentro; as duas bordas e os traços da escala em amarelo, por cima dele) e
+# tem ao lado a barra que mostra há quanto tempo o líquido está lá dentro. O
+# que se vê é o que conta: desenho e regra saem das mesmas duas constantes
+# (LINHA_DA_REGIAO e MEIA_REGIAO).
+#
+# FECHAR A ENTRADA DE AR NÃO É DAQUI. A porta do forno é um objeto do cenário,
+# encostada ao lado dele, e a Cacau a fecha DEPOIS que esta tela some (ver
+# retorta.gd, passo 5, e porta_da_fornalha.gd). Enquanto isso o ar continua
+# entrando — é o que as moléculas de O₂ passando pela grade mostram, do começo
+# ao fim da tela.
+#
+# Líquido no topo do tubo por TEMPO_ATE_QUEIMAR (aqueceu demais): a carga
+# queimou e virou cinza. O líquido fica cinza e a tela fecha com sucesso =
+# false. ESC/△ desiste a qualquer momento (cancelado = true).
 #
 # TEXTO, SÓ O TÍTULO E OS CONTROLES. O resto se lê no desenho: o líquido, a
-# seta da marca, as moléculas de O₂ passando pela grade e a comporta.
+# região e as moléculas de O₂ entrando pela grade.
 #
 # A ARTE: o quadro e o termômetro são pixel art ampliada ESCALA vezes (inteira,
 # para o pixel não entortar). A folha do termômetro tem dois sprites lado a
 # lado, na mesma posição: o termômetro vazio e só as marcações. O líquido é
 # desenhado entre os dois, por isso as marcações ficam por cima dele. O formato
-# do líquido sai do próprio sprite (o vidro encolhido RECUO_VIDRO px): se o
-# termômetro for redesenhado, só as LINHA_* precisam de ajuste. A seta, a
-# grade, a comporta e as moléculas são desenhadas aqui, em pixels do quadro,
-# com a paleta dele.
+# do líquido sai do próprio sprite (o vidro encolhido RECUO_VIDRO px), e os
+# traços da escala saem da folha de marcações: se o termômetro for redesenhado,
+# só as LINHA_* precisam de ajuste. A região, a barra, a grade e as moléculas
+# são desenhadas aqui, em pixels do quadro, com a paleta dele.
 #
 # O mundo NÃO pausa: a fornalha continua queimando atrás, e o quadro abre ao
 # lado dela, no lado da tela com mais espaço, sem tapar a Cacau nem o fogo. O
 # que trava é só o movimento da personagem.
 
 signal terminado(sucesso: bool, cancelado: bool)
-## A comporta acabou de fechar (a retorta abafa o fogo do cenário).
-signal vedada
 
-enum Etapa { AQUECER, VEDAR, VEDADA, CINZAS }
+enum Etapa { AQUECER, NO_PONTO, CINZAS }
 
 const QUADRO := preload("res://assets/Lab/fornalha/Quadro Puzzle.png")
 const TERMOMETRO := preload("res://assets/Lab/fornalha/termometro e marcações.png")
 const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 const SOM_NO_PONTO := preload("res://sounds/check.mp3")
-const SOM_COMPORTA := preload("res://sounds/somPorta_fechando.wav")
-const SOM_SUCESSO := preload("res://sounds/PuzzleConcluido2.mp3")
 const SOM_CINZAS := preload("res://sounds/AcessoNegado.mp3")
 
 const TITULO := "Temperatura\nda Fornalha"
 ## {acao} vira a tecla desenhada no teclado e o botão no controle.
 const CONTROLES_AQUECER := "{interact} Aquecer      {fechar} Sair"
-const CONTROLES_VEDAR := "{ui_down:S} Vedar      {fechar} Sair"
 
 # ── Layout (px do QUADRO, antes da escala) ──
 const ESCALA := 3
@@ -63,24 +67,24 @@ const POS_TERMOMETRO := Vector2i(14, 34)
 ## o traço de baixo da escala; o 1 enche o tubo.
 const LINHA_VAZIO := 101
 const LINHA_CHEIO := 3
-## A marca: o traço grande da escala que o líquido precisa alcançar, e quantos
-## px acima ou abaixo dele ainda contam.
-const LINHA_MARCA := 41
-const FOLGA_MARCA := 5
-## Traço grande da escala (px do sprite), repintado na cor da marca.
-const TRACO_MARCA := Rect2i(17, 0, 4, 1)
-## Coluna da ponta da seta, logo à direita do tubo.
-const X_SETA := 22
-const COLUNAS_SETA := 5
+## A REGIÃO: a faixa do termômetro em que a temperatura conta. É dada pela
+## linha do meio (um traço grande da escala) e por quantas linhas ela se estende
+## para cima e para baixo dele. A faixa inteira é pintada no tubo — o que se vê
+## é exatamente o que vale (ver _linhas_da_regiao).
+## A escala tem um traço a cada 2 linhas, nas ímpares: com o meio num traço e
+## MEIA_REGIAO par, as duas bordas da região também caem em cima de traços.
+## Aumentar MEIA_REGIAO alarga a região (e facilita o puzzle).
+const LINHA_DA_REGIAO := 41
+const MEIA_REGIAO := 6
+## A barra ao lado do tubo, da altura da região, que enche enquanto o líquido
+## fica dentro dela: a coluna em que começa (px do sprite) e a largura.
+const X_DA_BARRA := 23
+const LARGURA_DA_BARRA := 3
 ## Quanto o vidro tem de espessura: o líquido é o vidro encolhido disto.
 const RECUO_VIDRO := 2
 
 const GRADE := Rect2i(54, 136, 24, 24)
 const BARRAS_DA_GRADE := 3
-const TOPO_TRILHOS := 104
-const COMPORTA_ALTURA := 26
-const COMPORTA_Y_ABERTA := 108
-const COMPORTA_Y_FECHADA := 135
 ## As moléculas de O₂ (centro, px do quadro) nascem escondidas à direita do
 ## buraco da grade — só aparecem dali para a esquerda, como se o ar entrasse
 ## por ela — e somem perto do termômetro.
@@ -108,41 +112,38 @@ const PERDA_BASE := 0.03
 const PERDA_PROPORCIONAL := 0.08
 ## Quão rápido o fogo acompanha a tecla (1 / segundos para ir de 0 a 1).
 const RESPOSTA_DO_FOGO := 4.0
-## Tempo com o líquido na marca para a temperatura contar como alcançada.
-const TEMPO_NA_MARCA := 1.6
-## Fora da marca a seta vai se apagando neste ritmo.
-const DESCARGA_DA_MARCA := 0.6
-## Etapa 2: com a entrada toda aberta, o ar faz a temperatura subir isto.
-const SUBIDA_COM_AR := 0.12
-## O ar entra aos poucos depois da marca (segundos até a força total).
-const RAMPA_DO_AR := 0.6
-## Segurando S, segundos da comporta aberta até fechada.
-const TEMPO_DA_COMPORTA := 0.55
-## Vedada, a temperatura se acomoda na marca neste ritmo.
+## Tempo com o líquido dentro da região para a temperatura contar como
+## alcançada (é o tempo que a barra leva para encher).
+const TEMPO_NA_REGIAO := 1.6
+## Fora da região a barra vai esvaziando neste ritmo.
+const DESCARGA_DA_REGIAO := 0.6
+## No ponto, o líquido se acomoda no meio da região neste ritmo e a tela ainda
+## fica este tanto (s) antes de fechar: é o tempo de ver a região acesa.
 const ACOMODACAO := 2.5
+const ESPERA_NO_PONTO := 0.9
 ## Topo do tubo: ficar aqui por TEMPO_ATE_QUEIMAR queima a carga.
 const LIMITE_DE_QUEIMA := 0.95
 const TEMPO_ATE_QUEIMAR := 1.2
 
-## Uma molécula a cada tanto (s): devagar enquanto aquece, ventando na etapa 2.
-const INTERVALO_O2_AQUECER := 0.7
-const INTERVALO_O2_VEDAR := 0.4
+## Uma molécula de O₂ a cada tanto (s) entrando pela grade, e a velocidade
+## delas (px do quadro por segundo, sorteada entre os dois).
+const INTERVALO_O2 := 0.7
 const VELOCIDADE_O2 := Vector2(16.0, 22.0)
-const VELOCIDADE_O2_VEDAR := 1.4
 
-# ── Paleta (a do quadro, mais o líquido, a marca e o O₂ da folha de moléculas) ──
+# ── Paleta (a do quadro, mais o líquido, a região e o O₂ da folha de moléculas) ──
 const COR_CONTORNO := Color8(0x1c, 0x1b, 0x21)
 const COR_METAL := Color8(0x57, 0x55, 0x5e)
 const COR_METAL_ESCURO := Color8(0x49, 0x41, 0x48)
-const COR_METAL_CLARO := Color8(0x7a, 0x6e, 0x5e)
-const COR_METAL_BRILHO := Color8(0x9c, 0x8f, 0x7c)
 const COR_BURACO := Color8(0x12, 0x10, 0x16)
 const LIQUIDO := [Color8(0xd2, 0x3c, 0x2c), Color8(0xff, 0x8a, 0x66), Color8(0x8a, 0x1f, 0x26)]
 const LIQUIDO_QUENTE := [Color8(0xff, 0x5a, 0x2a), Color8(0xff, 0xd4, 0x9a), Color8(0xc2, 0x30, 0x2a)]
 const LIQUIDO_CINZA := [Color8(0x6e, 0x68, 0x72), Color8(0x9a, 0x95, 0xa0), Color8(0x4a, 0x45, 0x50)]
-const COR_MARCA := Color8(0xf2, 0xc1, 0x4e)
-const COR_MARCA_APAGADA := Color8(0x9a, 0x74, 0x2c)
-const COR_MARCA_VAZIA := Color8(0x2b, 0x24, 0x22)
+## A região (as bordas, os traços e a barra cheia), a mesma depois de a carga
+## queimar, o fundo dela no vidro do tubo e a barra vazia.
+const COR_REGIAO := Color8(0xf2, 0xc1, 0x4e)
+const COR_REGIAO_APAGADA := Color8(0x9a, 0x74, 0x2c)
+const COR_REGIAO_NO_TUBO := Color8(0x4e, 0x3f, 0x25)
+const COR_REGIAO_VAZIA := Color8(0x2b, 0x24, 0x22)
 const O2_CORPO := Color8(0x4b, 0x32, 0xe6)
 const O2_BRILHO := Color8(0x81, 0x9f, 0xff)
 const O2_SOMBRA := Color8(0x24, 0x00, 0xb9)
@@ -159,15 +160,13 @@ var _etapa: int = Etapa.AQUECER
 var _temperatura: float = TEMPERATURA_INICIAL
 var _fogo: float = 0.0
 var _soprando: bool = false
-var _progresso_marca: float = 0.0
+var _progresso_regiao: float = 0.0
 var _tempo_no_limite: float = 0.0
-var _tempo_na_etapa: float = 0.0
-var _comporta: float = 0.0
 ## O E que acendeu a fornalha pode chegar ainda apertado: só vale depois de
 ## solto uma vez.
 var _e_liberado: bool = false
 var _cinza: float = 0.0
-var _clarao_marca: float = 0.0
+var _clarao_regiao: float = 0.0
 var _relogio: float = 0.0
 var _tremor: float = 0.0
 var _deslocamento_tremor := Vector2i.ZERO
@@ -186,6 +185,9 @@ var _controles: Label = null
 # sprite do termômetro na primeira abertura e serve para as seguintes.
 static var _faixas_liquido: Array = []
 static var _linha_do_bulbo: int = 0
+# Os traços da escala, um por linha: [linha, x0, largura]. Saem da folha de
+# marcações; os que caem dentro da região são repintados na cor dela.
+static var _tracos: Array = []
 static var _textura_o2: Texture2D = null
 
 
@@ -237,8 +239,6 @@ func usa_cursor() -> bool:
 func dicas_do_controle() -> Array:
 	if _etapa == Etapa.AQUECER:
 		return [[Interacao.ACAO, "AQUECER"], ["fechar", "DESISTIR"]]
-	if _etapa == Etapa.VEDAR:
-		return [["ui_down", "VEDAR"], ["fechar", "DESISTIR"]]
 	return []
 
 
@@ -249,27 +249,25 @@ func dicas_do_controle() -> Array:
 func _process(delta: float) -> void:
 	_relogio += delta
 	_tremor = maxf(_tremor - delta, 0.0)
-	_clarao_marca = maxf(_clarao_marca - delta * 2.5, 0.0)
+	_clarao_regiao = maxf(_clarao_regiao - delta * 2.5, 0.0)
 	_posicionar()
 
 	if not _encerrando:
-		# Desistir só vale enquanto ainda há o que fazer: vedada, é carvão.
+		# Desistir só vale enquanto ainda há o que fazer: no ponto, já fechou.
 		if _em_jogo() and Input.is_action_just_pressed("fechar"):
 			_fechar(false, true)
 			return
 		_travar_personagem()
 		if not _e_liberado and not Input.is_action_pressed(Interacao.ACAO):
 			_e_liberado = true
-		_tempo_na_etapa += delta
-		match _etapa:
-			Etapa.AQUECER:
-				_aquecer(delta)
-			Etapa.VEDAR:
-				_vedar(delta)
-			Etapa.VEDADA:
-				_temperatura = lerpf(_temperatura, _temperatura_da_marca(), 1.0 - exp(-ACOMODACAO * delta))
+		if _em_jogo():
+			_aquecer(delta)
+		# (_aquecer pode ter acabado de chegar no ponto: aí não se vigia mais.)
 		if _em_jogo():
 			_vigiar_queima(delta)
+	elif _etapa == Etapa.NO_PONTO:
+		# A tela se despede com o líquido assentando no meio da região.
+		_temperatura = lerpf(_temperatura, _temperatura_da_regiao(), 1.0 - exp(-ACOMODACAO * delta))
 
 	_atualizar_moleculas(delta)
 	if _tremor > 0.0 and int(_relogio * 30.0) != int((_relogio - delta) * 30.0):
@@ -285,32 +283,25 @@ func _aquecer(delta: float) -> void:
 	var perda := PERDA_BASE + PERDA_PROPORCIONAL * _temperatura
 	_mudar_temperatura((_fogo * AQUECIMENTO - (1.0 - _fogo) * perda) * delta)
 
-	if _na_marca():
-		_progresso_marca = minf(_progresso_marca + delta / TEMPO_NA_MARCA, 1.0)
+	if _na_regiao():
+		_progresso_regiao = minf(_progresso_regiao + delta / TEMPO_NA_REGIAO, 1.0)
 	else:
-		_progresso_marca = maxf(_progresso_marca - delta * DESCARGA_DA_MARCA, 0.0)
-	if _progresso_marca >= 1.0:
-		_entrar_na_vedacao()
+		_progresso_regiao = maxf(_progresso_regiao - delta * DESCARGA_DA_REGIAO, 0.0)
+	if _progresso_regiao >= 1.0:
+		_chegar_no_ponto()
 
 
-func _entrar_na_vedacao() -> void:
-	_etapa = Etapa.VEDAR
-	_tempo_na_etapa = 0.0
+## A barra encheu: a temperatura está no ponto. A tela avisa (o som e o clarão
+## na região) e fecha com sucesso — o que falta do carvão é lá fora, na porta
+## do forno (ver retorta.gd).
+func _chegar_no_ponto() -> void:
+	_etapa = Etapa.NO_PONTO
 	_soprando = false
 	_fogo = 0.0
-	_clarao_marca = 1.0
+	_clarao_regiao = 1.0
 	_tocar(SOM_NO_PONTO)
-	Controle.rotular(_controles, CONTROLES_VEDAR, 2.0)
-
-
-func _vedar(delta: float) -> void:
-	if Input.is_action_pressed("ui_down"):
-		_comporta = move_toward(_comporta, 1.0, delta / TEMPO_DA_COMPORTA)
-	# O ar que passa pela fresta alimenta a queima: a temperatura dispara.
-	var rampa := clampf(_tempo_na_etapa / RAMPA_DO_AR, 0.0, 1.0)
-	_mudar_temperatura(SUBIDA_COM_AR * (1.0 - _comporta) * rampa * delta)
-	if _comporta >= 1.0:
-		_concluir()
+	_esconder_controles()
+	_fechar(true, false, ESPERA_NO_PONTO)
 
 
 func _vigiar_queima(delta: float) -> void:
@@ -325,21 +316,6 @@ func _vigiar_queima(delta: float) -> void:
 
 func _mudar_temperatura(variacao: float) -> void:
 	_temperatura = clampf(_temperatura + variacao, 0.0, 1.0)
-
-
-func _concluir() -> void:
-	_etapa = Etapa.VEDADA
-	_soprando = false
-	_tremor = 0.12
-	_tocar(SOM_COMPORTA)
-	vedada.emit()
-	_esconder_controles()
-	await get_tree().create_timer(0.45, false).timeout
-	if not is_instance_valid(self) or _encerrando:
-		return
-	_clarao_marca = 1.0
-	_tocar(SOM_SUCESSO, 2.0)
-	_fechar(true, false, 1.1)
 
 
 func _queimar() -> void:
@@ -393,23 +369,28 @@ func _travar_personagem() -> void:
 
 
 func _em_jogo() -> bool:
-	return _etapa == Etapa.AQUECER or _etapa == Etapa.VEDAR
+	return _etapa == Etapa.AQUECER
 
 
 func _nivel() -> int:
 	return roundi(lerpf(LINHA_VAZIO, LINHA_CHEIO, _temperatura))
 
 
-func _na_marca() -> bool:
-	return absi(_nivel() - LINHA_MARCA) <= FOLGA_MARCA
+## As linhas do sprite que a região ocupa: x = a de cima, y = a de baixo (as
+## duas incluídas). É daqui que saem a regra (_na_regiao) e o desenho.
+func _linhas_da_regiao() -> Vector2i:
+	return Vector2i(LINHA_DA_REGIAO - MEIA_REGIAO, LINHA_DA_REGIAO + MEIA_REGIAO)
 
 
-func _temperatura_da_marca() -> float:
-	return float(LINHA_VAZIO - LINHA_MARCA) / float(LINHA_VAZIO - LINHA_CHEIO)
+## O topo do líquido está dentro da região?
+func _na_regiao() -> bool:
+	var linhas := _linhas_da_regiao()
+	return _nivel() >= linhas.x and _nivel() <= linhas.y
 
 
-func _y_comporta() -> int:
-	return roundi(lerpf(COMPORTA_Y_ABERTA, COMPORTA_Y_FECHADA, _comporta))
+## A temperatura do meio da região.
+func _temperatura_da_regiao() -> float:
+	return float(LINHA_VAZIO - LINHA_DA_REGIAO) / float(LINHA_VAZIO - LINHA_CHEIO)
 
 
 ## Som solto na raiz: continua tocando depois que o painel fecha.
@@ -495,8 +476,8 @@ func _posicionar() -> void:
 			x = na_tela.end.x + AFASTAMENTO_DO_FOCO
 	x = clampf(x, MARGEM_DA_TELA, tela.x - tamanho.x - MARGEM_DA_TELA)
 	var y := (tela.y - tamanho.y) * 0.5 + (1.0 - _entrada) * 18.0
-	# O quadro inteiro só treme no baque da comporta e na queima; no limite de
-	# temperatura quem treme é o termômetro (ver _desenhar).
+	# O quadro inteiro só treme quando a carga queima; no limite de temperatura
+	# quem treme é o termômetro (ver _desenhar).
 	var tremor := Vector2.ZERO if _em_jogo() else Vector2(_deslocamento_tremor * ESCALA)
 	_quadro.position = (Vector2(x, y) + tremor).round()
 	_quadro.modulate.a = _entrada
@@ -507,28 +488,22 @@ func _posicionar() -> void:
 # MOLÉCULAS DE O₂
 # ─────────────────────────────────────────────────────────────
 
+## O ar entra o tempo todo: a boca do forno está aberta, e quem a fecha é a
+## porta, lá fora, depois desta tela. Só a carga queimada (cinzas) corta o fio.
 func _atualizar_moleculas(delta: float) -> void:
 	_proxima_molecula -= delta
-	if _em_jogo() and _proxima_molecula <= 0.0:
-		var vedando := _etapa == Etapa.VEDAR
-		_proxima_molecula = INTERVALO_O2_VEDAR if vedando else INTERVALO_O2_AQUECER
+	if _etapa != Etapa.CINZAS and _proxima_molecula <= 0.0:
+		_proxima_molecula = INTERVALO_O2
 		_moleculas.append({
 			"x": O2_X_NASCE,
 			"y": randf_range(O2_FAIXA_Y.x, O2_FAIXA_Y.y),
-			"v": randf_range(VELOCIDADE_O2.x, VELOCIDADE_O2.y) * (VELOCIDADE_O2_VEDAR if vedando else 1.0),
+			"v": randf_range(VELOCIDADE_O2.x, VELOCIDADE_O2.y),
 			"fase": randf() * TAU,
 		})
 
-	# A comporta barra quem ainda não entrou e está na altura dela: essa
-	# molécula nem chega a aparecer (ver _desenhar_grade).
-	var fundo_comporta := float(_y_comporta() + COMPORTA_ALTURA)
-	var entrada := float(_x_do_buraco_direita())
 	var seguem: Array[Dictionary] = []
 	for m in _moleculas:
-		var ainda_fora: bool = m["x"] - O2_METADE.x >= entrada
 		m["x"] -= m["v"] * delta
-		if ainda_fora and m["x"] - O2_METADE.x < entrada and m["y"] < fundo_comporta:
-			continue
 		if m["x"] > O2_X_SOME:
 			seguem.append(m)
 	_moleculas = seguem
@@ -552,13 +527,16 @@ func _desenhar() -> void:
 		pos += Vector2(_deslocamento_tremor)
 	var tamanho := Vector2(TAMANHO_TERMOMETRO)
 	a.draw_texture_rect_region(TERMOMETRO, Rect2(pos, tamanho), Rect2(Vector2.ZERO, tamanho))
+	# A região entra em dois tempos: o fundo dela atrás do líquido, e as bordas,
+	# os traços e a barra por cima de tudo (para continuarem à vista mesmo com
+	# o líquido lá em cima, passado do ponto).
+	_desenhar_fundo_da_regiao(a, pos)
 	_desenhar_liquido(a, pos)
 	a.draw_texture_rect_region(TERMOMETRO, Rect2(pos, tamanho),
 		Rect2(Vector2(TAMANHO_TERMOMETRO.x, 0), tamanho))
-	_desenhar_marca(a, pos)
+	_desenhar_regiao(a, pos)
 
 	_desenhar_grade(a)
-	_desenhar_comporta(a)
 
 
 func _desenhar_liquido(a: Control, pos: Vector2) -> void:
@@ -586,36 +564,65 @@ func _cores_do_liquido() -> Array:
 	return cores
 
 
-## A seta amarela à direita do tubo, apontando o traço da marca. Começa vazada
-## e vai se enchendo, da base para a ponta, enquanto o líquido fica na marca;
-## na marca, ela pulsa.
-func _desenhar_marca(a: Control, pos: Vector2) -> void:
-	var centro := pos + Vector2(X_SETA, LINHA_MARCA)
-	# Só as colunas de dentro enchem: a ponta e a base são borda.
-	var miolo := COLUNAS_SETA - 2
-	var cheias := miolo if _etapa != Etapa.AQUECER else ceili(_progresso_marca * miolo - 0.001)
-	var cor := COR_MARCA
-	if _etapa == Etapa.AQUECER and _na_marca():
-		cor = COR_MARCA.lerp(Color.WHITE, 0.3 * (0.5 + 0.5 * sin(_relogio * 12.0)))
-	cor = cor.lerp(Color.WHITE, _clarao_marca)
+## A cor da região acesa: pulsa com o líquido lá dentro, estoura em branco no
+## instante em que a temperatura chega no ponto e apaga se a carga queimar.
+func _cor_da_regiao() -> Color:
+	var cor := COR_REGIAO
+	if _etapa == Etapa.AQUECER and _na_regiao():
+		cor = COR_REGIAO.lerp(Color.WHITE, 0.3 * (0.5 + 0.5 * sin(_relogio * 12.0)))
+	cor = cor.lerp(Color.WHITE, _clarao_regiao)
 	if _etapa == Etapa.CINZAS:
-		cor = cor.lerp(COR_MARCA_APAGADA, _cinza)
+		cor = cor.lerp(COR_REGIAO_APAGADA, _cinza)
+	return cor
 
-	# Contorno: a seta inteira 1 px maior, em volta.
-	for i in range(-1, COLUNAS_SETA + 1):
-		var meia := clampi(i, -1, COLUNAS_SETA - 1) + 1
-		a.draw_rect(Rect2(centro.x + i, centro.y - meia, 1, meia * 2 + 1), COR_CONTORNO)
-	for i in COLUNAS_SETA:
-		var coluna := Rect2(centro.x + i, centro.y - i, 1, i * 2 + 1)
-		var borda := i == 0 or i == COLUNAS_SETA - 1
-		if borda or i >= COLUNAS_SETA - 1 - cheias:
-			a.draw_rect(coluna, cor)
-		else:
-			a.draw_rect(coluna, COR_MARCA_VAZIA)
-			a.draw_rect(Rect2(coluna.position, Vector2.ONE), cor)
-			a.draw_rect(Rect2(coluna.position.x, coluna.end.y - 1.0, 1, 1), cor)
-	# O traço da escala que é a marca, na cor dela.
-	a.draw_rect(Rect2(pos + Vector2(TRACO_MARCA.position.x, LINHA_MARCA), Vector2(TRACO_MARCA.size)), cor)
+
+## O líquido está dentro da região (ou já ficou: no ponto, ela segue acesa)?
+func _regiao_acesa() -> bool:
+	return _etapa == Etapa.NO_PONTO or (_etapa == Etapa.AQUECER and _na_regiao())
+
+
+## O fundo da região, pintado no vidro do tubo ATRÁS do líquido: a faixa âmbar
+## que mostra onde a temperatura tem de ficar. Com o líquido lá dentro ela
+## clareia. Tem a largura do líquido, linha por linha.
+func _desenhar_fundo_da_regiao(a: Control, pos: Vector2) -> void:
+	var linhas := _linhas_da_regiao()
+	var cor := COR_REGIAO_NO_TUBO
+	if _regiao_acesa():
+		cor = COR_REGIAO_NO_TUBO.lerp(_cor_da_regiao(), 0.35)
+	for faixa in _faixas_liquido:
+		var linha: int = faixa[0]
+		if linha >= linhas.x and linha <= linhas.y:
+			a.draw_rect(Rect2(pos.x + faixa[1], pos.y + linha, faixa[2], 1), cor)
+
+
+## O que da região fica POR CIMA do líquido: as duas bordas (de cima e de
+## baixo), os traços da escala que caem dentro dela e a barra ao lado.
+func _desenhar_regiao(a: Control, pos: Vector2) -> void:
+	var linhas := _linhas_da_regiao()
+	var cor := _cor_da_regiao()
+
+	# As bordas atravessam o tubo, sempre na cor da região: é por elas que a
+	# faixa continua à vista com o líquido passado do ponto, cobrindo o fundo.
+	for faixa in _faixas_liquido:
+		var linha: int = faixa[0]
+		if linha == linhas.x or linha == linhas.y:
+			a.draw_rect(Rect2(pos.x + faixa[1], pos.y + linha, faixa[2], 1), cor)
+
+	# Os traços da escala, na cor da região.
+	for traco in _tracos:
+		var linha: int = traco[0]
+		if linha >= linhas.x and linha <= linhas.y:
+			a.draw_rect(Rect2(pos.x + traco[1], pos.y + linha, traco[2], 1), cor)
+
+	# A barra: da altura da região, enche de baixo para cima enquanto o líquido
+	# fica lá dentro e esvazia quando ele sai.
+	var altura := linhas.y - linhas.x + 1
+	var barra := Rect2(pos.x + X_DA_BARRA, pos.y + linhas.x, LARGURA_DA_BARRA, altura)
+	a.draw_rect(barra.grow(1.0), COR_CONTORNO)
+	a.draw_rect(barra, COR_REGIAO_VAZIA)
+	var cheias := altura if _etapa != Etapa.AQUECER else ceili(_progresso_regiao * altura - 0.001)
+	if cheias > 0:
+		a.draw_rect(Rect2(barra.position.x, barra.end.y - cheias, barra.size.x, cheias), cor)
 
 
 ## A entrada de ar: moldura, buraco escuro, as moléculas passando e as barras
@@ -651,44 +658,37 @@ func _desenhar_grade(a: Control) -> void:
 		a.draw_rect(Rect2(x + 1.0, buraco.position.y, 1, buraco.size.y), COR_CONTORNO)
 
 
-## A comporta: uma chapa rebitada que desce pelos trilhos até cobrir a grade.
-## Na etapa de vedar, o contorno pisca na cor da marca, chamando o S.
-func _desenhar_comporta(a: Control) -> void:
-	var esquerda := float(GRADE.position.x)
-	var largura := float(GRADE.size.x)
-	var altura_trilho := float(COMPORTA_Y_FECHADA + COMPORTA_ALTURA - TOPO_TRILHOS)
-	for x in [esquerda - 3.0, esquerda + largura]:
-		a.draw_rect(Rect2(x, TOPO_TRILHOS, 3, altura_trilho), COR_CONTORNO)
-		a.draw_rect(Rect2(x + 1.0, TOPO_TRILHOS + 1, 1, altura_trilho - 2.0), COR_METAL)
-	# Travessa no alto dos trilhos.
-	a.draw_rect(Rect2(esquerda - 3.0, TOPO_TRILHOS, largura + 6.0, 3), COR_CONTORNO)
-	a.draw_rect(Rect2(esquerda - 2.0, TOPO_TRILHOS + 1, largura + 4.0, 1), COR_METAL)
-
-	var y := float(_y_comporta())
-	var contorno := COR_CONTORNO
-	if _etapa == Etapa.VEDAR and fmod(_tempo_na_etapa, 0.6) < 0.36:
-		contorno = COR_MARCA
-	a.draw_rect(Rect2(esquerda, y, largura, COMPORTA_ALTURA), contorno)
-	a.draw_rect(Rect2(esquerda + 1, y + 1, largura - 2, COMPORTA_ALTURA - 2), COR_METAL_CLARO)
-	a.draw_rect(Rect2(esquerda + 1, y + 1, largura - 2, 1), COR_METAL_BRILHO)
-	a.draw_rect(Rect2(esquerda + 1, y + COMPORTA_ALTURA - 2, largura - 2, 1), COR_METAL_ESCURO)
-	for nervura in [9.0, 16.0]:
-		a.draw_rect(Rect2(esquerda + 3, y + nervura, largura - 6, 1), COR_METAL_ESCURO)
-		a.draw_rect(Rect2(esquerda + 3, y + nervura + 1.0, largura - 6, 1), COR_METAL_BRILHO)
-	for rebite in [Vector2(2, 3), Vector2(largura - 3, 3), Vector2(2, COMPORTA_ALTURA - 4),
-			Vector2(largura - 3, COMPORTA_ALTURA - 4)]:
-		a.draw_rect(Rect2(Vector2(esquerda, y) + rebite, Vector2.ONE), COR_CONTORNO)
-
-
 # ─────────────────────────────────────────────────────────────
-# DESENHOS FEITOS UMA VEZ (líquido e molécula)
+# DESENHOS FEITOS UMA VEZ (líquido, traços da escala e molécula)
 # ─────────────────────────────────────────────────────────────
 
 static func _preparar_desenhos() -> void:
 	if _faixas_liquido.is_empty():
 		_montar_liquido()
+	if _tracos.is_empty():
+		_montar_tracos()
 	if _textura_o2 == null:
 		_textura_o2 = _montar_o2()
+
+
+## Os traços da escala, lidos da folha de marcações (o segundo sprite da
+## folha): de cada linha que tem traço, onde ele começa e a largura.
+static func _montar_tracos() -> void:
+	var imagem := TERMOMETRO.get_image()
+	if imagem.is_compressed():
+		imagem.decompress()
+	var w := TAMANHO_TERMOMETRO.x
+	_tracos.clear()
+	for y in TAMANHO_TERMOMETRO.y:
+		var x0 := -1
+		var x1 := -1
+		for x in w:
+			if imagem.get_pixel(w + x, y).a > 0.5:
+				if x0 < 0:
+					x0 = x
+				x1 = x
+		if x0 >= 0:
+			_tracos.append([y, x0, x1 - x0 + 1])
 
 
 ## O líquido cheio, tirado do sprite vazio: o vidro encolhido RECUO_VIDRO px

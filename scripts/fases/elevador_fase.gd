@@ -37,6 +37,15 @@ extends Node2D
 #                           é ele que segura a personagem e é por ele que ela
 #                           entra. Vem desenhado em cima da arte, mas o
 #                           desenho é seu
+#   Cabine/Piso/Grade    -> a GRADINHA da beirada esquerda (o lado oposto ao da
+#                           rampa): um retângulo fino, do estrado até o
+#                           corrimão do desenho. Andando a Cacau para nela e
+#                           não desce pelo lado esquerdo; pulando, passa por
+#                           cima. Arraste as alças para mudar a altura, ou
+#                           apague o nó para a cabine ser aberta dos dois
+#                           lados. Fica FORA do polígono do estrado de
+#                           propósito: dentro dele ela viraria o ponto mais
+#                           alto, e a Cacau embarcaria em cima da grade
 #   AreaEmbarque/Colisao -> de onde dentro da cabine o E funciona. O script
 #                           reposiciona essa caixa sozinho na altura do
 #                           estrado, então reabra a cena depois de mexer muito
@@ -61,7 +70,8 @@ extends Node2D
 # personagem (que anda em z_index 2 nas fases), então ela aparece atrás da
 # grade, como quem está dentro do elevador. Para a cabine sumir dentro do poço
 # em vez de passar por cima do chão, é o CENÁRIO que tem de estar na frente:
-# na fase1.2 o TileMapLayer do terreno está em z_index 10 justamente por isso.
+# no corredor do pátio (corredor_patio.tscn, a ponta de cima deste elevador) a
+# camada do piso, Estrutura, está em z_index 10 justamente por isso.
 
 const CENA := "res://scenes/fases/componentes/elevador_fase.tscn"
 const GRUPO := "elevador_fase"

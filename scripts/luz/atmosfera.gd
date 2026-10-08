@@ -49,6 +49,8 @@ const GRUPO_RECEBE_LUZ := &"recebe_luz"
 const SHADER_DO_FUNDO := preload("res://shaders/camada_de_fundo.gdshader")
 const PASTA_DA_INTERFACE := "res://assets/UI/"
 const PREVIA_COMO_NO_JOGO := -1
+## Prévia do editor sem luz nenhuma: para pintar uma fase escura enxergando.
+const PREVIA_TUDO_CLARO := 3
 
 ## A hora mudou (inclusive a cada passo de uma transição).
 signal perfil_mudou(perfil: PerfilDeLuz)
@@ -77,8 +79,20 @@ signal anoiteceu
 @export var crepusculo: PerfilDeLuz = preload("res://assets/luz/crepusculo.tres")
 @export var noite: PerfilDeLuz = preload("res://assets/luz/noite.tres")
 
+@export_group("Interior")
+## Para fase FECHADA (oficina, corredor, subsolo): preencha, e a fase usa sempre
+## este perfil. Lá dentro a hora do jogo não entra — não anoitece nem amanhece,
+## e nada do que acontece aqui mexe na hora de ninguém. Do perfil só valem a luz
+## ambiente do mundo e a força das lâmpadas: sol, lua e céu não existem aqui.
+## Vazio (o normal), a fase é ao ar livre e segue a hora.
+@export var perfil_fixo: PerfilDeLuz:
+	set(v):
+		perfil_fixo = v
+		if Engine.is_editor_hint() and is_inside_tree():
+			_mostrar_previa()
+
 @export_group("Cena")
-## O ParallaxBackground da fase.
+## O ParallaxBackground da fase. Fase sem fundo (um interior) não precisa dele.
 @export_node_path("ParallaxBackground") var fundo := NodePath("../BG")
 
 @export_group("Pôr do sol")
@@ -109,6 +123,7 @@ var _descida: Tween
 var _andamento := 0.0
 var _postes_piscaram := false
 var _previa := PREVIA_COMO_NO_JOGO
+var _perfil_claro: PerfilDeLuz
 var _vestir_pedido := false
 var _ate_a_previa := 0.0
 
@@ -117,6 +132,10 @@ var _ate_a_previa := 0.0
 
 func _enter_tree() -> void:
 	add_to_group(GRUPO)
+	# De volta à árvore (no editor, ao voltar para a aba desta cena): a
+	# arrumação pedida no _ready() pode ter caído com o nó fora dela.
+	if is_node_ready():
+		_arrumar_a_cena.call_deferred()
 
 
 func _ready() -> void:
@@ -190,8 +209,28 @@ static func hora_da_partida() -> Momento:
 	return Momento.ENTARDECER
 
 
-## O perfil de um momento.
+## Põe o jogo inteiro numa hora, para a frente ou para trás, sem transição: a
+## fase onde [param no] está muda agora, as outras quando abrirem. É o que o
+## atalho de debug da hora usa (tecla Ç, no player.gd); a história só anda para
+## a frente, por [method por_do_sol] e [method anoitecer].
+static func definir_hora_da_partida(no: Node, m: Momento) -> void:
+	EstadoMundo.sol_se_pos = m != Momento.ENTARDECER
+	EstadoMundo.anoiteceu = m == Momento.NOITE
+	var atmosfera := da_cena(no)
+	if atmosfera != null and atmosfera.segue_a_partida:
+		atmosfera.definir_momento(m)
+
+
+## A fase é fechada, com luz própria que não depende da hora? (Ver
+## [member perfil_fixo].)
+func e_interior() -> bool:
+	return perfil_fixo != null
+
+
+## O perfil de um momento. Num interior é sempre o mesmo, seja que hora for.
 func perfil_de(m: Momento) -> PerfilDeLuz:
+	if perfil_fixo != null:
+		return perfil_fixo
 	match m:
 		Momento.CREPUSCULO:
 			return crepusculo
@@ -210,14 +249,15 @@ func nivel_dos_postes() -> float:
 	return _perfil.postes if _perfil != null else 1.0
 
 
-## O sol ainda está no céu para se pôr aqui? (Só uma vez.)
+## O sol ainda está no céu para se pôr aqui? (Só uma vez; num interior, nunca.)
 func pode_por_o_sol() -> bool:
-	return momento == Momento.ENTARDECER and not _em_transicao
+	return momento == Momento.ENTARDECER and not _em_transicao and not e_interior()
 
 
-## Ainda dá para anoitecer aqui? (Só uma vez, e só se a fase não abriu de noite.)
+## Ainda dá para anoitecer aqui? (Só uma vez, e só se a fase não abriu de noite;
+## num interior, nunca.)
 func pode_anoitecer() -> bool:
-	return momento != Momento.NOITE and not _em_transicao
+	return momento != Momento.NOITE and not _em_transicao and not e_interior()
 
 
 ## Troca a hora na hora, sem transição. Se o sol ainda estava descendo (ou a
@@ -555,6 +595,14 @@ func _textura_de(item: CanvasItem) -> Texture2D:
 func _mostrar_previa() -> void:
 	if not Engine.is_editor_hint() or not is_inside_tree():
 		return
+	if _previa == PREVIA_TUDO_CLARO:
+		# Só para trabalhar: o cenário sem escuro nenhum e as lâmpadas apagadas.
+		if _perfil_claro == null:
+			_perfil_claro = PerfilDeLuz.new()
+			_perfil_claro.ambiente = Color.WHITE
+			_perfil_claro.postes = 0.0
+		aplicar(_perfil_claro)
+		return
 	var m: Momento = momento if _previa == PREVIA_COMO_NO_JOGO else (_previa as Momento)
 	aplicar(perfil_de(m))
 
@@ -567,7 +615,7 @@ func _get_property_list() -> Array[Dictionary]:
 		"type": TYPE_INT,
 		"usage": PROPERTY_USAGE_EDITOR,
 		"hint": PROPERTY_HINT_ENUM,
-		"hint_string": "Como a fase começa:-1,Entardecer:0,Crepúsculo:1,Noite:2",
+		"hint_string": "Como a fase começa:-1,Entardecer:0,Crepúsculo:1,Noite:2,Tudo claro (para pintar):3",
 	}]
 
 

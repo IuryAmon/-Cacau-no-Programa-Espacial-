@@ -44,6 +44,10 @@
 [ext_resource type="Script" uid="uid://c3axexybsy6j8" path="res://scripts/fases/seta_guia.gd" id="41_setaguia"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/cesta_macas.tscn" id="41_sis0h"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/radio_comunicacao.tscn" id="43_radio"]
+[ext_resource type="Script" uid="uid://dfboij7njb15c" path="res://scripts/luz/atmosfera.gd" id="60_atmosfera"]
+[ext_resource type="Script" uid="uid://c2bbsa80lmr8h" path="res://scripts/luz/postes_de_luz.gd" id="64_postes"]
+[ext_resource type="Resource" uid="uid://d3jcpnuy2053h" path="res://assets/luz/oficina.tres" id="65_oficina"]
+[ext_resource type="Script" uid="uid://dx3e4o4vfhvnf" path="res://scripts/luz/luz_pontual.gd" id="66_luz"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_q4hxp"]
 texture = ExtResource("2_g6wav")
@@ -1572,6 +1576,9 @@ animations = [{
 resource_local_to_scene = true
 size = Vector2(118, 26)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_paredeesq"]
+size = Vector2(64, 320)
+
 [node name="Fase1Oficina" type="Node2D" unique_id=852755391]
 script = ExtResource("1_1i23b")
 testar_a_partir_daqui = true
@@ -1586,7 +1593,7 @@ tile_set = SubResource("TileSet_fi1wk")
 
 [node name="Cenário2" type="TileMapLayer" parent="." unique_id=1623955911]
 scale = Vector2(2, 2)
-tile_map_data = PackedByteArray("AAALAA4AAgACAAAAAAALAA8AAgACAAEAAAAMAA4AAgADAAAAAAAMAA8AAgADAAEAAACjAAkAAgACAAQAAACjAAoAAgACAAUAAACkAAkAAgADAAQAAACkAAoAAgADAAUAAADhAA4AAQAOAAAAAADPAOH/AgACAAQAAADPAOL/AgACAAUAAADQAOH/AgADAAQAAADQAOL/AgADAAUAAAAxAAwAAwABAAkAAAAyAAwAAwADAAkAAAA/AAwAAwABAAkAAABAAAwAAwADAAkAAAB7AAsAAwABAAkAAAB8AAsAAwADAAkAAACiAA0AAwABAAkAAACjAA0AAwADAAkAAABwAAsAAwADAAkAAABvAAsAAwABAAkAAAA=")
+tile_map_data = PackedByteArray("AAALAA4AAgACAAAAAAALAA8AAgACAAEAAAAMAA4AAgADAAAAAAAMAA8AAgADAAEAAACjAAkAAgACAAQAAACjAAoAAgACAAUAAACkAAkAAgADAAQAAACkAAoAAgADAAUAAADhAA4AAQAOAAAAAADPAOH/AgACAAQAAADPAOL/AgACAAUAAADQAOH/AgADAAQAAADQAOL/AgADAAUAAAAxAAwAAwABAAkAAAAyAAwAAwADAAkAAAA/AAwAAwABAAkAAABAAAwAAwADAAkAAAB7AAsAAwABAAkAAAB8AAsAAwADAAkAAACiAA0AAwABAAkAAACjAA0AAwADAAkAAABwAAsAAwADAAkAAABvAAsAAwABAAkAAAAEAAoAAwABAAkAAAAFAAoAAwADAAkAAAA=")
 tile_set = SubResource("TileSet_duilu")
 
 [node name="Terreno" type="TileMapLayer" parent="." unique_id=1311144320]
@@ -1631,7 +1638,7 @@ autowrap_mode = 3
 
 [node name="ElevadorPatio" parent="Entrada" unique_id=227977664 instance=ExtResource("39_elevador")]
 position = Vector2(71, 517)
-cena_destino = "res://scenes/fases/fase1_2_exterior.tscn"
+cena_destino = "res://scenes/fases/corredor_patio.tscn"
 tag_aqui = "oficina"
 tag_destino = "patio"
 
@@ -1740,6 +1747,14 @@ recuo_do_jogador = 30.0
 position = Vector2(1, -167.5)
 shape = SubResource("RectangleShape2D_o5jaj")
 debug_color = Color(0.98955435, 0, 0.2945345, 0.41960785)
+
+[node name="Colisoes" type="Node2D" parent="." unique_id=1352046817]
+
+[node name="ParedeEsquerda" type="StaticBody2D" parent="Colisoes" unique_id=608775123]
+position = Vector2(-40, 400)
+
+[node name="Colisao" type="CollisionShape2D" parent="Colisoes/ParedeEsquerda" unique_id=1934420566]
+shape = SubResource("RectangleShape2D_paredeesq")
 
 [node name="SpawnPadrao" type="Marker2D" parent="." unique_id=1725810761]
 position = Vector2(180, 502)
@@ -1862,7 +1877,7 @@ scale = Vector2(2, 2)
 position = Vector2(9.062467, 9.875257)
 scale = Vector2(1.3476615, 1.3476615)
 
-[node name="CollisionShape2D" parent="PortaoPaineis/Barreira" index="1" unique_id=794879984]
+[node name="CollisionShape2D" parent="PortaoPaineis/Barreira" index="2" unique_id=794879984]
 position = Vector2(9.5, 9.5)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="PortaoPaineis/Barreira" unique_id=1488828095]
@@ -2084,6 +2099,48 @@ position = Vector2(5216, 518)
 
 [node name="CestaMacas2" parent="." unique_id=482028533 instance=ExtResource("41_sis0h")]
 position = Vector2(2782, -64)
+
+[node name="Atmosfera" type="Node" parent="." unique_id=92000030]
+script = ExtResource("60_atmosfera")
+perfil_fixo = ExtResource("65_oficina")
+
+[node name="PostesDeLuz" type="Node2D" parent="." unique_id=92000031]
+script = ExtResource("64_postes")
+cor = Color(1, 0.86, 0.6, 1)
+energia = 1.1
+alcance = 260.0
+abertura = 0.9
+feixe = 0.1
+tremor = 0.02
+mariposas = 0
+metadata/_edit_lock_ = true
+
+[node name="Luzes" type="Node2D" parent="." unique_id=92000032]
+
+[node name="PlacaDaPorta" type="Node2D" parent="Luzes" unique_id=92000033]
+position = Vector2(575, 372)
+script = ExtResource("66_luz")
+cor = Color(0.8, 0.96, 0.9, 1)
+energia = 0.75
+raio = 220.0
+queda = 1.3
+clarao = 0.1
+
+[node name="DomoDoBumerangue" type="Node2D" parent="Luzes" unique_id=92000034]
+position = Vector2(2174, 258)
+script = ExtResource("66_luz")
+cor = Color(0.72, 0.9, 1, 1)
+energia = 0.7
+raio = 140.0
+clarao = 0.18
+
+[node name="DomoDoMacarico" type="Node2D" parent="Luzes" unique_id=92000035]
+position = Vector2(2514, -927)
+script = ExtResource("66_luz")
+cor = Color(0.72, 0.9, 1, 1)
+energia = 0.7
+raio = 140.0
+clarao = 0.18
 
 [editable path="Entrada/PickupBumerangue"]
 [editable path="Patio/PickupMacarico"]
