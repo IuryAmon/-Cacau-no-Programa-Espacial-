@@ -17,6 +17,7 @@
 [ext_resource type="Script" uid="uid://c2bbsa80lmr8h" path="res://scripts/luz/postes_de_luz.gd" id="64_postes"]
 [ext_resource type="Texture2D" uid="uid://cpv5w27wyng8l" path="res://assets/Area Aberta/Lua/2.png" id="66_lua"]
 [ext_resource type="Script" uid="uid://cemix3p8exsjs" path="res://scripts/fases/passagem_de_cena.gd" id="67_passagem"]
+[ext_resource type="PackedScene" uid="uid://cp70i8inp8u1p" path="res://scenes/fases/componentes/destilador.tscn" id="68_destilador"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_43r7v"]
 texture = ExtResource("9_frnbk")
@@ -1108,3 +1109,6 @@ script = ExtResource("60_atmosfera")
 [node name="PostesDeLuz" type="Node2D" parent="." unique_id=92000021]
 script = ExtResource("64_postes")
 metadata/_edit_lock_ = true
+
+[node name="Destilador" parent="." unique_id=92000030 instance=ExtResource("68_destilador")]
+position = Vector2(700, 512)

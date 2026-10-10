@@ -105,13 +105,18 @@ func _testar_fiacao() -> void:
 			"as tags das duas pontas se cruzam")
 		_checar(desce.cena_destino == OFICINA, "o do corredor volta para a oficina")
 	if desce:
-		# O piso na frente de tudo é o que esconde a cabine dentro do poço.
+		# O piso na frente de tudo é o que esconde a cabine dentro do poço — mas
+		# só durante a viagem: parado, a Cacau pisa na frente dele.
 		var piso: TileMapLayer = corredor.get_node_or_null("Estrutura")
 		var player: Node2D = corredor.get_node("Player")
+		_checar(piso != null and piso.z_index < player.z_index,
+			"com o elevador parado a Cacau pisa NA FRENTE do piso do corredor")
+		desce._esconder_no_poco(true)
 		_checar(piso != null and piso.z_index > desce.z_index,
-			"o piso do corredor desenha NA FRENTE da cabine (o poco esconde ela)")
+			"na viagem o piso desenha NA FRENTE da cabine (o poco esconde ela)")
 		_checar(piso != null and piso.z_index > player.z_index,
 			"e NA FRENTE da passageira")
+		desce._esconder_no_poco(false)
 	await _fechar(corredor)
 
 

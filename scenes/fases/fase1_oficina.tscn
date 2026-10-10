@@ -1134,6 +1134,9 @@ region = Rect2(12, 8, 26, 35)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_o5jaj"]
 size = Vector2(46, 57)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_paredeesq"]
+size = Vector2(64, 320)
+
 [sub_resource type="Curve2D" id="Curve2D_elevador"]
 _data = {
 "points": PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 278)
@@ -1575,9 +1578,6 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ipcei"]
 resource_local_to_scene = true
 size = Vector2(118, 26)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_paredeesq"]
-size = Vector2(64, 320)
 
 [node name="Fase1Oficina" type="Node2D" unique_id=852755391]
 script = ExtResource("1_1i23b")
@@ -2096,6 +2096,9 @@ metadata/_edit_lock_ = true
 
 [node name="CestaMacas" parent="." unique_id=484415686 instance=ExtResource("41_sis0h")]
 position = Vector2(5216, 518)
+
+[node name="CestaMacas3" parent="." unique_id=1427067758 instance=ExtResource("41_sis0h")]
+position = Vector2(8088, 67)
 
 [node name="CestaMacas2" parent="." unique_id=482028533 instance=ExtResource("41_sis0h")]
 position = Vector2(2782, -64)

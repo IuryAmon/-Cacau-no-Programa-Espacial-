@@ -35,6 +35,12 @@ extends FaseBase
 #   LimitesDaCamera, SpawnPadrao, Player   o de sempre (ver fase_base.gd). O
 #              SpawnPadrao só vale quando a cena é aberta direto, sem vir do
 #              corredor.
+#   Destilador a coluna de destilação (componentes/destilador.tscn), logo no
+#              começo da fase. O E nela para o jogo e abre a explicação do
+#              Dr. Chico: a coluna vira o desenho de raio X e mostra o ar
+#              sendo separado pelo ponto de ebulição (destilador.gd e
+#              explicacao_destilador.gd). Arraste o nó para mudar de lugar: o
+#              ponto dele é o chão, no meio da coluna.
 #
 # Este script não liga nada: a FaseBase já cuida da câmera, e a passagem de pôr
 # a Cacau no lugar. A lógica da fase nova entra aqui conforme ela for sendo

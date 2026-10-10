@@ -96,10 +96,9 @@ extends FaseBase
 # da fornalha tem luz própria (Patio/Retorta/LuzDoFogo), e todo poste pintado
 # no TileMap acende sozinho (nó PostesDeLuz). Ver docs/ILUMINACAO.md.
 #
-# DESENHO: o TileMapLayer do terreno está em z_index 10, ACIMA de tudo — a
-# personagem (z_index 2) pisa por trás da grama. (Era o que escondia a cabine
-# do elevador dentro do poço, quando ele chegava aqui; no corredor do pátio
-# quem faz esse papel é a camada Estrutura de lá.)
+# DESENHO: o TileMapLayer do terreno está em z_index 1 — a personagem
+# (z_index 2) pisa NA FRENTE da grama, e a grama ainda cobre o pé do tronco
+# da árvore (z_index 0).
 #
 # A ÁRVORE TEM DUAS PROFUNDIDADES: a personagem passa ENTRE elas.
 #   Terreno/Arvore        o salgueiro inteiro (Weeping Willow2.png), fora da

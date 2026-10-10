@@ -1,0 +1,343 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/laboratorio/que_atomo_e_esse.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/fundo_do_laboratorio.gd" id="2_fundo"]
+[ext_resource type="PackedScene" path="res://scenes/laboratorio/computador.tscn" id="3_computador"]
+[ext_resource type="Script" path="res://scripts/ui/atomo_camadas.gd" id="4_atomo"]
+[ext_resource type="Script" path="res://scripts/ui/caixa_elemento.gd" id="5_caixa"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="8_fonte"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_botao"]
+bg_color = Color(0.66, 0.08, 0.08, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.8, 0, 0.9)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="QueAtomoEEsse" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+titulo = "QUE ÁTOMO É ESSE?"
+
+[node name="Fundo" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_fundo")
+
+[node name="Computador" parent="." instance=ExtResource("3_computador")]
+layout_mode = 0
+offset_left = 278.0
+offset_top = 72.0
+offset_right = 1148.0
+offset_bottom = 702.0
+
+[node name="Cabecalho" parent="Computador/Display" index="0"]
+text = "PERGUNTA 1 DE 10"
+
+[node name="GrupoJogo" type="Control" parent="Computador/Display/Conteudo"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Atomo" type="Control" parent="Computador/Display/Conteudo/GrupoJogo"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 38.0
+offset_right = 408.0
+offset_bottom = 438.0
+mouse_filter = 2
+script = ExtResource("4_atomo")
+com_legenda_do_nucleo = false
+previa = 6
+
+[node name="Propriedades" type="Control" parent="Computador/Display/Conteudo/GrupoJogo"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 440.0
+offset_right = 408.0
+offset_bottom = 486.0
+mouse_filter = 2
+
+[node name="NumeroAtomico" type="Label" parent="Computador/Display/Conteudo/GrupoJogo/Propriedades"]
+layout_mode = 0
+offset_right = 134.0
+offset_bottom = 26.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "Z = ?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LegendaZ" type="Label" parent="Computador/Display/Conteudo/GrupoJogo/Propriedades"]
+layout_mode = 0
+offset_top = 28.0
+offset_right = 134.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 0.9)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "NÚMERO ATÔMICO"
+horizontal_alignment = 1
+
+[node name="NumeroDeMassa" type="Label" parent="Computador/Display/Conteudo/GrupoJogo/Propriedades"]
+layout_mode = 0
+offset_left = 134.0
+offset_right = 268.0
+offset_bottom = 26.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "A = ?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LegendaA" type="Label" parent="Computador/Display/Conteudo/GrupoJogo/Propriedades"]
+layout_mode = 0
+offset_left = 134.0
+offset_top = 28.0
+offset_right = 268.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 0.9)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "NÚMERO DE MASSA"
+horizontal_alignment = 1
+
+[node name="Carga" type="Label" parent="Computador/Display/Conteudo/GrupoJogo/Propriedades"]
+layout_mode = 0
+offset_left = 268.0
+offset_right = 400.0
+offset_bottom = 26.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "CARGA ?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LegendaCarga" type="Label" parent="Computador/Display/Conteudo/GrupoJogo/Propriedades"]
+layout_mode = 0
+offset_left = 268.0
+offset_top = 28.0
+offset_right = 400.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 0.9)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="Placar" type="Label" parent="Computador/Display/Conteudo/GrupoJogo"]
+layout_mode = 0
+offset_left = 564.0
+offset_top = 14.0
+offset_right = 764.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.56, 0.78, 1, 0.9)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "ACERTOS: 0"
+horizontal_alignment = 2
+
+[node name="Titulo" type="Label" parent="Computador/Display/Conteudo/GrupoJogo"]
+layout_mode = 0
+offset_left = 410.0
+offset_top = 38.0
+offset_right = 778.0
+offset_bottom = 64.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "QUAL É O ELEMENTO?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Opcoes" type="Control" parent="Computador/Display/Conteudo/GrupoJogo"]
+layout_mode = 0
+offset_left = 410.0
+offset_top = 72.0
+offset_right = 778.0
+offset_bottom = 450.0
+mouse_filter = 2
+
+[node name="Opcao1" type="Control" parent="Computador/Display/Conteudo/GrupoJogo/Opcoes"]
+custom_minimum_size = Vector2(152, 184)
+layout_mode = 0
+offset_left = 18.0
+offset_right = 170.0
+offset_bottom = 184.0
+mouse_filter = 2
+script = ExtResource("5_caixa")
+numero_atomico = 5
+
+[node name="Opcao2" type="Control" parent="Computador/Display/Conteudo/GrupoJogo/Opcoes"]
+custom_minimum_size = Vector2(152, 184)
+layout_mode = 0
+offset_left = 198.0
+offset_right = 350.0
+offset_bottom = 184.0
+mouse_filter = 2
+script = ExtResource("5_caixa")
+numero_atomico = 6
+
+[node name="Opcao3" type="Control" parent="Computador/Display/Conteudo/GrupoJogo/Opcoes"]
+custom_minimum_size = Vector2(152, 184)
+layout_mode = 0
+offset_left = 18.0
+offset_top = 194.0
+offset_right = 170.0
+offset_bottom = 378.0
+mouse_filter = 2
+script = ExtResource("5_caixa")
+numero_atomico = 7
+
+[node name="Opcao4" type="Control" parent="Computador/Display/Conteudo/GrupoJogo/Opcoes"]
+custom_minimum_size = Vector2(152, 184)
+layout_mode = 0
+offset_left = 198.0
+offset_top = 194.0
+offset_right = 350.0
+offset_bottom = 378.0
+mouse_filter = 2
+script = ExtResource("5_caixa")
+numero_atomico = 12
+
+[node name="Continuar" type="Label" parent="Computador/Display/Conteudo/GrupoJogo"]
+visible = false
+layout_mode = 0
+offset_left = 410.0
+offset_top = 458.0
+offset_right = 778.0
+offset_bottom = 478.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "CLIQUE PARA CONTINUAR"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GrupoFim" type="Control" parent="Computador/Display/Conteudo"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Titulo" type="Label" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_top = 84.0
+offset_right = 786.0
+offset_bottom = 130.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 33
+text = "FIM DA PARTIDA"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Rotulo" type="Label" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_top = 160.0
+offset_right = 786.0
+offset_bottom = 186.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 0.9)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "VOCÊ ACERTOU"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Placar" type="Label" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_top = 196.0
+offset_right = 786.0
+offset_bottom = 262.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 66
+text = "0 DE 10"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Mensagem" type="Label" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_top = 286.0
+offset_right = 786.0
+offset_bottom = 312.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "MUITO BEM!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoDeNovo" type="Panel" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_left = 153.0
+offset_top = 360.0
+offset_right = 383.0
+offset_bottom = 406.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_botao")
+
+[node name="Texto" type="Label" parent="Computador/Display/Conteudo/GrupoFim/BotaoDeNovo"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "JOGAR DE NOVO"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoSair" type="Panel" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_left = 403.0
+offset_top = 360.0
+offset_right = 633.0
+offset_bottom = 406.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_botao")
+
+[node name="Texto" type="Label" parent="Computador/Display/Conteudo/GrupoFim/BotaoSair"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "VOLTAR"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[editable path="Computador"]

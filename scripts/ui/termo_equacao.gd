@@ -27,6 +27,12 @@ signal molecula_apareceu
 ## Quanto uma molécula avança por cima da vizinha no amontoado (0 = lado a
 ## lado; 0,3 = 30% por cima).
 @export_range(0.0, 0.8, 0.01) var sobreposicao: float = 0.35
+## Desligado (os puzzles da história, de coeficiente até 4), o amontoado é
+## sempre de duas colunas, no tamanho da folha. Ligado (o balanceamento do
+## Laboratório, de coeficiente até 9 e moléculas maiores), ele passa a três
+## colunas quando as moléculas são muitas e encolhe o que for preciso para
+## caber no retângulo Moleculas.
+@export var encolher_para_caber: bool = false
 
 @onready var botao_mais: Control = $BotaoMais
 @onready var botao_menos: Control = $BotaoMenos
@@ -73,7 +79,16 @@ func mostrar_quantidade(quantidade: int, animar: bool = true) -> void:
 	var tamanho := textura.get_size() * escala_molecula
 	var passo := tamanho * (1.0 - sobreposicao)
 	var colunas := 1 if quantidade == 1 else 2
+	if encolher_para_caber and quantidade > 6:
+		colunas = 3
 	var linhas := ceili(float(quantidade) / colunas)
+	if encolher_para_caber:
+		var largura_cheia := tamanho.x + passo.x * (mini(colunas, quantidade) - 1)
+		var altura_cheia := tamanho.y + passo.y * (linhas - 1)
+		var cabe := minf(moleculas.size.x / largura_cheia, moleculas.size.y / altura_cheia)
+		if cabe < 1.0:
+			tamanho *= cabe
+			passo *= cabe
 	var altura_total := tamanho.y + passo.y * (linhas - 1)
 	for i in quantidade:
 		@warning_ignore("integer_division")

@@ -1,0 +1,100 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/laboratorio/computador_do_laboratorio.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cji6avv68agjd" path="res://assets/UI/Computador receptor/tela_computador.png" id="2_tela"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="3_fonte"]
+[ext_resource type="Shader" path="res://shaders/tela_crt.gdshader" id="4_crt"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_brilho"]
+blend_mode = 1
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("4_crt")
+shader_parameter/forca_linhas = 0.1
+shader_parameter/periodo = 4.0
+shader_parameter/vinheta = 0.45
+
+[node name="Computador" type="TextureRect"]
+texture_filter = 1
+layout_mode = 3
+anchors_preset = 0
+offset_left = 278.0
+offset_top = 72.0
+offset_right = 1148.0
+offset_bottom = 702.0
+scale = Vector2(1.2, 1.2)
+mouse_filter = 2
+texture = ExtResource("2_tela")
+expand_mode = 1
+script = ExtResource("1_script")
+
+[node name="Display" type="Control" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 0
+offset_left = 42.0
+offset_top = 42.0
+offset_right = 828.0
+offset_bottom = 567.0
+pivot_offset = Vector2(393, 262.5)
+mouse_filter = 2
+
+[node name="Cabecalho" type="Label" parent="Display"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 14.0
+offset_right = 764.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.56, 0.78, 1, 0.9)
+theme_override_fonts/font = ExtResource("3_fonte")
+theme_override_font_sizes/font_size = 11
+text = "LABORATÓRIO"
+
+[node name="Conteudo" type="Control" parent="Display"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Rodape" type="Label" parent="Display"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 492.0
+offset_right = 764.0
+offset_bottom = 512.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 0.9)
+theme_override_fonts/font = ExtResource("3_fonte")
+theme_override_font_sizes/font_size = 11
+
+[node name="Aura" type="ColorRect" parent="Display"]
+material = SubResource("CanvasItemMaterial_brilho")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.25, 0.6, 1, 0.14)
+
+[node name="Varredura" type="ColorRect" parent="Display"]
+material = SubResource("ShaderMaterial_crt")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Led" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 762.0
+offset_top = 597.0
+offset_right = 774.0
+offset_bottom = 603.0
+mouse_filter = 2
+color = Color(0.9, 0.12, 0.1, 1)

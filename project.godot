@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Projeto 8.28"
-run/main_scene="uid://bqevk7iunmrs4"
+run/main_scene="res://scenes/menu_principal.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -47,6 +47,7 @@ directories/dtl_directory={
 "cientista_balanceamento_4": "res://timelines/cientista_balanceamento_4.dtl",
 "cientista_balanceamento_5": "res://timelines/cientista_balanceamento_5.dtl",
 "cientista_balanceamento_6": "res://timelines/cientista_balanceamento_6.dtl",
+"cientista_destilador": "res://timelines/cientista_destilador.dtl",
 "cientista_dica_equacao_dobrada": "res://timelines/cientista_dica_equacao_dobrada.dtl",
 "cientista_dica_sem_itens": "res://timelines/cientista_dica_sem_itens.dtl",
 "cientista_dica_tem_ambos": "res://timelines/cientista_dica_tem_ambos.dtl",

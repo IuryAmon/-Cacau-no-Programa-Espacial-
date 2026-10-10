@@ -126,10 +126,16 @@ func _testar_corredor() -> void:
 		var chao_dela := _chao_abaixo(cena, elevador.global_position + Vector2(140.0, -120.0))
 		_checar(not chao_dela.is_empty() and absf((chao_dela.position as Vector2).y - elevador.global_position.y) <= 6.0,
 			"com a origem na linha do piso")
-		# O poço: o piso é desenhado na frente da cabine e da passageira.
+		# O piso: atrás da Cacau enquanto ela anda, e na frente da cabine e
+		# da passageira só durante a viagem (o poço).
+		_checar(estrutura.z_index < player.z_index, "a Cacau pisa NA FRENTE do piso")
+		_checar(elevador.cenario_do_poco == estrutura, "o piso é o cenário do poço do elevador")
+		elevador._esconder_no_poco(true)
 		_checar(estrutura.z_index > elevador.z_index and estrutura.z_index > player.z_index,
-			"o piso desenha NA FRENTE da cabine e da Cacau (é o que esconde o elevador no poço)")
+			"na viagem o piso desenha NA FRENTE da cabine e da Cacau (é o que esconde o elevador no poço)")
 		_checar(frente != null and frente.z_index > estrutura.z_index, "e as pilastras da frente continuam por cima de tudo")
+		elevador._esconder_no_poco(false)
+		_checar(estrutura.z_index < player.z_index, "e volta para trás dela com a cabine parada")
 
 	# A ponta direita: a passagem para o pátio.
 	var saida := cena.get_node_or_null("SaidaPatio") as PassagemDeCena

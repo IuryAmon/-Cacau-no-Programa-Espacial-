@@ -69,9 +69,11 @@ extends Node2D
 # DESENHO: o z_index da cena do componente (3) deixa a cabine na FRENTE da
 # personagem (que anda em z_index 2 nas fases), então ela aparece atrás da
 # grade, como quem está dentro do elevador. Para a cabine sumir dentro do poço
-# em vez de passar por cima do chão, é o CENÁRIO que tem de estar na frente:
-# no corredor do pátio (corredor_patio.tscn, a ponta de cima deste elevador) a
-# camada do piso, Estrutura, está em z_index 10 justamente por isso.
+# em vez de passar por cima do chão, é o CENÁRIO que tem de estar na frente —
+# mas só durante a viagem, senão o piso cobre os pés da Cacau andando. É o
+# "cenario_do_poco": no corredor do pátio (corredor_patio.tscn, a ponta de
+# cima deste elevador) ele aponta para a camada do piso, Estrutura, que o
+# elevador sobe para o z_index 10 enquanto a cabine anda e devolve ao parar.
 
 const CENA := "res://scenes/fases/componentes/elevador_fase.tscn"
 const GRUPO := "elevador_fase"
@@ -91,6 +93,10 @@ enum Direcao { SOBE, DESCE }
 # tamanho do elevador em um lugar só e o resto acompanha.
 const CABINE_LARGURA := 66.0
 const CABINE_ALTURA := 39.0
+
+## z_index do "cenario_do_poco" durante a viagem: acima da cabine (3) e da
+## passageira (2).
+const Z_DO_POCO := 10
 
 ## Altura da caixa do E, em pixels de tela: é a personagem em pé no estrado.
 ## Não entra na escala da arte porque ela não muda de tamanho junto.
@@ -143,6 +149,13 @@ static var tag_chegada: String = ""
 		curso = valor
 		queue_redraw()
 
+@export_group("Poço")
+## A camada do cenário (o piso) que esconde a cabine dentro do poço. Só
+## ENQUANTO a cabine viaja ela é desenhada na frente de tudo; com o elevador
+## parado ela volta para o z_index que tem na cena, atrás da personagem. Vazio
+## deixa o cenário como está.
+@export var cenario_do_poco: CanvasItem = null
+
 @export_group("Tempos")
 ## Quanto o sheet inteiro leva para fechar (e para abrir), seja qual for o FPS
 ## gravado no SpriteFrames.
@@ -173,6 +186,9 @@ var _jogador_dentro: bool = false
 var _aviso_visivel: bool = false
 # Último y local da cabine, para repassar o passo à passageira.
 var _y_da_cabine: float = 0.0
+# O "cenario_do_poco" está na frente agora, e o z_index dele para devolver.
+var _poco_na_frente: bool = false
+var _z_do_cenario: int = 0
 
 # --- CÂMERA CONGELADA ---
 # A câmera é FILHA da personagem: levá-la para cima levaria a câmera junto. A
@@ -337,6 +353,7 @@ func _receber_passageira() -> void:
 	_mostrar_quadro(_ultimo_quadro())
 	_cabine.position.y = _passo_do_poco()
 	_y_da_cabine = _cabine.position.y
+	_esconder_no_poco(true)
 	_travar_passageira(passageira)
 
 	# Primeiro ponto de retorno da visita: morrer antes de qualquer bandeira ou
@@ -392,11 +409,29 @@ func _percorrer(de: float, ate: float, passageira: Node2D) -> void:
 	_y_da_cabine = de
 	if is_equal_approx(de, ate) or duracao_do_percurso <= 0.0:
 		_cabine.position.y = ate
+		_esconder_no_poco(not is_zero_approx(ate))
 		return
 
+	_esconder_no_poco(true)
 	var viagem := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	viagem.tween_method(_passo_da_cabine.bind(passageira), de, ate, duracao_do_percurso)
 	await viagem.finished
+	# Só a cabine de volta ao lugar devolve o piso para trás da personagem:
+	# quem partiu continua escondido até a tela apagar.
+	_esconder_no_poco(not is_zero_approx(ate))
+
+
+## Põe o "cenario_do_poco" na frente da cabine e da passageira (ou o devolve
+## para o z_index que ele tem na cena).
+func _esconder_no_poco(esconder: bool) -> void:
+	if cenario_do_poco == null or esconder == _poco_na_frente:
+		return
+	_poco_na_frente = esconder
+	if esconder:
+		_z_do_cenario = cenario_do_poco.z_index
+		cenario_do_poco.z_index = Z_DO_POCO
+	else:
+		cenario_do_poco.z_index = _z_do_cenario
 
 
 func _passo_da_cabine(y: float, passageira: Node2D) -> void:

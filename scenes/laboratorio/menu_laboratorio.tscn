@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/laboratorio/menu_laboratorio.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/fundo_do_laboratorio.gd" id="2_fundo"]
+
+[node name="MenuLaboratorio" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+titulo = "LABORATÓRIO"
+cena_de_volta = "res://scenes/menu_principal.tscn"
+texto_de_voltar = "menu"
+navegar_com_teclas = true
+
+[node name="Fundo" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_fundo")
+
+[node name="Painel" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

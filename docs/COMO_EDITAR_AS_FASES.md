@@ -588,7 +588,10 @@ ordem dos desenhos é: 1ª linha H, O, C; 2ª linha H₂, O₂, C₂; 3ª linha 
 CO₂; 4ª linha C₂H₂. **Os desenhos são achados sozinhos** (ver
 `scripts/ui/folha_moleculas.gd`): pode redesenhar, mudar tamanho e posição,
 desde que mantenha a ordem e um espaço vazio entre um desenho e outro. O CO não
-tem desenho próprio — é recortado do CO₂.
+tem desenho próprio — é recortado do CO₂. O ar da fase do nitrogênio também
+não: o **N₂** é o O₂ com as três cores trocadas e o **Ar** (argônio, um átomo
+só) é o O com as cores trocadas; as cores estão em `RECOLORIDAS`, no mesmo
+script. Se a folha ganhar um N₂ ou um Ar desenhado, é só pôr em `LINHAS`.
 
 ### As setas "POR AQUI" (estilo Metal Slug)
 
@@ -705,7 +708,9 @@ ficou só com o palco, para a fase do nitrogênio ser montada do zero:
   esquerda e cruzando a linha, a cena troca sozinha e ela volta para o fundo
   do corredor (ver abaixo). A linha fica em x = 24, logo depois da beirada da
   câmera;
-- `LimitesDaCamera`, `SpawnPadrao` e `Player`, como em toda fase.
+- `LimitesDaCamera`, `SpawnPadrao` e `Player`, como em toda fase;
+- `Destilador` — a coluna de destilação, logo no começo. Ver "A coluna de
+  destilação", abaixo.
 
 O que ainda falta voltar para o jogo fechar: a **mochila de N₂** e a
 **amostra de nitrogênio (N)**, que eram pegas aqui. Na lista de objetivos, a
@@ -715,6 +720,125 @@ chapa do armário e do ciclo do nitrogênio saíram junto com os objetos.
 
 Atenção: o `tools/gerar_cenas_fases.tscn` (logo abaixo) ainda sabe montar a
 Torre antiga e sobrescreveria esta cena.
+
+## A coluna de destilação (fase 2)
+
+No começo da fase 2 fica a coluna de destilação
+(`scenes/fases/componentes/destilador.tscn`). Chegando perto, o botão (E, ou □
+de controle) acende na frente dela e a coluna ganha um contorno branco.
+Apertando, o jogo para e **o Dr. Chico explica, pelo rádio, como ela separa o
+ar**: a coluna sai do mapa, vem para a esquerda da tela, uma faixa de luz desce
+por ela e o aço vira o desenho preto de raio X.
+
+**Como uma coluna dessas funciona** (é o que o desenho mostra):
+
+- cada substância ferve numa temperatura, o **ponto de ebulição**: o
+  nitrogênio a -196 °C, o argônio a -186 °C, o oxigênio a -183 °C. Mais quente
+  que isso ela é gás; mais fria, líquido;
+- o calor não vem de máquina nenhuma: a -200 °C o ar líquido é muito mais
+  frio que tudo em volta, e o **calor do ambiente** vai entrando nele sozinho
+  (as setinhas laranja embaixo do piso). Quem tira calor é o **resfriador**, a
+  serpentina dentro da cúpula. Por isso o fundo, onde está o líquido, é o
+  lugar menos frio (-183 °C) e o topo o mais frio (-196 °C), e cada andar do
+  meio fica entre um e outro. É a régua colorida colada na coluna;
+- o fundo não passa de -183 °C enquanto houver oxigênio líquido lá: um líquido
+  fervendo não fica mais quente que o ponto de ebulição dele (a água na
+  panela não passa de 100 °C);
+- o gás sobe porque é gás, e esfria no caminho porque vai passando por andares
+  cada vez mais frios. Quando chega no andar que está no ponto de ebulição
+  dele, vira líquido de novo e fica ali (a tampa da panela: o vapor sobe,
+  encosta na tampa fria e vira gota);
+- resultado: o nitrogênio, que é o que ferve mais fácil, só vira líquido lá no
+  topo; o argônio para um andar acima do fundo; o oxigênio, o mais difícil de
+  ferver, nem sai do fundo. Numa coluna de verdade é assim: oxigênio líquido
+  embaixo, nitrogênio em cima, argônio no meio.
+
+O que acontece na tela, fala por fala:
+
+1. a coluna vira o desenho de raio X;
+2. o ar entra no fundo já **líquido**, a -200 °C, e aparecem as fichas do que
+   ele é feito: N₂ 78%, Ar 1%, O₂ 21% (na ordem dos andares da coluna);
+3. cada ficha mostra o **ponto de ebulição** da substância;
+4. o líquido vai ganhando calor do ambiente e o fundo fica menos frio aos
+   poucos (a plaquinha dele vai contando). Passando de -196 °C o **nitrogênio
+   ferve**: só as moléculas dele saem do líquido e sobem como gás, pelas
+   fendas;
+5. um sopro de geada no resfriador: no topo, a -196 °C, o nitrogênio **vira
+   líquido de novo**;
+6. o fundo chega a -183 °C: a -186 °C ferve o **argônio**, que
+   sobe um andar só; o **oxigênio fica** no fundo. A plaquinha de cada andar
+   toma a cor e o desenho de quem ficou ali;
+7. o título vira **DESTILAÇÃO FRACIONADA**.
+
+Os termos: o que separa as substâncias é o **ponto de ebulição** (não o de
+fusão, que é sólido ↔ líquido); líquido virando gás fervendo é **ebulição**,
+gás virando líquido é **condensação**; o processo é a **destilação
+fracionada** do ar líquido.
+
+Dá para ver quantas vezes quiser (cada E recomeça do zero) e o ESC fecha no
+meio. A primeira vez fica anotada (`Destilador.ja_explicou()`), para quando a
+fase quiser cobrar isso.
+
+**As falas.** Estão em `timelines/cientista_destilador.dtl`, no editor do
+Dialogic. Antes de cada fala há um `[signal arg="..."]`: é ele que faz o
+desenho andar — `raio_x`, `ar`, `ebulicao`, `ferver`, `esfriar`,
+`separar`, `fim`, nessa ordem (os sete passos da lista acima). Reescreva,
+junte ou tire falas à vontade; cada marca só precisa continuar antes da fala
+que a comenta (marca que faltar é feita junto com a seguinte). Se o jogador
+passar as falas depressa, o desenho corre para alcançar.
+
+**A tela** (`scenes/explicacao_destilador.tscn`, script
+`scripts/explicacao_destilador.gd`):
+
+- `Raiz/Coluna` — onde a coluna fica (o tamanho é o da arte × 4). À esquerda
+  dela vão a régua e as plaquinhas de temperatura: deixe uns 170 px livres;
+- `Raiz/Fichas/*` — as três fichas da legenda
+  (`scripts/ui/ficha_substancia.gd`): posição, `nome` e `parte_do_ar` no
+  Inspector. O ponto de ebulição não se escreve ali: sai do mesmo número que
+  decide o andar. Elas não se mexem;
+- `Raiz/Veu` — a cor e a força do escuro por cima do jogo;
+- `timeline` e `deslocamento_da_fala` (quanto a caixa de fala anda para a
+  direita, para não cobrir o pé da coluna) — no Inspector do nó raiz. Com a
+  `timeline` vazia a tela passa só o desenho, sem fala;
+- `SomPop` e `SomRadio` — o estalo de cada substância que ferve ou que chega
+  no andar dela, e o chiado do rádio; o volume é no nó.
+
+**A química** (`scripts/ui/coluna_destilacao.gd`). Nada ali é encenado. Os
+números estão no topo do script:
+
+- `SUBSTANCIAS` — o ponto de ebulição de cada uma, quantas moléculas entram (a
+  proporção é só para se ver; a ficha é que diz os 78/21/1%) e as cores do
+  líquido;
+- `TEMPERATURA_DO_FUNDO` (-183, onde o fundo estaciona) e
+  `TEMPERATURA_DO_TOPO` (-196, onde o resfriador segura o topo) — os andares
+  do meio ficam repartidos por igual entre as duas;
+- `TEMPERATURA_DO_AR_LIQUIDO` (-200) e `GRAUS_POR_SEGUNDO` (a pressa com que
+  o fundo ganha calor do ambiente).
+
+A molécula ferve quando o fundo passa do ponto de ebulição dela, e vira líquido
+no primeiro andar que está nesse ponto ou abaixo. Mudar um número muda o que
+acontece na tela (ponha o fundo em -180 e o oxigênio também sobe; ponha o topo
+em -190 e o nitrogênio não vira líquido em lugar nenhum) — é a conta que o
+puzzle do controle de temperatura vai precisar. `RAMPA_DE_TEMPERATURA` são as
+cores da régua e do gás, do mais frio ao menos frio.
+
+**A arte.** `assets/fase nitrogenio/coluna de destilação.png` tem os dois
+desenhos lado a lado: o de aço (o do mapa) e o de raio X. **As bandejas são
+lidas do desenho**: toda barra clara presa em uma parede só é uma bandeja, o
+vão do outro lado é a fenda por onde o gás sobe, e o dente na ponta é a borda
+que segura o líquido. Pode redesenhar, mudar o tamanho e o número de bandejas.
+O calor do ambiente (as setinhas laranja entre os pés) e o resfriador (o fio
+azul no alto da cúpula) são desenhados por código, nos vãos que a arte deixa.
+Em lugar nenhum a tela fala em aquecedor: ninguém esquenta a coluna. Se mudar o
+tamanho ou o lugar do desenho de aço na folha, acerte também o `region_rect`
+do `Sprite` do `destilador.tscn`. As moléculas pequenas são
+`assets/fase nitrogenio/moleculas do ar.png`: 3 linhas (N₂, O₂, Ar) de 4
+quadros de 12 × 12 px — a molécula girando; o 1º quadro, deitada, é o de
+dentro do líquido e o das plaquinhas.
+
+**No mapa** (`destilador.tscn`): o ponto do nó é o chão, no meio da coluna;
+`Dica` é o botão, `Colisao` a área em que ele acende e `Sprite/Contorno` a
+linha (a cor é o `modulate` dele).
 
 ## O corredor da torre
 
@@ -938,6 +1062,16 @@ E os passos da Cacau, com o som de cada chão (grama, concreto e metal):
 
 ```
 godot --headless --path . res://tools/teste_passos.tscn
+```
+
+A coluna de destilação tem o dela (as bandejas lidas da arte, as temperaturas
+do fundo ao topo, o nitrogênio fervendo primeiro e cada substância no andar do
+seu ponto de ebulição, a conversa do Dr. Chico fazendo o desenho andar na fase
+2, o fechar sozinho e o ESC). Com `-- --capturas=<pasta>` e sem `--headless`,
+salva uma imagem de cada momento:
+
+```
+godot --headless --path . res://tools/teste_destilador.tscn
 ```
 
 Os morcegos dos corredores têm o deles (acordar, o bote e o aviso, o desvio, o

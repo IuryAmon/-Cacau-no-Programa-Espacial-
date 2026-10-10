@@ -19,9 +19,11 @@ extends FaseBase
 #               rampa abre e o controle volta — e por ela que desce de novo:
 #               entrar na cabine e apertar E. A cabine vem de BAIXO, então
 #               "direcao" é DESCE (o poço fica embaixo do piso).
-#   Estrutura   piso e teto, como no outro corredor, mas com z_index 10: o piso
-#               fica NA FRENTE da cabine e da Cacau. É isso que faz o elevador
-#               sumir dentro do poço em vez de escorregar por cima do chão.
+#   Estrutura   piso e teto, como no outro corredor: ATRÁS da Cacau, que pisa
+#               na frente do piso. Só enquanto a cabine viaja o elevador a põe
+#               na frente de tudo (é o "cenario_do_poco" dele) — é isso que faz
+#               a cabine sumir dentro do poço em vez de escorregar por cima do
+#               chão.
 #   SaidaPatio  a ponta aberta da direita, uma PassagemDeCena: cruzou a linha,
 #               troca de cena para o pátio — onde ela entra andando pela
 #               esquerda, na grama. É também por aqui que ela entra andando

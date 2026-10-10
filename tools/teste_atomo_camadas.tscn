@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/teste_atomo_camadas.gd" id="1_t"]
+
+[node name="TesteAtomoCamadas" type="Node"]
+script = ExtResource("1_t")

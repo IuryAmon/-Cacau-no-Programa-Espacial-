@@ -1,0 +1,121 @@
+[gd_scene format=3 uid="uid://bm41o3gaj766k"]
+
+[ext_resource type="Script" uid="uid://bf4yqr34qq3q2" path="res://scripts/explicacao_destilador.gd" id="1_tela"]
+[ext_resource type="Script" uid="uid://dsbnjqadmhi2v" path="res://scripts/ui/coluna_destilacao.gd" id="2_coluna"]
+[ext_resource type="Script" uid="uid://cdepet4s1v1ex" path="res://scripts/ui/ficha_substancia.gd" id="3_ficha"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="4_fonte"]
+[ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="5_pop"]
+[ext_resource type="AudioStream" uid="uid://c7q8f231m2iko" path="res://sounds/radio/radio_chiado.wav" id="6_chiado"]
+
+[node name="ExplicacaoDestilador" type="CanvasLayer" unique_id=1598327126]
+process_mode = 3
+layer = 98
+script = ExtResource("1_tela")
+
+[node name="Raiz" type="Control" parent="." unique_id=466581336]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Veu" type="ColorRect" parent="Raiz" unique_id=325934248]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.047, 0.055, 0.11, 0.95)
+
+[node name="Desenho" type="Control" parent="Raiz" unique_id=467810791]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Coluna" type="Control" parent="Raiz" unique_id=1428610108]
+texture_filter = 1
+custom_minimum_size = Vector2(320, 724)
+anchors_preset = 0
+offset_left = 200.0
+offset_top = 60.0
+offset_right = 520.0
+offset_bottom = 784.0
+mouse_filter = 2
+script = ExtResource("2_coluna")
+
+[node name="Fichas" type="Control" parent="Raiz" unique_id=1105327991]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="FichaN2" type="Control" parent="Raiz/Fichas" unique_id=1717150898]
+texture_filter = 1
+custom_minimum_size = Vector2(292, 100)
+anchors_preset = 0
+offset_left = 610.0
+offset_top = 130.0
+offset_right = 902.0
+offset_bottom = 230.0
+mouse_filter = 2
+script = ExtResource("3_ficha")
+
+[node name="FichaAr" type="Control" parent="Raiz/Fichas" unique_id=1235523955]
+texture_filter = 1
+custom_minimum_size = Vector2(292, 100)
+anchors_preset = 0
+offset_left = 610.0
+offset_top = 270.0
+offset_right = 902.0
+offset_bottom = 370.0
+mouse_filter = 2
+script = ExtResource("3_ficha")
+substancia = "Ar"
+nome = "ARGÔNIO"
+parte_do_ar = "1%"
+
+[node name="FichaO2" type="Control" parent="Raiz/Fichas" unique_id=236610937]
+texture_filter = 1
+custom_minimum_size = Vector2(292, 100)
+anchors_preset = 0
+offset_left = 610.0
+offset_top = 410.0
+offset_right = 902.0
+offset_bottom = 510.0
+mouse_filter = 2
+script = ExtResource("3_ficha")
+substancia = "O2"
+nome = "OXIGÊNIO"
+parte_do_ar = "21%"
+
+[node name="Sair" type="Label" parent="Raiz" unique_id=59544902]
+layout_mode = 0
+offset_left = 1446.0
+offset_top = 20.0
+offset_right = 1570.0
+offset_bottom = 52.0
+theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
+theme_override_fonts/font = ExtResource("4_fonte")
+theme_override_font_sizes/font_size = 11
+text = "{fechar}
+para fechar"
+horizontal_alignment = 1
+
+[node name="SomPop" type="AudioStreamPlayer" parent="." unique_id=1522023309]
+stream = ExtResource("5_pop")
+volume_db = -10.0
+
+[node name="SomRadio" type="AudioStreamPlayer" parent="." unique_id=2036296615]
+stream = ExtResource("6_chiado")

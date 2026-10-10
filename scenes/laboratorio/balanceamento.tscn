@@ -1,0 +1,458 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/laboratorio/balanceamento.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/fundo_do_laboratorio.gd" id="2_fundo"]
+[ext_resource type="PackedScene" path="res://scenes/laboratorio/computador.tscn" id="3_computador"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="8_fonte"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_botao"]
+bg_color = Color(0.66, 0.08, 0.08, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.8, 0, 0.9)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_botao_pequeno"]
+bg_color = Color(0.66, 0.08, 0.08, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.8, 0, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nivel"]
+bg_color = Color(0.05, 0.1, 0.18, 0.55)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.9, 0.95, 1, 0.9)
+
+[node name="Balanceamento" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+titulo = "BALANCEAMENTO"
+
+[node name="Fundo" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_fundo")
+
+[node name="Computador" parent="." instance=ExtResource("3_computador")]
+layout_mode = 0
+offset_left = 278.0
+offset_top = 72.0
+offset_right = 1148.0
+offset_bottom = 702.0
+
+[node name="Cabecalho" parent="Computador/Display" index="0"]
+text = "BALANCEAMENTO DE EQUAÇÕES"
+
+[node name="GrupoEscolha" type="Control" parent="Computador/Display/Conteudo"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Titulo" type="Label" parent="Computador/Display/Conteudo/GrupoEscolha"]
+layout_mode = 0
+offset_top = 64.0
+offset_right = 786.0
+offset_bottom = 104.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 33
+text = "ESCOLHA O NÍVEL"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoFacil" type="Panel" parent="Computador/Display/Conteudo/GrupoEscolha"]
+layout_mode = 0
+offset_left = 43.0
+offset_top = 150.0
+offset_right = 263.0
+offset_bottom = 380.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_nivel")
+
+[node name="Nome" type="Label" parent="Computador/Display/Conteudo/GrupoEscolha/BotaoFacil"]
+layout_mode = 0
+offset_top = 30.0
+offset_right = 220.0
+offset_bottom = 76.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 33
+text = "FÁCIL"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Descricao" type="Label" parent="Computador/Display/Conteudo/GrupoEscolha/BotaoFacil"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 92.0
+offset_right = 200.0
+offset_bottom = 170.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_constants/line_spacing = 5
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "COM AS MOLÉCULAS E A CONTAGEM DOS ÁTOMOS"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Quantas" type="Label" parent="Computador/Display/Conteudo/GrupoEscolha/BotaoFacil"]
+layout_mode = 0
+offset_top = 186.0
+offset_right = 220.0
+offset_bottom = 206.0
+theme_override_colors/font_color = Color(0.56, 0.78, 1, 0.9)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "7 EQUAÇÕES"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoMedio" type="Panel" parent="Computador/Display/Conteudo/GrupoEscolha"]
+layout_mode = 0
+offset_left = 283.0
+offset_top = 150.0
+offset_right = 503.0
+offset_bottom = 380.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_nivel")
+
+[node name="Nome" type="Label" parent="Computador/Display/Conteudo/GrupoEscolha/BotaoMedio"]
+layout_mode = 0
+offset_top = 30.0
+offset_right = 220.0
+offset_bottom = 76.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 33
+text = "MÉDIO"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Descricao" type="Label" parent="Computador/Display/Conteudo/GrupoEscolha/BotaoMedio"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 92.0
+offset_right = 200.0
+offset_bottom = 170.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_constants/line_spacing = 5
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "COM AS MOLÉCULAS, SEM A CONTAGEM"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Quantas" type="Label" parent="Computador/Display/Conteudo/GrupoEscolha/BotaoMedio"]
+layout_mode = 0
+offset_top = 186.0
+offset_right = 220.0
+offset_bottom = 206.0
+theme_override_colors/font_color = Color(0.56, 0.78, 1, 0.9)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "8 EQUAÇÕES"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoDificil" type="Panel" parent="Computador/Display/Conteudo/GrupoEscolha"]
+layout_mode = 0
+offset_left = 523.0
+offset_top = 150.0
+offset_right = 743.0
+offset_bottom = 380.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_nivel")
+
+[node name="Nome" type="Label" parent="Computador/Display/Conteudo/GrupoEscolha/BotaoDificil"]
+layout_mode = 0
+offset_top = 30.0
+offset_right = 220.0
+offset_bottom = 76.0
+theme_override_colors/font_color = Color(1, 0.35, 0.3, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 33
+text = "DIFÍCIL"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Descricao" type="Label" parent="Computador/Display/Conteudo/GrupoEscolha/BotaoDificil"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 92.0
+offset_right = 200.0
+offset_bottom = 170.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_constants/line_spacing = 5
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "SÓ A EQUAÇÃO ESCRITA"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Quantas" type="Label" parent="Computador/Display/Conteudo/GrupoEscolha/BotaoDificil"]
+layout_mode = 0
+offset_top = 186.0
+offset_right = 220.0
+offset_bottom = 206.0
+theme_override_colors/font_color = Color(0.56, 0.78, 1, 0.9)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "9 EQUAÇÕES"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GrupoEquacao" type="Control" parent="Computador/Display/Conteudo"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LinhaEquacao" type="HBoxContainer" parent="Computador/Display/Conteudo/GrupoEquacao"]
+layout_mode = 0
+offset_top = 58.0
+offset_right = 786.0
+offset_bottom = 98.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="LabelReagentesTitulo" type="Label" parent="Computador/Display/Conteudo/GrupoEquacao"]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 116.0
+offset_right = 390.0
+offset_bottom = 140.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "Reagentes"
+horizontal_alignment = 1
+
+[node name="LabelReagentesValor" type="RichTextLabel" parent="Computador/Display/Conteudo/GrupoEquacao"]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 144.0
+offset_right = 390.0
+offset_bottom = 168.0
+mouse_filter = 2
+theme_override_colors/default_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/normal_font = ExtResource("8_fonte")
+theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
+text = "H = ?   O = ?"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+horizontal_alignment = 1
+
+[node name="LabelProdutosTitulo" type="Label" parent="Computador/Display/Conteudo/GrupoEquacao"]
+layout_mode = 0
+offset_left = 396.0
+offset_top = 116.0
+offset_right = 706.0
+offset_bottom = 140.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "Produtos"
+horizontal_alignment = 1
+
+[node name="LabelProdutosValor" type="RichTextLabel" parent="Computador/Display/Conteudo/GrupoEquacao"]
+layout_mode = 0
+offset_left = 396.0
+offset_top = 144.0
+offset_right = 706.0
+offset_bottom = 168.0
+mouse_filter = 2
+theme_override_colors/default_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/normal_font = ExtResource("8_fonte")
+theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
+text = "H = ?   O = ?"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+horizontal_alignment = 1
+
+[node name="Termos" type="Control" parent="Computador/Display/Conteudo/GrupoEquacao"]
+layout_mode = 0
+offset_top = 188.0
+offset_right = 786.0
+offset_bottom = 408.0
+mouse_filter = 2
+
+[node name="BotaoConfirmar" type="Panel" parent="Computador/Display/Conteudo/GrupoEquacao"]
+layout_mode = 0
+offset_left = 243.0
+offset_top = 428.0
+offset_right = 543.0
+offset_bottom = 474.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_botao")
+
+[node name="Texto" type="Label" parent="Computador/Display/Conteudo/GrupoEquacao/BotaoConfirmar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "CONFIRMAR"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoPular" type="Panel" parent="Computador/Display/Conteudo/GrupoEquacao"]
+layout_mode = 0
+offset_left = 690.0
+offset_top = 10.0
+offset_right = 770.0
+offset_bottom = 32.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_botao_pequeno")
+
+[node name="Texto" type="Label" parent="Computador/Display/Conteudo/GrupoEquacao/BotaoPular"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "PULAR"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GrupoFim" type="Control" parent="Computador/Display/Conteudo"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Titulo" type="Label" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_top = 96.0
+offset_right = 786.0
+offset_bottom = 142.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 33
+text = "NÍVEL FÁCIL CONCLUÍDO"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resumo" type="Label" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_top = 190.0
+offset_right = 786.0
+offset_bottom = 216.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "7 DE 7 EQUAÇÕES BALANCEADAS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Erros" type="Label" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_top = 236.0
+offset_right = 786.0
+offset_bottom = 262.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "CONFIRMAÇÕES ERRADAS: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoOutroNivel" type="Panel" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_left = 153.0
+offset_top = 340.0
+offset_right = 383.0
+offset_bottom = 386.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_botao")
+
+[node name="Texto" type="Label" parent="Computador/Display/Conteudo/GrupoFim/BotaoOutroNivel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "OUTRO NÍVEL"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BotaoSair" type="Panel" parent="Computador/Display/Conteudo/GrupoFim"]
+layout_mode = 0
+offset_left = 403.0
+offset_top = 340.0
+offset_right = 633.0
+offset_bottom = 386.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_botao")
+
+[node name="Texto" type="Label" parent="Computador/Display/Conteudo/GrupoFim/BotaoSair"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 22
+text = "VOLTAR"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[editable path="Computador"]

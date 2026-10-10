@@ -1,0 +1,82 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/laboratorio/tabela_periodica.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/fundo_do_laboratorio.gd" id="2_fundo"]
+[ext_resource type="Script" path="res://scripts/ui/caixa_elemento.gd" id="3_caixa"]
+[ext_resource type="Script" path="res://scripts/ui/atomo_camadas.gd" id="4_atomo"]
+
+[node name="TabelaPeriodica" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+navegar_com_teclas = true
+
+[node name="Fundo" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_fundo")
+
+[node name="Folha" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Veu" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.047, 0.055, 0.11, 0.74)
+
+[node name="Ficha" type="Control" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 210.0
+offset_top = 110.0
+offset_right = 1390.0
+offset_bottom = 770.0
+mouse_filter = 2
+
+[node name="Caixa" type="Control" parent="Ficha"]
+custom_minimum_size = Vector2(228, 276)
+layout_mode = 0
+offset_left = 40.0
+offset_top = 96.0
+offset_right = 268.0
+offset_bottom = 372.0
+mouse_filter = 2
+script = ExtResource("3_caixa")
+numero_atomico = 6
+escala = 3
+com_papel = false
+
+[node name="Atomo" type="Control" parent="Ficha"]
+layout_mode = 0
+offset_left = 660.0
+offset_top = 76.0
+offset_right = 1160.0
+offset_bottom = 576.0
+mouse_filter = 2
+script = ExtResource("4_atomo")
+cor_das_camadas = Color(0.239, 0.165, 0.133, 0.9)
+cor_do_nucleo = Color(0.557, 0.231, 0.173, 0.9)
+cor_do_fio_do_eletron = Color(0.239, 0.165, 0.133, 1)
+com_legenda_do_nucleo = false

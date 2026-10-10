@@ -1,0 +1,15 @@
+join cientista (cientistaradio) right
+[signal arg="raio_x"]
+cientista (cientistaradio): Essa é a coluna de destilação, Cacau. Olha só como ela é por dentro!
+[signal arg="ar"]
+cientista: O ar entra aqui líquido, a -200 °C. É uma mistura: nitrogênio, oxigênio e um pouquinho de argônio.
+[signal arg="ebulicao"]
+cientista: Cada um ferve numa temperatura diferente: é o ponto de ebulição.
+[signal arg="ferver"]
+cientista: O líquido vai ganhando calor do ambiente e ficando menos frio. O nitrogênio é o primeiro a ferver!
+[signal arg="esfriar"]
+cientista: O gás sobe e esfria: lá em cima tem um resfriador. No topo, a -196 °C, ele vira líquido de novo.
+[signal arg="separar"]
+cientista: Depois ferve o argônio, que para no andar do seu ponto de ebulição. O oxigênio nem sai do fundo!
+[signal arg="fim"]
+cientista: Separar uma mistura pelo ponto de ebulição é a destilação fracionada.
