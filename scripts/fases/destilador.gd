@@ -26,7 +26,11 @@ extends Area2D
 #   Sprite/Contorno -> a linha em volta; a cor é o "modulate" dele (a textura
 #                    só existe com o jogo rodando)
 #   Dica          -> o botão E/□
-#   Colisao       -> a área em que o botão aparece e o E funciona
+#   Colisao       -> a área em que o botão aparece e o E funciona. Tem de
+#                    passar dos lados do Corpo, senão encostada nele a Cacau
+#                    fica fora dela
+#   Corpo/Forma   -> a parede: a silhueta da arte de aço, cúpula incluída
+#                    (a Cacau não atravessa a coluna e pode pousar em cima)
 #   explicacao    -> a cena da tela que o E abre
 
 const CENA := "res://scenes/fases/componentes/destilador.tscn"

@@ -394,6 +394,16 @@ func _testar_na_fase() -> void:
 			and sprite.scale == Vector2(2, 2),
 		"o que se vê no mapa é o desenho de aço, no tamanho dos tiles (×2)")
 	_checar(sprite.z_index < player.z_index, "a Cacau passa na frente dela")
+	var forma := destilador.get_node_or_null("Corpo/Forma") as CollisionPolygon2D
+	var parede := Rect2()
+	if forma:
+		parede = Rect2(forma.global_transform * forma.polygon[0], Vector2.ZERO)
+		for ponto in forma.polygon:
+			parede = parede.expand(forma.global_transform * ponto)
+	_checar(forma != null and destilador.get_node("Corpo") is StaticBody2D
+			and (player.collision_mask & (destilador.get_node("Corpo") as StaticBody2D).collision_layer) != 0
+			and absf(parede.size.x - arte.size.x) < 1.0 and absf(parede.size.y - arte.size.y) < 4.0,
+		"ela é sólida, do tamanho da arte (a Cacau não atravessa)")
 	_checar(contorno.texture != null and contorno.texture.get_size() == Vector2(82, 183),
 		"o contorno foi montado da própria arte")
 	_checar(destilador.explicacao != null, "a tela da explicação está ligada nela")
@@ -406,7 +416,8 @@ func _testar_na_fase() -> void:
 	_checar(not dica.visible and not contorno.visible, "de longe, nem botão nem contorno")
 	_checar(not destilador.ja_explicou(), "e a explicação ainda não foi vista")
 
-	player.global_position = destilador.global_position + Vector2(-60, -12)
+	# A coluna é parede: encostada nela pela esquerda (capsula de raio 13).
+	player.global_position = destilador.global_position + Vector2(-94, -12)
 	player.velocity = Vector2.ZERO
 	await _esperar(func() -> bool: return dica.visible, 2.0)
 	_checar(dica.visible, "chegando perto, o botão acende")

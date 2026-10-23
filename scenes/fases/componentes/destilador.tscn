@@ -30,6 +30,11 @@ offset = Vector2(-41, -182)
 position = Vector2(0, -60)
 shape = SubResource("RectangleShape2D_alcance")
 
+[node name="Corpo" type="StaticBody2D" parent="."]
+
+[node name="Forma" type="CollisionPolygon2D" parent="Corpo"]
+polygon = PackedVector2Array(-80, 0, -80, -308, -74, -326, -62, -342, -46, -354, -26, -361, 26, -361, 46, -354, 62, -342, 74, -326, 80, -308, 80, 0)
+
 [node name="Dica" parent="." unique_id=411748948 instance=ExtResource("3_tecla")]
 z_index = 1
 position = Vector2(0, -150)
