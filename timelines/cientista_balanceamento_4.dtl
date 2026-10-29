@@ -1,4 +1,3 @@
-join cientista (cientista_serio) leftmost [mirrored="true"]
-cientista (cientista_serio): Opa, agora sobrou oxigênio. São 2 nos reagentes e só 1 nos produtos.
-cientista: E não dá para adicionar só 1. O gás oxigênio não existe como átomo solto, cada átomo está sempre ligado a outro oxigênio.
-cientista (cientista_feliz): Então, para igualar, adicione mais uma molécula de água.
+join cientista (cientista_mto_feliz) leftmost [mirrored="true"]
+cientista (cientista_mto_feliz): Perfeito! Hidrogênio, 4 e 4. Oxigênio, 2 e 2. Todos os elementos estão igualados, e é isso que quer dizer equação balanceada.
+cientista (cientista_feliz): Pode iniciar a simulação da combustão!

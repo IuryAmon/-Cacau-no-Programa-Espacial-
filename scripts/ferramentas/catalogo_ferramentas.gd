@@ -23,6 +23,10 @@ static var FERRAMENTAS := {
 		"descricao": "Hidrogênio queimando em oxigênio puro: a mesma reação do foguete, agora na mão dela. A chama passa dos 2000 °C e corta o que está soldado.",
 		"icone": "res://assets/itens/maçarico.png",
 		"cor": Color(1.0, 0.62, 0.22),
+		"tutorial": {
+			"texto": "Aperte {interact} perto de uma porta de metal: o maçarico derrete o aço.",
+			"demo": "res://scenes/ui/demo_macarico.tscn",
+		},
 	},
 	"bumerangue": {
 		# NOME e DESCRIÇÃO podem ser reescritos à vontade: a ficha de coleta
@@ -46,7 +50,9 @@ static var FERRAMENTAS := {
 		# equipamentos (scripts/ui/tutorial_ferramenta.gd). "texto" é a ÚNICA coisa
 		# escrita na ficha; "demo" é a cena da telinha animada (a Cacau
 		# arremessando e a caixa elétrica quebrando). Ferramenta sem este campo
-		# simplesmente não tem tutorial.
+		# simplesmente não tem tutorial. O texto aceita as marcas de tecla do
+		# BotoesControle: "{dash}" sai SHIFT no teclado e o R2 desenhado no
+		# controle.
 		"tutorial": {
 			"texto": "Jogue o bumerangue nas caixinhas para cortar os circuitos elétricos",
 			"demo": "res://scenes/ui/demo_bumerangue.tscn",
@@ -58,8 +64,15 @@ static var FERRAMENTAS := {
 		"tecla": "SHIFT",
 		"acao": "dash",
 		"descricao": "Nitrogênio comprimido em jato curto: empurra a Cacau no ar e apaga chamas, porque N₂ não alimenta combustão.",
-		"icone": "",
+		# Dois tanques de N₂ (o verde do nitrogênio no jogo inteiro) num
+		# suporte de costas, com os bocais embaixo soltando o jato.
+		"icone": "res://assets/itens/mochila de N2.png",
+		"escala_mapa": 2.0,
 		"cor": Color(0.5, 0.75, 1.0),
+		"tutorial": {
+			"texto": "Aperte {dash} com uma direção: o jato de N₂ empurra a Cacau. No ar, dá um jato por pulo.",
+			"demo": "res://scenes/ui/demo_mochila.tscn",
+		},
 	},
 	"sinalizador": {
 		"nome": "Sinalizador Quimioluminescente (Ferramenta)",

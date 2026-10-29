@@ -14,15 +14,19 @@ extends "res://tools/teste_de_tela.gd"
 #   * a tela de escolha mostra os três níveis;
 #   * FÁCIL é como os puzzles da história: as moléculas aparecem conforme o
 #     coeficiente e a contagem dos átomos fica verde quando bate;
+#   * a arrumação dos níveis com moléculas: a contagem dos átomos no alto, a
+#     equação escrita embaixo dela e, embaixo da equação, os desenhos — cada
+#     termo escrito centrado em cima da coluna da molécula dele, o "+" e a seta
+#     em cima dos vãos;
 #   * MÉDIO tem as moléculas e não tem a contagem, e nada muda de cor antes de
 #     confirmar;
 #   * DIFÍCIL é só a equação escrita, com um seletor em cada coeficiente;
-#   * confirmar sem definir tudo pede os coeficientes; errado, o terminal diz
+#   * confirmar sem definir tudo pede os coeficientes; errado, o rodapé diz
 #     que elemento não bate; certo, passa (inclusive em dobro, mostrando a
 #     forma mais simples); PULAR mostra a resposta e não conta;
 #   * as setas dão a volta (9 -> 0 e 0 -> 9);
 #   * em todas as equações dos três níveis, com os coeficientes no máximo, nada
-#     sai do vidro, as setas não se cobrem e as moléculas cabem no lugar;
+#     sai do area, as setas não se cobrem e as moléculas cabem no lugar;
 #   * os três níveis se resolvem até o fim, clicando; o fim diz quantas foram
 #     balanceadas e quantas confirmações saíram erradas;
 #   * ESC no meio volta à escolha do nível e, de lá, ao Laboratório.
@@ -33,6 +37,7 @@ extends "res://tools/teste_de_tela.gd"
 # momento.
 
 const CENA := "res://scenes/laboratorio/balanceamento.tscn"
+const EquacaoSobreColunas := preload("res://scripts/ui/equacao_sobre_colunas.gd")
 const NIVEIS := [EquacoesDoLaboratorio.Nivel.FACIL, EquacoesDoLaboratorio.Nivel.MEDIO, EquacoesDoLaboratorio.Nivel.DIFICIL]
 ## O jogo anda mais depressa enquanto o teste espera a equação seguinte.
 const PRESSA := 8.0
@@ -57,12 +62,52 @@ func _ready() -> void:
 # APOIO
 # ─────────────────────────────────────────────────────────────
 
-## O que a linha da equação (níveis com moléculas) está escrevendo.
+## O que a linha da equação (níveis com moléculas) está escrevendo, peça por
+## peça: "2 H2 + ? O2 → ? H2O".
 func _linha_escrita(tela: TelaInterativa) -> String:
-	var texto := ""
-	for letra: Label in tela.linha_equacao.get_children():
-		texto += letra.text
-	return texto
+	return EquacaoSobreColunas.texto(tela.linha_equacao)
+
+
+## A cor em que a equação está escrita.
+func _cor_da_linha(tela: TelaInterativa) -> Color:
+	return EquacaoSobreColunas.cor(tela.linha_equacao)
+
+
+## A arrumação dos níveis com moléculas, de cima para baixo: a contagem dos
+## átomos, a equação escrita e os desenhos — com cada termo escrito em cima da
+## coluna da molécula dele e os operadores em cima dos vãos. Devolve o que
+## estiver fora do lugar (vazio = tudo certo).
+func _fora_da_arrumacao(tela: TelaInterativa) -> PackedStringArray:
+	var problemas := PackedStringArray()
+	var linha: Control = tela.linha_equacao
+	var faixa := linha.get_global_rect()
+	var titulo: Rect2 = tela.reagentes_titulo.get_global_rect()
+	if titulo.end.y > faixa.position.y + 0.5:
+		problemas.append("os títulos Reagentes/Produtos não estão acima da equação")
+	if tela.reagentes_valor.visible and tela.reagentes_valor.get_global_rect().end.y > faixa.position.y + 0.5:
+		problemas.append("a contagem dos átomos não está acima da equação")
+	if tela.reagentes_valor.visible and tela.reagentes_valor.get_global_rect().position.y < titulo.end.y - 0.5:
+		problemas.append("a contagem por cima do título")
+	if EquacaoSobreColunas.quantos_termos(linha) != tela._termos.size():
+		problemas.append("%d termos escritos para %d colunas" % [EquacaoSobreColunas.quantos_termos(linha), tela._termos.size()])
+		return problemas
+	for i in tela._termos.size():
+		var coluna: TermoEquacao = tela._termos[i]
+		var escrito := EquacaoSobreColunas.retangulo_do_termo(linha, i)
+		var seta: Rect2 = coluna.retangulo_do_botao(1)
+		if escrito.end.y > coluna.botao_mais.get_global_rect().position.y + 0.5:
+			problemas.append("o termo %s escrito não está acima da coluna dele" % coluna.formula)
+		if absf(EquacaoSobreColunas.meio_do_termo(linha, i) - seta.get_center().x) > 1.5:
+			problemas.append("o termo %s escrito não está centrado na coluna (%.1f x %.1f)" \
+				% [coluna.formula, EquacaoSobreColunas.meio_do_termo(linha, i), seta.get_center().x])
+		if escrito.size.x > coluna.get_global_rect().size.x + tela.FOLGA_DO_TERMO * coluna.get_global_transform().get_scale().x + 0.5:
+			problemas.append("o termo %s escrito é mais largo que a coluna" % coluna.formula)
+	if EquacaoSobreColunas.menor_folga(linha) < 0.0:
+		problemas.append("uma peça da equação por cima da vizinha (%.1f)" % EquacaoSobreColunas.menor_folga(linha))
+	var extensao := EquacaoSobreColunas.extensao(linha)
+	if extensao.x < 0.0 or extensao.y > linha.size.x:
+		problemas.append("a equação escrita sai da linha dela (%s)" % extensao)
+	return problemas
 
 
 ## A equação do nível difícil como está escrita: os números dos seletores e as
@@ -275,13 +320,13 @@ func _testar_a_escolha() -> void:
 	await _esperar(0.4)
 	_checar(tela.titulo == "BALANCEAMENTO" and tela.cena_de_volta == TransicaoDeCena.CENA_LABORATORIO,
 		"o título é BALANCEAMENTO, e ESC leva ao Laboratório")
-	_checar((tela.computador.texture as Texture2D).resource_path.ends_with("Computador receptor/tela_computador.png"),
-		"a tela é a do computador da fase 1")
+	_checar(tela.painel is PainelDaAtividade and not tela.painel.has_node("Display/Varredura") and not tela.painel.has_node("Led"),
+		"o conteúdo fica direto na tela do Laboratório: sem moldura de monitor, sem varredura nem luzinha")
 	_checar(tela.estado == tela.Estado.ESCOLHA and tela.grupo_escolha.visible and not tela.grupo_equacao.visible \
 		and not tela.grupo_fim.visible, "abre na escolha do nível")
-	_checar(tela.computador.texto_do_rodape() == tela.TXT_ESCOLHA, "o rodapé avisa: vale qualquer resposta balanceada")
+	_checar(tela.painel.texto_do_rodape() == tela.TXT_ESCOLHA, "o rodapé avisa: vale qualquer resposta balanceada")
 	var certos := true
-	var vidro: Rect2 = tela.computador.retangulo_do_vidro()
+	var area: Rect2 = tela.painel.retangulo_do_conteudo()
 	var caixas: Array[Rect2] = []
 	for nivel: EquacoesDoLaboratorio.Nivel in NIVEIS:
 		var botao: Panel = tela.botoes_de_nivel[nivel]
@@ -290,7 +335,7 @@ func _testar_a_escolha() -> void:
 				or (botao.get_node("Descricao") as Label).text != EquacoesDoLaboratorio.DESCRICOES[nivel] \
 				or (botao.get_node("Quantas") as Label).text != "%d EQUAÇÕES" % EquacoesDoLaboratorio.do_nivel(nivel).size():
 			certos = false
-		if not tela.alvo_disponivel(alvo) or not vidro.encloses(tela.retangulo_do_alvo(alvo)):
+		if not tela.alvo_disponivel(alvo) or not area.encloses(tela.retangulo_do_alvo(alvo)):
 			certos = false
 		if not _cabe_inteiro(botao.get_node("Descricao") as Label):
 			certos = false
@@ -303,7 +348,7 @@ func _testar_a_escolha() -> void:
 	textos.append_array(_textos_do_script(tela))
 	textos.append_array(["BALANCEAMENTO DE EQUAÇÕES", "FIM DO NÍVEL"])
 	_checar(_letras_que_faltam(textos).is_empty(), "toda letra da tela e das falas existe na fonte [%s]" % _letras_que_faltam(textos))
-	var fora := _labels_fora_do_lugar(tela.computador, vidro)
+	var fora := _labels_fora_do_lugar(tela.painel, area)
 	_checar(fora.is_empty(), "todo texto cabe no lugar dele %s" % [fora])
 	await _passar_por(tela, "nivel_medio")
 	_checar((tela.botoes_de_nivel[NIVEIS[1]] as Panel).self_modulate != Color.WHITE \
@@ -321,8 +366,8 @@ func _testar_o_facil() -> void:
 	await _clicar(tela, "nivel_facil")
 	_checar(tela.estado == tela.Estado.RESOLVENDO and tela.nivel == NIVEIS[0] and tela.indice == 0 \
 		and tela.grupo_equacao.visible and not tela.grupo_escolha.visible, "clicar em FÁCIL começa o nível")
-	_checar(tela.computador.cabecalho.text == "FÁCIL: EQUAÇÃO 1 DE 7" \
-		and tela.computador.texto_do_rodape() == "BALANCEIE: A QUEIMA DO HIDROGÊNIO, QUE EMPURRA O FOGUETE",
+	_checar(tela.painel.cabecalho.text == "FÁCIL: EQUAÇÃO 1 DE 7" \
+		and tela.painel.texto_do_rodape() == "BALANCEIE: A QUEIMA DO HIDROGÊNIO, QUE EMPURRA O FOGUETE",
 		"o cabeçalho diz FÁCIL: EQUAÇÃO 1 DE 7, e o rodapé apresenta a reação")
 	var formulas: Array = []
 	for termo: TermoEquacao in tela._termos:
@@ -330,8 +375,10 @@ func _testar_o_facil() -> void:
 	_checar(formulas == ["H2", "O2", "H2O"] and tela._seletores.is_empty(),
 		"uma coluna por substância, a mesma dos puzzles da história (termo_equacao.tscn): H2, O2, H2O")
 	_checar(tela.linha_equacao.visible and tela.reagentes_valor.visible and tela.produtos_valor.visible \
-		and tela.reagentes_titulo.visible, "com a equação escrita no alto e a contagem dos átomos")
-	_checar(_linha_escrita(tela) == "? H2  +  ? O2   →   ? H2O", "sem mexer, os coeficientes são \"?\" (\"%s\")" % _linha_escrita(tela))
+		and tela.reagentes_titulo.visible, "com a contagem dos átomos e a equação escrita")
+	var fora := _fora_da_arrumacao(tela)
+	_checar(fora.is_empty(), "a contagem no alto, a equação embaixo dela e cada termo em cima da molécula dele %s" % [fora])
+	_checar(_linha_escrita(tela) == "? H2 + ? O2 → ? H2O", "sem mexer, os coeficientes são \"?\" (\"%s\")" % _linha_escrita(tela))
 	_checar(tela.reagentes_valor.get_parsed_text() == "H = ?   O = ?" and tela.produtos_valor.get_parsed_text() == "H = ?   O = ?",
 		"e a contagem também")
 	_checar(tela.alvo_disponivel("mais_0") and tela.alvo_disponivel("menos_2") and not tela.tem_alvo("mais_3") \
@@ -339,15 +386,15 @@ func _testar_o_facil() -> void:
 
 	# Confirmar sem definir.
 	await _clicar(tela, "confirmar")
-	_checar(tela.computador.texto_do_rodape() == tela.TXT_FALTA_DEFINIR and _tocou(tela, "erro") and tela.erros == 0,
+	_checar(tela.painel.texto_do_rodape() == tela.TXT_FALTA_DEFINIR and _tocou(tela, "erro") and tela.erros == 0,
 		"confirmar sem mexer pede os coeficientes (e não conta como erro)")
 
 	# As moléculas aparecem conforme o coeficiente.
 	await _clicar(tela, "mais_0", 2)
 	_checar(tela.coeficientes[0] == 2 and tela._termos[0].moleculas.get_child_count() == 2, "duas vezes a seta do H2: duas moléculas de H2")
-	_checar(_linha_escrita(tela) == "2 H2  +  ? O2   →   ? H2O" and tela.reagentes_valor.get_parsed_text() == "H = 4   O = ?",
+	_checar(_linha_escrita(tela) == "2 H2 + ? O2 → ? H2O" and tela.reagentes_valor.get_parsed_text() == "H = 4   O = ?",
 		"a equação vira 2 H2 + ? O2 e a contagem, H = 4")
-	_checar(not tela.computador.avisando(), "mexer numa seta apaga o aviso de erro")
+	_checar(not tela.painel.avisando(), "mexer numa seta apaga o aviso de erro")
 	await _clicar(tela, "menos_0")
 	_checar(tela.coeficientes[0] == 1 and tela._termos[0].moleculas.get_child_count() == 1, "a seta de baixo tira uma")
 	await _clicar(tela, "mais_1")
@@ -358,7 +405,7 @@ func _testar_o_facil() -> void:
 		"o H, que bate, fica verde; o O, que não bate, amarelo")
 	_checar(tela.reagentes_titulo.get_theme_color("font_color") == tela.COR_ERRO, "tudo definido e não bate: os títulos ficam vermelhos")
 	await _clicar(tela, "confirmar")
-	_checar(tela.computador.texto_do_rodape() == "ELEMENTO O DESBALANCEADO" and tela.erros == 1 and tela.estado == tela.Estado.RESOLVENDO,
+	_checar(tela.painel.texto_do_rodape() == "ELEMENTO O DESBALANCEADO" and tela.erros == 1 and tela.estado == tela.Estado.RESOLVENDO,
 		"confirmar 1-1-1: ELEMENTO O DESBALANCEADO, um erro")
 	await _esperar(0.4)
 	_checar(tela.grupo_equacao.position.is_equal_approx(tela.grupo_equacao.get_meta("pos_base")), "a equação treme e volta para o lugar")
@@ -372,20 +419,19 @@ func _testar_o_facil() -> void:
 	await _teclar(KEY_ENTER)
 	_checar(tela.estado == tela.Estado.PASSANDO and tela.resolvidas == 1 and resolvidas == [0],
 		"ENTER confirma: balanceada")
-	_checar(tela.computador.texto_do_rodape() == tela.TXT_BALANCEADA and _tocou(tela, "sucesso") \
-		and tela.computador.led.color == ComputadorDoLaboratorio.COR_LED_CERTO, "o terminal diz BALANCEADA!")
+	_checar(tela.painel.texto_do_rodape() == tela.TXT_BALANCEADA and _tocou(tela, "sucesso"), "o rodapé diz BALANCEADA!")
 	_checar(not tela.alvo_disponivel("mais_0") and not tela.alvo_disponivel("confirmar"), "enquanto passa, nada pode ser clicado")
 	await _foto("bal_3_facil_certo")
 	_checar(await _esperar_a_proxima(tela) and tela.indice == 1 and tela.estado == tela.Estado.RESOLVENDO,
 		"e logo vem a equação seguinte")
-	_checar(tela.computador.cabecalho.text == "FÁCIL: EQUAÇÃO 2 DE 7" and tela.coeficientes == [0, 0, 0] \
-		and _linha_escrita(tela) == "? C  +  ? O2   →   ? CO", "a segunda: ? C + ? O2 -> ? CO, do zero")
+	_checar(tela.painel.cabecalho.text == "FÁCIL: EQUAÇÃO 2 DE 7" and tela.coeficientes == [0, 0, 0] \
+		and _linha_escrita(tela) == "? C + ? O2 → ? CO", "a segunda: ? C + ? O2 -> ? CO, do zero")
 
-	# Em dobro vale, e o terminal mostra a forma mais simples.
+	# Em dobro vale, e o rodapé mostra a forma mais simples.
 	await _por_coeficientes(tela, [4, 2, 4])
 	await _clicar(tela, "confirmar")
 	_checar(tela.estado == tela.Estado.PASSANDO and tela.resolvidas == 2 \
-		and tela.computador.texto_do_rodape() == "BALANCEADA! FORMA MAIS SIMPLES: 2-1-2",
+		and tela.painel.texto_do_rodape() == "BALANCEADA! FORMA MAIS SIMPLES: 2-1-2",
 		"4-2-4 também passa: BALANCEADA! FORMA MAIS SIMPLES: 2-1-2")
 	await _esperar_a_proxima(tela)
 
@@ -396,7 +442,7 @@ func _testar_o_facil() -> void:
 	_checar(tela.coeficientes[0] == 0 and tela._termos[0].moleculas.get_child_count() == 0, "e a de cima no 9 volta ao zero")
 	await _por_coeficientes(tela, [0, 1, 2])
 	await _clicar(tela, "confirmar")
-	_checar(tela.computador.texto_do_rodape() == tela.TXT_FALTA_DEFINIR and tela.erros == 1,
+	_checar(tela.painel.texto_do_rodape() == tela.TXT_FALTA_DEFINIR and tela.erros == 1,
 		"com um coeficiente em zero, confirmar pede os coeficientes")
 
 	# PULAR.
@@ -404,7 +450,7 @@ func _testar_o_facil() -> void:
 	await _clicar(tela, "pular")
 	_checar(tela.estado == tela.Estado.PASSANDO and tela.resolvidas == 2 and resolvidas.size() == 2,
 		"PULAR passa adiante sem contar como balanceada")
-	_checar(tela.computador.texto_do_rodape() == "A RESPOSTA ERA: 2-1-2" and tela.coeficientes == [2, 1, 2],
+	_checar(tela.painel.texto_do_rodape() == "A RESPOSTA ERA: 2-1-2" and tela.coeficientes == [2, 1, 2],
 		"e mostra a resposta: 2-1-2")
 	_checar(await _esperar_a_proxima(tela) and tela.indice == antes + 1, "depois vem a seguinte")
 
@@ -421,8 +467,10 @@ func _testar_o_medio() -> void:
 	var tela := await _abrir(CENA)
 	await _esperar(0.3)
 	await _clicar(tela, "nivel_medio")
-	_checar(tela.nivel == NIVEIS[1] and tela.computador.cabecalho.text == "MÉDIO: EQUAÇÃO 1 DE 8", "MÉDIO: EQUAÇÃO 1 DE 8")
+	_checar(tela.nivel == NIVEIS[1] and tela.painel.cabecalho.text == "MÉDIO: EQUAÇÃO 1 DE 8", "MÉDIO: EQUAÇÃO 1 DE 8")
 	_checar(tela._termos.size() == 3 and tela.linha_equacao.visible, "com as moléculas e a equação escrita")
+	var fora := _fora_da_arrumacao(tela)
+	_checar(fora.is_empty(), "os títulos no alto, a equação embaixo e cada termo em cima da molécula dele %s" % [fora])
 	_checar(not tela.reagentes_valor.visible and not tela.produtos_valor.visible, "mas sem a contagem dos átomos")
 	_checar(tela.reagentes_titulo.visible and tela.reagentes_titulo.get_theme_color("font_color") == tela.COR_TEXTO,
 		"os títulos Reagentes e Produtos ficam, sem cor de certo ou errado")
@@ -430,20 +478,20 @@ func _testar_o_medio() -> void:
 	await _por_coeficientes(tela, [1, 1, 1])
 	_checar(tela._termos[0].moleculas.get_child_count() == 1 and tela.reagentes_titulo.get_theme_color("font_color") == tela.COR_TEXTO,
 		"errado e tudo definido: nada muda de cor antes de confirmar")
-	var cor_da_linha := (tela.linha_equacao.get_child(0) as Label).get_theme_color("font_color")
+	var cor_da_linha := _cor_da_linha(tela)
 	await _por_coeficientes(tela, [2, 1, 2])
 	_checar(tela.esta_balanceada() and tela.reagentes_titulo.get_theme_color("font_color") == tela.COR_TEXTO \
-		and (tela.linha_equacao.get_child(0) as Label).get_theme_color("font_color") == cor_da_linha,
+		and _cor_da_linha(tela) == cor_da_linha,
 		"certo também não: quem conta os átomos é a pessoa")
 	await _foto("bal_4_medio")
 	await _clicar(tela, "confirmar")
-	_checar(tela.estado == tela.Estado.PASSANDO and (tela.linha_equacao.get_child(0) as Label).get_theme_color("font_color") == tela.COR_CERTO,
+	_checar(tela.estado == tela.Estado.PASSANDO and _cor_da_linha(tela) == tela.COR_CERTO,
 		"confirmando, a equação fica verde")
 	await _esperar_a_proxima(tela)
-	# A hidrazina: 1-1-1-2. Errando dois elementos, o terminal diz os dois.
+	# A hidrazina: 1-1-1-2. Errando dois elementos, o rodapé diz os dois.
 	await _por_coeficientes(tela, [1, 2, 1, 1])
 	await _clicar(tela, "confirmar")
-	_checar(tela.computador.texto_do_rodape() == "ELEMENTOS H E O DESBALANCEADOS" and tela.erros == 1,
+	_checar(tela.painel.texto_do_rodape() == "ELEMENTOS H E O DESBALANCEADOS" and tela.erros == 1,
 		"N2H4 + O2 -> N2 + H2O com 1-2-1-1: ELEMENTOS H E O DESBALANCEADOS")
 	await _fechar(tela)
 
@@ -453,7 +501,7 @@ func _testar_o_dificil() -> void:
 	var tela := await _abrir(CENA)
 	await _esperar(0.3)
 	await _clicar(tela, "nivel_dificil")
-	_checar(tela.nivel == NIVEIS[2] and tela.computador.cabecalho.text == "DIFÍCIL: EQUAÇÃO 1 DE 9", "DIFÍCIL: EQUAÇÃO 1 DE 9")
+	_checar(tela.nivel == NIVEIS[2] and tela.painel.cabecalho.text == "DIFÍCIL: EQUAÇÃO 1 DE 9", "DIFÍCIL: EQUAÇÃO 1 DE 9")
 	_checar(tela._termos.is_empty() and tela._seletores.size() == 3, "sem moléculas: um seletor para cada coeficiente")
 	_checar(not tela.linha_equacao.visible and not tela.reagentes_titulo.visible and not tela.reagentes_valor.visible,
 		"sem a equação do alto, sem Reagentes/Produtos, sem contagem")
@@ -495,8 +543,8 @@ func _testar_o_layout() -> void:
 	print("\n--- TUDO NO LUGAR, EM TODAS AS EQUAÇÕES ---")
 	var tela := await _abrir(CENA)
 	await _esperar(0.4)
-	var vidro: Rect2 = tela.computador.retangulo_do_vidro()
-	var rodape: Label = tela.computador.rodape
+	var area: Rect2 = tela.painel.retangulo_do_conteudo()
+	var rodape: Label = tela.painel.rodape
 	var problemas := PackedStringArray()
 	var menor_letra := 99
 	for nivel: EquacoesDoLaboratorio.Nivel in NIVEIS:
@@ -513,15 +561,15 @@ func _testar_o_layout() -> void:
 			var nome := "%s %d (%s)" % [EquacoesDoLaboratorio.NOMES[nivel], qual + 1,
 				EquacaoQuimica.escrita(tela.equacao()["reagentes"], tela.equacao()["produtos"], tela.equacao()["resposta"])]
 			# O rodapé apresenta a reação numa linha só.
-			if FONTE.get_string_size(tela.computador.texto_do_rodape() + "_", HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x > rodape.size.x:
+			if FONTE.get_string_size(tela.painel.texto_do_rodape() + "_", HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x > rodape.size.x:
 				problemas.append("%s: o nome não cabe no rodapé" % nome)
-			# As setas: dentro do vidro, sem cobrir umas às outras nem os botões.
+			# As setas: dentro do area, sem cobrir umas às outras nem os botões.
 			var setas: Array[Rect2] = []
 			for i in quantos:
 				for prefixo: String in ["mais_", "menos_"]:
 					var seta: Rect2 = tela.retangulo_do_alvo(prefixo + str(i))
-					if not seta.has_area() or not vidro.encloses(seta):
-						problemas.append("%s: seta %s%d fora do vidro %s" % [nome, prefixo, i, seta])
+					if not seta.has_area() or not area.encloses(seta):
+						problemas.append("%s: seta %s%d fora do area %s" % [nome, prefixo, i, seta])
 					setas.append(seta)
 			for i in setas.size():
 				for j in range(i + 1, setas.size()):
@@ -531,14 +579,18 @@ func _testar_o_layout() -> void:
 					if setas[i].intersects(tela.retangulo_do_alvo(botao)):
 						problemas.append("%s: seta %d em cima do %s" % [nome, i, botao])
 			if EquacoesDoLaboratorio.com_moleculas(nivel):
-				# A equação do alto cabe na largura dela.
-				if tela.linha_equacao.size.x > 786.5 or tela.linha_equacao.get_combined_minimum_size().x > 786.0:
-					problemas.append("%s: a equação do alto não cabe (%.0f)" % [nome, tela.linha_equacao.get_combined_minimum_size().x])
-				menor_letra = mini(menor_letra, (tela.linha_equacao.get_child(0) as Label).get_theme_font_size("font_size"))
+				# A equação escrita: embaixo da contagem, cada termo em cima da
+				# coluna dele, sem uma peça cobrir a outra nem sair do area.
+				for problema in _fora_da_arrumacao(tela):
+					problemas.append("%s: %s" % [nome, problema])
+				for i in quantos:
+					if not area.encloses(EquacaoSobreColunas.retangulo_do_termo(tela.linha_equacao, i)):
+						problemas.append("%s: o termo %d escrito sai do area" % [nome, i])
+				menor_letra = mini(menor_letra, EquacaoSobreColunas.tamanho(tela.linha_equacao))
 				# As nove moléculas de cada termo cabem no retângulo delas.
 				for termo: TermoEquacao in tela._termos:
-					if not vidro.encloses(termo.get_global_rect()):
-						problemas.append("%s: a coluna do %s sai do vidro" % [nome, termo.formula])
+					if not area.encloses(termo.get_global_rect()):
+						problemas.append("%s: a coluna do %s sai do area" % [nome, termo.formula])
 					var caixa := Rect2(Vector2.ZERO, termo.moleculas.size).grow(6.0)
 					if termo.moleculas.get_child_count() != tela.COEF_MAX:
 						problemas.append("%s: %s com %d moléculas" % [nome, termo.formula, termo.moleculas.get_child_count()])
@@ -548,18 +600,18 @@ func _testar_o_layout() -> void:
 							break
 				if EquacoesDoLaboratorio.com_contagem(nivel):
 					for valor: RichTextLabel in [tela.reagentes_valor, tela.produtos_valor]:
-						if valor.get_content_width() > valor.size.x + 0.5 or not vidro.encloses(valor.get_global_rect()):
+						if valor.get_content_width() > valor.size.x + 0.5 or not area.encloses(valor.get_global_rect()):
 							problemas.append("%s: a contagem \"%s\" não cabe" % [nome, valor.get_parsed_text()])
 			else:
 				for filho: Control in tela.termos.get_children():
-					if not vidro.grow(1.0).encloses(filho.get_global_rect()):
-						problemas.append("%s: %s sai do vidro" % [nome, filho.get_class()])
-			var fora := _labels_fora_do_lugar(tela.computador, vidro)
+					if not area.grow(1.0).encloses(filho.get_global_rect()):
+						problemas.append("%s: %s sai do area" % [nome, filho.get_class()])
+			var fora := _labels_fora_do_lugar(tela.painel, area)
 			if not fora.is_empty():
 				problemas.append("%s: %s" % [nome, fora])
 	_checar(problemas.is_empty(), "nas 24 equações, com tudo em 9: setas, moléculas, contagem e escrita no lugar %s" \
 		% [problemas.slice(0, 6)])
-	_checar(menor_letra >= tela.FONTE_EQUACAO_MIN, "a letra da equação do alto nunca fica menor que o mínimo (a menor usada: %d px; mínimo %d)" \
+	_checar(menor_letra >= tela.FONTE_EQUACAO_MIN, "a letra da equação escrita nunca fica menor que o mínimo (a menor usada: %d px; mínimo %d)" \
 		% [menor_letra, tela.FONTE_EQUACAO_MIN])
 	await _fechar(tela)
 
@@ -603,10 +655,10 @@ func _testar_os_niveis_inteiros() -> void:
 			and tela.resumo_do_fim.text == "%d DE %d EQUAÇÕES BALANCEADAS" % [fila.size() - 1, fila.size()] \
 			and tela.erros_do_fim.text == "CONFIRMAÇÕES ERRADAS: 1",
 			"o fim diz: NÍVEL %s CONCLUÍDO, %d DE %d, CONFIRMAÇÕES ERRADAS: 1" % [nome, fila.size() - 1, fila.size()])
-		var vidro: Rect2 = tela.computador.retangulo_do_vidro()
+		var area: Rect2 = tela.painel.retangulo_do_conteudo()
 		_checar(tela.alvo_disponivel("outro_nivel") and tela.alvo_disponivel("sair") and not tela.alvo_disponivel("confirmar") \
-			and vidro.encloses(tela.retangulo_do_alvo("outro_nivel")) and vidro.encloses(tela.retangulo_do_alvo("sair")) \
-			and _labels_fora_do_lugar(tela.computador, vidro).is_empty(), "com os botões OUTRO NÍVEL e VOLTAR, tudo no lugar")
+			and area.encloses(tela.retangulo_do_alvo("outro_nivel")) and area.encloses(tela.retangulo_do_alvo("sair")) \
+			and _labels_fora_do_lugar(tela.painel, area).is_empty(), "com os botões OUTRO NÍVEL e VOLTAR, tudo no lugar")
 		if nivel == NIVEIS[0]:
 			await _foto("bal_7_fim")
 		await _clicar(tela, "outro_nivel")

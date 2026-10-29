@@ -2,6 +2,8 @@ extends CanvasLayer
 
 # Menu que aparece quando o jogador aperta ESC dentro do simulador.
 # Duas opções: voltar para a simulação ou desligar tudo e sair do foguete.
+# É a pausa do simulador: o menu de pausa do resto do jogo (autoload Pausa)
+# não abre aqui, e o START do controle, que é a pausa lá, abre este também.
 
 signal saida_pedida
 
@@ -16,6 +18,7 @@ var pode_pausar: bool = false
 
 func _ready() -> void:
 	visible = false
+	add_to_group(Pausa.GRUPO_PAUSA_PROPRIA)
 	_botao_continuar.pressed.connect(_on_continuar_pressionado)
 	_botao_sair.pressed.connect(_on_sair_pressionado)
 	# ESC no teclado, ○ no controle (os dois abrem e fecham este menu).
@@ -23,7 +26,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(evento: InputEvent) -> void:
-	if not evento.is_action_pressed("ui_cancel"):
+	if not evento.is_action_pressed("ui_cancel") and not evento.is_action_pressed(Pausa.ACAO):
 		return
 	if visible:
 		_on_continuar_pressionado()

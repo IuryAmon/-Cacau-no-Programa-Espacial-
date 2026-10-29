@@ -140,14 +140,17 @@ func _testar_cena() -> void:
 	var depois := _chao_abaixo(cena, Vector2(fim.x + 300.0, player.global_position.y))
 	_checar(not depois.is_empty(), "e o piso continua depois dela, para a Cacau sair andando")
 
-	# A fase 2 não tem porta: a ponta esquerda dela é outra passagem, que recebe
-	# quem vem do corredor e devolve ao fundo dele.
+	# A fase 2 não tem porta de volta: a ponta esquerda dela é outra passagem,
+	# que recebe quem vem do corredor e devolve ao fundo dele. (As portas que ela
+	# tem são as dos prédios da rua, e nenhuma leva ao corredor nem ao lab.)
 	await _abrir(FASE2)
 	await _segundos(0.3)
 	var fase2 := get_tree().current_scene
 	var entrada := fase2.get_node_or_null("PassagemCorredor") as PassagemDeCena
-	_checar(entrada != null and fase2.get_node_or_null("PortaHub") == null and _portas_da(fase2).is_empty(),
-		"a fase 2 não tem porta: a ponta esquerda dela é uma passagem")
+	var de_volta := _portas_da(fase2).filter(func(p: Node) -> bool:
+		return p.cena_destino == CORREDOR or p.cena_destino == LAB)
+	_checar(entrada != null and fase2.get_node_or_null("PortaHub") == null and de_volta.is_empty(),
+		"a fase 2 não tem porta de volta: a ponta esquerda dela é uma passagem")
 	if entrada != null:
 		_checar(entrada.cena_destino == CORREDOR and entrada.tag_destino == "fundo"
 			and entrada.tag_aqui == "entrada" and entrada.sentido < 0.0,

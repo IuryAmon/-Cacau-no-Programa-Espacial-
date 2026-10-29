@@ -1,30 +1,39 @@
 extends "res://tools/teste_de_tela.gd"
 
 # Teste do simulador de destilação do Laboratório: as misturas
-# (scripts/laboratorio/misturas_do_destilador.gd), a coluna
-# (scripts/ui/coluna_do_simulador.gd), o termômetro (scripts/ui/termometro.gd)
-# e a tela (scenes/laboratorio/destilador.tscn).
+# (scripts/laboratorio/misturas_do_destilador.gd), a física do equilíbrio
+# entre líquido e vapor (scripts/laboratorio/equilibrio_liquido_vapor.gd), a
+# coluna (scripts/ui/coluna_do_simulador.gd), o termômetro
+# (scripts/ui/termometro.gd) e a tela (scenes/laboratorio/destilador.tscn).
 #
 # A simulação é conferida passo a passo (avancar(1/60)), sem depender da
 # velocidade da máquina: o mesmo teste dá sempre o mesmo resultado.
 #
 #   * OS DADOS: os pontos de ebulição são os de verdade (arredondados para o
-#     grau); toda mistura tem substâncias que existem, com pontos de ebulição
-#     diferentes, e um termômetro que alcança a separação; as temperaturas se
-#     escrevem com vírgula só quando precisam (-0,5 °C);
-#   * A COLUNA: começa com tudo líquido no fundo, na temperatura mínima; a
-#     temperatura vai atrás do que foi pedido, sem pulo; os andares ficam cada
-#     vez mais frios para cima, e o topo é o resfriador;
-#   * A DESTILAÇÃO de cada uma das seis misturas, na temperatura certa: cada
-#     substância acaba inteira no andar em que a conta manda (o primeiro que
-#     está no ponto de ebulição dela ou abaixo), nenhuma molécula se perde e
-#     nenhuma sai da coluna;
-#   * o que não condensa nem no topo fica gás lá em cima (o neônio, o butano
-#     do petróleo), e o que não ferve fica no fundo (o sal);
-#   * esquentar demais mistura de novo duas substâncias no mesmo andar, e
-#     esfriar não desfaz: só recomeçando;
+#     grau), e a pressão de vapor de cada substância (Antoine) dá esse mesmo
+#     ponto de ebulição pela conta; toda mistura tem substâncias que existem e
+#     um termômetro que alcança a separação; o ar da lista tem as proporções
+#     do ar (com o argônio aumentado); as temperaturas se escrevem com vírgula
+#     só quando precisam (-0,5 °C);
+#   * A FÍSICA: tudo evapora um pouco abaixo do ponto de ebulição; o ar
+#     líquido ferve ENTRE os pontos de ebulição do nitrogênio e do oxigênio, e
+#     o vapor dele sai rico em nitrogênio mas com oxigênio e argônio; o álcool
+#     com água tem o azeótropo; a água salgada ferve acima de 100 °C e o sal
+#     não evapora; as escolhas justas saem na proporção certa;
+#   * A COLUNA: começa com tudo líquido no fundo, na temperatura mínima; sem
+#     ferver nada sai do fundo, mas a superfície faz o vai-e-volta; fervendo, o
+#     fundo fica no ponto de bolha da mistura (que sobe); sem ferver, a
+#     temperatura vai atrás do pedido sem pulo; os andares ficam cada vez mais
+#     frios para cima, e o topo é o resfriador;
+#   * A DESTILAÇÃO de cada uma das seis misturas: assenta, separa (cada
+#     substância é a maioria num lugar), nada se perde nem sai da coluna, o
+#     topo fica rico no que evapora mais fácil e o fundo no que evapora menos —
+#     e, no ar, nenhum dos dois fica puro;
+#   * esquentar demais seca o fundo e manda o oxigênio para cima, e esfriar
+#     não desfaz: só recomeçando;
 #   * O TERMÔMETRO: a altura de cada temperatura e a volta (do ponto para os
-#     graus) batem; as marcas são os pontos de ebulição da mistura;
+#     graus) batem; as marcas são os pontos de ebulição da mistura, mais a de
+#     onde o fundo ferve agora, que sobe junto com ele;
 #   * A TELA: as seis misturas na lista, as fichas das substâncias, as setas,
 #     as teclas ↑ e ↓, o arrasto do ponteiro, RECOMEÇAR, o aviso MISTURA
 #     SEPARADA; todo texto existe na fonte e cabe no lugar;
@@ -43,38 +52,30 @@ const L := ColunaDoSimulador.LIQUIDO
 const G := ColunaDoSimulador.GAS
 
 ## Os pontos de ebulição de verdade, a 1 atm (NIST Chemistry WebBook e CRC
-## Handbook), para conferir os arredondados da lista.
+## Handbook), para conferir os arredondados da lista e a conta.
 const EBULICAO_DE_VERDADE := {
 	"N2": -195.8, "O2": -183.0, "Ar": -185.8, "Ne": -246.0, "Kr": -153.4, "Xe": -108.1,
 	"CH4": -161.5, "C2H6": -88.6, "C3H8": -42.1, "C4H10": -0.5, "C8H18": 125.6, "C12H26": 216.3, "C16H34": 286.9,
 	"C2H6O": 78.4, "H2O": 100.0, "NaCl": 1465.0,
 }
 
-## Para cada mistura: a temperatura do fundo que a separa e onde cada
-## substância tem de acabar (andar, fase). É a conta do topo de
-## coluna_do_simulador.gd, feita à mão.
+## Para cada mistura: uma temperatura do fundo que a separa e o que se espera
+## dela. "topo" é a substância que manda no líquido do topo, "fundo" a que
+## manda no do fundo, "gas" a que sai como gás pelo topo (se alguma).
 const SEPARACOES := {
-	# Fundo a -183: andares a -183, -186,25, -189,5, -192,75 e -196.
-	"ar": {"fundo": -183.0, "onde": {"O2": Vector2i(0, L), "Ar": Vector2i(1, L), "N2": Vector2i(4, L)}},
-	# Fundo a -110: -110, -131,5, -153, -174,5 e -196. O neônio (-246) não condensa.
-	"gases_nobres": {"fundo": -110.0,
-		"onde": {"Xe": Vector2i(0, L), "Kr": Vector2i(2, L), "Ar": Vector2i(4, L), "Ne": Vector2i(4, G)}},
-	# Fundo a -2: -2, -42, -82, -122 e -162.
-	"gas_natural": {"fundo": -2.0,
-		"onde": {"C4H10": Vector2i(0, L), "C3H8": Vector2i(1, L), "C2H6": Vector2i(3, L), "CH4": Vector2i(4, L)}},
-	# Fundo a 280: 280, 216,25, 152,5, 88,75 e 25. O butano (-0,5) não condensa.
-	"petroleo": {"fundo": 280.0,
-		"onde": {"C16H34": Vector2i(0, L), "C12H26": Vector2i(2, L), "C8H18": Vector2i(3, L), "C4H10": Vector2i(4, G)}},
-	# Fundo a 90: 90, 72,5, 55, 37,5 e 20.
-	"cana": {"fundo": 90.0, "onde": {"H2O": Vector2i(0, L), "C2H6O": Vector2i(1, L)}},
-	# Fundo a 110: 110, 87,5, 65, 42,5 e 20.
-	"mar": {"fundo": 110.0, "onde": {"NaCl": Vector2i(0, L), "H2O": Vector2i(1, L)}},
+	"ar": {"fundo": -188.0, "topo": "N2", "embaixo": "O2"},
+	"gases_nobres": {"fundo": -120.0, "topo": "Ar", "embaixo": "Xe", "gas": "Ne"},
+	"gas_natural": {"fundo": -20.0, "topo": "CH4", "embaixo": "C4H10"},
+	"petroleo": {"fundo": 260.0, "topo": "C8H18", "embaixo": "C16H34", "gas": "C4H10"},
+	"cana": {"fundo": 90.0, "topo": "C2H6O", "embaixo": "H2O"},
+	"mar": {"fundo": 110.0, "topo": "H2O", "embaixo": "NaCl"},
 }
 
 
 func _ready() -> void:
 	await _comecar()
 	_testar_os_dados()
+	_testar_a_fisica()
 	await _testar_a_coluna()
 	await _testar_as_separacoes()
 	await _testar_o_calor_demais()
@@ -117,24 +118,27 @@ func _andar(coluna: ColunaDoSimulador, segundos: float) -> void:
 		coluna.avancar(PASSO)
 
 
-## Onde cada substância da mistura está, numa linha (para a mensagem do teste).
+## O que há em cada andar, numa linha (para a mensagem do teste).
 func _retrato(coluna: ColunaDoSimulador) -> String:
 	var partes := PackedStringArray()
-	for chave: String in coluna.mistura()["substancias"]:
-		partes.append("%s: %s" % [chave, coluna.onde_esta(chave)])
-	return "; ".join(partes)
+	for andar in range(coluna.andares() - 1, -1, -1):
+		var contas := coluna.contas_do_andar(andar)
+		var txt := ""
+		for chave: String in contas:
+			txt += "%d %s " % [contas[chave], chave]
+		partes.append("%d[%s]" % [andar, txt.strip_edges()])
+	var gas := coluna.contas_do_gas()
+	return " ".join(partes) + (" gás %s" % gas if not gas.is_empty() else "")
 
 
-## A conta do topo de coluna_do_simulador.gd, refeita aqui: o andar em que a
-## substância fica com o fundo nesta temperatura, e em que fase.
-func _lugar_pela_conta(coluna: ColunaDoSimulador, chave: String, fundo: float) -> Vector2i:
-	var ebulicao := MisturasDoDestilador.ebulicao(chave)
-	if ebulicao >= fundo:
-		return Vector2i(0, L)
-	for andar in range(1, coluna.andares()):
-		if coluna.temperatura_do_andar_com(andar, fundo) <= ebulicao:
-			return Vector2i(andar, L)
-	return Vector2i(coluna.andares() - 1, G)
+## A substância com mais moléculas no líquido do andar ("" vazio).
+func _a_que_mais_tem(coluna: ColunaDoSimulador, andar: int) -> String:
+	var contas := coluna.contas_do_andar(andar)
+	var melhor := ""
+	for chave: String in contas:
+		if melhor == "" or int(contas[chave]) > int(contas[melhor]):
+			melhor = chave
+	return melhor
 
 
 # ─────────────────────────────────────────────────────────────
@@ -156,6 +160,26 @@ func _testar_os_dados() -> void:
 	_checar(MisturasDoDestilador.graus(-196.0) == "-196 °C" and MisturasDoDestilador.graus(78.0) == "78 °C" \
 		and MisturasDoDestilador.graus(-0.5) == "-0,5 °C" and MisturasDoDestilador.graus(1465.0) == "1465 °C" \
 		and MisturasDoDestilador.graus(0.0) == "0 °C", "as temperaturas por escrito: -196 °C, 78 °C, -0,5 °C, 1465 °C")
+
+	# A pressão de vapor (Antoine) de cada uma chega em 1 atm no ponto de
+	# ebulição dela: a conta e a ficha falam da mesma coisa.
+	var fora := PackedStringArray()
+	for chave: String in MisturasDoDestilador.SUBSTANCIAS:
+		if not EquilibrioLiquidoVapor.volatil(chave):
+			continue
+		var pela_conta := EquilibrioLiquidoVapor.ebulicao_pela_conta(chave)
+		if absf(pela_conta - float(EBULICAO_DE_VERDADE[chave])) > 0.6:
+			fora.append("%s ferve a %.2f pela conta (de verdade %s)" % [chave, pela_conta, EBULICAO_DE_VERDADE[chave]])
+	_checar(fora.is_empty(), "pela pressão de vapor, cada substância ferve a menos de 0,6 °C do ponto de ebulição de verdade %s" % [fora])
+	_checar(not EquilibrioLiquidoVapor.volatil("NaCl") and EquilibrioLiquidoVapor.pressao_de_vapor("NaCl", 120.0) == 0.0 \
+		and is_inf(EquilibrioLiquidoVapor.temperatura_de_bolha({"NaCl": 3})), "o sal não evapora: sozinho, não tem ponto de ebulição na conta")
+	var subindo := true
+	for chave: String in ["N2", "H2O", "C8H18"]:
+		var p1 := EquilibrioLiquidoVapor.pressao_de_vapor(chave, MisturasDoDestilador.ebulicao(chave) - 10.0)
+		var p2 := EquilibrioLiquidoVapor.pressao_de_vapor(chave, MisturasDoDestilador.ebulicao(chave) + 10.0)
+		if not (p1 > 0.0 and p1 < 1.0 and p2 > 1.0):
+			subindo = false
+	_checar(subindo, "a pressão de vapor cresce com a temperatura: abaixo do ponto de ebulição ela já existe (> 0), e passa de 1 atm depois dele")
 
 	var problemas := PackedStringArray()
 	var textos: Array = []
@@ -183,8 +207,8 @@ func _testar_os_dados() -> void:
 			if not MisturasDoDestilador.SUBSTANCIAS.has(substancia):
 				problemas.append("%s: %s não existe" % [nome, substancia])
 				continue
-			if int(substancias[substancia]) < 3:
-				problemas.append("%s: pouco %s para se ver" % [nome, substancia])
+			if int(substancias[substancia]) < 1:
+				problemas.append("%s: sem %s" % [nome, substancia])
 			var ebulicao := MisturasDoDestilador.ebulicao(substancia)
 			if pontos.has(ebulicao):
 				problemas.append("%s: dois pontos de ebulição iguais" % nome)
@@ -206,6 +230,11 @@ func _testar_os_dados() -> void:
 		% [MisturasDoDestilador.MISTURAS.size(), problemas])
 	_checar(MisturasDoDestilador.MISTURAS.size() >= 6 and MisturasDoDestilador.mistura("ar")["nome"] == "AR LÍQUIDO" \
 		and MisturasDoDestilador.mistura("nada").is_empty(), "são seis, a começar pelo ar líquido da história")
+	var ar: Dictionary = MisturasDoDestilador.mistura("ar")["substancias"]
+	var total_do_ar := float(int(ar["N2"]) + int(ar["O2"]) + int(ar["Ar"]))
+	_checar(int(ar["N2"]) / total_do_ar > 0.65 and int(ar["O2"]) / total_do_ar > 0.18 and int(ar["O2"]) / total_do_ar < 0.28 \
+		and int(ar["Ar"]) >= 1 and int(ar["Ar"]) < int(ar["O2"]),
+		"o ar da lista é quase o de verdade: %d N2, %d O2 e %d Ar (o argônio aumentado para aparecer)" % [ar["N2"], ar["O2"], ar["Ar"]])
 
 	var sem_desenho := PackedStringArray()
 	for chave: String in MisturasDoDestilador.SUBSTANCIAS:
@@ -234,6 +263,61 @@ func _testar_os_dados() -> void:
 
 
 # ─────────────────────────────────────────────────────────────
+# A FÍSICA (o equilíbrio entre líquido e vapor)
+# ─────────────────────────────────────────────────────────────
+
+func _testar_a_fisica() -> void:
+	print("\n--- A FÍSICA: EVAPORAR NÃO É FERVER ---")
+	var ar := {"N2": 78, "O2": 21, "Ar": 1}
+	var a_200 := EquilibrioLiquidoVapor.pressao_da_mistura(ar, -200.0)
+	_checar(a_200 > 0.3 and a_200 < 0.6,
+		"a -200 °C o ar líquido já tem pressão de vapor (%.2f atm): ele evapora, mas não ferve (menos de 1 atm)" % a_200)
+	var bolha := EquilibrioLiquidoVapor.temperatura_de_bolha(ar)
+	_checar(bolha > -195.8 and bolha < -183.0 and absf(bolha - -194.3) < 0.6,
+		"o ar líquido ferve a %.1f °C: entre o nitrogênio (-196) e o oxigênio (-183), como o de verdade (-194,3)" % bolha)
+	var vapor := EquilibrioLiquidoVapor.vapor(ar, bolha)
+	_checar(float(vapor["N2"]) > 0.9 and float(vapor["N2"]) < 0.97,
+		"o vapor que sai dele é rico em nitrogênio (%d%%), mas não é só nitrogênio" % roundi(float(vapor["N2"]) * 100.0))
+	_checar(float(vapor["O2"]) > 0.03 and float(vapor["Ar"]) > 0.0,
+		"o oxigênio evapora junto (%.1f%% do vapor), 11 °C abaixo do ponto de ebulição dele; o argônio também" \
+		% (float(vapor["O2"]) * 100.0))
+	var mais_rico := float(vapor["N2"]) > 0.78 and float(vapor["O2"]) < 0.21
+	_checar(mais_rico, "o vapor é mais rico no que evapora mais fácil que o líquido de onde saiu (lei de Raoult)")
+	var de_novo := EquilibrioLiquidoVapor.vapor({"N2": roundi(float(vapor["N2"]) * 1000.0), "O2": roundi(float(vapor["O2"]) * 1000.0),
+		"Ar": roundi(float(vapor["Ar"]) * 1000.0)}, EquilibrioLiquidoVapor.temperatura_de_bolha(
+		{"N2": roundi(float(vapor["N2"]) * 1000.0), "O2": roundi(float(vapor["O2"]) * 1000.0), "Ar": roundi(float(vapor["Ar"]) * 1000.0)}))
+	_checar(float(de_novo["N2"]) > float(vapor["N2"]) and float(de_novo["N2"]) < 1.0,
+		"condensando esse vapor e fervendo de novo (uma bandeja), ele fica ainda mais rico (%.1f%%), mas nunca 100%%" \
+		% (float(de_novo["N2"]) * 100.0))
+	_checar(not EquilibrioLiquidoVapor.ferve({"N2": 1}, -197.0) and EquilibrioLiquidoVapor.ferve({"N2": 1}, -195.0) \
+		and EquilibrioLiquidoVapor.cabe({}, "O2", -190.0) and not EquilibrioLiquidoVapor.cabe({}, "N2", -190.0),
+		"puro, cada um ferve acima do ponto de ebulição dele (e só vira líquido abaixo)")
+
+	# O álcool com a água: o azeótropo.
+	var no_azeotropo := {"C2H6O": 9, "H2O": 1}
+	var t_az := EquilibrioLiquidoVapor.temperatura_de_bolha(no_azeotropo)
+	var y_az := float(EquilibrioLiquidoVapor.vapor(no_azeotropo, t_az)["C2H6O"])
+	var meio_a_meio := {"C2H6O": 1, "H2O": 1}
+	var y_meio := float(EquilibrioLiquidoVapor.vapor(meio_a_meio, EquilibrioLiquidoVapor.temperatura_de_bolha(meio_a_meio))["C2H6O"])
+	_checar(absf(y_az - 0.9) < 0.02 and absf(t_az - 78.2) < 0.4 and y_meio > 0.6,
+		"álcool e água: meio a meio, o vapor sai com %d%% de álcool; com 90%% de álcool o vapor sai igual ao líquido (%.0f%%, a %.1f °C): é o azeótropo" \
+		% [roundi(y_meio * 100.0), y_az * 100.0, t_az])
+	var t_mar := EquilibrioLiquidoVapor.temperatura_de_bolha({"H2O": 9, "NaCl": 6})
+	_checar(t_mar > 101.0 and t_mar < 110.0 and absf(EquilibrioLiquidoVapor.temperatura_de_bolha({"H2O": 9}) - 100.0) < 0.1,
+		"a água pura ferve a 100 °C; salgada, a %.1f °C" % t_mar)
+	_checar(EquilibrioLiquidoVapor.vapor({"H2O": 9, "NaCl": 6}, 110.0).keys() == ["H2O"],
+		"e o vapor da água salgada é só água: o sal fica")
+
+	var creditos := {}
+	var saiu := {}
+	for i in 20:
+		var tipo := EquilibrioLiquidoVapor.escolher({"N2": 0.9, "O2": 0.1}, creditos)
+		saiu[tipo] = int(saiu.get(tipo, 0)) + 1
+	_checar(int(saiu.get("N2", 0)) == 18 and int(saiu.get("O2", 0)) == 2,
+		"as escolhas justas: de 20 moléculas de um vapor com 90%% de N2, saem 18 de N2 e 2 de O2 %s" % saiu)
+
+
+# ─────────────────────────────────────────────────────────────
 # A COLUNA
 # ─────────────────────────────────────────────────────────────
 
@@ -242,53 +326,84 @@ func _testar_a_coluna() -> void:
 	var coluna := _nova_coluna("ar")
 	await _quadros(1)
 	var dados := MisturasDoDestilador.mistura("ar")
+	var total := 0
+	for chave: String in dados["substancias"]:
+		total += int(dados["substancias"][chave])
 	_checar(coluna.andares() == 5, "a coluna tem cinco andares: o fundo e as quatro bandejas")
 	_checar(coluna.size == coluna.tamanho_da_coluna() and coluna.size.x > 200.0, "o nó toma o tamanho da arte ampliada %s" % coluna.size)
-	_checar(coluna.total_de_moleculas() == 9 + 4 + 6 and coluna.quantas_em(ColunaDoSimulador.Estado.LIQUIDA) == 19,
-		"começa com as 19 moléculas do ar líquidas")
+	_checar(coluna.total_de_moleculas() == total and coluna.quantas_em(ColunaDoSimulador.Estado.LIQUIDA) == total,
+		"começa com as %d moléculas do ar líquidas" % total)
 	_checar(coluna.lugar_de("N2") == Vector2i(0, L) and coluna.lugar_de("Ar") == Vector2i(0, L) and coluna.lugar_de("O2") == Vector2i(0, L),
 		"todas no fundo")
 	_checar(coluna.situacao_de("N2") == "LÍQUIDO NO FUNDO" and coluna.situacao_de("nada") == "", "a ficha diz LÍQUIDO NO FUNDO")
-	_checar(not coluna.separada() and coluna.substancia_do_andar(0) == "", "misturadas: a mistura não está separada")
+	_checar(not coluna.separada() and coluna.substancia_do_andar(0) == "" and coluna.dono_do_andar(0) == "N2",
+		"misturadas: a mistura não está separada (o nitrogênio é só a maioria)")
 	_checar(coluna.temperatura() == -200.0 and coluna.temperatura_pedida() == -200.0, "na temperatura mínima do termômetro (-200)")
+	var bolha := coluna.bolha_do_fundo()
+	_checar(bolha > -196.0 and bolha < -190.0, "o fundo sabe onde ferve: a %.1f °C, entre o nitrogênio e o oxigênio" % bolha)
 	var iguais := true
 	for andar in coluna.andares():
 		if not is_equal_approx(coluna.temperatura_do_andar(andar), -200.0):
 			iguais = false
 	_checar(iguais and coluna.temperatura_do_topo() == -200.0,
 		"com o fundo mais frio que o resfriador, a coluna inteira está na temperatura do fundo")
-	_andar(coluna, 3.0)
-	_checar(coluna.quantas_em(ColunaDoSimulador.Estado.LIQUIDA) == 19 and coluna.temperatura() == -200.0,
-		"sem mexer no termômetro, nada acontece")
 
-	# O termômetro pede; a temperatura vai atrás.
+	# Abaixo do ponto de bolha: nada ferve, mas a superfície evapora e condensa.
+	var pularam := {}
+	for i in roundi(4.0 / PASSO):
+		coluna.avancar(PASSO)
+		for p in coluna.particulas():
+			if p.pulo > 0.0:
+				pularam[p.tipo] = true
+	_checar(coluna.quantas_em(ColunaDoSimulador.Estado.LIQUIDA) == total and coluna.lugar_de("N2") == Vector2i(0, L)
+		and not coluna.fervendo(0) and coluna.temperatura() == -200.0, "sem mexer no termômetro, nada ferve nem sai do fundo")
+	_checar(pularam.has("N2"),
+		"mas a superfície faz o vai-e-volta: moléculas pulam para fora e voltam (evaporação abaixo do ponto de ebulição) %s" % [pularam.keys()])
+
+	# O termômetro pede; a temperatura vai atrás, mas fervendo ela fica no ponto
+	# de bolha da mistura.
 	coluna.pedir_temperatura(999.0)
 	_checar(coluna.temperatura_pedida() == float(dados["maxima"]), "o pedido é preso à escala (máximo -170)")
 	coluna.pedir_temperatura(-999.0)
 	_checar(coluna.temperatura_pedida() == float(dados["minima"]), "e ao mínimo (-200)")
 	coluna.pedir_temperatura(-170.0)
 	_checar(coluna.temperatura() == -200.0, "pedir não muda a temperatura na hora")
-	_andar(coluna, ColunaDoSimulador.TEMPO_DE_PONTA_A_PONTA * 0.5)
-	_checar(absf(coluna.temperatura() - (-185.0)) < 0.3, "na metade do tempo, metade do caminho (%.1f)" % coluna.temperatura())
-	_andar(coluna, ColunaDoSimulador.TEMPO_DE_PONTA_A_PONTA * 0.5 + 0.1)
-	_checar(coluna.temperatura() == -170.0, "em %.1f s o fundo vai de uma ponta à outra do termômetro" \
-		% ColunaDoSimulador.TEMPO_DE_PONTA_A_PONTA)
+	_andar(coluna, 1.5)
+	_checar(coluna.fervendo(0) and absf(coluna.temperatura() - coluna.bolha_do_fundo()) < 0.05 and coluna.temperatura() < -190.0,
+		"chegando no ponto de bolha (%.1f °C), o fundo ferve e para de esquentar: o calor vira vapor" % coluna.temperatura())
+	var antes := coluna.bolha_do_fundo()
+	_andar(coluna, 3.0)
+	_checar(coluna.bolha_do_fundo() > antes + 1.0 and coluna.fracao(0, "N2") < 0.7,
+		"saindo mais nitrogênio, o líquido do fundo fica mais rico em oxigênio e ferve cada vez mais quente (%.1f -> %.1f)" \
+		% [antes, coluna.bolha_do_fundo()])
 	var descendo := true
 	for andar in range(1, coluna.andares()):
 		if coluna.temperatura_do_andar(andar) >= coluna.temperatura_do_andar(andar - 1):
 			descendo = false
-	_checar(descendo and is_equal_approx(coluna.temperatura_do_andar(4), -196.0) and is_equal_approx(coluna.temperatura_do_andar(0), -170.0),
-		"cada andar mais frio que o de baixo: do fundo (-170) ao resfriador (-196)")
-	_checar(is_equal_approx(coluna.temperatura_do_andar(2), -183.0) and is_equal_approx(coluna.temperatura_do_andar_com(1, -183.0), -186.25),
-		"os do meio repartem por igual (o do meio a -183; com o fundo a -183, o 1º a -186,25)")
+	_checar(descendo and is_equal_approx(coluna.temperatura_do_andar(4), -196.0),
+		"cada andar mais frio que o de baixo, até o resfriador (-196)")
+	_checar(is_equal_approx(coluna.temperatura_do_andar_com(2, -176.0), -186.0) and is_equal_approx(coluna.temperatura_do_andar_com(1, -183.0), -186.25),
+		"os do meio repartem por igual (com o fundo a -176, o do meio a -186; com o fundo a -183, o 1º a -186,25)")
 	_checar(coluna.cor_da_temperatura(-200.0) == ColunaDoSimulador.RAMPA[0] and coluna.cor_da_temperatura(-170.0) == ColunaDoSimulador.RAMPA[-1] \
 		and coluna.cor_da_temperatura(-185.0) != ColunaDoSimulador.RAMPA[0], "a cor vai do azul do mínimo ao laranja do máximo")
 
 	coluna.reiniciar()
 	_checar(coluna.temperatura() == -200.0 and coluna.temperatura_pedida() == -200.0 \
-		and coluna.quantas_em(ColunaDoSimulador.Estado.LIQUIDA) == 19 and coluna.lugar_de("N2") == Vector2i(0, L),
+		and coluna.quantas_em(ColunaDoSimulador.Estado.LIQUIDA) == total and coluna.lugar_de("N2") == Vector2i(0, L),
 		"reiniciar() devolve tudo ao fundo e o termômetro ao mínimo")
 	coluna.queue_free()
+
+	# Sem nada fervendo, a temperatura vai de uma ponta à outra sem pulo.
+	var mar := _nova_coluna("mar")
+	var dados_mar := MisturasDoDestilador.mistura("mar")
+	var faixa := float(dados_mar["maxima"]) - float(dados_mar["minima"])
+	mar.pedir_temperatura(104.0)
+	_andar(mar, (104.0 - 20.0) / faixa * ColunaDoSimulador.TEMPO_DE_PONTA_A_PONTA * 0.5)
+	_checar(absf(mar.temperatura() - 62.0) < 0.6, "sem ferver, a temperatura vai atrás do pedido sem pulo (metade do caminho: %.1f)" % mar.temperatura())
+	_andar(mar, 2.0)
+	_checar(mar.temperatura() == 104.0 and not mar.fervendo(0) and mar.lugar_de("H2O") == Vector2i(0, L),
+		"a água salgada a 104 °C ainda não ferve (ferve a %.1f)" % mar.bolha_do_fundo())
+	mar.queue_free()
 
 	# Sem mistura, a coluna não quebra.
 	var vazia := ColunaDoSimulador.new()
@@ -306,28 +421,20 @@ func _testar_as_separacoes() -> void:
 	for chave: String in SEPARACOES:
 		var dados := MisturasDoDestilador.mistura(chave)
 		var nome := String(dados["nome"])
-		var fundo := float(SEPARACOES[chave]["fundo"])
-		var onde: Dictionary = SEPARACOES[chave]["onde"]
+		var esperado: Dictionary = SEPARACOES[chave]
+		var fundo := float(esperado["fundo"])
 		var coluna := _nova_coluna(chave)
 		print("  . %s, com o fundo a %s" % [nome, MisturasDoDestilador.graus(fundo)])
 
-		# O que o teste espera é o que a conta manda.
-		var pela_conta := true
-		for substancia: String in onde:
-			if _lugar_pela_conta(coluna, substancia, fundo) != onde[substancia]:
-				pela_conta = false
-		_checar(pela_conta and onde.size() == (dados["substancias"] as Dictionary).size(),
-			"pela conta, cada substância tem o seu andar (e nenhum andar tem duas)")
-
 		var ferveram: Array = []
-		var condensaram := {}
 		var separou := [0]
 		coluna.ferveu.connect(func(substancia: String) -> void: ferveram.append(substancia))
-		coluna.condensou.connect(func(substancia: String, andar: int) -> void: condensaram[substancia] = andar)
 		coluna.separou.connect(func() -> void: separou[0] += 1)
 		var inicial := {}
+		var total := 0
 		for substancia: String in dados["substancias"]:
 			inicial[substancia] = int(dados["substancias"][substancia])
+			total += inicial[substancia]
 
 		coluna.pedir_temperatura(fundo)
 		# Enquanto anda: ninguém some, ninguém sai da coluna.
@@ -335,116 +442,143 @@ func _testar_as_separacoes() -> void:
 		var perdidas := false
 		var fora := false
 		var limites := Rect2(Vector2.ZERO, coluna.tamanho_da_coluna()).grow(2.0)
-		while tempo < 120.0 and not (coluna.separada() and is_equal_approx(coluna.temperatura(), fundo)):
+		while tempo < 90.0 and not coluna.parada():
 			coluna.avancar(PASSO)
 			tempo += PASSO
 			if int(tempo / PASSO) % 30 == 0:
 				for substancia: String in inicial:
 					var contadas := 0
-					for lugar: Vector2i in coluna.onde_esta(substancia):
-						contadas += int(coluna.onde_esta(substancia)[lugar])
+					var lugares := coluna.onde_esta(substancia)
+					for lugar: Vector2i in lugares:
+						contadas += int(lugares[lugar])
 					if contadas != inicial[substancia]:
 						perdidas = true
-				for p in coluna._particulas:
+				for p in coluna.particulas():
 					if not limites.has_point(p.pos):
 						fora = true
-		_checar(coluna.separada(), "a mistura se separa (em %.0f s de jogo): %s" % [tempo, _retrato(coluna)])
-		_checar(not perdidas and coluna.total_de_moleculas() == inicial.values().reduce(func(a: int, b: int) -> int: return a + b, 0),
-			"nenhuma molécula se perde no caminho")
+		_checar(coluna.parada(), "a coluna assenta (em %.0f s de jogo): %s" % [tempo, _retrato(coluna)])
+		_checar(coluna.separada() and separou[0] == 1, "e a mistura está separada: cada substância é a maioria num lugar (o aviso sai uma vez)")
+		_checar(not perdidas and coluna.total_de_moleculas() == total, "nenhuma molécula se perde no caminho")
 		_checar(not fora, "nem sai de dentro da coluna")
-		var no_lugar := true
-		for substancia: String in onde:
-			if coluna.lugar_de(substancia) != onde[substancia]:
-				no_lugar = false
-		_checar(no_lugar, "cada substância inteira no andar da conta")
-		_checar(separou[0] == 1, "o sinal de separada sai uma vez só")
-		# Ferveu tudo o que saiu do fundo (cada substância avisa uma vez só), a
-		# começar pela que ferve mais fácil.
-		var esperadas: Array = []
-		for substancia in MisturasDoDestilador.em_ordem_de_ebulicao(dados):
-			if onde[substancia] != Vector2i(0, L):
-				esperadas.append(substancia)
-		var ferveram_em_ordem := ferveram.duplicate()
-		ferveram_em_ordem.sort_custom(func(a: String, b: String) -> bool:
-			return MisturasDoDestilador.ebulicao(a) < MisturasDoDestilador.ebulicao(b))
-		_checar(ferveram_em_ordem == esperadas and ferveram[0] == esperadas[0],
-			"ferveu o que saiu do fundo, a começar pelo que ferve mais fácil: %s" % [ferveram])
-		var condensou_certo := true
-		for substancia: String in onde:
-			var lugar: Vector2i = onde[substancia]
-			if lugar.y == L and lugar.x > 0 and int(condensaram.get(substancia, -1)) != lugar.x:
-				condensou_certo = false
-			if lugar.y == G and coluna.quantas_em(ColunaDoSimulador.Estado.SOLTA, substancia) != inicial[substancia]:
-				condensou_certo = false
-		_checar(condensou_certo, "cada uma condensou no andar dela (e o que não condensa ficou gás)")
-		# As fichas.
 		var topo := coluna.andares() - 1
+		_checar(_a_que_mais_tem(coluna, topo) == esperado["topo"],
+			"o líquido do topo é rico no que evapora mais fácil (%s)" % esperado["topo"])
+		_checar(_a_que_mais_tem(coluna, 0) == esperado["embaixo"],
+			"o do fundo, no que evapora menos (%s)" % esperado["embaixo"])
+		if esperado.has("gas"):
+			_checar(coluna.lugar_de(esperado["gas"]) == Vector2i(topo, G) and coluna.situacao_de(esperado["gas"]) == "GÁS NO TOPO",
+				"%s nem no topo vira líquido: sai como gás" % esperado["gas"])
+		var mais_volatil := ""
+		for substancia: String in dados["substancias"]:
+			if EquilibrioLiquidoVapor.volatil(substancia) and (mais_volatil == "" \
+					or MisturasDoDestilador.ebulicao(substancia) < MisturasDoDestilador.ebulicao(mais_volatil)):
+				mais_volatil = substancia
+		_checar(not ferveram.is_empty() and ferveram[0] == mais_volatil and not ferveram.has("NaCl"),
+			"a primeira a evaporar é a que ferve mais fácil (%s) %s" % [mais_volatil, ferveram])
+		# As fichas: cada uma diz onde está a maior parte dela.
 		var frases := true
-		for substancia: String in onde:
-			var lugar: Vector2i = onde[substancia]
-			var esperada := "LÍQUIDO NO FUNDO"
-			if lugar.y == G:
-				esperada = "GÁS NO TOPO"
-			elif lugar.x == topo:
-				esperada = "LÍQUIDO NO TOPO"
-			elif lugar.x > 0:
-				esperada = "LÍQUIDO NO %dº ANDAR" % lugar.x
-			if coluna.situacao_de(substancia) != esperada:
+		for substancia: String in dados["substancias"]:
+			var lugar := coluna.lugar_principal(substancia)
+			var frase := coluna.situacao_de(substancia)
+			if frase.is_empty() or lugar == ColunaDoSimulador.A_CAMINHO or not frase.ends_with(coluna.nome_do_lugar(lugar)):
 				frases = false
-			if lugar.y == L and coluna.substancia_do_andar(lugar.x) != substancia:
-				frases = false
-		_checar(frases, "e a ficha de cada uma diz onde ela está")
+		_checar(frases, "e a ficha de cada uma diz onde está a maior parte dela")
 		# Parada ali, continua separada.
 		_andar(coluna, 5.0)
 		_checar(coluna.separada() and separou[0] == 1, "deixada quieta, continua separada")
 		coluna.queue_free()
 	await _quadros(1)
 
+	# No ar, nem o topo nem o fundo ficam puros.
+	var ar := _nova_coluna("ar")
+	ar.pedir_temperatura(float(SEPARACOES["ar"]["fundo"]))
+	_andar_ate(ar, ar.parada)
+	var topo := ar.andares() - 1
+	var n2_no_topo := ar.fracao(topo, "N2")
+	var o2_no_fundo := ar.fracao(0, "O2")
+	_checar(n2_no_topo >= 0.85 and n2_no_topo < 1.0, "ar: o topo tem %d%% de nitrogênio — rico, mas não puro" % roundi(n2_no_topo * 100.0))
+	_checar(o2_no_fundo > 0.5 and o2_no_fundo < 1.0, "e o fundo, %d%% de oxigênio, com argônio e nitrogênio junto" % roundi(o2_no_fundo * 100.0))
+	var misturadas := 0
+	for andar in range(1, topo):
+		if ar.contas_do_andar(andar).size() >= 2:
+			misturadas += 1
+	_checar(misturadas >= 1, "e no meio as bandejas guardam misturas: %s" % _retrato(ar))
+	ar.queue_free()
+	await _quadros(1)
+
 
 func _testar_o_calor_demais() -> void:
 	print("\n--- ESQUENTAR DEMAIS, ESFRIAR, RECOMEÇAR ---")
 	var coluna := _nova_coluna("ar")
-	coluna.pedir_temperatura(-183.0)
-	_checar(_andar_ate(coluna, coluna.separada) >= 0.0, "o ar separado a -183")
-	# Fundo a -176: andares a -176, -181, -186, -191 e -196. O oxigênio (-183) e o
-	# argônio (-186) param os dois no 2º andar.
+	coluna.pedir_temperatura(-188.0)
+	_checar(_andar_ate(coluna, coluna.separada) >= 0.0, "o ar separado a -188")
+	var puro_antes := coluna.fracao(coluna.andares() - 1, "N2")
+	# Acima do ponto de ebulição do oxigênio, o fundo ferve até secar.
 	coluna.pedir_temperatura(-176.0)
-	_andar_ate(coluna, func() -> bool: return coluna.em_transito() == 0 and is_equal_approx(coluna.temperatura(), -176.0) \
-		and coluna.lugar_de("O2") != ColunaDoSimulador.A_CAMINHO and coluna.lugar_de("Ar") != ColunaDoSimulador.A_CAMINHO)
-	_andar(coluna, 3.0)
-	_checar(coluna.lugar_de("O2") == Vector2i(2, L) and coluna.lugar_de("Ar") == Vector2i(2, L),
-		"com o fundo a -176, o oxigênio e o argônio vão parar no mesmo andar: %s" % _retrato(coluna))
-	_checar(not coluna.separada() and coluna.substancia_do_andar(2) == "", "a mistura deixa de estar separada")
-	_checar(coluna.lugar_de("N2") == Vector2i(4, L), "o nitrogênio continua no topo")
+	_andar_ate(coluna, func() -> bool: return coluna.parada())
+	_checar(coluna.contas_do_andar(0).is_empty() and coluna.temperatura() == -176.0,
+		"com o fundo a -176 (acima dos -183 do oxigênio), o fundo ferve até secar: %s" % _retrato(coluna))
+	_checar(not coluna.onde_esta("O2").has(Vector2i(0, L)) and coluna.fracao(coluna.andares() - 1, "N2") < puro_antes,
+		"o oxigênio subiu todo, e o topo ficou menos rico em nitrogênio (%d%% -> %d%%)" \
+		% [roundi(puro_antes * 100.0), roundi(coluna.fracao(coluna.andares() - 1, "N2") * 100.0)])
+	# O que ficou nas bandejas mais frias que os -183 °C dele é oxigênio: cada
+	# substância segue a maioria num lugar (a tela continua dizendo separada).
+	# O preço do calor demais é o topo mais sujo, e o fundo vazio.
+	var bandeja_de_oxigenio := false
+	for andar in range(1, coluna.andares() - 1):
+		if coluna.dono_do_andar(andar) == "O2" and coluna.temperatura_do_andar(andar) < -183.0:
+			bandeja_de_oxigenio = true
+	_checar(bandeja_de_oxigenio and coluna.dono_do_andar(coluna.andares() - 1) == "N2" and coluna.separada(),
+		"o oxigênio parou nas bandejas abaixo de -183 °C, e o nitrogênio segue a maioria no topo")
 
 	# Esfriar não desfaz: o líquido de uma bandeja fica nela.
+	var antes_de_esfriar: Array[Dictionary] = []
+	for andar in coluna.andares():
+		antes_de_esfriar.append(coluna.contas_do_andar(andar))
 	coluna.pedir_temperatura(-200.0)
 	_andar(coluna, 8.0)
-	_checar(coluna.temperatura() == -200.0 and coluna.lugar_de("O2") == Vector2i(2, L) and coluna.lugar_de("Ar") == Vector2i(2, L) \
-		and not coluna.separada(), "esfriar tudo de novo não desmistura: o que virou líquido numa bandeja fica nela")
+	var ficou := true
+	for andar in coluna.andares():
+		if coluna.contas_do_andar(andar) != antes_de_esfriar[andar]:
+			ficou = false
+	_checar(coluna.temperatura() == -200.0 and ficou and coluna.contas_do_andar(0).is_empty(),
+		"esfriar tudo de novo não desfaz: o que virou líquido numa bandeja fica nela, e o fundo segue vazio")
 	coluna.reiniciar()
-	coluna.pedir_temperatura(-183.0)
+	coluna.pedir_temperatura(-188.0)
 	_checar(_andar_ate(coluna, coluna.separada) >= 0.0, "recomeçando, dá para separar de novo")
 	coluna.queue_free()
 
-	# O que nunca ferve na escala e o que nunca condensa.
+	# O que nunca evapora e o que nunca condensa.
 	var mar := _nova_coluna("mar")
+	_checar(mar.situacao_de("NaCl") == "SÓLIDO NO FUNDO" and mar.situacao_de("H2O") == "LÍQUIDO NO FUNDO",
+		"o sal nunca é líquido (só derrete a 801 °C): o que não cabe na água fica SÓLIDO NO FUNDO")
 	mar.pedir_temperatura(float(MisturasDoDestilador.mistura("mar")["maxima"]))
 	_andar(mar, 40.0)
 	_checar(mar.lugar_de("NaCl") == Vector2i(0, L) and mar.quantas_em(ColunaDoSimulador.Estado.LIQUIDA, "NaCl") == 6,
-		"água do mar no máximo do termômetro: o sal não ferve, fica no fundo")
-	_checar(mar.onde_esta("H2O").keys().all(func(lugar: Vector2i) -> bool: return lugar.x > 0),
-		"e a água saiu toda do fundo, sem o sal: %s" % _retrato(mar))
+		"água do mar no máximo do termômetro: o sal não evapora, fica no fundo")
+	_checar(mar.onde_esta("H2O").keys().all(func(lugar: Vector2i) -> bool: return lugar.x > 0) \
+		and mar.fracao(mar.andares() - 1, "H2O") == 1.0, "e a água saiu toda do fundo, pura (o sal não vai junto): %s" % _retrato(mar))
+	_checar(mar.situacao_de("NaCl") == "SÓLIDO NO FUNDO", "sem água, o sal todo fica sólido no fundo")
+	# Pouco sal numa água que o dissolve todo.
+	var salmoura := MisturasDoDestilador.mistura("mar").duplicate(true)
+	salmoura["substancias"] = {"H2O": 18, "NaCl": 1}
+	mar.definir_mistura(salmoura)
+	_checar(mar.situacao_de("NaCl") == "DISSOLVIDO NO FUNDO",
+		"com água que dê para dissolver todo o sal, a ficha diz DISSOLVIDO NO FUNDO")
 	mar.queue_free()
 	var nobres := _nova_coluna("gases_nobres")
 	_andar(nobres, 12.0)
 	_checar(nobres.lugar_de("Ne") == Vector2i(4, G) and nobres.situacao_de("Ne") == "GÁS NO TOPO",
-		"gases nobres, sem mexer em nada: a -200 o neônio já é gás, sobe e fica gás no topo")
+		"gases nobres, sem mexer em nada: a -200 o neônio já ferve, sobe e fica gás no topo")
 	_checar(nobres.lugar_de("Ar") == Vector2i(0, L) and nobres.lugar_de("Xe") == Vector2i(0, L), "os outros continuam líquidos no fundo")
 	nobres.queue_free()
 	var petroleo := _nova_coluna("petroleo")
 	_andar(petroleo, 12.0)
-	_checar(petroleo.lugar_de("C4H10") == Vector2i(4, G), "petróleo a 25 °C: o butano já sai como gás pelo topo")
+	_checar(petroleo.lugar_de("C4H10") == Vector2i(0, L) and not petroleo.fervendo(0),
+		"petróleo a 25 °C: o butano dissolvido no óleo ainda não ferve (a pressão dele ali é menor que 1 atm)")
+	petroleo.pedir_temperatura(100.0)
+	_andar_ate(petroleo, petroleo.parada)
+	_checar(petroleo.lugar_de("C4H10") == Vector2i(4, G), "a 100 °C, ele sai todo como gás pelo topo")
 	petroleo.queue_free()
 	await _quadros(1)
 
@@ -489,6 +623,23 @@ func _testar_o_termometro() -> void:
 	await _quadros(1)
 
 
+## As marcas do termômetro que são de substância (sem a "O FUNDO FERVE").
+func _marcas_de_substancia(termometro: Termometro) -> Array[Dictionary]:
+	var lista: Array[Dictionary] = []
+	for marca: Dictionary in termometro.marcas:
+		if not marca.has("texto"):
+			lista.append(marca)
+	return lista
+
+
+## A marca de onde o fundo ferve agora (vazio se não há).
+func _marca_do_fundo(termometro: Termometro) -> Dictionary:
+	for marca: Dictionary in termometro.marcas:
+		if marca.has("texto"):
+			return marca
+	return {}
+
+
 # ─────────────────────────────────────────────────────────────
 # A TELA
 # ─────────────────────────────────────────────────────────────
@@ -501,13 +652,18 @@ func _testar_a_tela() -> void:
 		"o título é DESTILADOR, e ESC leva ao Laboratório")
 	_checar(tela.chave_da_mistura == "ar" and tela.mistura()["chave"] == "ar", "abre com o ar líquido, a mistura da história")
 	_checar(tela.substancias() == ["N2", "Ar", "O2"], "as fichas vêm na ordem em que as substâncias fervem: N2, Ar, O2")
-	_checar(tela.termometro.minima == -200.0 and tela.termometro.maxima == -170.0 and tela.termometro.marcas.size() == 3,
+	var marcas := _marcas_de_substancia(tela.termometro)
+	_checar(tela.termometro.minima == -200.0 and tela.termometro.maxima == -170.0 and marcas.size() == 3,
 		"o termômetro vai de -200 a -170, com uma marca para cada substância")
 	var marcas_certas := true
-	for marca: Dictionary in tela.termometro.marcas:
+	for marca: Dictionary in marcas:
 		if float(marca["graus"]) != MisturasDoDestilador.ebulicao(String(marca["chave"])):
 			marcas_certas = false
 	_checar(marcas_certas, "cada marca na altura do ponto de ebulição da substância")
+	var do_fundo := _marca_do_fundo(tela.termometro)
+	_checar(not do_fundo.is_empty() and absf(float(do_fundo["graus"]) - tela.coluna.bolha_do_fundo()) < 0.06 \
+		and String(do_fundo["texto"]) == tela.TXT_MARCA_DO_FUNDO,
+		"e uma marca escrita mostra onde o fundo ferve agora (%s)" % MisturasDoDestilador.graus(float(do_fundo.get("graus", 0.0))))
 	await _quadros(2)
 	_checar(tela.termometro.pedida == -200.0 and tela.termometro.medida == -200.0, "o ponteiro e a coluna colorida começam no mínimo")
 
@@ -546,7 +702,7 @@ func _testar_a_tela() -> void:
 	# As fichas, as listas e os textos de TODAS as misturas.
 	var textos := _textos_do_script(tela)
 	textos.append_array(["LÍQUIDO NO FUNDO", "LÍQUIDO NO TOPO", "LÍQUIDO NO 3º ANDAR", "GÁS NO TOPO", "GÁS NO 2º ANDAR",
-		"MUDANDO DE ANDAR", "ESPALHADA", ColunaDoSimulador.LEGENDA_DO_RESFRIADOR, "↑ 1465 °C", "↓ -246 °C"])
+		"SÓLIDO NO FUNDO", "DISSOLVIDO NO FUNDO", "MUDANDO DE ANDAR", "22 DE 22 NO 3º ANDAR", ColunaDoSimulador.LEGENDA_DO_RESFRIADOR, "↑ 1465 °C", "↓ -246 °C", "-193,5 °C"])
 	_checar(_letras_que_faltam(textos).is_empty(), "toda letra da tela existe na fonte [%s]" % _letras_que_faltam(textos))
 	var apertados := PackedStringArray()
 	for i in MisturasDoDestilador.MISTURAS.size():
@@ -568,7 +724,8 @@ func _testar_a_tela() -> void:
 			var linhas: Array = [[String(substancia["nome"]), 22],
 				[String(MisturasDoDestilador.APELIDOS.get(substancias[k], "")), 11],
 				[tela.TXT_FERVE % MisturasDoDestilador.graus(float(substancia["ebulicao"])), 11],
-				["LÍQUIDO NO 3º ANDAR", 11], ["MUDANDO DE ANDAR", 11]]
+				["LÍQUIDO NO 3º ANDAR", 11], ["MUDANDO DE ANDAR", 11], ["22 DE 22 NO 3º ANDAR", 11],
+				["DISSOLVIDO NO FUNDO", 11]]
 			for linha: Array in linhas:
 				if PecasDoLaboratorio.largura(String(linha[0]), int(linha[1])) > cabem:
 					apertados.append("%s: \"%s\" não cabe na ficha" % [dados["nome"], linha[0]])
@@ -577,10 +734,15 @@ func _testar_a_tela() -> void:
 			var ampliacao := 2.0 if lado * 2.0 <= tela.LARGURA_DO_DESENHO - 8.0 else 1.0
 			if lado * ampliacao > tela.LARGURA_DO_DESENHO + 4.0:
 				apertados.append("%s: a molécula de %s não cabe no canto (%.0f px)" % [dados["nome"], substancias[k], lado * ampliacao])
-		# O aviso de baixo das fichas (o objetivo, ou MISTURA SEPARADA) cabe na tela.
+		# O aviso de baixo das fichas (o objetivo, o começo, ou MISTURA SEPARADA
+		# com a frase de baixo) cabe na tela.
 		var pe_das_fichas: float = tela.retangulo_da_ficha(substancias.size()).position.y + 34.0
-		var linhas_do_aviso := EstiloHUD.quebrar(FONTE, tela.TXT_OBJETIVO, 11, tela.FICHAS.size.x).size()
-		if pe_das_fichas - 22.0 + linhas_do_aviso * 17.0 > tela.size.y - 60.0:
+		var mais_comprido := 0
+		for aviso: String in [tela.TXT_OBJETIVO, tela.TXT_COMECO]:
+			mais_comprido = maxi(mais_comprido, EstiloHUD.quebrar(FONTE, aviso, 11, tela.FICHAS.size.x).size())
+		var depois_da_placa := EstiloHUD.quebrar(FONTE, tela.TXT_SEPARADA_MAS, 11, tela.FICHAS.size.x).size()
+		if pe_das_fichas - 22.0 + mais_comprido * 17.0 > tela.size.y - 60.0 \
+				or pe_das_fichas + 22.0 + depois_da_placa * 17.0 > tela.size.y - 60.0:
 			apertados.append("%s: o aviso de baixo das fichas não cabe" % dados["nome"])
 		# A nota e o aviso do modelo, embaixo da lista.
 		var y: float = tela.retangulo_do_recomecar().end.y + 34.0
@@ -588,14 +750,19 @@ func _testar_a_tela() -> void:
 		y += EstiloHUD.quebrar(FONTE, tela.TXT_MODELO, 11, tela.LISTA.size.x).size() * 17.0
 		if y > tela.size.y - 60.0:
 			apertados.append("%s: a nota e o aviso do modelo passam do pé da tela (%.0f)" % [dados["nome"], y])
-		# As marcas do termômetro (molécula + número) cabem até as fichas.
+		# As marcas do termômetro (molécula + número, ou o texto) cabem até as fichas.
 		for marca: Dictionary in tela.termometro.marcas:
 			var texto := MisturasDoDestilador.graus(float(marca["graus"]))
 			if float(marca["graus"]) > tela.termometro.maxima or float(marca["graus"]) < tela.termometro.minima:
 				texto = "↑ " + texto
-			var largura := float(MoleculasDoDestilador.celula(String(marca["chave"])).x) * MoleculasDoDestilador.ESCALA
-			var fim: float = tela.termometro.global_position.x + tela.termometro.retangulo_da_ficha().end.x + 2.0 + 30.0 + largura \
+			var largura := float(MoleculasDoDestilador.celula(String(marca["chave"])).x) * MoleculasDoDestilador.ESCALA \
 				+ PecasDoLaboratorio.largura(texto, 11)
+			if marca.has("texto"):
+				largura = 0.0
+				for linha in String(marca["texto"]).split("\n"):
+					largura = maxf(largura, PecasDoLaboratorio.largura(linha, 11))
+				largura = maxf(largura, PecasDoLaboratorio.largura(texto, 11))
+			var fim: float = tela.termometro.global_position.x + tela.termometro.retangulo_da_ficha().end.x + 2.0 + 30.0 + largura
 			if fim > tela.FICHAS.position.x - 6.0:
 				apertados.append("%s: a marca de %s encosta nas fichas (%.0f)" % [dados["nome"], marca["chave"], fim])
 	_checar(apertados.is_empty(), "nas seis misturas: botões, fichas, notas e marcas do termômetro no lugar %s" % [apertados.slice(0, 6)])
@@ -678,11 +845,26 @@ func _testar_os_comandos() -> void:
 	_botao_do_mouse(ponto.call(-190.0), false)
 	_checar(graus_inteiros, "arrastando, o pedido anda de grau em grau")
 
+	# A marca de onde o fundo ferve sobe enquanto ele ferve.
+	tela.coluna.reiniciar()
+	tela.pedir_temperatura(-186.0)
+	for i in 60:
+		tela.coluna.avancar(PASSO)
+	await _quadros(2)
+	var marca_antes := float(_marca_do_fundo(tela.termometro).get("graus", 0.0))
+	for i in 240:
+		tela.coluna.avancar(PASSO)
+	await _quadros(2)
+	var marca_depois := float(_marca_do_fundo(tela.termometro).get("graus", 0.0))
+	_checar(marca_depois > marca_antes + 1.0 and tela.termometro.medida <= marca_depois + 0.1,
+		"fervendo, a marca \"O FUNDO FERVE\" sobe (%s -> %s) e a coluna colorida não passa dela" \
+		% [MisturasDoDestilador.graus(marca_antes), MisturasDoDestilador.graus(marca_depois)])
+
 	# Trocar de mistura e recomeçar.
 	await _clicar(tela, "mistura_petroleo")
 	_checar(tela.chave_da_mistura == "petroleo" and trocas == ["petroleo"] and _tocou(tela, "botao"),
 		"clicar em PETRÓLEO troca a mistura")
-	_checar(tela.termometro.minima == 25.0 and tela.termometro.maxima == 350.0 and tela.termometro.marcas.size() == 4 \
+	_checar(tela.termometro.minima == 25.0 and tela.termometro.maxima == 350.0 and _marcas_de_substancia(tela.termometro).size() == 4 \
 		and tela.coluna.temperatura_pedida() == 25.0 and tela.coluna.total_de_moleculas() == 18,
 		"com a escala dela (25 a 350), as quatro marcas e as moléculas dela, do começo")
 	_checar(tela.substancias() == ["C4H10", "C8H18", "C12H26", "C16H34"], "e as fichas dela: butano, octano, dodecano, hexadecano")
@@ -716,12 +898,9 @@ func _testar_a_separacao_na_tela() -> void:
 		var pediu: bool = tela.coluna.temperatura_pedida() == fundo
 		var tempo := _andar_ate(tela.coluna, tela.coluna.separada, 120.0)
 		await _quadros(2)
-		var onde: Dictionary = SEPARACOES[chave]["onde"]
-		var no_lugar := true
-		for substancia: String in onde:
-			if tela.coluna.lugar_de(substancia) != onde[substancia]:
-				no_lugar = false
-		_checar(pediu and tempo >= 0.0 and no_lugar and _tocou(tela, "certo"),
+		var topo: int = tela.coluna.andares() - 1
+		var rico_em_cima: bool = _a_que_mais_tem(tela.coluna, topo) == SEPARACOES[chave]["topo"]
+		_checar(pediu and tempo >= 0.0 and rico_em_cima and _tocou(tela, "certo"),
 			"%s separada a %s, com o som de acerto" % [MisturasDoDestilador.mistura(chave)["nome"], MisturasDoDestilador.graus(fundo)])
 		await _esperar(0.3)
 		await _foto("dest_2_%s" % chave)
@@ -764,7 +943,8 @@ func _testar_o_controle() -> void:
 	await _quadros(3)
 	var arrastado: float = tela.coluna.temperatura_pedida()
 	var no_cursor := roundf(termometro.graus_no_ponto(CursorVirtual._pos.y - termometro.global_position.y))
-	_checar(arrastado > -190.0 and arrastado == no_cursor, "segurando o ✕ e subindo o cursor, o ponteiro vai junto (%s)" 		% MisturasDoDestilador.graus(arrastado))
+	_checar(arrastado > -190.0 and arrastado == no_cursor, "segurando o ✕ e subindo o cursor, o ponteiro vai junto (%s)" \
+		% MisturasDoDestilador.graus(arrastado))
 	_botao_do_controle(JOY_BUTTON_A, false)
 	await _quadros(3)
 	_eixo_do_controle(JOY_AXIS_LEFT_Y, 1.0)

@@ -18,7 +18,8 @@ extends RefCounted
 #   prologo    world1 até a revelação do Dr. Chico
 #   carbono    Ala de Pirólise + o corredor do pátio + Pátio (fase 1 e 1.2)
 #                                                         -> entregar o C
-#   nitrogenio o corredor da torre + a fase 2 (em branco) -> entregar o N
+#   nitrogenio o corredor da torre + a rua da fase 2 e os seus prédios
+#                                                         -> entregar o N
 #   subsolo    Subsolo em blecaute                       -> entregar o P e o S
 #   lancamento Torre de Lançamento                       -> embarque
 #
@@ -146,15 +147,21 @@ func _init(visitou: Callable) -> void:
 				_entregou.bind("C"))],
 		]),
 
-		# A fase do nitrogênio está em branco, sendo refeita do zero: os passos
-		# que dependiam dos objetos da antiga Torre (a alavanca atrás da grade,
-		# a chapa soldada do armário, o ciclo do nitrogênio na estufa) saíram
-		# junto com eles. Ficaram só os que não consultam nenhum nó da cena —
-		# os passos novos entram aqui conforme a fase for sendo montada.
-		_trilha("nitrogenio", "NITROGÊNIO", AmostraChonps.CORES["N"], [CORREDOR_TORRE, FASE2], [
-			[_obj("entrar_torre", "Entre na Torre de Gases e Estufa", _visitou.bind(FASE2))],
-			[_obj("mochila", "Pegue a mochila propulsora de N₂", _tem.bind("mochila"))],
-			[_obj("pegar_n", "Pegue a amostra de nitrogênio (N)", _pegou.bind("N"))],
+		# A fase do nitrogênio: a rua com os três prédios (compressor, torre e
+		# destilação) e o caminho do ar até o N₂ (quase puro). Quem guarda o que já
+		# foi feito entre as salas é a MissaoNitrogenio (scripts/fases/
+		# missao_nitrogenio.gd): as perguntas daqui só leem o estado dela.
+		_trilha("nitrogenio", "NITROGÊNIO", AmostraChonps.CORES["N"], [CORREDOR_TORRE, FASE2,
+				MissaoNitrogenio.CENA_COMPRESSOR, MissaoNitrogenio.CENA_DESTILACAO,
+				MissaoNitrogenio.CENA_TORRE, MissaoNitrogenio.CENA_TELHADO], [
+			[_obj("entrar_torre", "Chegue à rua da Torre de Gases", _visitou.bind(FASE2))],
+			[_obj("mochila", "Pegue a mochila de N₂ na sala de destilação", _tem.bind("mochila"))],
+			[_obj("cilindro", "Suba a torre até o telhado e pegue o cilindro de amostra", _pegou_o_cilindro)],
+			[_obj("comprimir", "No compressor, encha o cilindro com ar líquido", _comprimiu)],
+			[_obj("levar_amostra", "Leve a amostra à coluna de destilação antes que ela esquente",
+				_amostra_chegou_a_coluna)],
+			[_obj("destilar", "Separe o nitrogênio do ar na coluna de destilação", _destilou)],
+			[_obj("pegar_n", "Pegue o cilindro de nitrogênio (N)", _pegou.bind("N"))],
 			[_obj("entregar_n", "Leve o nitrogênio ao receptor do painel CHONPS, no laboratório",
 				_entregou.bind("N"))],
 		]),
@@ -277,6 +284,29 @@ func _entregou(letra: String) -> bool:
 func _tentou_porta_de_metal() -> bool:
 	return EstadoMundo.ja_feito_caminho(PORTA_METAL, PortaMetalMacarico.MARCA_TENTOU) \
 		or EstadoMundo.ja_feito_caminho(PORTA_METAL_ELEVADOR, PortaMetalMacarico.MARCA_TENTOU)
+
+
+# ─────────────────────────────────────────────
+#  Perguntas — Torre de Gases (nitrogênio)
+# ─────────────────────────────────────────────
+
+## O cilindro saiu do telhado: na mochila, preso no compressor, cheio de
+## amostra, na coluna — ou o nitrogênio até já foi colhido.
+func _pegou_o_cilindro() -> bool:
+	return MissaoNitrogenio.tem_cilindro_vazio() or MissaoNitrogenio.cilindro_acoplado \
+		or MissaoNitrogenio.compressor_concluido()
+
+
+func _comprimiu() -> bool:
+	return MissaoNitrogenio.compressor_concluido()
+
+
+func _amostra_chegou_a_coluna() -> bool:
+	return MissaoNitrogenio.amostra_na_coluna or _destilou()
+
+
+func _destilou() -> bool:
+	return MissaoNitrogenio.nitrogenio_destilado or Progresso.conquistou_celula("N")
 
 
 # ─────────────────────────────────────────────

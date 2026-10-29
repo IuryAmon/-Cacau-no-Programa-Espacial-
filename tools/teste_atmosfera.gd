@@ -16,17 +16,28 @@ extends Node
 #     estrelas e fica lembrado;
 #   * a cena do mirante inteira, com o diálogo de verdade: a Cacau fica parada
 #     do começo ao fim, a tela não apaga, a fase fica no crepúsculo, ela fala
-#     do anoitecer, o controle e o HUD voltam, e a cena não repete;
+#     do anoitecer, o controle e o HUD voltam, e a cena não repete. A música:
+#     o piano G com o balão, a trilha pausada, "vendo foguete2" um respiro
+#     depois do piano, e no fim a trilha de volta, já com a bossa do sol posto;
+#   * a música segue a hora em todo lugar de céu aberto: a bossa da tarde, a
+#     do sol posto e o jazz da noite — inclusive quando a noite cai no pátio e
+#     com a tecla Ç —, sem recomeçar de uma fase para a outra; a oficina toca a
+#     dela;
 #   * de volta ao world1 depois disso, a fase abre no crepúsculo;
 #   * o pátio (fase 1.2) abre no crepúsculo, sem lua; encher e acender a
 #     fornalha não muda a hora, e resolver o painel da temperatura também não:
 #     com o forno de boca aberta o tempo não passa. É quando a porta do forno
 #     fecha, com ele ainda queimando lá dentro, que a noite cai com a lua
-#     subindo, uma vez só; daí em diante o pátio e o world1 abrem de noite;
+#     subindo, uma vez só; daí em diante o pátio e o world1 abrem de noite.
+#     Os postes do pátio ficam apagados até a noite cair e pegam no meio dela;
 #   * a hora é uma só para o jogo inteiro: na tarde, no crepúsculo e na noite,
 #     as três fases ao ar livre abrem na mesma hora;
 #   * a tecla Ç (debug) passa para a hora seguinte, na fase e na partida;
 #   * a fase2_torre, de noite, tem a lua no alto;
+#   * as janelas dos prédios da torre acendem à noite, todas e todas iguais
+#     (o vidro de uma cor só), cada uma em cima da sua janela; ficam fracas ao
+#     entardecer, e a rua nunca põe na tela mais luzes do que o Godot soma num
+#     desenho só;
 #   * a interface do mundo (balões, teclas, textos) fica fora da luz ambiente,
 #     e a placa da estrada não;
 #   * as luzes que seguem o horário (o laser) ficam apagadas numa cena sem
@@ -36,9 +47,19 @@ const MUNDO := "res://scenes/world1.tscn"
 const PATIO := "res://scenes/fases/fase1_2_exterior.tscn"
 const TORRE := "res://scenes/fases/fase2_torre.tscn"
 const OFICINA := "res://scenes/fases/fase1_oficina.tscn"
+const MUSICA_DA_TARDE := "res://sounds/Trilhas/bossa nova estilo stardew valley.mp3"
+const MUSICA_DO_SOL_POSTO := "res://sounds/Trilhas/bossa nova estila stardew valley2.mp3"
+const MUSICA_DA_NOITE := "res://sounds/Trilhas/jazz noite.mp3"
+const MUSICA_DO_FOGUETE := "res://sounds/Trilhas/vendo foguete2.mp3"
+const MUSICA_DA_OFICINA := "res://sounds/Trilhas/fase1.mp3"
 const ARTE_DO_POSTE := "Props-01.png"
 ## O mastro do poste da fase2_torre, de cima para baixo (linhas do atlas).
 const MASTRO := [9, 10, 11, 12, 10, 11, 12, 13]
+## O Godot soma no máximo 15 luzes num mesmo desenho, e o cenário da rua é
+## desenhado num bloco só: as luzes da fase na tela (postes e janelas) ficam
+## nisto, e sobra lugar para as que andam com a Cacau (lanterna, maçarico,
+## ferramenta).
+const LUZES_DA_FASE_NA_TELA := 12
 
 var _falhas := 0
 
@@ -62,6 +83,7 @@ func _rodar() -> void:
 	await _testar_hora_sincronizada()
 	await _testar_tecla_da_hora()
 	await _testar_torre_de_noite()
+	await _testar_janelas_da_torre()
 	await _testar_oficina()
 	await _testar_luzes_proprias()
 	print("\n>>> %s <<<" % ("TUDO OK" if _falhas == 0 else "%d FALHA(S)" % _falhas))
@@ -80,9 +102,9 @@ func _zerar_a_partida() -> void:
 func _testar_postes() -> void:
 	print("\n--- OS POSTES ---")
 	await _abrir(TORRE)
-	var da_torre := _mastros(get_tree().current_scene)
-	_checar(da_torre.size() >= 1 and da_torre.all(func(m: Array) -> bool: return m == MASTRO),
-		"o poste da fase2_torre é o modelo: %d tiles" % MASTRO.size())
+	var da_torre := _postes_de_cena(get_tree().current_scene)
+	_checar(da_torre.size() >= 4 and da_torre.all(func(p: PosteDeLuz) -> bool: return p.linhas_da_haste() == MASTRO),
+		"os %d postes da fase2_torre (cena PosteDeLuz) são o modelo: %d tiles" % [da_torre.size(), MASTRO.size()])
 
 	await _abrir(MUNDO)
 	var cena := get_tree().current_scene
@@ -137,6 +159,7 @@ func _testar_entardecer() -> void:
 	_checar(atm.perfil_atual() == atm.entardecer and is_zero_approx(atm.perfil_atual().estrelas),
 		"o perfil é o do entardecer, sem estrelas")
 	_checar(atm.pode_por_o_sol(), "e o sol ainda está para se pôr")
+	_checar(_musica_tocando() == MUSICA_DA_TARDE, "toca a bossa da tarde (%s)" % _musica_tocando().get_file())
 
 	var ambiente := _ambiente(atm)
 	_checar(ambiente != null and ambiente.color.is_equal_approx(atm.entardecer.ambiente),
@@ -236,10 +259,38 @@ func _testar_cena_do_mirante() -> void:
 	var falas_a_direita := true
 	var uau_so_com_o_retrato := false
 	var presa_na_fala := true
+	var tocou_o_piano := false
+	var piano_com_o_balao := false
+	var quando_o_piano_acabou := -1.0
+	var quando_o_foguete_entrou := -1.0
+	var trilha_pausou := false
+	var musica_do_foguete_tocou := false
+	var trilha_parada_com_ela := true
+	var exclamacao := player.get_node("ExclamacaoFoguete") as CanvasItem
+	var quando_pisou := -1.0
+	var quando_o_balao_pulou := -1.0
 	var espera := 0.0
 	while espera < 40.0 and not (EstadoMundo.sol_se_pos and player.pode_se_mover):
 		await get_tree().process_frame
 		espera += get_process_delta_time()
+		if gatilho._disparado and quando_pisou < 0.0:
+			quando_pisou = espera
+		if exclamacao.visible and quando_o_balao_pulou < 0.0:
+			quando_o_balao_pulou = espera - quando_pisou
+		if gatilho._susto != null and is_instance_valid(gatilho._susto) and gatilho._susto.playing:
+			if not tocou_o_piano:
+				piano_com_o_balao = exclamacao.visible and Dialogic.current_timeline == null
+			tocou_o_piano = true
+		elif tocou_o_piano and quando_o_piano_acabou < 0.0:
+			quando_o_piano_acabou = espera
+		trilha_pausou = trilha_pausou or TrilhaSonora.esta_pausada()
+		if gatilho.tocando_a_musica_do_foguete():
+			if quando_o_foguete_entrou < 0.0:
+				quando_o_foguete_entrou = espera
+			musica_do_foguete_tocou = true
+			var pausado := TrilhaSonora._tocador
+			trilha_parada_com_ela = trilha_parada_com_ela and TrilhaSonora.esta_pausada() \
+				and pausado != null and pausado.stream_paused
 		if Dialogic.current_timeline != null:
 			falou = true
 			var quem := load("res://timelines/cacau.dch") as DialogicCharacter
@@ -292,6 +343,23 @@ func _testar_cena_do_mirante() -> void:
 	_checar(player.pode_se_mover and not player.segurar_apos_o_foguete, "o controle voltou")
 	await _quadros(3)
 	_checar(hud.visible and cena.get_node_or_null("FadeTela") == null, "o HUD voltou e a cortina saiu")
+	_checar(quando_o_balao_pulou >= 0.0 and quando_o_balao_pulou < 0.05,
+		"o balão pula na hora em que ela entra no mirante (%.2f s)" % quando_o_balao_pulou)
+	_checar(tocou_o_piano and piano_com_o_balao, "o piano G tocou junto com o balão de exclamação")
+	_checar(trilha_pausou and musica_do_foguete_tocou and trilha_parada_com_ela
+		and gatilho.musica_do_foguete.resource_path == MUSICA_DO_FOGUETE,
+		"a trilha parou e \"vendo foguete2\" tocou no lugar")
+	var respiro := quando_o_foguete_entrou - quando_o_piano_acabou
+	_checar(quando_o_piano_acabou > 0.0 and respiro >= gatilho.espera_antes_da_musica - 0.05,
+		"   %.1f s depois de o piano acabar" % respiro)
+	await _segundos(gatilho.fade_de_volta + 0.3)
+	var trilha := TrilhaSonora._tocador
+	_checar(not gatilho.tocando_a_musica_do_foguete() and not TrilhaSonora.esta_pausada()
+		and trilha != null and trilha.playing and not trilha.stream_paused
+		and is_equal_approx(trilha.volume_db, atm.volume_da_musica_db),
+		"no fim a trilha voltou (%.1f dB)" % (trilha.volume_db if trilha != null else 0.0))
+	_checar(_musica_tocando() == MUSICA_DO_SOL_POSTO,
+		"   já com a bossa do sol posto (%s)" % _musica_tocando().get_file())
 
 	# A cena não repete: nem pisando de novo, nem se a fase recarregar.
 	player.global_position = forma.global_position + Vector2(60, -120)
@@ -310,6 +378,7 @@ func _testar_volta_no_crepusculo() -> void:
 	await _quadros(4)
 	_checar(atm.momento == Atmosfera.Momento.CREPUSCULO and atm.perfil_atual() == atm.crepusculo,
 		"a fase abre no crepúsculo, não de noite")
+	_checar(_musica_tocando() == MUSICA_DO_SOL_POSTO, "   com a bossa do sol posto")
 	var sol := cena.get_node("BG/CamadaDoSol/Sol") as AstroPixel
 	_checar(is_equal_approx(sol.descida, atm.descida_do_sol), "com o sol posto")
 	_checar((cena.get_node("ColisaoCenaFoguete") as Area2D)._disparado, "e a cena do mirante desarmada")
@@ -327,6 +396,7 @@ func _testar_noite_no_patio() -> void:
 	await _quadros(4)
 	_checar(atm != null and atm.momento == Atmosfera.Momento.CREPUSCULO and atm.perfil_atual() == atm.crepusculo,
 		"o pátio abre no crepúsculo")
+	_checar(_musica_tocando() == MUSICA_DO_SOL_POSTO, "   com a bossa do sol posto")
 	var lua := cena.get_node_or_null("BG/CamadaDaLua/Lua") as AstroPixel
 	var lugar_da_lua := lua._base.y
 	_checar(lua != null and lua.tipo == AstroPixel.Tipo.LUA and is_zero_approx(lua.presenca())
@@ -335,6 +405,9 @@ func _testar_noite_no_patio() -> void:
 	_checar(lua.texture.resource_path == "res://assets/Area Aberta/Lua/2.png"
 		and not lua.brilho_pixelado and lua.scale.x < 1.0, "   (Lua/2.png, pequena e de brilho liso)")
 	_checar(cena.get_node_or_null("PostesDeLuz") is PostesDeLuz, "pronto para poste pintado acender")
+	var postes := _luzes_de_poste(cena)
+	_checar(atm.postes_so_de_noite and postes.size() >= 2 and _postes_apagados(postes),
+		"os %d postes do pátio esperam a noite: apagados no crepúsculo" % postes.size())
 
 	var retorta := cena.get_node("Patio/Retorta") as RetortaCarbonizacao
 	atm.duracao_do_anoitecer = 1.0
@@ -364,6 +437,7 @@ func _testar_noite_no_patio() -> void:
 	_checar(retorta._esperando_porta and retorta._acesa and not retorta._carbono_pronto
 		and atm.momento == Atmosfera.Momento.CREPUSCULO and atm.pode_anoitecer() and player.pode_se_mover,
 		"resolvido o painel, com o forno de boca aberta, o tempo não passa")
+	_checar(_postes_apagados(postes), "   e os postes continuam apagados")
 
 	# A porta fechou: com o fogo abafado lá dentro, o tempo avança.
 	var hud := player.get_node("CanvasLayer") as CanvasLayer
@@ -375,6 +449,9 @@ func _testar_noite_no_patio() -> void:
 	var parada := true
 	var hud_sumiu := false
 	var fogo_aceso := true
+	# Os postes, enquanto a noite cai: apagados no começo, acesos antes do fim.
+	var postes_esperaram := true
+	var postes_acenderam := false
 	var espera := 0.0
 	while espera < 5.0 and atm.pode_anoitecer():
 		await get_tree().process_frame
@@ -397,7 +474,12 @@ func _testar_noite_no_patio() -> void:
 		if lua.presenca() > 0.9 and lua.position.y > lugar_da_lua + 20.0 \
 				and lua.position.y < lugar_da_lua + atm.subida_da_lua - 20.0:
 			lua_subindo = true
+		if espera < atm.duracao_do_anoitecer * atm.hora_dos_postes_no_anoitecer * 0.8:
+			postes_esperaram = postes_esperaram and _postes_apagados(postes)
+		postes_acenderam = postes_acenderam or postes.all(func(l: LuzDePoste) -> bool: return l._nivel() > 0.5)
 	_checar(fogo_aceso, "a fornalha ficou acesa, de porta fechada, enquanto a noite caía")
+	_checar(postes_esperaram and postes_acenderam,
+		"os postes ficaram apagados no começo da noite caindo e acenderam antes de ela terminar")
 	_checar(parada and hud_sumiu, "ela ficou parada e o HUD saiu de cena")
 	_checar(lua_subindo, "a lua subiu de trás da serra, já acesa")
 	_checar(not tela_apagou, "sem tela preta")
@@ -405,7 +487,10 @@ func _testar_noite_no_patio() -> void:
 		and is_equal_approx(atm.perfil_atual().estrelas, 1.0), "a noite caiu: céu estrelado (%.1f s)" % espera)
 	_checar(is_equal_approx(lua.position.y, lugar_da_lua) and is_equal_approx(lua.presenca(), 1.0),
 		"a lua parou no lugar em que foi deixada na cena")
+	_checar(postes.all(func(l: LuzDePoste) -> bool: return is_equal_approx(l.intensidade, atm.noite.postes)),
+		"de noite os postes estão com tudo")
 	_checar(EstadoMundo.anoiteceu and not atm.pode_anoitecer(), "e a noite ficou lembrada")
+	_checar(_musica_tocando() == MUSICA_DA_NOITE, "com a noite, entra o jazz (%s)" % _musica_tocando().get_file())
 	await _segundos(RetortaCarbonizacao.BRASA_APOS_A_NOITE + 0.4)
 	_checar(not retorta._acesa and retorta._carbono_pronto, "a brasa apagou e o carvão saiu, já de noite")
 	_checar(player.pode_se_mover and hud.visible and cena.get_node_or_null("FadeTela") == null,
@@ -416,12 +501,16 @@ func _testar_noite_no_patio() -> void:
 	retorta._guardar_carga()
 
 	# Daí em diante o pátio e o world1 abrem de noite.
+	var jazz := TrilhaSonora._tocador
 	await _abrir(PATIO)
 	atm = Atmosfera.da_cena(get_tree().current_scene)
 	await _quadros(4)
 	lua = get_tree().current_scene.get_node("BG/CamadaDaLua/Lua") as AstroPixel
 	_checar(atm.momento == Atmosfera.Momento.NOITE and is_equal_approx(lua.presenca(), 1.0)
 		and is_zero_approx(lua.descida), "voltando ao pátio, já é noite, com a lua no alto")
+	_checar(_luzes_de_poste(get_tree().current_scene).all(func(l: LuzDePoste) -> bool:
+		return is_equal_approx(l.intensidade, atm.noite.postes)), "   e os postes acesos")
+	_checar(jazz != null and TrilhaSonora._tocador == jazz, "   e o jazz segue, sem recomeçar")
 	await _abrir(MUNDO)
 	atm = Atmosfera.da_cena(get_tree().current_scene)
 	await _quadros(4)
@@ -440,9 +529,9 @@ func _dar_uma_tora() -> void:
 func _testar_hora_sincronizada() -> void:
 	print("\n--- A HORA É A MESMA EM TODAS AS FASES ---")
 	var horas := [
-		["de tarde", false, false, Atmosfera.Momento.ENTARDECER],
-		["no crepúsculo", true, false, Atmosfera.Momento.CREPUSCULO],
-		["de noite", true, true, Atmosfera.Momento.NOITE],
+		["de tarde", false, false, Atmosfera.Momento.ENTARDECER, MUSICA_DA_TARDE],
+		["no crepúsculo", true, false, Atmosfera.Momento.CREPUSCULO, MUSICA_DO_SOL_POSTO],
+		["de noite", true, true, Atmosfera.Momento.NOITE, MUSICA_DA_NOITE],
 	]
 	for hora: Array in horas:
 		_zerar_a_partida()
@@ -450,6 +539,9 @@ func _testar_hora_sincronizada() -> void:
 		EstadoMundo.anoiteceu = hora[2]
 		var iguais := true
 		var luas_certas := true
+		var musicas_certas := true
+		var sem_recomecar := true
+		var tocador: AudioStreamPlayer = null
 		for caminho: String in [MUNDO, PATIO, TORRE]:
 			await _abrir(caminho)
 			var cena := get_tree().current_scene
@@ -460,8 +552,14 @@ func _testar_hora_sincronizada() -> void:
 			var lua := cena.get_node_or_null("BG/CamadaDaLua/Lua") as AstroPixel
 			if lua != null:
 				luas_certas = luas_certas and is_equal_approx(lua.presenca(), 1.0 if hora[2] else 0.0)
+			musicas_certas = musicas_certas and _musica_tocando() == hora[4]
+			if tocador == null:
+				tocador = TrilhaSonora._tocador
+			sem_recomecar = sem_recomecar and tocador != null and TrilhaSonora._tocador == tocador
 		_checar(iguais, "%s, é %s no world1, no pátio e na torre" % [hora[0], hora[0]])
 		_checar(luas_certas, "   e a lua %s" % ("está no céu" if hora[2] else "ainda não apareceu em nenhuma"))
+		_checar(musicas_certas, "   e toca %s nas três" % String(hora[4]).get_file())
+		_checar(sem_recomecar, "   sem recomeçar de uma fase para a outra")
 
 
 func _testar_tecla_da_hora() -> void:
@@ -478,6 +576,7 @@ func _testar_tecla_da_hora() -> void:
 	tecla.physical_keycode = KEY_SEMICOLON
 	var esperadas := [Atmosfera.Momento.CREPUSCULO, Atmosfera.Momento.NOITE, Atmosfera.Momento.ENTARDECER]
 	var nomes := ["crepúsculo", "noite", "tarde de novo"]
+	var musicas := [MUSICA_DO_SOL_POSTO, MUSICA_DA_NOITE, MUSICA_DA_TARDE]
 	for i in esperadas.size():
 		player._input(tecla)
 		await _quadros(2)
@@ -485,6 +584,7 @@ func _testar_tecla_da_hora() -> void:
 			and Atmosfera.hora_da_partida() == esperadas[i]
 			and is_equal_approx(lua.presenca(), 1.0 if esperadas[i] == Atmosfera.Momento.NOITE else 0.0),
 			"um toque: %s, na fase e na partida" % nomes[i])
+		_checar(_musica_tocando() == musicas[i], "   e a música da hora entra junto (%s)" % _musica_tocando().get_file())
 	player._input(tecla)
 	await _abrir(MUNDO)
 	await _quadros(4)
@@ -516,7 +616,76 @@ func _testar_torre_de_noite() -> void:
 	_checar(cena.get_node("BG").get_child(0) is CeuPixel and is_equal_approx(atm.perfil_atual().estrelas, 1.0),
 		"   céu estrelado")
 	await _quadros(3)
-	_checar((cena.get_node("PostesDeLuz") as PostesDeLuz).quantidade() == 1, "o poste da torre acende")
+	var postes := _postes_de_cena(cena)
+	var acesos := 0
+	for poste: PosteDeLuz in postes:
+		var luz := poste.get_node_or_null(^"Luz") as LuzDePoste
+		if luz != null and luz.is_in_group(LuzDePoste.GRUPO) and luz.intensidade > 0.9 \
+				and luz.position == poste.ponto_da_lampada():
+			acesos += 1
+	_checar(postes.size() >= 4 and acesos == postes.size(),
+		"os postes da torre acendem, cada um com a luz no tubo (%d de %d)" % [acesos, postes.size()])
+
+
+## As janelas pintadas nos prédios da rua acendem à noite, todas iguais
+## (JanelasAcesas).
+func _testar_janelas_da_torre() -> void:
+	print("\n--- AS JANELAS DA TORRE, DE NOITE ---")
+	_zerar_a_partida()
+	EstadoMundo.sol_se_pos = true
+	EstadoMundo.anoiteceu = true
+	await _abrir(TORRE)
+	await _quadros(4)
+	var cena := get_tree().current_scene
+	var janelas := cena.get_node_or_null("JanelasAcesas") as JanelasAcesas
+	var pintadas := _janelas_pintadas(cena)
+	_checar(janelas != null and pintadas > 0 and janelas.quantidade() == pintadas,
+		"toda janela pintada nos prédios acende (%d de %d)"
+			% [janelas.quantidade() if janelas != null else -1, pintadas])
+	if janelas == null:
+		return
+	var em_cima := janelas.janelas().filter(func(arte: Rect2) -> bool: return _em_cima_de_janela(cena, arte))
+	_checar(em_cima.size() == janelas.quantidade(),
+		"   cada uma em cima da sua janela (%d)" % em_cima.size())
+	_checar(janelas.get_child_count() == 0 and janelas.get_child_count(true) > 0,
+		"   o que acende é filho interno: não entra no .tscn")
+	_checar(janelas.is_in_group(Atmosfera.GRUPO_DE_LUZES) and janelas.intensidade > 0.9,
+		"   e de noite estão com tudo")
+
+	# Todas iguais: o vidro é a mesma arte, pintada da cor do nó, e só nos vidros.
+	var receita: Dictionary = JanelasAcesas.JANELAS["Buildings.png"]
+	var vidro := JanelasAcesas._mascara(receita["tamanho"] * 16, receita["vidros"]).get_image()
+	var tons := {}
+	var acesos := 0
+	for y in vidro.get_height():
+		for x in vidro.get_width():
+			if vidro.get_pixel(x, y).a > 0.0:
+				tons[vidro.get_pixel(x, y)] = true
+				acesos += 1
+	var nos_vidros := 0
+	for v: Rect2i in receita["vidros"]:
+		nos_vidros += v.get_area()
+	var desenho := janelas.get_children(true).filter(func(no: Node) -> bool: return no.name == &"Vidros")
+	_checar(tons.size() == 1 and acesos == nos_vidros and desenho.size() == 1
+		and Color((desenho[0] as CanvasItem).modulate, 1.0).is_equal_approx(Color(janelas.cor, 1.0)),
+		"   todas iguais: o vidro é de uma cor só, a do nó, e só nos vidros (%d tom, %d de %d pixels)"
+			% [tons.size(), acesos, nos_vidros])
+
+	var luzes := janelas.luzes()
+	_checar(luzes.size() > 0 and luzes.size() < janelas.quantidade(),
+		"   as janelas vizinhas de um andar dividem a luz na parede (%d luzes para %d janelas)"
+			% [luzes.size(), janelas.quantidade()])
+	var mais := _mais_luzes_na_tela(cena)
+	_checar(mais <= LUZES_DA_FASE_NA_TELA,
+		"na rua, a câmera nunca vê mais que %d luzes da fase de uma vez (%d no pior lugar)"
+			% [LUZES_DA_FASE_NA_TELA, mais])
+
+	var atm := Atmosfera.da_cena(cena)
+	atm.definir_momento(Atmosfera.Momento.ENTARDECER)
+	await _quadros(2)
+	_checar(is_equal_approx(janelas.intensidade, atm.entardecer.postes),
+		"ao entardecer elas ficam fracas, como os postes (%.2f)" % atm.entardecer.postes)
+	atm.definir_momento(Atmosfera.Momento.NOITE)
 
 
 ## A fase 1 é um galpão fechado: tem a luz DELA (um perfil fixo), que não muda
@@ -542,6 +711,7 @@ func _testar_oficina() -> void:
 		if atm == null:
 			return
 		_checar(not atm.pode_por_o_sol() and not atm.pode_anoitecer(), "   lá dentro não há pôr do sol nem anoitecer")
+		_checar(_musica_tocando() == MUSICA_DA_OFICINA, "   e toca a música da fase 1, seja que hora for")
 		_checar(EstadoMundo.sol_se_pos == noite and EstadoMundo.anoiteceu == noite,
 			"   e entrar nela não mexe na hora do jogo")
 		ambientes.append(_ambiente(atm).color)
@@ -728,6 +898,21 @@ func _mastros(raiz: Node) -> Array:
 	return mastros
 
 
+## Os postes que são a cena PosteDeLuz (os que se arrastam no editor).
+func _postes_de_cena(raiz: Node) -> Array:
+	return raiz.find_children("*", "", true, false).filter(func(no: Node) -> bool: return no is PosteDeLuz)
+
+
+## As luzes dos postes que são a cena PosteDeLuz.
+func _luzes_de_poste(raiz: Node) -> Array:
+	return raiz.find_children("*", "", true, false).filter(func(no: Node) -> bool: return no is LuzDePoste)
+
+
+## Nenhum dos postes está entregando luz (nem a meia piscada).
+func _postes_apagados(luzes: Array) -> bool:
+	return luzes.all(func(l: LuzDePoste) -> bool: return is_zero_approx(l.intensidade) and l._nivel() <= 0.01)
+
+
 ## Quantos tons diferentes tem a textura da poça de luz de um poste.
 func _tons_da_poca(luz: LuzDePoste) -> int:
 	for filho in luz.get_children(true):
@@ -739,6 +924,77 @@ func _tons_da_poca(luz: LuzDePoste) -> int:
 					tons[img.get_pixel(x, y).r8] = true
 			return tons.size()
 	return 0
+
+
+## Quantas janelas estão pintadas no cenário (a célula de cima, à esquerda, da
+## arte de janela do Buildings.png).
+func _janelas_pintadas(raiz: Node) -> int:
+	var receita: Dictionary = JanelasAcesas.JANELAS["Buildings.png"]
+	var total := 0
+	for camada in _camadas_de_tiles(raiz):
+		for i in camada.tile_set.get_source_count():
+			var id := camada.tile_set.get_source_id(i)
+			var fonte := camada.tile_set.get_source(id) as TileSetAtlasSource
+			if fonte != null and fonte.texture != null and fonte.texture.resource_path.get_file() == "Buildings.png":
+				total += camada.get_used_cells_by_id(id, receita["celula"]).size()
+	return total
+
+
+## A janela acesa está em cima de uma janela pintada: no canto de cima, à
+## esquerda, dela fica a célula de cima, à esquerda, da arte.
+func _em_cima_de_janela(raiz: Node, arte: Rect2) -> bool:
+	var receita: Dictionary = JanelasAcesas.JANELAS["Buildings.png"]
+	for camada in _camadas_de_tiles(raiz):
+		var lado := Vector2(camada.tile_set.tile_size)
+		var celula := camada.local_to_map(camada.to_local(arte.position) + lado * 0.5)
+		var id := camada.get_cell_source_id(celula)
+		if id < 0:
+			continue
+		var fonte := camada.tile_set.get_source(id) as TileSetAtlasSource
+		if fonte != null and fonte.texture.resource_path.get_file() == "Buildings.png" \
+				and camada.get_cell_atlas_coords(celula) == receita["celula"]:
+			return true
+	return false
+
+
+## O pior lugar da fase para a câmera da Cacau: quantas luzes da fase (fora as
+## que andam com ela) caem na tela de uma vez.
+func _mais_luzes_na_tela(cena: Node) -> int:
+	var player := cena.get_node("Player") as Node2D
+	var zoom := (player.get_node("Camera2D") as Camera2D).zoom
+	var tela := Vector2(ProjectSettings.get_setting("display/window/size/viewport_width"),
+		ProjectSettings.get_setting("display/window/size/viewport_height")) / zoom
+	var luzes: Array[PointLight2D] = []
+	_luzes_2d(cena, luzes)
+	var caixas: Array[Rect2] = []
+	for luz in luzes:
+		if not luz.enabled or not luz.is_visible_in_tree() or luz.texture == null or player.is_ancestor_of(luz):
+			continue
+		var tamanho := luz.texture.get_size() * luz.texture_scale * luz.global_transform.get_scale().abs()
+		caixas.append(Rect2(luz.to_global(luz.offset) - tamanho * 0.5, tamanho))
+
+	var area := (cena.get_node("LimitesDaCamera") as ReferenceRect).get_global_rect()
+	var mais := 0
+	var y := area.position.y
+	while true:
+		var x := area.position.x
+		while true:
+			var vista := Rect2(Vector2(x, y), tela)
+			mais = maxi(mais, caixas.filter(func(c: Rect2) -> bool: return c.intersects(vista)).size())
+			if x + tela.x >= area.end.x:
+				break
+			x = minf(x + 16.0, area.end.x - tela.x)
+		if y + tela.y >= area.end.y:
+			break
+		y = minf(y + 16.0, area.end.y - tela.y)
+	return mais
+
+
+func _luzes_2d(no: Node, lista: Array[PointLight2D]) -> void:
+	if no is PointLight2D:
+		lista.append(no)
+	for filho in no.get_children(true):
+		_luzes_2d(filho, lista)
 
 
 func _camadas_de_tiles(no: Node) -> Array[TileMapLayer]:
@@ -775,6 +1031,12 @@ func _abrir(caminho: String) -> void:
 
 func _player() -> CharacterBody2D:
 	return get_tree().current_scene.get_node("Player") as CharacterBody2D
+
+
+## O arquivo da música que a TrilhaSonora está tocando ("" no silêncio).
+func _musica_tocando() -> String:
+	var musica := TrilhaSonora.musica_atual()
+	return musica.resource_path if musica != null else ""
 
 
 func _quadros(n: int) -> void:

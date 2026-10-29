@@ -13,14 +13,16 @@ extends Control
 # Pendurada do lado direito vai a PLAQUINHA DO PONTO DE EBULIÇÃO, igual às de
 # temperatura da coluna e na cor do líquido da substância. Ela só aparece
 # quando a explicação chega nesse assunto (ebulicao_a_vista) e dá um pulo
-# quando o fundo da coluna passa dessa temperatura e a substância ferve
-# (pulsar).
+# quando a primeira molécula da substância evapora do fundo fervendo (pulsar)
+# — o que, numa mistura, acontece abaixo desse número: o oxigênio começa a
+# evaporar a uns -194 °C, junto com o nitrogênio.
 #
 # COMO EDITAR NO EDITOR:
 #   substancia    "N2", "O2" ou "Ar". Dela saem o desenho (FolhaMoleculas), a
 #                 fórmula escrita (os números descem, como em N₂) e o ponto de
-#                 ebulição — que é o número de ColunaDestilacao.SUBSTANCIAS, o
-#                 mesmo que decide em que andar ela vira líquido.
+#                 ebulição — o número de ColunaDestilacao.SUBSTANCIAS. Quanto
+#                 ela evapora em cada temperatura, a coluna tira da pressão de
+#                 vapor dela (MisturasDoDestilador), que dá esse mesmo ponto.
 #   nome          o que vai escrito embaixo da fórmula.
 #   parte_do_ar   o número grande da direita ("78%").
 #   posição do nó onde a ficha fica. As três estão na ordem dos andares da

@@ -18,6 +18,13 @@ extends Node2D
 # Desligue de novo antes de exportar o jogo de verdade.
 @export var testar_a_partir_daqui: bool = false
 
+@export_group("Música")
+## A música desta fase. Vazio: ao ar livre toca a música da hora (ver a
+## Atmosfera) e num interior fica o silêncio. Quem toca é a TrilhaSonora
+## (trilha_sonora.gd): entre duas cenas com a mesma música ela não recomeça.
+@export var musica: AudioStream
+@export_range(-40.0, 6.0, 0.5, "suffix:dB") var volume_da_musica_db := -6.0
+
 ## Toda fase vem depois da revelação no laboratório (é por ele que se chega
 ## aqui): o cientista já é o Dr. Chico. Vale para toda fala dele numa fase — o
 ## rádio da entrada da fase 1, os puzzles.
@@ -69,5 +76,9 @@ func _preparar_fase() -> void:
 
 	# Seja qual for o lugar em que ela ficou, a câmera já começa enquadrada nele.
 	CameraJogador.encaixar(player)
+
+	# Carregando a amostra de ar líquido da fase do nitrogênio, o relógio dela
+	# continua nesta cena (ver missao_nitrogenio.gd).
+	MissaoNitrogenio.instalar_na_fase(self)
 
 	FadeTela.clarear_na_chegada(self, 0.5)

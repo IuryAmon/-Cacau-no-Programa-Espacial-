@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c5gy6geu1s8mr"
+path="res://.godot/imported/porta de Rolamento.mp3-47e03b3503e1a94cb60f740f1408546f.mp3str"
+
+[deps]
+
+source_file="res://sounds/porta de Rolamento.mp3"
+dest_files=["res://.godot/imported/porta de Rolamento.mp3-47e03b3503e1a94cb60f740f1408546f.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

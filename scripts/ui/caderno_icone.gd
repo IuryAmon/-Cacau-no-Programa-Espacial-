@@ -98,7 +98,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_pulo = maxf(0.0, _pulo - delta / T_PULO)
-	# A tecla afunda em loop: redesenha junto com o relógio dos botões.
+	# Com nota nova a tecla afunda em loop: redesenha junto com o relógio dos
+	# botões. Sem ela, redesenhar ainda pega a troca de teclado para controle.
 	if visible:
 		queue_redraw()
 
@@ -145,10 +146,11 @@ func _draw() -> void:
 		_desenhar_novidade(caderno)
 	draw_set_transform(Vector2.ZERO)
 
+	# A tecla fica parada; só afunda em loop com nota nova esperando ser lida.
 	var nome := nome_da_tecla()
 	var centro := Vector2(caderno.x + RESPIRO_TECLA + 8.0 * ESCALA_TECLA, caderno.y * 0.5)
 	BotoesControle.desenhar(self, centro, nome, ESCALA_TECLA, Color.WHITE,
-		BotoesControle.quadro_atual())
+		BotoesControle.quadro_atual() if novidade else 0)
 
 
 func _desenhar_caderninho(deslocamento: Vector2, cor_unica: Color = Color(0, 0, 0, 0)) -> void:

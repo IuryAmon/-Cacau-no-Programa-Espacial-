@@ -25,7 +25,8 @@ extends Node
 # aparece toda hora: o ✕ que passa a última fala é o botão de pular, o ○ que
 # sai do puzzle é o dash, o □ que abre a gaiola é o bumerangue. Um toque que
 # nasce com tela aberta fica PRESO a ela até ser solto — quem lê ação de
-# gameplay pergunta "livre_para(acao)" antes de agir.
+# gameplay pergunta "livre_para(acao)" antes de agir. O ESC que fecha um puzzle
+# (ou o menu de pausa) também fica preso: soltar o puzzle não abre a pausa.
 
 ## Ação do E no mapa de entrada do projeto.
 const ACAO := "interact"
@@ -37,7 +38,7 @@ const GRUPO_TELA := "tela_usa_tecla_e"
 ## Ações do mundo que um toque feito em cima de uma tela não pode disparar
 ## depois que ela fecha (ver "livre_para").
 const ACOES_DO_MUNDO: Array[StringName] = [&"jump", &"arremessar", &"arremessar_mouse",
-	&"dash", &"luz", &"lanterna", &"alternar_mira"]
+	&"dash", &"luz", &"lanterna", &"alternar_mira", &"pausar"]
 
 # O toque atual já virou ação? Os dois zeram sozinhos quando a tecla é solta.
 var _toque_usado: bool = false
@@ -56,7 +57,12 @@ func _ready() -> void:
 
 
 func _ao_receber_entrada(event: InputEvent) -> void:
-	if event is InputEventMouseMotion or event is InputEventJoypadMotion:
+	if event is InputEventMouseMotion:
+		return
+	# Analógico só interessa nos gatilhos (o R2 é o dash): os sticks mexem o
+	# tempo todo e nenhuma ação do mundo mora neles.
+	if event is InputEventJoypadMotion \
+			and event.axis != JOY_AXIS_TRIGGER_LEFT and event.axis != JOY_AXIS_TRIGGER_RIGHT:
 		return
 	if not event.is_pressed() or event.is_echo() or not ocupada():
 		return

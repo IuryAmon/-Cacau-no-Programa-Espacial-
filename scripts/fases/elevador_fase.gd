@@ -60,6 +60,8 @@ extends Node2D
 #                           passageira é o elevador cuja "tag_aqui" bate com a
 #                           "tag_destino" de quem a mandou para lá
 #   recebe_chegada       -> desligue no elevador que só leva e nunca recebe
+#   cabine_aqui          -> desligado, o poço fica VAZIO: a cabine está parada
+#                           no outro andar (no editor sobra só o contorno dela)
 #   Tempos (Inspector)   -> a duração de cada ato
 #
 # NO EDITOR o elevador desenha o poço: uma linha tracejada até onde a cabine
@@ -177,6 +179,26 @@ static var tag_chegada: String = ""
 @export var requer_habilidade: String = ""
 @export_multiline var mensagem_trancada: String = "O painel está travado."
 @export_multiline var mensagem_sem_destino: String = "(Ainda em construção)"
+## Desligado, o E não parte: a Cacau diz a "fala_trancada" (uma timeline) e o
+## elevador fica onde está. Quem liga e desliga é o script da fase — na rua da
+## fase 2, com a amostra gelada na mão não dá tempo (ver fase2_torre.gd).
+@export var liberado: bool = true
+@export var fala_trancada: String = ""
+## A cabine está NESTE andar. Desligado, o poço fica vazio — ela está parada no
+## outro andar: o desenho e o estrado somem, e o E dá a "fala_trancada" em vez
+## de partir. Quem chega de elevador chega com a cabine, então a chegada liga
+## isto sozinha; o resto é com o script da fase — na fase 2, a cabine da torre
+## começa lá no telhado e fica no andar em que a Cacau a deixou (ver
+## missao_nitrogenio.gd).
+@export var cabine_aqui: bool = true:
+	set(valor):
+		cabine_aqui = valor
+		if is_node_ready():
+			_aplicar_cabine_aqui()
+
+## A passageira chegou por ESTE elevador ao abrir a cena — e a cabine veio com
+## ela. É por aqui que o script da fase sabe em que andar a cabine ficou.
+var chegou_com_passageira: bool = false
 
 enum Estado { PARADO, EM_USO }
 
@@ -225,6 +247,7 @@ static func criar(pai: Node, nome: String, pos_do_piso: Vector2, config: Diction
 func _ready() -> void:
 	_aplicar_escala()
 	_mostrar_quadro(0)
+	_aplicar_cabine_aqui()
 	if Engine.is_editor_hint():
 		return
 
@@ -240,6 +263,8 @@ func _ready() -> void:
 	if recebe_chegada and chegando_de_elevador and tag_chegada == tag_aqui:
 		chegando_de_elevador = false
 		tag_chegada = ""
+		chegou_com_passageira = true
+		cabine_aqui = true
 		_receber_passageira()
 
 
@@ -279,6 +304,19 @@ func _altura_do_piso() -> float:
 	return to_local(_colisao_piso.to_global(Vector2(0.0, topo))).y - _cabine.position.y
 
 
+## Mostra ou some com a cabine ("cabine_aqui"). Sem ela, o estrado e a grade
+## saem da física junto — o poço vazio é só o chão da fase —, mas a zona do E
+## continua, para a fala de quem aperta E no poço vazio.
+func _aplicar_cabine_aqui() -> void:
+	if _cabine == null:
+		return
+	_cabine.visible = cabine_aqui
+	queue_redraw()
+	if Engine.is_editor_hint():
+		return
+	_piso.process_mode = Node.PROCESS_MODE_INHERIT if cabine_aqui else Node.PROCESS_MODE_DISABLED
+
+
 func _process(_delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
@@ -293,7 +331,13 @@ func _process(_delta: float) -> void:
 # --- PARTIDA ---
 
 func _partir() -> void:
-	if requer_habilidade != "" and not Progresso.tem_habilidade(requer_habilidade):
+	# Modo dev (ver modo_dev.gd): elevador nenhum fica travado.
+	if requer_habilidade != "" and not Progresso.tem_habilidade(requer_habilidade) \
+			and not ModoDev.ativo:
+		return
+	if (not liberado or not cabine_aqui) and not ModoDev.ativo:
+		if fala_trancada != "":
+			DialogicBridge.falar(fala_trancada)
 		return
 	if cena_destino == "":
 		return
@@ -302,6 +346,8 @@ func _partir() -> void:
 	if passageira == null:
 		return
 
+	# No modo dev nem a cabine parada no outro andar segura: ela aparece aqui.
+	cabine_aqui = true
 	_estado = Estado.EM_USO
 	_esconder_aviso()
 
@@ -596,7 +642,9 @@ func _ao_sair(corpo: Node2D) -> void:
 
 
 func _atualizar_aviso() -> void:
-	var mostrar := _jogador_dentro and cena_destino != ""
+	# Poço vazio sem fala: o E não faz nada ali, então nem balão.
+	var mostrar := _jogador_dentro and cena_destino != "" \
+		and (cabine_aqui or fala_trancada != "")
 	if mostrar == _aviso_visivel:
 		return
 	_aviso_visivel = mostrar
@@ -651,3 +699,6 @@ func _draw() -> void:
 	# Contorno de onde a cabine vai parar.
 	var tamanho := Vector2(CABINE_LARGURA, CABINE_ALTURA) * escala_da_arte
 	draw_rect(Rect2(fim + Vector2(-tamanho.x * 0.5, -tamanho.y), tamanho), cor, false, 2.0)
+	# Cabine no outro andar: ela some daqui, e o contorno marca onde ela para.
+	if not cabine_aqui:
+		draw_rect(Rect2(Vector2(-tamanho.x * 0.5, -tamanho.y), tamanho), cor, false, 2.0)

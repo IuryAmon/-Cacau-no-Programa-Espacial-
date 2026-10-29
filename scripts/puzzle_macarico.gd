@@ -19,6 +19,11 @@ extends CanvasLayer
 # reagentes e dos produtos fica verde quando bate. A diferença é que aqui o
 # Dr. Chico NÃO ajuda — quem responde é o próprio terminal, no rodapé.
 #
+# DE CIMA PARA BAIXO: a contagem dos átomos (Reagentes / Produtos), depois a
+# equação escrita e, embaixo dela, as moléculas. Cada termo da equação fica
+# centrado em cima da coluna do desenho que ele representa (ver
+# scripts/ui/equacao_sobre_colunas.gd).
+#
 # VALE QUALQUER RESPOSTA BALANCEADA: se C, H e O batem dos dois lados, a etapa
 # conclui. Não existe um gabarito — na etapa 1 vale 1-1-2-1 e qualquer
 # múltiplo dele (2-2-4-2...); na etapa 2 vale 1-1-1-1-1, 4-2-3-4-2, 3-1-2-3-1,
@@ -30,8 +35,10 @@ extends CanvasLayer
 #   balanceada                 -> conclui (e, se der para simplificar, mostra
 #                                 a forma mais simples)
 #
-# Concluir a etapa 1 fica guardado até a fase recarregar: fechar a tela no
-# meio da etapa 2 e voltar recomeça da etapa 2.
+# Concluir a etapa 1 fica guardado: fechar a tela no meio da etapa 2 e voltar
+# recomeça da etapa 2 — inclusive depois de a Cacau morrer e a fase recarregar,
+# que é quando a gaiola devolve o que este puzzle anotou (ver progresso() e o
+# cabeçalho de gaiola_puzzle.gd).
 #
 # ONDE MEXER:
 #   ETAPAS (logo abaixo)          as reações, as respostas e os textos.
@@ -41,16 +48,21 @@ extends CanvasLayer
 #   scripts/ui/folha_moleculas.gd de onde vêm os desenhos das moléculas.
 #
 # INTERFACE (a mesma que a GaiolaPuzzle espera de todo puzzle de gaiola):
-#   sinal "puzzle_resolvido" e método "abrir_puzzle()".
+#   sinal "puzzle_resolvido" e método "abrir_puzzle()"; e, para a etapa 1 não
+#   se perder numa morte, sinal "progresso_mudou" e "restaurar_progresso()".
 # CONTROLES: mouse nas setas e no botão; ENTER confirma; ESC fecha.
 #   No controle: o analógico leva o cursor, o direcional pula de seta em seta,
 #   ✕ aperta, △ fecha e □ abre o domo no fim (ver cursor_virtual.gd).
 # DEBUG: a tecla L resolve o puzzle na hora.
 
 signal puzzle_resolvido
+## Uma etapa foi concluída: "dados" é o progresso() de agora. Quem guarda é a
+## gaiola (EstadoMundo), para devolver quando a fase recarregar.
+signal progresso_mudou(dados: Dictionary)
 
 const TERMO := preload("res://scenes/ui/termo_equacao.tscn")
 const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
+const EquacaoSobreColunas := preload("res://scripts/ui/equacao_sobre_colunas.gd")
 
 const ETAPAS := [
 	{
@@ -80,9 +92,13 @@ const ORDEM_ELEMENTOS := ["C", "H", "O"]
 # ── Montagem da linha de termos (px do Display) ──
 const LARGURA_MAIS := 40.0
 const LARGURA_SETA := 64.0
-## Tamanho de fonte máximo da equação escrita; encolhe se não couber.
+## Tamanho de fonte máximo da equação escrita; encolhe se algum termo não
+## couber em cima da coluna dele.
 const FONTE_EQUACAO := 30
 const FONTE_EQUACAO_MIN := 18
+## Quanto um termo escrito pode passar da largura da coluna dele (para os dois
+## lados somados) sem encostar no "+" vizinho.
+const FOLGA_DO_TERMO := 6.0
 
 const COR_AMARELO := Color(1, 0.85, 0)
 const COR_CERTO := Color.GREEN
@@ -109,6 +125,10 @@ var _etapa_liberada: int = 0
 var _respostas := {}
 var _termos: Array[TermoEquacao] = []
 var _largura_termo: float = 0.0
+## A linha da equação escrita, peça por peça, na ordem: o x do meio de cada
+## coluna e de cada vão ({"formula": i, "centro": x} ou {"operador": "+",
+## "centro": x}), medido dentro de LinhaEquacao. Montado junto com as colunas.
+var _molde_da_linha: Array = []
 var _rodape_texto: String = ""
 var _rodape_padrao: String = ""
 var _rodape_cursor: bool = false
@@ -121,7 +141,7 @@ var _rodape_cursor: bool = false
 @onready var aura: ColorRect = $RootControl/Tela/Display/Aura
 @onready var grupo_equacao: Control = $RootControl/Tela/Display/GrupoEquacao
 @onready var resumo: HBoxContainer = $RootControl/Tela/Display/GrupoEquacao/Resumo
-@onready var linha_equacao: HBoxContainer = $RootControl/Tela/Display/GrupoEquacao/LinhaEquacao
+@onready var linha_equacao: Control = $RootControl/Tela/Display/GrupoEquacao/LinhaEquacao
 @onready var reagentes_titulo: Label = $RootControl/Tela/Display/GrupoEquacao/LabelReagentesTitulo
 @onready var reagentes_valor: RichTextLabel = $RootControl/Tela/Display/GrupoEquacao/LabelReagentesValor
 @onready var produtos_titulo: Label = $RootControl/Tela/Display/GrupoEquacao/LabelProdutosTitulo
@@ -190,6 +210,19 @@ func fechar_puzzle(resolvido: bool) -> void:
 		player.pode_se_mover = true
 	if resolvido:
 		puzzle_resolvido.emit()
+
+
+## O que não se perde numa morte: até que etapa ela chegou e a resposta de
+## cada etapa já concluída (é o que aparece escrito no alto da etapa seguinte).
+func progresso() -> Dictionary:
+	return {"etapa": _etapa_liberada, "respostas": _respostas.duplicate(true)}
+
+
+## A gaiola devolve o progresso() anotado antes de a fase recarregar.
+func restaurar_progresso(dados: Dictionary) -> void:
+	_etapa_liberada = clampi(int(dados.get("etapa", 0)), 0, ETAPAS.size() - 1)
+	var respostas: Variant = dados.get("respostas", {})
+	_respostas = (respostas as Dictionary).duplicate(true) if respostas is Dictionary else {}
 
 
 func _resetar() -> void:
@@ -261,25 +294,33 @@ func _montar_etapa(indice: int) -> void:
 	var x := (termos.size.x - total) * 0.5
 	var inicio_produtos := 0.0
 	var fim_reagentes := 0.0
+	# O x de cada coluna vale também para a equação escrita em cima delas: a
+	# linha e as colunas são vizinhas no mesmo grupo.
+	var da_linha := termos.position.x - linha_equacao.position.x
+	_molde_da_linha.clear()
 	for peca in pecas:
 		var largura := _largura_da_peca(peca)
+		var centro := da_linha + x + largura * 0.5
 		if peca == "+" or peca == "->":
 			if peca == "->":
 				fim_reagentes = x
 				inicio_produtos = x + largura
 			termos.add_child(_criar_operador(peca, x, largura))
+			_molde_da_linha.append({"operador": peca, "centro": centro})
 		else:
 			var termo := TERMO.instantiate() as TermoEquacao
 			termo.formula = peca
 			termo.position = Vector2(x, 0)
 			termos.add_child(termo)
 			termo.molecula_apareceu.connect(_tocar_pop)
+			_molde_da_linha.append({"formula": _termos.size(), "centro": centro})
 			_termos.append(termo)
 		x += largura
 	var fim_produtos := x
 	var inicio_reagentes := (termos.size.x - total) * 0.5
 
-	# Reagentes e Produtos centralizados em cima dos termos de cada lado.
+	# Reagentes e Produtos centralizados em cima dos termos de cada lado (e da
+	# metade da equação escrita que é deles).
 	_centralizar_contagem(reagentes_titulo, reagentes_valor, inicio_reagentes, fim_reagentes)
 	_centralizar_contagem(produtos_titulo, produtos_valor, inicio_produtos, fim_produtos)
 
@@ -500,16 +541,26 @@ func _atualizar_equacao() -> void:
 	reagentes_titulo.add_theme_color_override("font_color", cor_geral)
 	produtos_titulo.add_theme_color_override("font_color", cor_geral)
 
-	for filho in linha_equacao.get_children():
-		filho.free()
-	var textos_coef: Array = []
-	for i in formulas.size():
-		textos_coef.append(str(coeficientes[i]) if tocado[i] else "?")
-	# A equação escrita encolhe até caber na largura da tela.
-	var tamanho := FONTE_EQUACAO
-	while tamanho > FONTE_EQUACAO_MIN and _largura_equacao(textos_coef, tamanho) > linha_equacao.size.x - 20.0:
-		tamanho -= 2
-	_escrever_equacao(linha_equacao, dados["reagentes"], dados["produtos"], [], textos_coef, cor_geral, tamanho, false)
+	_escrever_linha(cor_geral)
+
+
+## A equação escrita logo acima das moléculas: cada termo em cima da coluna do
+## desenho dele, o "+" e a seta em cima dos vãos. O coeficiente que ainda não
+## foi escolhido aparece como "?".
+func _escrever_linha(cor: Color) -> void:
+	var formulas := _formulas()
+	var pecas: Array = []
+	for item: Dictionary in _molde_da_linha:
+		if item.has("operador"):
+			pecas.append(EquacaoSobreColunas.operador(item["operador"], item["centro"]))
+		else:
+			var i: int = item["formula"]
+			pecas.append(EquacaoSobreColunas.termo(str(coeficientes[i]) if tocado[i] else "?",
+				formulas[i], item["centro"]))
+	# A letra encolhe até todo termo caber em cima da coluna dele.
+	var tamanho := EquacaoSobreColunas.tamanho_que_cabe(pecas, _largura_termo + FOLGA_DO_TERMO,
+		FONTE_EQUACAO, FONTE_EQUACAO_MIN)
+	EquacaoSobreColunas.escrever(linha_equacao, pecas, cor, tamanho)
 
 
 func _bbcode_contagem(elemento: String, valor: String, cor: Color) -> String:
@@ -572,9 +623,11 @@ static func _composicao(formula: String) -> Dictionary:
 
 # ------------------------- EQUAÇÃO ESCRITA -------------------------
 
-## Escreve "c₁ R₁ + c₂ R₂ -> c₃ P₁ + ..." com os índices em subscrito de
-## verdade (menores e rebaixados). "coefs" são números (omitindo o 1, como se
-## escreve em química); "textos_coef" são textos prontos ("?" ou "3").
+## Escreve "c₁ R₁ + c₂ R₂ -> c₃ P₁ + ..." numa linha corrida, com os índices
+## em subscrito de verdade (menores e rebaixados). É o resumo da etapa
+## anterior, no alto da tela — a equação que está sendo balanceada é escrita em
+## cima das colunas (ver _escrever_linha). "coefs" são números (omitindo o 1,
+## como se escreve em química); "textos_coef" são textos prontos ("?" ou "3").
 func _escrever_equacao(container: Control, reagentes: Array, produtos: Array, coefs: Array,
 		textos_coef: Array, cor: Color, tamanho: int, omitir_um: bool) -> void:
 	var formulas: Array = reagentes + produtos
@@ -592,25 +645,6 @@ func _escrever_equacao(container: Control, reagentes: Array, produtos: Array, co
 			_add_texto(container, coef, false, cor, tamanho)
 		for pedaco in _pedacos_da_formula(formulas[i]):
 			_add_texto(container, pedaco[0], pedaco[1], cor, tamanho)
-
-
-func _largura_equacao(textos_coef: Array, tamanho: int) -> float:
-	var dados: Dictionary = ETAPAS[etapa]
-	var formulas: Array = dados["reagentes"] + dados["produtos"]
-	var largura := 0.0
-	for i in formulas.size():
-		if i == dados["reagentes"].size():
-			largura += _medir("   →   ", tamanho)
-		elif i > 0:
-			largura += _medir("  +  ", tamanho)
-		largura += _medir(textos_coef[i] + " ", tamanho)
-		for pedaco in _pedacos_da_formula(formulas[i]):
-			largura += _medir(pedaco[0], _tamanho_sub(tamanho) if pedaco[1] else tamanho)
-	return largura
-
-
-func _medir(texto: String, tamanho: int) -> float:
-	return FONTE.get_string_size(texto, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho).x
 
 
 ## "C2H2" -> [["C", false], ["2", true], ["H", false], ["2", true]]
@@ -724,6 +758,7 @@ func _concluir_etapa() -> void:
 
 	if etapa + 1 < ETAPAS.size():
 		_etapa_liberada = etapa + 1
+		progresso_mudou.emit(progresso())
 		await get_tree().create_timer(2.6 if tem_dica else 1.5).timeout
 		if sessao != _sessao:
 			return

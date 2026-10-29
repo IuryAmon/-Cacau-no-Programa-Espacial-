@@ -348,14 +348,16 @@ static func tecla(ci: CanvasItem, f: Font, centro: Vector2, txt: String,
 ##
 ## Tecla sem desenho na folha cai na tampa escrita ("tecla").
 ## Quem chama precisa se redesenhar para a tecla afundar (5 quadros por
-## segundo, ver BotoesControle.quadro_atual). Devolve a largura desenhada.
+## segundo, ver BotoesControle.quadro_atual). Com "animada" desligado ela fica
+## parada, solta. Devolve a largura desenhada.
 static func tecla_da_acao(ci: CanvasItem, f: Font, centro: Vector2, txt: String,
-		acao: StringName, cor: Color, alfa: float = 1.0, tamanho: int = 15) -> float:
+		acao: StringName, cor: Color, alfa: float = 1.0, tamanho: int = 15,
+		animada: bool = true) -> float:
 	var desenho := desenho_da_tecla(txt, acao)
 	if desenho != "":
 		var escala := BotoesControle.escala_para(float(tamanho) + 11.0)
 		return BotoesControle.desenhar(ci, centro, desenho, escala, com_alfa(Color.WHITE, alfa),
-			BotoesControle.quadro_atual())
+			BotoesControle.quadro_atual() if animada else 0)
 	return tecla(ci, f, centro, txt, cor, alfa, tamanho)
 
 
@@ -392,6 +394,71 @@ static func desenho_da_tecla(txt: String, acao: StringName) -> String:
 			return botao
 	var nome := "tecla_" + txt.to_lower()
 	return nome if BotoesControle.TECLAS.has(nome) else ""
+
+
+# ─────────────────────────────────────────────────────────────
+# BOTÕES NO MEIO DO TEXTO
+# ─────────────────────────────────────────────────────────────
+# Um texto traduzido por BotoesControle.traduzir(..., true) traz os botões do
+# controle (e as teclas que têm desenho) como caracteres especiais, que a fonte
+# não desenha. Num Label quem os desenha é o IconesNoTexto; num texto desenhado
+# à mão (o tutorial das ferramentas), são estas duas. O botão fica parado
+# (quadro 0), um pouco maior que as letras, com uma folga dos dois lados.
+
+## Folga dos dois lados do botão, em frações do tamanho dele (a do IconesNoTexto).
+const FOLGA_DO_ICONE := 0.2
+
+
+## Largura do texto com os botões desenhados.
+static func largura_com_icones(f: Font, txt: String, tamanho: int) -> float:
+	var total := 0.0
+	for trecho: Variant in _trechos(txt):
+		if trecho is String:
+			total += f.get_string_size(trecho, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho).x
+		else:
+			total += _lado_do_icone(tamanho) * (1.0 + FOLGA_DO_ICONE * 2.0)
+	return total
+
+
+## Escreve o texto a partir da linha de base em "pos", com os botões desenhados
+## no lugar dos caracteres deles. Devolve a largura.
+static func escrever_com_icones(ci: CanvasItem, f: Font, pos: Vector2, txt: String, tamanho: int,
+		cor: Color) -> float:
+	var x := pos.x
+	var lado := _lado_do_icone(tamanho)
+	var meio_da_letra := pos.y - (f.get_ascent(tamanho) - f.get_descent(tamanho)) * 0.5
+	for trecho: Variant in _trechos(txt):
+		if trecho is String:
+			ci.draw_string(f, Vector2(x, pos.y), trecho, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho, cor)
+			x += f.get_string_size(trecho, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho).x
+		else:
+			x += lado * FOLGA_DO_ICONE
+			BotoesControle.desenhar(ci, Vector2(x + lado * 0.5, meio_da_letra),
+				BotoesControle.nome_do_caractere(trecho), lado / 16.0, Color(1, 1, 1, cor.a))
+			x += lado * (1.0 + FOLGA_DO_ICONE)
+	return x - pos.x
+
+
+static func _lado_do_icone(tamanho: int) -> float:
+	return 16.0 * BotoesControle.escala_para(float(tamanho))
+
+
+## O texto em pedaços: String para as letras, int (o código) para cada botão.
+static func _trechos(txt: String) -> Array:
+	var trechos: Array = []
+	var letras := ""
+	for i in txt.length():
+		var codigo := txt.unicode_at(i)
+		if BotoesControle.eh_icone(codigo):
+			if not letras.is_empty():
+				trechos.append(letras)
+				letras = ""
+			trechos.append(codigo)
+		else:
+			letras += txt[i]
+	if not letras.is_empty():
+		trechos.append(letras)
+	return trechos
 
 
 # ─────────────────────────────────────────────────────────────
@@ -469,7 +536,8 @@ static func tamanho_que_cabe(f: Font, txt: String, largura: float, espaco: float
 ## Quebra o texto em linhas na mão, em vez de usar draw_multiline_string, para
 ## que a entrelinha seja escolha de design e não o que a fonte trouxe de
 ## fábrica — a ari-w9500 é fonte de display e vem apertada demais para
-## parágrafo. Respeita as quebras já escritas no texto.
+## parágrafo. Respeita as quebras já escritas no texto. Os botões desenhados
+## (ver escrever_com_icones) contam com a largura do desenho.
 static func quebrar(f: Font, txt: String, tamanho: int, largura: float) -> PackedStringArray:
 	var linhas := PackedStringArray()
 	if f == null or txt.is_empty():
@@ -478,8 +546,7 @@ static func quebrar(f: Font, txt: String, tamanho: int, largura: float) -> Packe
 		var atual := ""
 		for palavra in paragrafo.split(" ", false):
 			var teste := palavra if atual.is_empty() else atual + " " + palavra
-			if atual.is_empty() or f.get_string_size(teste, HORIZONTAL_ALIGNMENT_LEFT,
-					-1, tamanho).x <= largura:
+			if atual.is_empty() or largura_com_icones(f, teste, tamanho) <= largura:
 				atual = teste
 			else:
 				linhas.append(atual)

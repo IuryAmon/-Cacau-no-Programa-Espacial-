@@ -32,7 +32,10 @@ extends CanvasLayer
 # tudo bate, a tela mostra "BUMERANGUE LIBERADO!" e o rodapé pede o E que abre
 # o domo.
 #
-# Fechar a tela no meio e voltar não desmonta o átomo.
+# Fechar a tela no meio e voltar não desmonta o átomo — nem a Cacau morrer no
+# meio do caminho: a fase recarrega, e a gaiola devolve ao puzzle novo quantas
+# partículas de cada tipo já estavam no átomo (ver progresso() e o cabeçalho de
+# gaiola_puzzle.gd). Elas saem dos seletores e voltam ao lugar quando a tela abre.
 #
 # ONDE MEXER:
 #   as constantes logo abaixo   o átomo pedido, os textos do terminal e os
@@ -49,13 +52,18 @@ extends CanvasLayer
 #                               a arte das partículas.
 #
 # INTERFACE (a mesma que a GaiolaPuzzle espera de todo puzzle de gaiola):
-#   sinal "puzzle_resolvido" e método "abrir_puzzle()".
+#   sinal "puzzle_resolvido" e método "abrir_puzzle()"; e, para o átomo pela
+#   metade não se perder numa morte, sinal "progresso_mudou" e
+#   "restaurar_progresso()".
 # CONTROLES: mouse nas setas; ESC fecha.
 #   No controle: o analógico leva o cursor, o direcional pula de seta em seta,
 #   ✕ aperta, △ fecha e □ abre o domo no fim (ver cursor_virtual.gd).
 # DEBUG: a tecla L resolve o puzzle na hora.
 
 signal puzzle_resolvido
+## O átomo mudou: "dados" é o progresso() de agora. Quem guarda é a gaiola
+## (EstadoMundo), para devolver quando a fase recarregar.
+signal progresso_mudou(dados: Dictionary)
 
 const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 
@@ -134,6 +142,9 @@ var _camada_k: Array[TextureRect] = []
 var _camada_l: Array[TextureRect] = []
 var _fase_k: float = 0.0
 var _fase_l: float = 0.0
+## O progresso() que a gaiola devolveu e que ainda não voltou para o átomo: as
+## partículas só têm lugar com a tela aberta (ver _repor_guardado).
+var _a_repor: Dictionary = {}
 
 @onready var led: ColorRect = $RootControl/Tela/Led
 @onready var display: Control = $RootControl/Tela/Display
@@ -193,6 +204,9 @@ func abrir_puzzle() -> void:
 		player.pode_se_mover = false
 	get_tree().paused = true
 	_ligar_tela()
+	# Só acontece com um átomo devolvido já completo: ele conclui sozinho.
+	if montado():
+		_concluir()
 
 
 func fechar_puzzle(resolvido: bool) -> void:
@@ -212,6 +226,46 @@ func fechar_puzzle(resolvido: bool) -> void:
 		puzzle_resolvido.emit()
 
 
+## Quantas partículas de cada seletor estão no átomo: é o que não se perde
+## numa morte.
+func progresso() -> Dictionary:
+	var dados := {}
+	for qual: String in SELETORES:
+		dados[qual] = quantas(qual)
+	return dados
+
+
+## A gaiola devolve o progresso() anotado antes de a fase recarregar. As
+## partículas voltam para o átomo na próxima vez que a tela abrir.
+func restaurar_progresso(dados: Dictionary) -> void:
+	_a_repor = dados.duplicate()
+
+
+## Põe de volta no átomo o que a gaiola devolveu: cada partícula sai do seletor
+## dela e vai para o lugar, como se as setas tivessem sido apertadas (sem o som
+## e sem os avisos). Só dá para fazer com a tela aberta — o lugar de cada uma
+## sai de onde os nós estão na tela.
+func _repor_guardado() -> void:
+	if _a_repor.is_empty():
+		return
+	var dados := _a_repor
+	_a_repor = {}
+	# Já existe um átomo nesta tela: é ele que vale.
+	if not _no_atomo().is_empty():
+		return
+	for qual: String in SELETORES:
+		var quantas_voltam := clampi(int(dados.get(qual, 0)), 0, int(SELETORES[qual]["cabem"]))
+		for i in quantas_voltam:
+			var peca := _nova_peca(qual)
+			match qual:
+				"camada_k":
+					_por_na_camada(peca, _camada_k, _fase_k)
+				"camada_l":
+					_por_na_camada(peca, _camada_l, _fase_l)
+				_:
+					_por_no_nucleo(peca)
+
+
 ## O átomo montado até aqui fica: só o que é do momento volta ao começo.
 func _resetar() -> void:
 	_matar_tweens()
@@ -222,6 +276,7 @@ func _resetar() -> void:
 	travado = false
 	aguardando_fechamento = false
 	_tempo = 0.0
+	_repor_guardado()
 
 	display.scale = Vector2.ONE
 	display.modulate = Color.WHITE
@@ -381,6 +436,7 @@ func alterar(qual: String, sentido: int) -> void:
 		_tirar(qual)
 	_atualizar_contagem()
 	atomo.queue_redraw()
+	progresso_mudou.emit(progresso())
 	if montado():
 		_concluir()
 

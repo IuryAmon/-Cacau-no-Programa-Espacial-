@@ -14,6 +14,7 @@ extends Node
 ## o parallax        o resto do BG              luz do horário + ar comendo o longe
 ## o mundo           (um CanvasModulate dele)   a luz ambiente
 ## os postes         grupo "luz_artificial"     fracos de dia, com tudo à noite
+## a música          (a TrilhaSonora)           uma por hora (grupo Música)
 ## [/codeblock]
 ##
 ## Céu, astros e nuvens entram sozinhos (eles se inscrevem no grupo
@@ -56,6 +57,10 @@ const PREVIA_TUDO_CLARO := 3
 signal perfil_mudou(perfil: PerfilDeLuz)
 ## A noite caiu (fim do anoitecer, ou a fase já abriu de noite).
 signal anoiteceu
+## A fase está numa hora nova: o sol acabou de se pôr, a noite acabou de cair
+## ou alguém trocou a hora ([method definir_momento]). A música da hora troca
+## junto (ver trilha_sonora.gd).
+signal momento_mudou(novo: Momento)
 
 ## A hora que o EDITOR mostra nesta fase — e a hora em que ela abre se
 ## [member segue_a_partida] estiver desligado. No jogo, com ele ligado, quem
@@ -111,6 +116,25 @@ signal anoiteceu
 ## De quantos pixels abaixo do lugar dela a lua sobe. Tem de bastar para ela
 ## sair de trás da serra.
 @export_range(0.0, 600.0, 1.0) var subida_da_lua := 280.0
+## Ligado, os postes desta fase ficam APAGADOS até a noite cair: no anoitecer
+## eles dão a piscada em [member hora_dos_postes_no_anoitecer] e daí em diante
+## ficam com tudo. Desligado (o normal), eles seguem a força de cada hora —
+## fracos ao entardecer, quase com tudo no crepúsculo. Só os postes: janelas e
+## luzes soltas continuam seguindo a hora.
+@export var postes_so_de_noite := false
+## Em que ponto do anoitecer (0 a 1) os postes que esperam a noite dão a
+## piscada e acendem. Só vale com [member postes_so_de_noite] ligado.
+@export_range(0.0, 1.0, 0.01) var hora_dos_postes_no_anoitecer := 0.45
+
+@export_group("Música")
+## O que toca ao ar livre em cada hora — a lei de todo lugar de céu aberto.
+## Quem toca é a TrilhaSonora (trilha_sonora.gd), que troca junto com a hora.
+## Num interior a hora não entra: lá vale a música da raiz da cena.
+@export var musica_do_entardecer: AudioStream = preload("res://sounds/Trilhas/bossa nova estilo stardew valley.mp3")
+## Do sol posto até a noite cair.
+@export var musica_do_crepusculo: AudioStream = preload("res://sounds/Trilhas/bossa nova estila stardew valley2.mp3")
+@export var musica_da_noite: AudioStream = preload("res://sounds/Trilhas/jazz noite.mp3")
+@export_range(-40.0, 6.0, 0.5, "suffix:dB") var volume_da_musica_db := -6.0
 
 var _perfil: PerfilDeLuz
 var _ambiente: CanvasModulate
@@ -122,6 +146,8 @@ var _em_transicao := false
 var _descida: Tween
 var _andamento := 0.0
 var _postes_piscaram := false
+## Já é noite para os postes que a esperam (ver [member postes_so_de_noite]).
+var _noite_nos_postes := false
 var _previa := PREVIA_COMO_NO_JOGO
 var _perfil_claro: PerfilDeLuz
 var _vestir_pedido := false
@@ -183,6 +209,7 @@ func _arrumar_a_cena() -> void:
 	_vestir_o_fundo()
 	if not Engine.is_editor_hint():
 		_soltar_a_interface(_raiz_da_cena())
+		_noite_nos_postes = momento == Momento.NOITE
 		aplicar(perfil_de(momento))
 		_por_os_astros_no_lugar()
 		if momento == Momento.NOITE:
@@ -244,9 +271,31 @@ func perfil_atual() -> PerfilDeLuz:
 	return _perfil
 
 
+## A música da hora que está valendo (ver o grupo Música). Num interior,
+## nenhuma.
+func musica_da_hora() -> AudioStream:
+	if e_interior():
+		return null
+	match momento:
+		Momento.CREPUSCULO:
+			return musica_do_crepusculo
+		Momento.NOITE:
+			return musica_da_noite
+	return musica_do_entardecer
+
+
 ## Força que o horário pede dos postes, de 0 a 1.
 func nivel_dos_postes() -> float:
 	return _perfil.postes if _perfil != null else 1.0
+
+
+## Força que o horário pede de uma das luzes do grupo [constant GRUPO_DE_LUZES]:
+## a dos postes — ou nada, para um poste que ainda espera a noite (ver
+## [member postes_so_de_noite]).
+func forca_de(luz: Node) -> float:
+	if postes_so_de_noite and luz is LuzDePoste and not _noite_nos_postes:
+		return 0.0
+	return nivel_dos_postes()
 
 
 ## O sol ainda está no céu para se pôr aqui? (Só uma vez; num interior, nunca.)
@@ -268,11 +317,13 @@ func definir_momento(m: Momento) -> void:
 	_descida = null
 	_em_transicao = false
 	momento = m
+	_noite_nos_postes = m == Momento.NOITE
 	aplicar(perfil_de(m))
 	_por_os_astros_no_lugar()
 	_anotar_a_hora()
 	if m == Momento.NOITE:
 		anoiteceu.emit()
+	momento_mudou.emit(m)
 
 
 ## O sol se põe: ele desce atrás da serra enquanto o céu, o fundo e o mundo
@@ -292,11 +343,13 @@ func por_do_sol(duracao: float = -1.0) -> void:
 	momento = Momento.CREPUSCULO
 	_em_transicao = false
 	_anotar_a_hora()
+	momento_mudou.emit(momento)
 
 
 ## A noite cai: o céu, o fundo e o mundo vão da hora que está valendo até a
-## noite, as estrelas acendem, os postes firmam e a lua sobe de trás da serra
-## até o lugar em que foi deixada na cena. Devolve quando termina, já de noite.
+## noite, as estrelas acendem, os postes firmam (ou acendem piscando, se
+## esperavam a noite) e a lua sobe de trás da serra até o lugar em que foi
+## deixada na cena. Devolve quando termina, já de noite.
 func anoitecer(duracao: float = -1.0) -> void:
 	if not pode_anoitecer() or Engine.is_editor_hint():
 		return
@@ -336,7 +389,7 @@ func aplicar(perfil: PerfilDeLuz) -> void:
 		_ambiente.color = perfil.ambiente
 
 	for luz in _da_minha_cena(GRUPO_DE_LUZES):
-		luz.set(&"intensidade", perfil.postes)
+		luz.set(&"intensidade", forca_de(luz))
 
 	_levar_o_astro_ao_ceu()
 	perfil_mudou.emit(perfil)
@@ -362,12 +415,14 @@ func _passo_do_por_do_sol(t: float) -> void:
 
 
 ## Cada poste pega num instante: uma onda curta, não um interruptor só.
-func _piscar_os_postes() -> void:
+## [param do_escuro]: os postes estavam apagados, e cada um fica assim até a
+## vez dele.
+func _piscar_os_postes(do_escuro: bool = false) -> void:
 	var luzes := _da_minha_cena(GRUPO_DE_LUZES)
 	var i := 0
 	for luz in luzes:
 		if luz.has_method(&"acender_piscando"):
-			luz.acender_piscando(0.11 * i + randf_range(0.0, 0.08))
+			luz.acender_piscando(0.11 * i + randf_range(0.0, 0.08), do_escuro)
 			i += 1
 
 
@@ -380,7 +435,14 @@ func _passo_do_anoitecer(t: float, de: PerfilDeLuz) -> void:
 		# A lua já aparece inteira cedo: ela nasce atrás da serra, não do nada
 		# no meio do céu.
 		perfil.lua = maxf(perfil.lua, smoothstep(0.0, 0.3, t))
+	# Os postes que esperavam a noite pegam no meio dela.
+	var acender := postes_so_de_noite and not _noite_nos_postes \
+		and t >= hora_dos_postes_no_anoitecer
+	if acender:
+		_noite_nos_postes = true
 	aplicar(perfil)
+	if acender:
+		_piscar_os_postes(true)
 	for astro in _astros():
 		if astro.tipo == AstroPixel.Tipo.LUA:
 			astro.descida = subida_da_lua * (1.0 - andado)
@@ -604,6 +666,7 @@ func _mostrar_previa() -> void:
 		aplicar(_perfil_claro)
 		return
 	var m: Momento = momento if _previa == PREVIA_COMO_NO_JOGO else (_previa as Momento)
+	_noite_nos_postes = m == Momento.NOITE
 	aplicar(perfil_de(m))
 
 

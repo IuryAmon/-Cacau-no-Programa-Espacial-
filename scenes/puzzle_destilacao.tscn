@@ -1,0 +1,72 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/puzzle_destilacao.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/fundo_do_laboratorio.gd" id="2_fundo"]
+[ext_resource type="Script" path="res://scripts/ui/coluna_do_simulador.gd" id="3_coluna"]
+[ext_resource type="Script" path="res://scripts/ui/termometro.gd" id="4_termometro"]
+[ext_resource type="PackedScene" path="res://scenes/ui/seletor_coeficiente.tscn" id="5_setas"]
+
+[node name="PuzzleDestilacao" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+titulo = "COLUNA DE DESTILAÇÃO"
+texto_de_voltar = "fechar"
+
+[node name="Fundo" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_fundo")
+
+[node name="Painel" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Coluna" type="Control" parent="."]
+layout_mode = 0
+offset_left = 650.0
+offset_top = 96.0
+offset_right = 970.0
+offset_bottom = 820.0
+mouse_filter = 2
+script = ExtResource("3_coluna")
+
+[node name="Termometro" type="Control" parent="."]
+layout_mode = 0
+offset_left = 1060.0
+offset_top = 112.0
+offset_right = 1180.0
+offset_bottom = 652.0
+mouse_filter = 2
+script = ExtResource("4_termometro")
+
+[node name="Setas" parent="." instance=ExtResource("5_setas")]
+layout_mode = 0
+offset_left = 1090.0
+offset_top = 664.0
+offset_right = 1150.0
+offset_bottom = 774.0
+
+[node name="Frente" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

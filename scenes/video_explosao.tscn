@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://cqe4bp43acufs"]
+
+[ext_resource type="VideoStream" uid="uid://b3y15yn31ltci" path="res://Videos/2026-10-13 22-21-35.ogv" id="1_video"]
+
+[node name="VideoExplosao" type="Control" unique_id=468048411]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Fundo" type="ColorRect" parent="." unique_id=399061824]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Proporcao" type="AspectRatioContainer" parent="." unique_id=1517393478]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+ratio = 1.3346
+
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="Proporcao" unique_id=2122347185]
+layout_mode = 2
+stream = ExtResource("1_video")
+autoplay = true
+expand = true

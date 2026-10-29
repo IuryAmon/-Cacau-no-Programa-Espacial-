@@ -174,12 +174,23 @@ func _desenhar_as_marcas(ficha: Rect2) -> void:
 		var y_do_texto := maxf(y, ultimo + 26.0)
 		ultimo = y_do_texto
 		var chave := String(marca["chave"])
-		var cor: Color = MisturasDoDestilador.substancia(chave).get("tona", EstiloHUD.CLARO)
+		var cor: Color = marca.get("cor", MisturasDoDestilador.substancia(chave).get("tona", EstiloHUD.CLARO))
 		var x := ficha.end.x + 2.0
 		draw_rect(Rect2(x, y - 3.0, 14.0, 6.0), EstiloHUD.CONTORNO)
 		draw_rect(Rect2(x, y - 1.0, 12.0, 2.0), cor)
 		if absf(y_do_texto - y) > 0.5:
 			draw_line(Vector2(x + 14.0, y), Vector2(x + 20.0, y_do_texto), cor, 2.0)
+		# Marca escrita (sem molécula): o texto, linha por linha, e o número
+		# embaixo. É a do compressor ("AR VIRA LÍQUIDO", que anda com a pressão).
+		if marca.has("texto"):
+			var linhas := String(marca["texto"]).split("\n")
+			var y_linha := y_do_texto - 4.0 - (linhas.size() - 1) * 6.0
+			for linha in linhas:
+				EstiloHUD.rotulo(self, FONTE, Vector2(x + 22.0, y_linha), linha, 11, cor)
+				y_linha += 13.0
+			EstiloHUD.rotulo(self, FONTE, Vector2(x + 22.0, y_linha + 2.0), MisturasDoDestilador.graus(graus), 11, cor)
+			ultimo = y_linha + 2.0
+			continue
 		# A molécula deitada e, depois dela, o número.
 		var largura := float(MoleculasDoDestilador.celula(chave).x) * MoleculasDoDestilador.ESCALA
 		MoleculasDoDestilador.desenhar(self, chave, Vector2(x + 24.0 + largura * 0.5, y_do_texto), 0)

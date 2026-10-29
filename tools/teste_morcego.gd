@@ -24,7 +24,10 @@ extends Node
 #     cancela o bote; com "vida" 1 ele morre no primeiro toque;
 #   * o corpo: fecha o alvo, quica, some sozinho — e derruba o vizinho;
 #   * desistir: com ela longe ele volta para o ninho e dorme de novo;
-#   * "persistir": o morcego morto não volta na visita seguinte.
+#   * "persistir": o morcego morto não volta na visita seguinte;
+#   * sem "persistir": na MESMA visita (a Cacau morreu e a fase recarregou) o
+#     morto continua morto e o ferido continua ferido; na visita seguinte o
+#     bando volta inteiro.
 #
 # A segunda parte abre os dois corredores de verdade: os morcegos estão lá,
 # pendurados no teto, longe das pontas por onde ela chega, dormindo enquanto
@@ -389,6 +392,34 @@ func _testar_persistir() -> void:
 	var comum := await _novo(Vector2(0, 300), {"vida": 1}, "MorcegoComum")
 	comum.levar_golpe(Vector2.RIGHT, 0.0)
 	_checar(not EstadoMundo.ja_feito(comum), "o morcego comum não anota nada: ele volta a cada visita")
+
+	# ... mas não a cada MORTE dela: enquanto a visita dura (a fase recarregando
+	# por morte não a encerra), o morto continua morto e o ferido, ferido.
+	comum.queue_free()
+	await _fisica(2)
+	var na_mesma_visita: Morcego = (load(MORCEGO) as PackedScene).instantiate()
+	na_mesma_visita.name = "MorcegoComum"
+	na_mesma_visita.position = Vector2(0, 300)
+	na_mesma_visita.vida = 1
+	add_child(na_mesma_visita)
+	await _fisica(3)
+	_checar(not is_instance_valid(na_mesma_visita), "na MESMA visita o morcego comum morto não volta")
+
+	var ferido := await _novo(Vector2(0, 300), {}, "MorcegoFerido")
+	ferido.levar_golpe(Vector2.RIGHT, 0.0)
+	_checar(ferido.vida_restante() == 1, "um golpe deixa o de 2 vidas com 1")
+	ferido.queue_free()
+	await _fisica(2)
+	ferido = await _novo(Vector2(0, 300), {}, "MorcegoFerido")
+	_checar(is_instance_valid(ferido) and ferido.vida_restante() == 1,
+		"na mesma visita ele renasce com a vida que tinha sobrado")
+
+	# A visita acabou (ela saiu da cena): o bando volta inteiro.
+	await _limpar()
+	comum = await _novo(Vector2(0, 300), {"vida": 1}, "MorcegoComum")
+	ferido = await _novo(Vector2(60, 300), {}, "MorcegoFerido")
+	_checar(is_instance_valid(comum) and is_instance_valid(ferido) and ferido.vida_restante() == 2,
+		"na visita seguinte o morto volta e o ferido está com a vida cheia")
 	await _limpar()
 
 
@@ -530,6 +561,10 @@ func _contar(a: Variant = null, b: Variant = null, c: Variant = null) -> void:
 func _limpar() -> void:
 	for m in get_tree().get_nodes_in_group(Morcego.GRUPO):
 		m.queue_free()
+	# Cada caso é uma "visita" nova: os morcegos daqui repetem o nome, e a vida
+	# que um deles perdeu não pode sobrar para o próximo (no jogo isso só é
+	# esquecido quando a Cacau sai da cena — ver Morcego.MARCA_VIDA).
+	EstadoMundo.esquecer_a_visita()
 	_sinais.clear()
 	_soltar_tudo()
 	if _player == null:

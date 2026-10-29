@@ -12,8 +12,15 @@ extends Node
 #   * cilindro solto no tubo acende a vaga; item errado é recusado e volta;
 #     solto fora do tubo, volta para o mesmo alvéolo;
 #   * montagem: encaixe errado recusa, o certo instala;
-#   * balanceamento e ignição continuam como antes, e resolver consome os
-#     cilindros do inventário e deixa o painel azul;
+#   * a tela da equação: a contagem dos átomos no alto, a equação escrita
+#     embaixo dela e, embaixo da equação, as moléculas — cada termo escrito
+#     centrado em cima da coluna do desenho dele;
+#   * o balanceamento guiado do Dr. Chico: primeiro UMA MOLÉCULA DE CADA (uma
+#     fala só, e a seta passa pelos três botões), depois uma molécula onde o
+#     elemento está em MENOR QUANTIDADE (o holofote vai do hidrogênio para o
+#     oxigênio na frase de cada um), e o último passo é da pessoa;
+#   * a ignição, e resolver consome os cilindros do inventário e deixa o
+#     painel azul;
 #   * fechar no meio devolve os cilindros à mochila, sem perder nada.
 #
 #   godot --headless --path . res://tools/teste_puzzle_foguete.tscn
@@ -22,6 +29,7 @@ extends Node
 # na pasta, para conferir o layout a olho.
 
 const HUD := "res://scenes/inventario_hud.tscn"
+const EquacaoSobreColunas := preload("res://scripts/ui/equacao_sobre_colunas.gd")
 const RECEPTOR := "res://scenes/receptor_item_geral.tscn"
 const ITEM_H2 := "Cilindro_de_Hidrogenio"
 const ITEM_O2 := "Cilindro_Oxigenio"
@@ -218,21 +226,58 @@ func _testar_caminho_completo() -> void:
 		_checar(caixa_tela.encloses(botao.get_global_rect()),
 			"%s cabe dentro da tela do computador" % botao.name)
 
-	# Balanceamento guiado: fala -> botão pedido -> meta, passo a passo.
+	# A arrumação: a contagem dos átomos no alto, a equação escrita embaixo
+	# dela e, embaixo da equação, as moléculas — cada termo em cima da coluna
+	# do desenho dele.
+	var linha: Control = puzzle.linha_equacao
+	var faixa := linha.get_global_rect()
+	_checar(puzzle.label_reagentes_valor.get_global_rect().end.y <= faixa.position.y + 0.5
+		and puzzle.label_produtos_valor.get_global_rect().end.y <= faixa.position.y + 0.5,
+		"a contagem dos atomos (Reagentes / Produtos) fica acima da equacao")
+	_checar(puzzle.label_reagentes_titulo.get_global_rect().end.y
+		<= puzzle.label_reagentes_valor.get_global_rect().position.y + 0.5,
+		"e o titulo, acima da contagem")
+	_checar(EquacaoSobreColunas.texto(linha) == "? H2 + ? O2 → ? H2O + Energia",
+		"a equacao escrita: %s" % EquacaoSobreColunas.texto(linha))
+	var colunas := [puzzle.botao_mais_h2, puzzle.botao_mais_o2, puzzle.botao_mais_h2o]
+	for i in colunas.size():
+		var seta: Control = colunas[i]
+		var escrito := EquacaoSobreColunas.retangulo_do_termo(linha, i)
+		_checar(absf(EquacaoSobreColunas.meio_do_termo(linha, i) - seta.get_global_rect().get_center().x) <= 1.5,
+			"o termo %d da equacao esta centrado na coluna da molecula dele" % (i + 1))
+		_checar(escrito.end.y <= seta.get_global_rect().position.y + 0.5 and caixa_tela.encloses(escrito),
+			"e escrito acima dela, dentro da tela")
+	_checar(EquacaoSobreColunas.menor_folga(linha) >= 0.0,
+		"nenhuma peca da equacao por cima da vizinha (folga %.1f)" % EquacaoSobreColunas.menor_folga(linha))
+	_checar(linha.get_global_transform().basis_xform(Vector2.RIGHT).x * EquacaoSobreColunas.extensao(linha).y
+		+ faixa.position.x <= caixa_tela.end.x, "e o \"+ Energia\" do fim cabe na tela")
+
+	# Balanceamento guiado, pelo método do Dr. Chico: uma molécula de cada,
+	# depois uma molécula onde o elemento está em menor quantidade, até igualar.
+	# Cada linha: botão pedido, meta, nome da captura e se o passo tem fala.
 	var mais_h2: Control = puzzle.botao_mais_h2
 	var mais_o2: Control = puzzle.botao_mais_o2
 	var mais_h2o: Control = puzzle.botao_mais_h2o
 	var roteiro := [
-		[mais_h2, [1, 0, 0], "5_passo1_lavoisier"],
-		[mais_h2o, [1, 0, 1], "6_passo2_reagentes"],
-		[mais_o2, [1, 1, 1], ""],
-		[mais_h2o, [1, 1, 2], "7_passo4_oxigenio_em_dupla"],
-		[null, [2, 1, 2], ""],
+		[mais_h2, [1, 0, 0], "5_passo1_uma_de_cada", true],
+		[mais_o2, [1, 1, 0], "", false],
+		[mais_h2o, [1, 1, 1], "5c_uma_de_cada_pronto", false],
+		[mais_h2o, [1, 1, 2], "6_passo2_menor_quantidade", true],
+		[null, [2, 1, 2], "7_passo3_agora_e_com_voce", true],
 	]
+	_checar(puzzle.ROTEIRO.size() == roteiro.size() + 1, "o roteiro tem %d passos" % (roteiro.size() + 1))
 	for i in roteiro.size():
 		var alvo: Control = roteiro[i][0]
 		var meta: Array = roteiro[i][1]
-		_checar(await _esperar_fala(puzzle), "passo %d: o cientista fala" % (i + 1))
+		var com_fala: bool = roteiro[i][3]
+		if not com_fala:
+			# "Uma de cada" é UMA instrução: nos cliques seguintes ninguém fala,
+			# a seta só passa para o próximo botão.
+			await _esperar(0.6)
+			_checar(not puzzle.mostrando_dialogo_cientista and Dialogic.current_timeline == null,
+				"passo %d: sem fala, a instrucao de antes ainda vale" % (i + 1))
+		else:
+			_checar(await _esperar_fala(puzzle), "passo %d: o cientista fala" % (i + 1))
 		if i == 0:
 			# "...acertar a estequiometria da combustão": ainda sem holofote. Ele
 			# acende na fala seguinte, a que cita os reagentes e os produtos.
@@ -244,20 +289,56 @@ func _testar_caminho_completo() -> void:
 			await _capturar("5_passo1_sem_holofote")
 			# Avança como quem joga: o primeiro toque termina de escrever, o
 			# segundo passa para a próxima fala.
-			while not _texto_da_fala().contains("reagentes e produtos"):
-				Dialogic.Inputs.handle_input()
-				await _esperar(0.2)
+			_checar(await _avancar_ate("reagentes e produtos"), "passo 1: chega na fala dos reagentes e produtos")
 			await _esperar(0.3)
-			_checar(puzzle.destaque.esta_ativo(),
-				"passo 1: acende na fala que cita os reagentes e os produtos")
+			_checar(puzzle.destaque.esta_ativo() and puzzle.destaque._furos_para.size() == 2,
+				"passo 1: acende os dois paineis na fala que cita os reagentes e os produtos")
 			await _capturar("5_passo1_com_holofote")
-		_checar(puzzle.destaque.esta_ativo() or alvo == null,
-			"passo %d: o holofote acende no que ele comenta" % (i + 1))
-		if roteiro[i][2] != "":
-			await _esperar(0.5)
-			await _capturar(roteiro[i][2] + "_fala")
-		await _pular_fala(puzzle)
-		await _esperar(0.1)
+			# A instrução do método: uma molécula de cada. O holofote desce para
+			# a equação escrita.
+			_checar(await _avancar_ate("uma molécula de cada"), "passo 1: a instrucao e \"uma molecula de cada\"")
+			_checar(_texto_da_fala().contains("todos os reagentes e todos os produtos"),
+				"passo 1: porque a reacao precisa ter todos os reagentes e todos os produtos")
+			await _esperar(0.4)
+			_checar(puzzle.destaque.esta_ativo() and puzzle.destaque._furos_para.size() == 1
+				and _mesmo_lugar(puzzle, puzzle.destaque._furos_para[0], puzzle._retangulo_da_equacao()),
+				"passo 1: e o holofote vai para a equacao escrita")
+		elif i == 3:
+			# O segundo passo do método: contar e achar onde falta. O holofote
+			# passa do hidrogênio (igualado) para o oxigênio (falta nos produtos).
+			_checar(await _avancar_ate("Hidrogênio, 2 nos reagentes e 2 nos produtos"),
+				"passo 4: ele conta o hidrogenio, 2 e 2")
+			await _esperar(0.4)
+			var do_h: Array = puzzle.destaque._enfases.duplicate()
+			_checar(do_h.size() == 2 and _mesmo_lugar(puzzle, do_h[0], puzzle._retangulos_para(["reagentes_h"])[0])
+				and _mesmo_lugar(puzzle, do_h[1], puzzle._retangulos_para(["produtos_h"])[0]),
+				"passo 4: com o H dos dois lados em evidencia")
+			await _capturar("6_passo2_hidrogenio")
+			_checar(await _avancar_ate("Oxigênio, 2 nos reagentes e só 1 nos produtos"),
+				"passo 4: depois o oxigenio, 2 e so 1")
+			await _esperar(0.4)
+			var do_o: Array = puzzle.destaque._enfases.duplicate()
+			_checar(do_o.size() == 2 and _mesmo_lugar(puzzle, do_o[0], puzzle._retangulos_para(["reagentes_o"])[0])
+				and _mesmo_lugar(puzzle, do_o[1], puzzle._retangulos_para(["produtos_o"])[0]),
+				"passo 4: e a evidencia passa para o O dos dois lados")
+			await _capturar("6_passo2_oxigenio")
+			_checar(await _avancar_ate("menor quantidade"), "passo 4: a regra: onde o elemento esta em menor quantidade")
+		elif i == 4:
+			_checar(await _avancar_ate("4 nos produtos e só 2 nos reagentes"),
+				"passo 5: a agua trouxe hidrogenio, 4 e 2")
+			await _esperar(0.4)
+			_checar(puzzle.destaque._enfases.size() == 2
+				and _mesmo_lugar(puzzle, puzzle.destaque._enfases[0], puzzle._retangulos_para(["reagentes_h"])[0]),
+				"passo 5: com o H em evidencia")
+			_checar(await _avancar_ate("Agora é com você"), "passo 5: e a ultima molecula fica por conta da pessoa")
+		if com_fala:
+			_checar(puzzle.destaque.esta_ativo(),
+				"passo %d: o holofote acende no que ele comenta" % (i + 1))
+			if roteiro[i][2] != "":
+				await _esperar(0.5)
+				await _capturar(roteiro[i][2] + "_fala")
+			await _pular_fala(puzzle)
+			await _esperar(0.1)
 		if alvo != null:
 			_checar(puzzle._botao_do_passo == alvo and puzzle.destaque.tem_seta(),
 				"passo %d: a seta aponta o botao %s" % [i + 1, alvo.name])
@@ -273,12 +354,29 @@ func _testar_caminho_completo() -> void:
 			puzzle._input(_clique(alvo.get_global_rect().get_center(), true))
 		else:
 			_checar(puzzle._botao_do_passo == null and not puzzle.destaque.tem_seta(),
-				"passo %d: livre, sem seta (voce ja sabe o que fazer)" % (i + 1))
+				"passo %d: livre, sem seta (agora e com voce)" % (i + 1))
+			if roteiro[i][2] != "":
+				await _esperar(0.4)
+				await _capturar(roteiro[i][2] + "_acao")
 			puzzle._input(_clique(mais_h2.get_global_rect().get_center(), true))
 		_checar(puzzle.coeficientes == meta, "passo %d: coeficientes em %s" % [i + 1, str(meta)])
+		if meta == [1, 1, 1]:
+			_checar(EquacaoSobreColunas.texto(linha) == "1 H2 + 1 O2 → 1 H2O + Energia",
+				"uma de cada: 1 H2 + 1 O2 -> 1 H2O")
+			_checar(puzzle.label_reagentes_valor.get_parsed_text() == "H = 2    O = 2"
+				and puzzle.label_produtos_valor.get_parsed_text() == "H = 2    O = 1",
+				"e a contagem: H 2 e 2, O 2 e 1")
+		elif meta == [1, 1, 2]:
+			_checar(puzzle.label_reagentes_valor.get_parsed_text() == "H = 2    O = 2"
+				and puzzle.label_produtos_valor.get_parsed_text() == "H = 4    O = 2",
+				"mais uma agua: O 2 e 2, H 2 e 4")
 
 	# Último passo: equação certa, a seta vai para a ignição.
 	_checar(await _esperar_fala(puzzle), "passo 6: o cientista comemora")
+	_checar(await _esperar_texto("Todos os elementos estão igualados"),
+		"passo 6: todos os elementos igualados e a equacao balanceada")
+	_checar(EquacaoSobreColunas.texto(linha) == "2 H2 + 1 O2 → 2 H2O + Energia"
+		and EquacaoSobreColunas.cor(linha) == Color.GREEN, "a equacao fica verde: 2 H2 + 1 O2 -> 2 H2O")
 	await _pular_fala(puzzle)
 	await _esperar(0.1)
 	_checar(puzzle._botao_do_passo == puzzle.botao_ignicao and puzzle.destaque.tem_seta(),
@@ -420,6 +518,26 @@ func _esperar_texto(trecho: String) -> bool:
 		await _esperar(0.05)
 		espera += 0.05
 	return _texto_da_fala().contains(trecho)
+
+
+## Avança a fala, como quem joga (um toque termina de escrever, o seguinte
+## passa adiante), até aparecer a frase com esse trecho. True se apareceu.
+func _avancar_ate(trecho: String) -> bool:
+	var toques := 0
+	while not _texto_da_fala().contains(trecho) and toques < 40 and Dialogic.current_timeline != null:
+		Dialogic.Inputs.handle_input()
+		await _esperar(0.2)
+		toques += 1
+	return _texto_da_fala().contains(trecho)
+
+
+## O furo (ou a caixa de ênfase) do holofote está em cima deste lugar da tela?
+## O holofote guarda os dele nas medidas do próprio nó.
+func _mesmo_lugar(puzzle: CanvasLayer, do_holofote: Rect2, na_tela: Rect2) -> bool:
+	var destaque: Control = puzzle.destaque
+	var esperado: Rect2 = destaque.get_global_transform().affine_inverse() * na_tela
+	return do_holofote.position.distance_to(esperado.position) < 2.0 \
+		and do_holofote.size.distance_to(esperado.size) < 2.0
 
 
 ## Pula a fala aberta (o Dialogic encerra de forma assíncrona).

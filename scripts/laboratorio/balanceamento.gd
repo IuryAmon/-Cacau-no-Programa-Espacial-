@@ -16,15 +16,21 @@ extends TelaInterativa
 #   DIFÍCIL   sem moléculas: só a equação escrita, com as setas em cada
 #             coeficiente (scenes/ui/seletor_coeficiente.tscn).
 #
+# Nos níveis com moléculas a tela se arruma como nos puzzles da história, de
+# cima para baixo: a contagem dos átomos (Reagentes / Produtos), a equação
+# escrita e, embaixo dela, os desenhos — cada termo da equação centrado em
+# cima da coluna da molécula que ele representa (ver
+# scripts/ui/equacao_sobre_colunas.gd).
+#
 # As reações de cada nível estão em scripts/laboratorio/equacoes_do_laboratorio.gd
 # e a conta (quantos átomos há em cada fórmula) em equacao_quimica.gd.
 #
 # VALE QUALQUER RESPOSTA BALANCEADA, como no puzzle do maçarico: com os
-# coeficientes em dobro a equação passa do mesmo jeito, e o terminal mostra a
+# coeficientes em dobro a equação passa do mesmo jeito, e o rodapé mostra a
 # forma mais simples. Errando, ele diz que elemento não bate.
 #
 # Um nível é uma fila de equações. Resolvida uma, entra a seguinte; "PULAR"
-# passa adiante sem resolver. No fim, o terminal diz quantas foram balanceadas
+# passa adiante sem resolver. No fim, o rodapé diz quantas foram balanceadas
 # e quantas confirmações saíram erradas.
 #
 # ONDE MEXER:
@@ -42,6 +48,7 @@ signal nivel_concluido
 
 const TERMO := preload("res://scenes/ui/termo_equacao.tscn")
 const SELETOR := preload("res://scenes/ui/seletor_coeficiente.tscn")
+const EquacaoSobreColunas := preload("res://scripts/ui/equacao_sobre_colunas.gd")
 
 ## Até quanto cada coeficiente vai. Passando, volta a zero (como nos puzzles).
 const COEF_MAX := 9
@@ -61,27 +68,31 @@ const TXT_RESUMO := "%d DE %d EQUAÇÕES BALANCEADAS"
 const TXT_ERROS := "CONFIRMAÇÕES ERRADAS: %d"
 const TXT_RODAPE_DO_FIM := "ESCOLHA OUTRO NÍVEL OU VOLTE AO LABORATÓRIO"
 
-# ── Montagem da linha de termos (px do vidro) ──
+# ── Montagem da linha de termos (px da área do painel) ──
 const LARGURA_MAIS := 40.0
 const LARGURA_SETA := 64.0
-## A letra da equação escrita no alto (níveis com moléculas): encolhe se não couber.
+## A letra da equação escrita em cima das moléculas (níveis fácil e médio):
+## encolhe se algum termo não couber em cima da coluna dele.
 const FONTE_EQUACAO := 30
 const FONTE_EQUACAO_MIN := 18
+## Quanto um termo escrito pode passar da largura da coluna dele (para os dois
+## lados somados) sem encostar no "+" vizinho.
+const FOLGA_DO_TERMO := 6.0
 ## A letra da equação do nível difícil, que é a tela inteira.
 const FONTE_ESCRITA := 33
 const FONTE_ESCRITA_MIN := 22
 ## A altura de uma fileira do nível difícil (a do seletor de coeficiente).
 const ALTURA_DA_FILEIRA := 110.0
 const FOLGA_DA_FORMULA := 4.0
-## No nível difícil: a altura (no vidro) em que a escrita pode começar e o vão
+## No nível difícil: a altura (na área do painel) em que a escrita pode começar e o vão
 ## entre uma fileira e a outra, quando a equação precisa de duas.
 const ALTO_DA_ESCRITA := 64.0
 const ENTRE_FILEIRAS := 50.0
 
-const COR_AMARELO := ComputadorDoLaboratorio.COR_AMARELO
-const COR_CERTO := ComputadorDoLaboratorio.COR_CERTO
-const COR_ERRO := ComputadorDoLaboratorio.COR_ERRO
-const COR_TEXTO := ComputadorDoLaboratorio.COR_TEXTO
+const COR_AMARELO := PainelDaAtividade.COR_AMARELO
+const COR_CERTO := PainelDaAtividade.COR_CERTO
+const COR_ERRO := PainelDaAtividade.COR_ERRO
+const COR_TEXTO := PainelDaAtividade.COR_TEXTO
 
 enum Estado { ESCOLHA, RESOLVENDO, PASSANDO, FIM }
 
@@ -101,29 +112,33 @@ var _sessao: int = 0
 var _termos: Array[TermoEquacao] = []
 var _seletores: Array[SeletorCoeficiente] = []
 var _largura_do_termo: float = 110.0
+## A linha da equação escrita, peça por peça, na ordem: o x do meio de cada
+## coluna e de cada vão ({"formula": i, "centro": x} ou {"operador": "+",
+## "centro": x}), medido dentro de LinhaEquacao. Montado junto com as colunas.
+var _molde_da_linha: Array = []
 
-@onready var computador: ComputadorDoLaboratorio = $Computador
-@onready var grupo_escolha: Control = $Computador/Display/Conteudo/GrupoEscolha
-@onready var grupo_equacao: Control = $Computador/Display/Conteudo/GrupoEquacao
-@onready var linha_equacao: HBoxContainer = $Computador/Display/Conteudo/GrupoEquacao/LinhaEquacao
-@onready var reagentes_titulo: Label = $Computador/Display/Conteudo/GrupoEquacao/LabelReagentesTitulo
-@onready var reagentes_valor: RichTextLabel = $Computador/Display/Conteudo/GrupoEquacao/LabelReagentesValor
-@onready var produtos_titulo: Label = $Computador/Display/Conteudo/GrupoEquacao/LabelProdutosTitulo
-@onready var produtos_valor: RichTextLabel = $Computador/Display/Conteudo/GrupoEquacao/LabelProdutosValor
-@onready var termos: Control = $Computador/Display/Conteudo/GrupoEquacao/Termos
-@onready var botao_confirmar: Panel = $Computador/Display/Conteudo/GrupoEquacao/BotaoConfirmar
-@onready var botao_pular: Panel = $Computador/Display/Conteudo/GrupoEquacao/BotaoPular
-@onready var grupo_fim: Control = $Computador/Display/Conteudo/GrupoFim
-@onready var titulo_do_fim: Label = $Computador/Display/Conteudo/GrupoFim/Titulo
-@onready var resumo_do_fim: Label = $Computador/Display/Conteudo/GrupoFim/Resumo
-@onready var erros_do_fim: Label = $Computador/Display/Conteudo/GrupoFim/Erros
-@onready var botao_outro_nivel: Panel = $Computador/Display/Conteudo/GrupoFim/BotaoOutroNivel
-@onready var botao_sair: Panel = $Computador/Display/Conteudo/GrupoFim/BotaoSair
+@onready var painel: PainelDaAtividade = $Painel
+@onready var grupo_escolha: Control = $Painel/Display/Conteudo/GrupoEscolha
+@onready var grupo_equacao: Control = $Painel/Display/Conteudo/GrupoEquacao
+@onready var linha_equacao: Control = $Painel/Display/Conteudo/GrupoEquacao/LinhaEquacao
+@onready var reagentes_titulo: Label = $Painel/Display/Conteudo/GrupoEquacao/LabelReagentesTitulo
+@onready var reagentes_valor: RichTextLabel = $Painel/Display/Conteudo/GrupoEquacao/LabelReagentesValor
+@onready var produtos_titulo: Label = $Painel/Display/Conteudo/GrupoEquacao/LabelProdutosTitulo
+@onready var produtos_valor: RichTextLabel = $Painel/Display/Conteudo/GrupoEquacao/LabelProdutosValor
+@onready var termos: Control = $Painel/Display/Conteudo/GrupoEquacao/Termos
+@onready var botao_confirmar: Panel = $Painel/Display/Conteudo/GrupoEquacao/BotaoConfirmar
+@onready var botao_pular: Panel = $Painel/Display/Conteudo/GrupoEquacao/BotaoPular
+@onready var grupo_fim: Control = $Painel/Display/Conteudo/GrupoFim
+@onready var titulo_do_fim: Label = $Painel/Display/Conteudo/GrupoFim/Titulo
+@onready var resumo_do_fim: Label = $Painel/Display/Conteudo/GrupoFim/Resumo
+@onready var erros_do_fim: Label = $Painel/Display/Conteudo/GrupoFim/Erros
+@onready var botao_outro_nivel: Panel = $Painel/Display/Conteudo/GrupoFim/BotaoOutroNivel
+@onready var botao_sair: Panel = $Painel/Display/Conteudo/GrupoFim/BotaoSair
 ## O botão de cada nível, na tela de escolha.
 @onready var botoes_de_nivel := {
-	EquacoesDoLaboratorio.Nivel.FACIL: $Computador/Display/Conteudo/GrupoEscolha/BotaoFacil as Panel,
-	EquacoesDoLaboratorio.Nivel.MEDIO: $Computador/Display/Conteudo/GrupoEscolha/BotaoMedio as Panel,
-	EquacoesDoLaboratorio.Nivel.DIFICIL: $Computador/Display/Conteudo/GrupoEscolha/BotaoDificil as Panel,
+	EquacoesDoLaboratorio.Nivel.FACIL: $Painel/Display/Conteudo/GrupoEscolha/BotaoFacil as Panel,
+	EquacoesDoLaboratorio.Nivel.MEDIO: $Painel/Display/Conteudo/GrupoEscolha/BotaoMedio as Panel,
+	EquacoesDoLaboratorio.Nivel.DIFICIL: $Painel/Display/Conteudo/GrupoEscolha/BotaoDificil as Panel,
 }
 
 
@@ -147,7 +162,7 @@ func _ao_abrir() -> void:
 		func() -> bool: return estado == Estado.FIM)
 	for no: Control in [grupo_equacao, botao_confirmar]:
 		no.set_meta("pos_base", no.position)
-	computador.ligar()
+	painel.aparecer()
 	mostrar_escolha()
 
 
@@ -204,9 +219,8 @@ func mostrar_escolha() -> void:
 	grupo_equacao.hide()
 	grupo_fim.hide()
 	grupo_escolha.show()
-	computador.definir_cabecalho("BALANCEAMENTO DE EQUAÇÕES")
-	computador.definir_rodape(TXT_ESCOLHA)
-	computador.definir_led(ComputadorDoLaboratorio.COR_LED_PARADO, true)
+	painel.definir_cabecalho("BALANCEAMENTO DE EQUAÇÕES")
+	painel.definir_rodape(TXT_ESCOLHA)
 
 
 ## Começa a fila de equações de um nível.
@@ -249,9 +263,8 @@ func _mostrar_o_fim() -> void:
 	titulo_do_fim.text = TXT_FIM % EquacoesDoLaboratorio.NOMES[nivel]
 	resumo_do_fim.text = TXT_RESUMO % [resolvidas, fila().size()]
 	erros_do_fim.text = TXT_ERROS % erros
-	computador.definir_cabecalho("FIM DO NÍVEL")
-	computador.definir_rodape(TXT_RODAPE_DO_FIM)
-	computador.definir_led(ComputadorDoLaboratorio.COR_LED_AZUL)
+	painel.definir_cabecalho("FIM DO NÍVEL")
+	painel.definir_rodape(TXT_RODAPE_DO_FIM)
 	tocar("sucesso")
 	nivel_concluido.emit()
 
@@ -294,9 +307,8 @@ func _montar_equacao() -> void:
 		registrar_alvo("mais_%d" % i, _retangulo_da_seta.bind(i, 1), alterar.bind(i, 1), _pode_mexer)
 		registrar_alvo("menos_%d" % i, _retangulo_da_seta.bind(i, -1), alterar.bind(i, -1), _pode_mexer)
 
-	computador.definir_cabecalho(TXT_CABECALHO % [EquacoesDoLaboratorio.NOMES[nivel], indice + 1, fila().size()])
-	computador.definir_rodape(TXT_INSTRUCAO % equacao()["nome"])
-	computador.definir_led(ComputadorDoLaboratorio.COR_LED_PARADO, true)
+	painel.definir_cabecalho(TXT_CABECALHO % [EquacoesDoLaboratorio.NOMES[nivel], indice + 1, fila().size()])
+	painel.definir_rodape(TXT_INSTRUCAO % equacao()["nome"])
 	_atualizar()
 
 
@@ -307,6 +319,7 @@ func _esvaziar_os_termos() -> void:
 		filho.free()
 	_termos.clear()
 	_seletores.clear()
+	_molde_da_linha.clear()
 
 
 ## Fácil e médio: uma coluna por substância, com as setas e as moléculas, como
@@ -326,13 +339,19 @@ func _montar_com_moleculas() -> void:
 	var inicio_dos_reagentes := x
 	var fim_dos_reagentes := x
 	var inicio_dos_produtos := x
+	# O x de cada coluna vale também para a equação escrita em cima delas: a
+	# linha e as colunas são vizinhas no mesmo grupo.
+	var da_linha := termos.position.x - linha_equacao.position.x
+	_molde_da_linha.clear()
 	for peca: String in pecas:
 		var largura := _largura_da_peca(peca)
+		var centro := da_linha + x + largura * 0.5
 		if peca == "+" or peca == "->":
 			if peca == "->":
 				fim_dos_reagentes = x
 				inicio_dos_produtos = x + largura
 			termos.add_child(_criar_operador(peca, Rect2(x, 0, largura, termos.size.y), 33))
+			_molde_da_linha.append({"operador": peca, "centro": centro})
 		else:
 			var termo := TERMO.instantiate() as TermoEquacao
 			termo.formula = peca
@@ -340,9 +359,11 @@ func _montar_com_moleculas() -> void:
 			termo.position = Vector2(x, 0)
 			termos.add_child(termo)
 			termo.molecula_apareceu.connect(tocar.bind("pop"))
+			_molde_da_linha.append({"formula": _termos.size(), "centro": centro})
 			_termos.append(termo)
 		x += largura
-	# "Reagentes" e "Produtos" centrados em cima dos termos de cada lado.
+	# "Reagentes" e "Produtos" centrados em cima dos termos de cada lado (e da
+	# metade da equação escrita que é deles).
 	_centralizar(reagentes_titulo, reagentes_valor, inicio_dos_reagentes, fim_dos_reagentes)
 	_centralizar(produtos_titulo, produtos_valor, inicio_dos_produtos, x)
 
@@ -377,7 +398,7 @@ func _montar_escrita() -> void:
 		fileiras = [reagentes + ["->"], produtos]
 	while tamanho > FONTE_ESCRITA_MIN and _mais_larga(fileiras, tamanho) > limite:
 		tamanho -= 11
-	# Sem a equação do alto nem a contagem, a escrita tem o vidro quase inteiro:
+	# Sem a equação do alto nem a contagem, a escrita tem a área quase inteira:
 	# as fileiras se espalham do alto dele até o botão, e não só no retângulo
 	# dos termos (as setas de uma fileira não encostam nas da outra).
 	var alto := ALTO_DA_ESCRITA - termos.position.y
@@ -490,7 +511,7 @@ func alterar(i: int, sentido: int) -> void:
 		_seletores[i].animar_seta(sentido)
 		tocar("passo")
 	# Mexeu de novo: o aviso de erro de antes já não vale.
-	computador.voltar_rodape()
+	painel.voltar_rodape()
 	_atualizar()
 
 
@@ -544,17 +565,29 @@ func _atualizar() -> void:
 		produtos_titulo.add_theme_color_override("font_color", cor_geral)
 
 	if EquacoesDoLaboratorio.com_moleculas(nivel):
-		# A equação escrita no alto, que encolhe até caber na largura da tela.
-		for filho in linha_equacao.get_children():
-			filho.free()
-		var textos := textos_dos_coeficientes()
-		var tamanho := FONTE_EQUACAO
-		while tamanho > FONTE_EQUACAO_MIN and _largura_da_equacao(textos, tamanho) > linha_equacao.size.x - 20.0:
-			tamanho -= 2
-		_escrever_equacao(linha_equacao, textos, cor_geral, tamanho)
+		_escrever_linha(cor_geral)
 	else:
 		for i in _seletores.size():
 			_seletores[i].numero.text = str(coeficientes[i]) if tocado[i] else "?"
+
+
+## A equação escrita logo acima das moléculas (níveis fácil e médio): cada termo
+## em cima da coluna do desenho dele, o "+" e a seta em cima dos vãos. O
+## coeficiente em que a pessoa ainda não mexeu aparece como "?".
+func _escrever_linha(cor: Color) -> void:
+	var todas := formulas()
+	var textos := textos_dos_coeficientes()
+	var pecas: Array = []
+	for item: Dictionary in _molde_da_linha:
+		if item.has("operador"):
+			pecas.append(EquacaoSobreColunas.operador(item["operador"], item["centro"]))
+		else:
+			var i: int = item["formula"]
+			pecas.append(EquacaoSobreColunas.termo(textos[i], String(todas[i]), item["centro"]))
+	# A letra encolhe até todo termo caber em cima da coluna dele.
+	var tamanho := EquacaoSobreColunas.tamanho_que_cabe(pecas, _largura_do_termo + FOLGA_DO_TERMO,
+		FONTE_EQUACAO, FONTE_EQUACAO_MIN)
+	EquacaoSobreColunas.escrever(linha_equacao, pecas, cor, tamanho)
 
 
 ## O coeficiente de cada termo como se escreve: o número, ou "?" enquanto a
@@ -581,36 +614,8 @@ func _contagem_colorida(elemento: String, valor: String, cor: Color) -> String:
 
 
 # ─────────────────────────────────────────────────────────────
-# EQUAÇÃO ESCRITA
+# AS LETRAS DO NÍVEL DIFÍCIL
 # ─────────────────────────────────────────────────────────────
-
-## Escreve "c₁ R₁ + c₂ R₂ → c₃ P₁ + ..." com os índices em subscrito de verdade
-## (menores e rebaixados).
-func _escrever_equacao(onde: Control, textos: PackedStringArray, cor: Color, tamanho: int) -> void:
-	var reagentes: Array = equacao()["reagentes"]
-	var todas := formulas()
-	for i in todas.size():
-		if i == reagentes.size():
-			_por_texto(onde, "   →   ", false, cor, tamanho)
-		elif i > 0:
-			_por_texto(onde, "  +  ", false, cor, tamanho)
-		_por_texto(onde, textos[i] + " ", false, cor, tamanho)
-		for pedaco: Array in EquacaoQuimica.pedacos(String(todas[i])):
-			_por_texto(onde, pedaco[0], pedaco[1], cor, tamanho)
-
-
-func _largura_da_equacao(textos: PackedStringArray, tamanho: int) -> float:
-	var reagentes: Array = equacao()["reagentes"]
-	var todas := formulas()
-	var largura := 0.0
-	for i in todas.size():
-		if i == reagentes.size():
-			largura += _medir("   →   ", tamanho)
-		elif i > 0:
-			largura += _medir("  +  ", tamanho)
-		largura += _medir(textos[i] + " ", tamanho) + _largura_da_formula(String(todas[i]), tamanho)
-	return largura
-
 
 func _medir(texto: String, tamanho: int) -> float:
 	return FONTE.get_string_size(texto, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho).x
@@ -656,7 +661,7 @@ func confirmar() -> void:
 
 func _errar(texto: String, tremer: Control) -> void:
 	tocar("erro")
-	computador.avisar(texto, COR_ERRO, 2.6)
+	painel.avisar(texto, COR_ERRO, 2.6)
 	var origem: Vector2 = tremer.get_meta("pos_base", tremer.position)
 	var tween := novo_tween()
 	tween.set_trans(Tween.TRANS_SINE)
@@ -669,16 +674,15 @@ func _concluir() -> void:
 	var sessao := _sessao
 	resolvidas += 1
 	tocar("sucesso")
-	computador.definir_led(ComputadorDoLaboratorio.COR_LED_CERTO)
 	_pintar_de_certo()
 	# Certa, mas dava para simplificar: passa do mesmo jeito, e o rodapé mostra
 	# a forma mais simples (com um pouco mais de tempo na tela para ler).
 	var simples := EquacaoQuimica.forma_mais_simples(coeficientes)
 	var tem_dica := simples != coeficientes
 	if tem_dica:
-		computador.avisar(TXT_FORMA_SIMPLES % _numeros_ligados(simples), COR_CERTO, -1.0)
+		painel.avisar(TXT_FORMA_SIMPLES % _numeros_ligados(simples), COR_CERTO, -1.0)
 	else:
-		computador.avisar(TXT_BALANCEADA, COR_CERTO, -1.0)
+		painel.avisar(TXT_BALANCEADA, COR_CERTO, -1.0)
 	equacao_resolvida.emit(indice)
 	await get_tree().create_timer(2.8 if tem_dica else 1.6).timeout
 	if sessao != _sessao:
@@ -694,7 +698,7 @@ func pular() -> void:
 	var sessao := _sessao
 	tocar("tirar")
 	definir_coeficientes(equacao()["resposta"])
-	computador.avisar(TXT_PULADA % _numeros_ligados(equacao()["resposta"]), COR_AMARELO, -1.0)
+	painel.avisar(TXT_PULADA % _numeros_ligados(equacao()["resposta"]), COR_AMARELO, -1.0)
 	await get_tree().create_timer(1.8).timeout
 	if sessao != _sessao:
 		return
@@ -722,13 +726,7 @@ func _seguir_adiante() -> void:
 ## Balanceada: a equação fica verde (em qualquer nível).
 func _pintar_de_certo() -> void:
 	if EquacoesDoLaboratorio.com_moleculas(nivel):
-		for filho in linha_equacao.get_children():
-			filho.free()
-		var textos := textos_dos_coeficientes()
-		var tamanho := FONTE_EQUACAO
-		while tamanho > FONTE_EQUACAO_MIN and _largura_da_equacao(textos, tamanho) > linha_equacao.size.x - 20.0:
-			tamanho -= 2
-		_escrever_equacao(linha_equacao, textos, COR_CERTO, tamanho)
+		_escrever_linha(COR_CERTO)
 		reagentes_titulo.add_theme_color_override("font_color", COR_CERTO)
 		produtos_titulo.add_theme_color_override("font_color", COR_CERTO)
 		return

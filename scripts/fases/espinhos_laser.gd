@@ -81,9 +81,11 @@ const TREMOR_DO_BRILHO := 0.1
 ## A caixa elétrica (ou qualquer AlvoBumerangue) que alimenta a armadilha.
 ## Deixe vazio para uns espinhos que nunca desligam.
 @export var caixa_eletrica: NodePath
-## Ligado (padrão): assim que a caixa é acertada, os espinhos morrem de vez.
+## Ligado (padrão): assim que a caixa é acertada, os espinhos morrem de vez —
+## inclusive depois de a Cacau morrer e a fase recarregar (a fileira se lembra
+## sozinha, ver _lembrar_desligamento).
 ## Desligado: eles voltam a subir quando a janela do alvo expira — vira uma
-## passagem cronometrada.
+## passagem cronometrada, que recomeça de pé a cada vida.
 @export var desligar_para_sempre: bool = true
 ## Respiro entre o acerto na caixa e o recolhimento. Nesse tempo os espinhos
 ## continuam de pé e MACHUCANDO — dá para ver o baque e a faísca da caixa antes
@@ -147,6 +149,7 @@ func _ready() -> void:
 		_atraso.timeout.connect(_ao_fim_do_atraso)
 
 	_criar_brilho()
+	_lembrar_desligamento()
 	_ligar_na_caixa()
 
 	# Estado inicial sem animação: quem entra na sala já vê a armadilha do
@@ -224,6 +227,22 @@ func _acender_brilho(aceso: bool) -> void:
 		_brilho.acesa = aceso
 
 
+# --- MEMÓRIA (o que sobra depois de uma morte) ---
+
+## Armadilha desligada de vez continua desligada quando a fase recarrega —
+## morrer não religa nada. Quem guarda isso é a PRÓPRIA armadilha (o desarmar()
+## anota no EstadoMundo), e não a caixa que a alimenta: assim ela nasce
+## recolhida mesmo que a caixa venha depois dela na árvore da cena (e ainda não
+## tenha acordado), ou que a caixa nem se lembre do acerto.
+##
+## É a mesma anotação que a lista de objetivos lê ("Desative os espinhos de
+## laser") — objetivo cumprido e armadilha de pé nunca mais aparecem juntos.
+func _lembrar_desligamento() -> void:
+	if desligar_para_sempre and EstadoMundo.ja_feito(self):
+		_travado = true
+		armado_no_inicio = false
+
+
 # --- LIGAÇÃO COM A CAIXA ELÉTRICA ---
 
 func _ligar_na_caixa() -> void:
@@ -238,13 +257,35 @@ func _ligar_na_caixa() -> void:
 		return
 
 	caixa.mudou.connect(_ao_mudar_caixa)
+	_conferir_caixa(caixa)
+	# A caixa que vem DEPOIS dos espinhos na árvore ainda não rodou o _ready()
+	# dela e não sabe dizer como está: a conferência se repete quando ela acorda.
+	if not caixa.is_node_ready():
+		caixa.ready.connect(_ao_acordar_a_caixa.bind(caixa), CONNECT_ONE_SHOT)
 
-	# A caixa pode já estar arrebentada quando os espinhos nascem (alvo com
-	# "persistir"). Nesse caso a corrente nunca chega: nascem recolhidos.
-	var ja_acertada: bool = ("quebrada" in caixa and caixa.quebrada) or ("ativo" in caixa and caixa.ativo)
-	if ja_acertada:
+
+## A caixa pode já estar acertada quando os espinhos nascem (alvo com
+## "persistir"). Nesse caso a corrente não chega: nascem recolhidos.
+##
+## Caixa LIGADA agora recolhe qualquer fileira. Caixa de janela, que já foi
+## acertada mas voltou desligada, só segura a fileira que desliga para sempre —
+## a passagem cronometrada volta de pé, porque o tempo dela acabou.
+func _conferir_caixa(caixa: Node) -> void:
+	var ligada: bool = "ativo" in caixa and caixa.ativo
+	var ja_acertada: bool = ligada \
+		or ("ja_acertado" in caixa and caixa.ja_acertado) \
+		or ("quebrada" in caixa and caixa.quebrada)
+	if ligada or (ja_acertada and desligar_para_sempre):
 		_travado = desligar_para_sempre
 		armado_no_inicio = false
+
+
+## A caixa acordou depois dos espinhos: se ela já estava acertada, a fileira
+## que subiu por engano recolhe, sem animação — nunca chegou a existir de pé.
+func _ao_acordar_a_caixa(caixa: Node) -> void:
+	_conferir_caixa(caixa)
+	if not armado_no_inicio and not _recolhido:
+		desarmar(false)
 
 
 func _ao_mudar_caixa(ligada: bool) -> void:
@@ -309,8 +350,9 @@ func desarmar(com_animacao: bool = true) -> void:
 		_atraso.stop()
 	if desligar_para_sempre:
 		_travado = true
-		# Só uma anotação para a lista de objetivos ("Desative os espinhos de
-		# laser"): os espinhos em si não leem isto de volta.
+		# Anotado na hora: é o que mantém a fileira recolhida depois de uma
+		# morte (ver _lembrar_desligamento) e o que a lista de objetivos lê
+		# ("Desative os espinhos de laser").
 		EstadoMundo.marcar_feito(self)
 
 	if com_animacao and _tem_animacao(ANIM_DESATIVANDO):

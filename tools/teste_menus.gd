@@ -19,14 +19,15 @@ extends "res://tools/teste_de_tela.gd"
 #     clique entram; ESC não faz nada no menu principal;
 #   * a cortina escurece, troca, clareia e some; dois pedidos seguidos trocam
 #     uma vez só; ela solta o jogo se ele estava pausado;
-#   * o menu do Laboratório tem um cartão para cada uma das cinco atividades,
+#   * o menu do Laboratório tem um cartão para cada uma das seis atividades,
 #     todos alcançáveis pelas teclas; cada cartão abre a cena dele, e o ESC de
 #     cada atividade volta ao menu do Laboratório; ESC no menu do Laboratório
 #     volta ao principal;
 #   * de controle, o direcional leva o foco um cartão por toque e o ✕ entra;
-#   * MODO HISTÓRIA abre o world1 com a Cacau, os HUDs da história ligados e o
-#     jogo andando; o botão que escolheu a história (o ESPAÇO, que também é o
-#     pulo) não faz a Cacau pular na chegada.
+#   * MODO HISTÓRIA abre a introdução e, dela (pulando com ESC), o world1 com a
+#     Cacau, os HUDs da história ligados e o jogo andando; o botão que escolheu
+#     a história (o ESPAÇO, que também é o pulo) não faz a Cacau pular na
+#     chegada. (A introdução tem o teste dela: tools/teste_introducao.tscn.)
 #
 # O SAIR não é apertado: ele fecharia o próprio teste.
 #
@@ -37,6 +38,7 @@ extends "res://tools/teste_de_tela.gd"
 const CENA_MENU := "res://scenes/menu_principal.tscn"
 const CENA_LABORATORIO := "res://scenes/laboratorio/menu_laboratorio.tscn"
 const CENA_HISTORIA := "res://scenes/world1.tscn"
+const CENA_INTRODUCAO := "res://scenes/introducao.tscn"
 ## As cortinas passam mais depressa enquanto o teste espera por elas.
 const PRESSA := 4.0
 ## As imagens do projeto geradas por I.A.: nenhuma entra no menu.
@@ -187,12 +189,13 @@ func _testar_o_projeto() -> void:
 	var principal := String(ProjectSettings.get_setting("application/run/main_scene"))
 	_checar(principal == CENA_MENU, "a cena principal do projeto é o menu principal (%s)" % principal)
 	_checar(TransicaoDeCena.CENA_MENU == CENA_MENU and TransicaoDeCena.CENA_LABORATORIO == CENA_LABORATORIO \
-		and TransicaoDeCena.CENA_HISTORIA == CENA_HISTORIA, "a cortina conhece o menu, o Laboratório e o começo da história")
+		and TransicaoDeCena.CENA_HISTORIA == CENA_HISTORIA and TransicaoDeCena.CENA_INTRODUCAO == CENA_INTRODUCAO,
+		"a cortina conhece o menu, o Laboratório, a introdução e o começo da história")
 	var faltando := PackedStringArray()
-	for caminho: String in [CENA_MENU, CENA_LABORATORIO, CENA_HISTORIA]:
+	for caminho: String in [CENA_MENU, CENA_LABORATORIO, CENA_INTRODUCAO, CENA_HISTORIA]:
 		if not ResourceLoader.exists(caminho):
 			faltando.append(caminho)
-	_checar(faltando.is_empty(), "as três cenas existem %s" % [faltando])
+	_checar(faltando.is_empty(), "as quatro cenas existem %s" % [faltando])
 
 
 func _testar_o_menu_principal() -> void:
@@ -469,8 +472,9 @@ func _testar_o_menu_do_laboratorio() -> void:
 		textos.append_array([dados["nome"], dados["descricao"]])
 		if not ResourceLoader.exists(String(dados["cena"])):
 			faltando.append(dados["cena"])
-	_checar(chaves == ["monte", "quiz", "balanceamento", "destilador", "tabela"] and menu.nomes_dos_alvos() == PackedStringArray(chaves),
-		"cinco atividades: monte seu átomo, que átomo é esse?, balanceamento, destilador e tabela periódica")
+	_checar(chaves == ["monte", "quiz", "balanceamento", "compressor", "destilador", "tabela"]
+		and menu.nomes_dos_alvos() == PackedStringArray(chaves),
+		"seis atividades: monte seu átomo, que átomo é esse?, balanceamento, compressor de ar, destilador e tabela periódica")
 	_checar(faltando.is_empty(), "a cena de cada uma existe %s" % [faltando])
 	_checar(menu.atividade("tabela")["nome"] == "TABELA PERIÓDICA" and menu.atividade("monte")["nome"] == "MONTE SEU ÁTOMO" \
 		and menu.atividade("quiz")["nome"] == "QUE ÁTOMO É ESSE?" and menu.atividade("nada").is_empty(),
@@ -491,12 +495,12 @@ func _testar_o_menu_do_laboratorio() -> void:
 			if outro.grow(8.0).intersects(cartao):
 				no_lugar = false
 		cartoes.append(cartao)
-	_checar(no_lugar, "os cinco cartões cabem na tela, entre o título e a dica das teclas, sem se cobrir")
-	_checar(is_equal_approx(cartoes[0].position.y, cartoes[2].position.y) and is_equal_approx(cartoes[3].position.y, cartoes[4].position.y) \
+	_checar(no_lugar, "os seis cartões cabem na tela, entre o título e a dica das teclas, sem se cobrir")
+	_checar(is_equal_approx(cartoes[0].position.y, cartoes[2].position.y) and is_equal_approx(cartoes[3].position.y, cartoes[5].position.y) \
 		and cartoes[3].position.y > cartoes[0].end.y \
 		and is_equal_approx(cartoes[0].position.x + cartoes[2].end.x, menu.size.x) \
-		and is_equal_approx(cartoes[3].position.x + cartoes[4].end.x, menu.size.x),
-		"três em cima e dois embaixo, as duas fileiras centradas")
+		and is_equal_approx(cartoes[3].position.x + cartoes[5].end.x, menu.size.x),
+		"três em cima e três embaixo, as duas fileiras centradas")
 	var aviso: Label = menu.get_node("Moldura/AvisoDeVoltar")
 	_checar(not aviso.get_global_rect().intersects(cartoes[0]) and not aviso.get_global_rect().intersects(menu.retangulo_do_titulo()),
 		"o aviso de voltar não encosta em cartão nem no título")
@@ -545,7 +549,7 @@ func _testar_o_menu_do_laboratorio() -> void:
 			if vizinho != "" and not alcancados.has(vizinho):
 				alcancados[vizinho] = true
 				fila.append(vizinho)
-	_checar(alcancados.size() == chaves.size(), "pelas teclas se chega aos cinco cartões (%d)" % alcancados.size())
+	_checar(alcancados.size() == chaves.size(), "pelas teclas se chega aos seis cartões (%d)" % alcancados.size())
 	await _passar_por(menu, "destilador")
 	_checar(menu.alvo_em_foco() == "destilador", "o mouse em cima de um cartão põe o foco nele")
 	await _foto("menu_4_laboratorio_foco")
@@ -638,8 +642,12 @@ func _testar_o_modo_historia() -> void:
 	await _quadros(2)
 	_checar(menu.de_saida() and TransicaoDeCena.em_curso(), "ESPAÇO no MODO HISTÓRIA começa a troca de cena")
 	_checar(Interacao.toque_preso(&"jump"), "o ESPAÇO que escolheu fica preso ao menu: não vale como pulo")
+	await _esperar_a_cortina()
+	_checar(_caminho_da_cena() == CENA_INTRODUCAO, "a cena que chega é a introdução (%s)" % _caminho_da_cena())
+	await _teclar(KEY_ESCAPE)
+	_checar(TransicaoDeCena.em_curso(), "ESC pula a introdução")
 	var cena := await _esperar_a_cortina()
-	_checar(_caminho_da_cena() == CENA_HISTORIA, "a cena que chega é o world1 (%s)" % _caminho_da_cena())
+	_checar(_caminho_da_cena() == CENA_HISTORIA, "e a cena que chega depois dela é o world1 (%s)" % _caminho_da_cena())
 	var cacau := get_tree().get_first_node_in_group("player")
 	_checar(cacau != null and cena.is_ancestor_of(cacau), "com a Cacau")
 	_checar(get_tree().get_nodes_in_group(CursorVirtual.GRUPO).filter(func(no: Node) -> bool: return no is TelaInterativa).is_empty(),

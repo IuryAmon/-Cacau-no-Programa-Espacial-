@@ -34,6 +34,8 @@ var FASE2: String
 ## Marcas que a caixa e a porta de metal deixam no EstadoMundo.
 var MARCA_EMPURRADA: String
 var MARCA_TENTOU: String
+## O rádio que chama a Cacau na chegada (ver _zerar_estado).
+const RADIOS := ["/root/Fase1Oficina/Entrada/RadioDrChico"]
 
 var _falhas := 0
 
@@ -261,6 +263,11 @@ func _testar_setas() -> void:
 func _zerar_estado() -> void:
 	EstadoMundo._feitos.clear()
 	EstadoMundo._valores.clear()
+	# O rádio do Dr. Chico (a entrada da oficina) chama a
+	# Cacau na chegada, e a lista some enquanto ele fala: aqui a chamada
+	# conta como já ouvida, para a lista se mexer só pelo que o teste faz.
+	for radio in RADIOS:
+		EstadoMundo._feitos[radio] = true
 	EstadoMundo.passagem_laser_aberta = false
 	EstadoMundo.revelou_dr_chico = false
 	root.get_node("Progresso")._habilidades.clear()

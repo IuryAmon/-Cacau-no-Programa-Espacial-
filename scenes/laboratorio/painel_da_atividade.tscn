@@ -1,0 +1,56 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://dbf6yot86k1ws" path="res://scripts/laboratorio/painel_da_atividade.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="3_fonte"]
+
+[node name="Painel" type="Control"]
+texture_filter = 1
+layout_mode = 3
+anchors_preset = 0
+offset_left = 250.0
+offset_top = 100.0
+offset_right = 1036.0
+offset_bottom = 625.0
+scale = Vector2(1.4, 1.4)
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="Display" type="Control" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Cabecalho" type="Label" parent="Display"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 14.0
+offset_right = 764.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.56, 0.78, 1, 0.9)
+theme_override_fonts/font = ExtResource("3_fonte")
+theme_override_font_sizes/font_size = 11
+text = "LABORATÓRIO"
+
+[node name="Conteudo" type="Control" parent="Display"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Rodape" type="Label" parent="Display"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 492.0
+offset_right = 764.0
+offset_bottom = 512.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 0.9)
+theme_override_fonts/font = ExtResource("3_fonte")
+theme_override_font_sizes/font_size = 11

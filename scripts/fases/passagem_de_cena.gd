@@ -119,6 +119,9 @@ func _do_lado_de_fora(x: float) -> bool:
 
 ## Quem está segurando a Cacau nesta cena agora (null = ninguém, pode sair).
 func _quem_segura() -> Node:
+	# Modo dev (ver modo_dev.gd): ninguém segura a saída.
+	if ModoDev.ativo:
+		return null
 	for no in get_tree().get_nodes_in_group(GRUPO_DE_QUEM_SEGURA):
 		if no.has_method("segura_a_saida") and no.segura_a_saida():
 			return no

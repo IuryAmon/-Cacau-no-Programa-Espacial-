@@ -1,5 +1,5 @@
 class_name DemoBumerangue
-extends Control
+extends DemoDeFerramenta
 
 # --- O QUADRADINHO DO TUTORIAL: A CACAU ARREMESSANDO O BUMERANGUE ---
 #
@@ -31,9 +31,9 @@ extends Control
 #   Tecla          onde a tecla (ou o botão do controle) aparece e de que
 #                  tamanho: o desenho ocupa o nó inteiro. Hoje fica no alto, no
 #                  meio do quadradinho, com 40×40 (2,5× o desenho da folha)
-# Os TEMPOS do roteiro são as constantes logo abaixo.
-
-const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
+# Os TEMPOS do roteiro são as constantes logo abaixo. O relógio, a cortina, a
+# tecla e o quadro da Cacau são os de toda telinha de tutorial
+# (scripts/ui/demo_de_ferramenta.gd).
 
 ## Ação do mapa de entrada que a telinha ensina: é dela que saem a tecla (F) e
 ## o botão do controle (□) desenhados no canto.
@@ -48,8 +48,6 @@ const ANIM_ARREMESSO := &"jogando_bumerangue"
 ## A tecla afunda e o braço sai. Antes disso ela só está parada: é o tempo de
 ## o olho achar a Cacau e a caixa.
 const T_APERTAR := 0.75
-## Quanto tempo a tecla fica afundada.
-const TECLA_FUNDA := 0.28
 ## O bumerangue se solta da mão um instante depois do toque, no meio do gesto.
 const T_SOLTAR := T_APERTAR + 0.08
 ## A ida perde força até a caixa, como no jogo; a volta acelera.
@@ -60,8 +58,6 @@ const DURACAO_VOLTA := 0.34
 const T_PEGAR := T_ACERTO + PAUSA_NA_CAIXA + DURACAO_VOLTA
 ## A caixa fica um tempo quebrada e estalando antes de a cena recomeçar.
 const T_FIM := 3.9
-## A cortina que escurece o fim de uma volta e abre a seguinte.
-const DURACAO_CORTINA := 0.28
 
 ## Rotações do bumerangue por segundo (a mesma do voo de verdade).
 const GIRO := TAU * 4.2
@@ -82,19 +78,11 @@ const BRILHO_MAX := 0.38
 const RESPIRACAO := 1.4
 
 const COR_TECLA := Color(0.55, 0.85, 0.45)
-## Lado do desenho da tecla na folha, em pixels: o nó Tecla dividido por isto
-## dá a ampliação.
-const LADO_NA_FOLHA := 16.0
 
-var _tempo: float = 0.0
-## Onde o relógio estava no quadro anterior, para cada evento disparar uma vez.
-var _anterior: float = -1.0
 var _trilha := PackedVector2Array()
 var _origem_do_mundo := Vector2.ZERO
 var _escala_do_bumerangue := Vector2.ONE
 
-@onready var _mundo: Node2D = $Mundo
-@onready var _cacau: AnimatedSprite2D = $Mundo/Cacau
 @onready var _mao: Marker2D = $Mundo/Cacau/Mao
 @onready var _caixa: AnimatedSprite2D = $Mundo/Caixa
 @onready var _alvo: Marker2D = $Mundo/Caixa/Alvo
@@ -103,26 +91,27 @@ var _escala_do_bumerangue := Vector2.ONE
 @onready var _bumerangue: Sprite2D = $Mundo/Bumerangue
 @onready var _faiscas_impacto: CPUParticles2D = $Mundo/FaiscasImpacto
 @onready var _faiscas_arco: CPUParticles2D = $Mundo/FaiscasArco
-@onready var _cortina: ColorRect = $Cortina
-@onready var _tecla: Control = $Tecla
 
 
-func _ready() -> void:
+func _ao_montar() -> void:
 	_origem_do_mundo = _mundo.position
 	_escala_do_bumerangue = _bumerangue.scale
-	# Quem escolhe o quadro da Cacau é o roteiro (ver _animar_cacau).
-	_cacau.stop()
-	_tecla.draw.connect(_desenhar_tecla)
-	reiniciar()
 
 
-## Volta ao começo do roteiro (a ficha chama quando termina de entrar, para o
-## primeiro arremesso não acontecer com ela ainda subindo).
-func reiniciar() -> void:
-	_tempo = 0.0
-	_recomecar()
-	_atualizar()
-	_anterior = _tempo
+func duracao_da_volta() -> float:
+	return T_FIM
+
+
+func instante_do_toque() -> float:
+	return T_APERTAR
+
+
+func acao() -> StringName:
+	return ACAO
+
+
+func cor_da_tecla() -> Color:
+	return COR_TECLA
 
 
 ## A caixa já foi arrebentada nesta volta?
@@ -134,22 +123,7 @@ func bumerangue_no_ar() -> bool:
 	return _tempo >= T_SOLTAR and _tempo < T_PEGAR
 
 
-func tecla_apertada() -> bool:
-	return _tempo >= T_APERTAR and _tempo < T_APERTAR + TECLA_FUNDA
-
-
-func _process(delta: float) -> void:
-	# Um quadro travado (a janela perdeu o foco) não pode pular o arremesso.
-	_tempo += minf(delta, 0.1)
-	if _tempo >= T_FIM:
-		_tempo = fmod(_tempo, T_FIM)
-		_recomecar()
-	_atualizar()
-	_anterior = _tempo
-
-
-func _recomecar() -> void:
-	_anterior = -1.0
+func _ao_recomecar() -> void:
 	_trilha.clear()
 	_rastro.clear_points()
 	_bumerangue.visible = false
@@ -163,7 +137,7 @@ func _recomecar() -> void:
 	_mundo.position = _origem_do_mundo
 
 
-func _atualizar() -> void:
+func _ao_atualizar() -> void:
 	var mao: Vector2 = _cacau.transform * _mao.position
 	var alvo: Vector2 = _caixa.transform * _alvo.position
 
@@ -197,10 +171,6 @@ func _atualizar() -> void:
 	var onda := (sin(_tempo * TAU / RESPIRACAO) + 1.0) * 0.5
 	_brilho.modulate.a = 0.0 if caixa_quebrada() else lerpf(BRILHO_MIN, BRILHO_MAX, onda)
 
-	_cortina.color.a = maxf(1.0 - smoothstep(0.0, DURACAO_CORTINA, _tempo),
-		smoothstep(T_FIM - DURACAO_CORTINA, T_FIM, _tempo))
-	_tecla.queue_redraw()
-
 
 ## Parada, ela roda a "idle"; no toque, o gesto do braço uma vez; acabou o
 ## gesto, a "idle" recomeça do primeiro quadro. O quadro sai do relógio do
@@ -211,24 +181,12 @@ func _animar_cacau() -> void:
 	if gesto >= 0.0 and gesto < duracao_do_gesto():
 		_mostrar_cacau(ANIM_ARREMESSO, int(gesto * _velocidade(ANIM_ARREMESSO)))
 		return
-	var parada := _tempo if gesto < 0.0 else gesto - duracao_do_gesto()
-	var quadros := _cacau.sprite_frames.get_frame_count(ANIM_PARADA)
-	_mostrar_cacau(ANIM_PARADA, int(parada * _velocidade(ANIM_PARADA)) % maxi(quadros, 1))
+	_mostrar_parada(_tempo if gesto < 0.0 else gesto - duracao_do_gesto())
 
 
 ## Quanto dura o gesto do arremesso, do toque até ela voltar a ficar parada.
 func duracao_do_gesto() -> float:
-	return _cacau.sprite_frames.get_frame_count(ANIM_ARREMESSO) / _velocidade(ANIM_ARREMESSO)
-
-
-func _velocidade(animacao: StringName) -> float:
-	return maxf(_cacau.sprite_frames.get_animation_speed(animacao), 1.0)
-
-
-func _mostrar_cacau(animacao: StringName, quadro: int) -> void:
-	if _cacau.animation != animacao:
-		_cacau.animation = animacao
-	_cacau.frame = quadro
+	return _duracao(ANIM_ARREMESSO)
 
 
 ## Ida em linha reta perdendo força, um respiro na caixa, volta acelerando.
@@ -253,11 +211,6 @@ func _marcar_rastro(voando: bool) -> void:
 	_rastro.points = _trilha
 
 
-## True no quadro em que o relógio cruza o instante "t".
-func _passou(t: float) -> bool:
-	return _anterior < t and _tempo >= t
-
-
 ## True no quadro de cada estalo da caixa quebrada (até a cortina fechar).
 func _estalou() -> bool:
 	var inicio := T_ACERTO + PRIMEIRO_ARCO
@@ -265,47 +218,3 @@ func _estalou() -> bool:
 		return false
 	return floorf((_tempo - inicio) / INTERVALO_ARCO) > floorf((_anterior - inicio) / INTERVALO_ARCO)
 
-
-func _disparar(particulas: CPUParticles2D) -> void:
-	particulas.restart()
-	particulas.emitting = true
-
-
-# --- A tecla no canto -----------------------------------------------------------
-
-## A mesma tecla desenhada dos equipamentos (o F da folha do teclado) — ou, de controle
-## na mão, o botão da ação — do tamanho do nó Tecla. Aqui ela não afunda em
-## loop: afunda UMA vez, no instante em que a Cacau arremessa. É o que liga
-## "apertei isto" a "ela fez aquilo".
-func _desenhar_tecla() -> void:
-	var centro := _tecla.size * 0.5
-	var lado := minf(_tecla.size.x, _tecla.size.y)
-	var desde := _tempo - T_APERTAR
-	var funda := tecla_apertada()
-
-	# Anel que se abre a partir da tecla no toque.
-	if desde >= 0.0 and desde < 0.45:
-		var onda := desde / 0.45
-		var anel := Rect2(centro - Vector2(lado, lado) * 0.5, Vector2(lado, lado)).grow(1.0 + onda * 11.0)
-		EstiloHUD.aro(_tecla, anel, EstiloHUD.com_alfa(COR_TECLA, (1.0 - onda) * 0.9), 2.0)
-
-	var texto := BotoesControle.tecla_da_acao(ACAO)
-	var desenho := EstiloHUD.desenho_da_tecla(texto, ACAO)
-	if desenho != "":
-		# Solta no quadro 0; no toque, os três quadros de apertar da folha.
-		var quadro := 0
-		if funda:
-			quadro = 1 + mini(int(desde / TECLA_FUNDA * 3.0), 2)
-		BotoesControle.desenhar(_tecla, centro, desenho, lado / LADO_NA_FOLHA, Color.WHITE, quadro)
-		return
-
-	# Tecla sem desenho na folha: a tampa escrita, que desce dois pixels e acende.
-	if funda:
-		centro.y += 2.0
-	var cor := COR_TECLA.lightened(0.45) if funda else COR_TECLA
-	var tamanho := maxi(int(lado) - 11, 8)
-	var largura := EstiloHUD.tecla(_tecla, FONTE, centro, texto, cor, 1.0, tamanho)
-	if funda:
-		var tampa := Vector2(largura, lado)
-		EstiloHUD.bloco(_tecla, Rect2(centro - tampa * 0.5, tampa),
-			EstiloHUD.com_alfa(COR_TECLA, 0.30))

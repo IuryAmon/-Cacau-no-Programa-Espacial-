@@ -83,7 +83,8 @@ func _testar_mapa() -> void:
 	_checar(_tem_botao("jump", JOY_BUTTON_A), "✕ pula")
 	_checar(_tem_botao("interact", JOY_BUTTON_X), "□ interage")
 	_checar(_tem_botao("arremessar", JOY_BUTTON_X), "□ arremessa o bumerangue")
-	_checar(_tem_botao("dash", JOY_BUTTON_B), "○ dá o dash")
+	_checar(_tem_eixo("dash", JOY_AXIS_TRIGGER_RIGHT) and not _tem_botao("dash", JOY_BUTTON_B),
+		"R2 (e não o ○) dá o dash")
 	# O maçarico perdeu o botão solto: ele só acende encostado no metal, pelo
 	# mesmo □ da interação. Um △ de maçarico de volta no mapa é regressão.
 	_checar(not InputMap.has_action("usar_macarico"),
@@ -107,6 +108,13 @@ func _testar_mapa() -> void:
 func _tem_botao(acao: String, botao: JoyButton) -> bool:
 	for evento in InputMap.action_get_events(acao):
 		if evento is InputEventJoypadButton and evento.button_index == botao:
+			return true
+	return false
+
+
+func _tem_eixo(acao: String, eixo: JoyAxis) -> bool:
+	for evento in InputMap.action_get_events(acao):
+		if evento is InputEventJoypadMotion and evento.axis == eixo and evento.axis_value > 0.0:
 			return true
 	return false
 
@@ -392,8 +400,12 @@ func _testar_ordenar() -> void:
 	_botao(JOY_BUTTON_B, true)
 	await _quadros(4)
 	_checar(is_instance_valid(outro), "○ não fecha mais o puzzle")
-	_checar(Interacao.toque_preso(&"dash"), "e esse ○ não vira dash")
 	_botao(JOY_BUTTON_B, false)
+	await _quadros(4)
+	_gatilho(JOY_AXIS_TRIGGER_RIGHT, true)
+	await _quadros(4)
+	_checar(Interacao.toque_preso(&"dash"), "R2 apertado em cima do puzzle não vira dash")
+	_gatilho(JOY_AXIS_TRIGGER_RIGHT, false)
 	await _quadros(4)
 	await _tocar(JOY_BUTTON_Y)
 	_checar(not is_instance_valid(outro), "△ desiste do puzzle")
@@ -647,6 +659,14 @@ func _botao(botao: JoyButton, apertado: bool) -> void:
 	evento.button_index = botao
 	evento.pressed = apertado
 	evento.pressure = 1.0 if apertado else 0.0
+	Input.parse_input_event(evento)
+
+
+func _gatilho(eixo: JoyAxis, apertado: bool) -> void:
+	var evento := InputEventJoypadMotion.new()
+	evento.device = 0
+	evento.axis = eixo
+	evento.axis_value = 1.0 if apertado else 0.0
 	Input.parse_input_event(evento)
 
 

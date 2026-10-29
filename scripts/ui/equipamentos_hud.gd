@@ -193,8 +193,9 @@ func _process(delta: float) -> void:
 			e["pulso"] = maxf(e["pulso"] - delta * 3.0, 0.0)
 			ativo = true
 
-	# Parada, a peça só precisa de um desenho novo quando as teclas embaixo dos
-	# equipamentos mudam de quadro. Sem equipamento nenhum, ela dorme.
+	# Parada, a peça só redesenha no ritmo do relógio dos botões: as teclas não
+	# afundam mais, mas é assim que ela pega a troca de teclado para controle.
+	# Sem equipamento nenhum, ela dorme.
 	var quadro := BotoesControle.quadro_atual()
 	if ativo or quadro != _quadro_das_teclas:
 		_quadro_das_teclas = quadro
@@ -280,10 +281,15 @@ func _desenhar_tecla(equipamento: Dictionary, x: float, surgir: float) -> void:
 	# Equipamento passivo (as botas) não tem botão: embaixo dele não vai nada.
 	if f == null or tecla.is_empty():
 		return
+	# O maçarico não tem botão próprio: acende encostado no metal, no mesmo
+	# E/□ da interação. Embaixo dele não vai tecla nenhuma.
+	if equipamento.get("id", "") == "macarico":
+		return
 	# A tecla desenhada (F, E...); de controle na mão vira o botão da ação (□).
+	# Parada: embaixo dos equipamentos ela só lembra o botão, não chama atenção.
 	EstiloHUD.tecla_da_acao(self, f,
 		Vector2(x, ALTURA_ROTULO + LADO + ALTURA_TECLA * 0.5 + 2.0), tecla,
-		String(equipamento.get("acao", "")), equipamento["cor"], surgir, TAM_TECLA)
+		String(equipamento.get("acao", "")), equipamento["cor"], surgir, TAM_TECLA, false)
 
 
 ## 0 -> 1 passando um pouco de 1 no caminho.

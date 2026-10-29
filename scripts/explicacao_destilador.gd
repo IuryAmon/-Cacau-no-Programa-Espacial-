@@ -11,8 +11,10 @@ extends CanvasLayer
 #   à esquerda   a coluna, grande, em raio X (scripts/ui/coluna_destilacao.gd),
 #                com a régua de temperatura colada nela: menos fria embaixo,
 #                onde o líquido ganha calor do ambiente, e mais fria em cima,
-#                onde fica o resfriador. Lá dentro o ar líquido ferve aos poucos e cada
-#                substância para no andar que está no ponto de ebulição dela.
+#                onde fica o resfriador. Lá dentro roda a conta de verdade (a
+#                mesma do simulador do Laboratório): tudo evapora um pouco, a
+#                mistura ferve entre os pontos de ebulição, o vapor sai rico em
+#                nitrogênio mas leva de tudo, e cada bandeja o enriquece mais.
 #   no meio      a legenda: uma ficha para cada substância do ar (N₂, Ar e
 #                O₂), na ordem dos andares da coluna, cada uma com o seu ponto
 #                de ebulição. Elas não saem do lugar.
@@ -25,12 +27,20 @@ extends CanvasLayer
 #   raio_x      a coluna de aço vira o desenho preto
 #   ar          o ar líquido (-200 °C) enche o fundo; as três fichas aparecem
 #   ebulicao    cada ficha mostra o ponto de ebulição da substância
-#   ferver      o líquido vai ganhando calor do ambiente e fica menos frio:
-#               passando de -196 °C o nitrogênio ferve, vira gás e sobe
-#   esfriar     um sopro de geada no resfriador; no topo (-196 °C) o
-#               nitrogênio vira líquido de novo
-#   separar     o fundo chega a -183 °C: o argônio ferve e para
-#               um andar acima; o oxigênio fica no fundo
+#   evaporar    ainda a -200 °C, sem ferver: moléculas da superfície pulam
+#               para fora e voltam (a evaporação acontece abaixo do ponto de
+#               ebulição)
+#   varal       (a fala compara com a roupa no varal; o desenho segue igual)
+#   ferver      o calor do ambiente leva o fundo ao ponto de ebulição da
+#               MISTURA (uns -194 °C): ela ferve, e a ficha de cada substância
+#               que começa a evaporar dá um pulo — inclusive a do oxigênio
+#   vapor       (a fala diz do que é feito o vapor; o desenho segue)
+#   esfriar     um sopro de geada no resfriador; lá em cima o vapor vira
+#               líquido de novo
+#   separar     o fundo segue esquentando até o fim: as bandejas enriquecem o
+#               vapor e a coluna assenta
+#   pureza      aparecem as etiquetas do topo e do fundo ("93% NITROGÊNIO"):
+#               rico, mas não 100% puro
 #   fim         o título vira "DESTILAÇÃO FRACIONADA"
 #
 # Pode reescrever as falas à vontade no editor do Dialogic, tirar e juntar
@@ -53,7 +63,8 @@ extends CanvasLayer
 #   Raiz/Sair      o aviso do canto.
 #   SomRadio       o chiado de abrir e fechar o canal do rádio (o mesmo do
 #                  rádio da fase 1); SomPop, o estalo de cada substância que
-#                  ferve e que vira líquido. O volume de cada um é no nó.
+#                  começa a evaporar e que vira líquido de novo. O volume de
+#                  cada um é no nó.
 #   timeline, deslocamento_da_fala   no Inspector do nó raiz.
 
 ## O desenho acabou de pousar de volta em cima da coluna do mapa: é a hora de
@@ -70,10 +81,11 @@ signal marco(nome: String)
 @export var deslocamento_da_fala: float = 110.0
 
 ## As marcas da conversa, na ordem em que o desenho acontece.
-const MARCOS: Array[String] = ["raio_x", "ar", "ebulicao", "ferver", "esfriar", "separar", "fim"]
+const MARCOS: Array[String] = ["raio_x", "ar", "ebulicao", "evaporar", "varal", "ferver", "vapor",
+	"esfriar", "separar", "pureza", "fim"]
 ## Sem conversa, a hora (em segundos) em que cada marca acontece.
-const HORA_SEM_FALA := {"raio_x": 0.0, "ar": 1.6, "ebulicao": 4.6, "ferver": 7.2,
-	"esfriar": 13.5, "separar": 21.0, "fim": 26.5}
+const HORA_SEM_FALA := {"raio_x": 0.0, "ar": 1.6, "ebulicao": 4.6, "evaporar": 7.0, "varal": 10.0,
+	"ferver": 13.0, "vapor": 17.0, "esfriar": 21.0, "separar": 26.0, "pureza": 33.0, "fim": 37.0}
 
 const TITULO := "COLUNA DE DESTILAÇÃO"
 const TITULO_FINAL := "DESTILAÇÃO FRACIONADA"
@@ -425,12 +437,17 @@ func _fazer(nome: String) -> void:
 			_mostrar_as_fichas()
 		"ebulicao":
 			_mostrar_os_pontos_de_ebulicao()
+		"evaporar":
+			_coluna.ir_para(ColunaDestilacao.Etapa.EVAPORAR)
 		"ferver":
 			_coluna.ir_para(ColunaDestilacao.Etapa.FERVER)
 		"esfriar":
 			_sopro_pendente = true
 		"separar":
 			_coluna.ir_para(ColunaDestilacao.Etapa.SEPARAR)
+		"pureza":
+			_coluna.ir_para(ColunaDestilacao.Etapa.SEPARAR)
+			_coluna.mostrar_pureza()
 		"fim":
 			_titulo = TITULO_FINAL
 			_pulo_do_titulo = 1.0
@@ -453,11 +470,13 @@ func _process(_delta: float) -> void:
 	# que a fala da vez está dizendo.
 	var pressa := 1.0
 	match marco_atual():
-		"esfriar":
-			# A fala é sobre o gás virando líquido no topo: ele tem de chegar lá.
+		"vapor", "esfriar":
+			# A fala é sobre o vapor subindo e virando líquido lá em cima: ele
+			# tem de estar chegando.
 			if not _alguma_assentou():
 				pressa = 3.0
-		"fim":
+		"pureza", "fim":
+			# As porcentagens só fazem sentido com a coluna já assentada.
 			if not _coluna.separado():
 				pressa = 3.0
 	_coluna.ritmo = pressa
@@ -517,8 +536,9 @@ func _mostrar_os_pontos_de_ebulicao() -> void:
 	_tween().tween_property(self, "_legenda_a_vista", 1.0, 0.3)
 
 
-## O fundo da coluna passou do ponto de ebulição da substância: a plaquinha da
-## ficha dela dá um pulo, com um estalo.
+## A primeira molécula da substância evaporou do fundo fervendo (a do oxigênio,
+## bem abaixo do ponto de ebulição dele): a plaquinha da ficha dela dá um pulo,
+## com um estalo.
 func _ao_ferver(substancia: String) -> void:
 	if not _aberta or _fechando:
 		return
@@ -528,8 +548,8 @@ func _ao_ferver(substancia: String) -> void:
 	_estalar()
 
 
-## A substância chegou no andar dela: outro estalo (a plaquinha do andar, na
-## coluna, toma a cor dela).
+## O vapor da substância virou líquido de novo pela primeira vez, numa bandeja
+## ou no topo: outro estalo (a plaquinha do andar, na coluna, dá um pulo).
 func _ao_assentar(_substancia: String) -> void:
 	if not _aberta or _fechando:
 		return

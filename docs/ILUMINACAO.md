@@ -30,12 +30,14 @@ na lua.
 | `BG/CamadaDaLua/Lua` | `astro_pixel.gd` | A lua (`assets/Area Aberta/Lua/2.png`) + o halo dela. Só no pátio e na torre: o `world1` não tem lua. |
 | `BG/NuvensDoFundo`, `BG/Nuvens` | `nuvens.gd` | Duas faixas de nuvens passando (cloud1 a cloud6). |
 | `PostesDeLuz` | `postes_de_luz.gd` | Acende todo poste pintado no TileMap. |
+| `JanelasAcesas` | `janelas_acesas.gd` | Acende, à noite, toda janela pintada nos prédios (na `fase2_torre`). |
 | `BG/BASE/.../Holofotes` | `arte_iluminada.gd` | Os holofotes do foguete lá no fundo, à noite. |
 
 Mais duas, para usar onde quiser:
 
 | Cena / script | Para quê |
 |---|---|
+| `scenes/luz/poste_de_luz.tscn` | Um poste de rua inteiro (arte + luz), para arrastar no editor. |
 | `scenes/luz/luz_de_poste.tscn` | Uma luz de lâmpada comprida, para acender o que não é tile. |
 | `scripts/luz/luz_pontual.gd` | Uma luz redonda: fogo, laser, tela, farol. |
 
@@ -76,6 +78,12 @@ Cada arquivo tem o céu (quatro cores, de cima para baixo), as estrelas, a luz
 que bate no fundo, a cor do ar, a luz ambiente do mundo, as nuvens e a força
 dos postes. Os três arquivos valem para todas as fases.
 
+**A música de cada horário.** Na `Atmosfera`, grupo **Música**: a do
+entardecer, a do crepúsculo (o sol já posto) e a da noite, e o volume. Elas
+tocam em todo lugar de céu aberto e trocam junto com a hora. O padrão (no
+`atmosfera.gd`) vale para todas as fases; mudar no Inspector de uma fase muda
+só ela. Ver "A música" no `COMO_EDITAR_AS_FASES.md`.
+
 **Em que hora a fase começa.** Na **hora da partida**, que é uma só para o
 jogo inteiro e só anda para a frente: *entardecer* até o sol se pôr no mirante,
 *crepúsculo* até a noite cair no pátio, *noite* daí em diante. Toda fase ao ar
@@ -107,6 +115,34 @@ enquanto você pinta. Cor, força, alcance, tremor e mariposas são do nó
 lisa pela luz em degraus. O poste tem **8 tiles** de
 altura (o braço em cima, a base embaixo); os do `world1` foram acertados para
 esse tamanho.
+
+**Poste que se arrasta.** Tile não se arrasta: para isso existe a cena
+`scenes/luz/poste_de_luz.tscn` (script `poste_de_luz.gd`), com a mesma arte e
+a luz dentro. A origem é o PÉ do poste, no meio da haste — solte em cima do
+chão. No Inspector, `altura` (em tiles, 8 por padrão) e `espelhado` (braço
+para a esquerda); a luz se acomoda sozinha no tubo. Para mudar a luz de um
+poste só, botão direito na instância → "Filhos Editáveis" e mexa no nó `Luz`.
+Os postes da rua da fase 2 já são essa cena.
+
+**Janelas acesas.** De noite as casas da `fase2_torre` estão com a luz acesa lá
+dentro. Janela também é tile: o nó `JanelasAcesas` acha toda janela pintada —
+o bloco de 2 × 3 tiles do `Buildings.png` — e acende todas, todas iguais: o
+vidro de uma cor só, o clarão em volta e a luz que sai e bate no caixilho e na
+parede. Pintou uma janela nova, ela acende; apagou, some. No Inspector do nó,
+valendo para todas: `cor` (a do vidro, do clarão e da luz), `energia` e
+`alcance` (a luz na parede) e `clarao`. A força vem da hora, como a dos postes:
+fraca ao entardecer, com tudo à noite, apagada no *Tudo claro (para pintar)*.
+Outra arte de janela se ensina em `JANELAS`, no começo do script. O nó fica
+logo depois do `Cenario` na árvore, para as janelas ficarem atrás dos postes e
+da Cacau.
+
+A luz na parede é uma luz de verdade, e o Godot soma no máximo 15 luzes num
+mesmo desenho — e o cenário da rua é um desenho só. Por isso as janelas
+vizinhas de um andar dividem uma luz (com uma poça em cada janela): as 63
+janelas da rua são 23 luzes, e no pior lugar a câmera pega 8 luzes da fase,
+postes incluídos. O teste confere que não passa de 12, para sobrar lugar para a
+lanterna e o maçarico da Cacau. Com o zoom do editor bem afastado, alguns
+andares perdem a luz na parede (o vidro e o clarão ficam): é só no editor.
 
 **Acender outra coisa.** Arraste `scenes/luz/luz_de_poste.tscn` para a cena (o
 ponto do nó é o centro do tubo), ou ponha um Node2D com o script
@@ -150,7 +186,8 @@ ainda aceso lá dentro, que o tempo avança:
 
 1. a Cacau para e o HUD sai de cena;
 2. o céu vai do crepúsculo à noite, as estrelas acendem, o fundo e o mundo
-   escurecem e os postes firmam (`Atmosfera.anoitecer`);
+   escurecem e, no meio disso, os dois postes do pátio acendem piscando — até
+   ali estavam apagados (`Atmosfera.anoitecer`);
 3. a lua sobe de trás da serra até o lugar em que o nó `Lua` foi deixado;
 4. a brasa apaga, a porta salta de volta para o lugar dela, o carvão pula para
    fora e o controle volta — já de noite.
@@ -162,6 +199,22 @@ Só acontece uma vez. Os tempos e a altura da subida estão na `Atmosfera` do
 pátio, grupo **Anoitecer** (`duracao_do_anoitecer`, `subida_da_lua`). Depois
 disso é noite pelo resto da partida (`EstadoMundo.anoiteceu`): o pátio e o
 `world1` já abrem escuros.
+
+**Os postes do pátio só acendem de noite.** São dois, da cena
+`poste_de_luz.tscn`, no nó `Postes` (`PosteEntrada`, na ponta por onde a Cacau
+chega, e `PosteFornalha`, depois da fornalha, com o braço virado para ela):
+arraste para mudar o lugar, ou duplique para pôr mais. Quem os segura apagados
+é a `Atmosfera` do pátio, grupo **Anoitecer**:
+
+- `postes_so_de_noite` — ligado, os postes da fase (os da cena e os pintados no
+  TileMap) ficam apagados no entardecer e no crepúsculo, e de noite ficam com
+  tudo. Desligado, eles seguem a força de cada hora, como no `world1`. Janelas
+  e luzes soltas não entram nessa regra: continuam seguindo a hora.
+- `hora_dos_postes_no_anoitecer` — em que ponto da noite caindo (0 a 1) eles
+  dão a piscada e acendem, um depois do outro.
+
+A prévia do editor acompanha: com `previa_no_editor` em *Crepúsculo* eles
+aparecem apagados, em *Noite*, acesos.
 
 ## Fase fechada (a oficina, fase 1)
 
@@ -228,7 +281,7 @@ mandar na mão, dê à ParallaxLayer o metadado `profundidade`, de 0 (perto) a 1
 (longe) — a `BG/BASE` do `world1` usa 0,3 para a base não sumir na neblina.
 
 **Nada disso é gravado na cena.** Céu, halo, nuvens e holofotes são desenhados
-direto no servidor de render; as luzes dos postes são filhas internas; o
+direto no servidor de render; as luzes dos postes e das janelas são filhas internas; o
 material do fundo vai por baixo do `material` (vazio) do nó. No `.tscn` fica só
 o que está no Inspector. Dá para olhar a noite no editor e salvar sem medo.
 
@@ -239,7 +292,7 @@ verdade em qualquer altura. A lua está numa camada presa na tela — ela é
 grande, e presa ao horizonte sairia do quadro lá embaixo.
 
 **O mundo.** A luz ambiente é um `CanvasModulate` interno da `Atmosfera`. As
-luzes dos postes e as pontuais são `PointLight2D` com a textura pintada por
+luzes dos postes, das janelas e as pontuais são `PointLight2D` com a textura pintada por
 conta (`textura_de_luz.gd`: lisa por padrão, em degraus com `pixelada`; ela é
 guardada, e dez postes usam a mesma).
 
@@ -254,7 +307,8 @@ guardada, e dez postes usam a mesma).
    com `ceu_pixel.gd`; uma ParallaxLayer comum com um Sprite2D + `astro_pixel.gd`
    dentro (sol ou lua, pelo `tipo`); uma ou duas ParallaxLayer com `nuvens.gd`.
 2. Na raiz: um Node com `atmosfera.gd` (`fundo` apontando para o `BG`) e um
-   Node2D com `postes_de_luz.gd`.
+   Node2D com `postes_de_luz.gd`. Se a fase tiver prédios com janela, um
+   Node2D com `janelas_acesas.gd` logo depois do TileMap do cenário.
 3. Tire qualquer `CanvasModulate` que a fase já tenha: o da `Atmosfera` é o
    único que vale no mundo.
 
@@ -268,6 +322,9 @@ godot --headless --path . res://tools/teste_atmosfera.tscn
 
 Confere os postes (altura, luz e a luz lisa), os três horários, a cena do mirante inteira
 com o diálogo de verdade, a volta ao `world1` no crepúsculo, a noite caindo no
-pátio com a lua subindo, a torre, a oficina por dentro (a luz que não muda com
+pátio com a lua subindo, a torre, as janelas acesas da torre (toda janela
+pintada acende, todas iguais, com o vidro de uma cor só, e nunca mais luzes na
+tela do que o Godot soma num desenho), a oficina por dentro (a luz que não muda com
 a hora, uma luz para cada lâmpada pintada, o clarão dos espinhos), a
-interface fora da luz e as luzes próprias.
+interface fora da luz e as luzes próprias. No pátio, confere também que os
+postes ficam apagados até a noite cair e acendem no meio dela.

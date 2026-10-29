@@ -25,6 +25,9 @@ const HUDS_AUTOLOAD: Array[String] = ["FerramentasHUD", "Objetivos", "Caderno"]
 ## em vez de aparecer de estalo. Static var sobrevive à troca de cena.
 static var chegada_escura: bool = false
 
+## Toda cortina viva entra aqui (ver "cobrindo").
+const GRUPO := &"fade_tela"
+
 var _cortina: ColorRect
 var _camadas_escondidas: Array[CanvasLayer] = []
 
@@ -37,6 +40,7 @@ static func criar(dono: Node, comeca_preto: bool = false) -> FadeTela:
 	fade.layer = 0
 	# Continua animando mesmo com a árvore pausada (menu de pausa aberto).
 	fade.process_mode = Node.PROCESS_MODE_ALWAYS
+	fade.add_to_group(GRUPO)
 
 	var cortina := ColorRect.new()
 	cortina.color = COR_CORTINA
@@ -54,6 +58,15 @@ static func criar(dono: Node, comeca_preto: bool = false) -> FadeTela:
 	else:
 		dono.add_child.call_deferred(fade)
 	return fade
+
+
+## Alguma cortina está na tela agora (escurecendo, escura ou clareando)? É uma
+## troca de cena por porta no meio: o menu de pausa não abre por cima dela.
+static func cobrindo(arvore: SceneTree) -> bool:
+	for fade in arvore.get_nodes_in_group(GRUPO):
+		if fade is FadeTela and fade._cortina != null and fade._cortina.visible:
+			return true
+	return false
 
 
 ## Apaga a tela e só então troca de cena, deixando marcado que a cena de

@@ -97,6 +97,21 @@ extends FaseBase
 # Para pintar enxergando: Atmosfera -> previa_no_editor -> "Tudo claro".
 # O passo a passo está em docs/ILUMINACAO.md, "Fase fechada".
 #
+# MORRER NÃO DESFAZ NADA
+#
+# Morrer recarrega esta cena inteira, e cada objeto volta do jeito que a Cacau
+# deixou — antes ou depois da bandeira: caixa elétrica arrebentada, espinhos e
+# serras desligados, torreta estragada, barreira aberta, domo aberto (e o
+# puzzle dele pela metade), porta de metal derretida, guincho resolvido, maçãs
+# comidas. Quem guarda é cada componente, sozinho, no EstadoMundo: o
+# "persistir" das caixas elétricas e das torretas já vem ligado, e os espinhos
+# e as serras anotam o próprio desligamento. Este script não precisa fazer nada
+# — e uma caixa ou torreta nova, posta na cena, já lembra também.
+#   Só recomeça o que é desafio de reflexo (plataformas que caem, a plataforma
+# de viagem, as bolas), as armadilhas sem caixa e a caixa de empurrar.
+#   A lista inteira está em docs/COMO_EDITAR_AS_FASES.md ("O que a fase
+# lembra"), e o teste que confere tudo é tools/teste_estado_da_fase1.tscn.
+#
 # Este script só liga os componentes uns nos outros. Mover, trocar sprites,
 # repintar tiles ou acrescentar salas é tudo feito no editor, na cena.
 

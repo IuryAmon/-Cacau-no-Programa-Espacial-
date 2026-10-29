@@ -426,12 +426,15 @@ func _chao_descoberto(chao: TileMapLayer, fonte: int) -> Vector2i:
 
 ## Põe a Cacau em pé sobre um tile da fonte `fonte` em que o raio do pé bate
 ## no próprio TileMapLayer — e não numa cabine ou porta parada em cima dele.
+## Em cima do piso pode haver tile, desde que sem colisão: no laboratório a
+## parede do fundo é pintada na mesma camada, logo acima do chão.
 func _ficar_sobre_o_tile(player: Node2D, som: SomPassos, camada: TileMapLayer, fonte: int) -> bool:
 	for celula in camada.get_used_cells_by_id(fonte):
 		var dados := camada.get_cell_tile_data(celula)
 		if dados == null or dados.get_collision_polygons_count(0) == 0:
 			continue
-		if camada.get_cell_source_id(celula + Vector2i.UP) != -1:
+		var acima := camada.get_cell_tile_data(celula + Vector2i.UP)
+		if acima != null and acima.get_collision_polygons_count(0) > 0:
 			continue
 		player.global_position = _em_cima_de(camada, celula)
 		if som._chao_sob_os_pes().get("collider") == camada:

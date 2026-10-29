@@ -21,7 +21,7 @@ extends Node
 #   Clique esq. -> arremessa o bumerangue mirado NO CURSOR — qualquer ângulo,
 #                  não só as 8 direções. As duas formas convivem: F para quem
 #                  joga só de teclado/controle, clique para mira de precisão.
-#   Shift / ○   -> dash da mochila de N₂ em 8 direções, no chão ou no ar (fase
+#   Shift / R2  -> dash da mochila de N₂ em 8 direções, no chão ou no ar (fase
 #                  2 em diante); o jato apaga chamas no caminho. Enquanto dura,
 #                  a personagem fica INVULNERÁVEL A DANO (esta_invencivel_dash
 #                  no player.gd) — e já atravessa qualquer Sentinela mesmo fora
@@ -262,9 +262,11 @@ func _physics_process(delta: float) -> void:
 		else:
 			_usar_bumerangue(pediu_bumerangue_mouse and not pediu_bumerangue_teclado)
 
-	# --- DASH DA MOCHILA (Shift + direção, no chão ou no ar) ---
-	# O ○ que acabou de fechar um puzzle é da tela, não vira dash.
-	if Input.is_action_just_pressed("dash") and Interacao.livre_para(&"dash"):
+	# --- DASH DA MOCHILA (Shift ou R2 + direção, no chão ou no ar) ---
+	# O toque que acabou de fechar uma tela é dela, não vira dash. Voando no
+	# modo dev, o Shift é o "mais rápido" do voo (ver player.gd).
+	if Input.is_action_just_pressed("dash") and Interacao.livre_para(&"dash") \
+			and not ModoDev.voando:
 		_dash_buffer = DASH_BUFFER
 
 	if _dash_buffer > 0.0 and Progresso.tem_habilidade("mochila") \
@@ -593,9 +595,17 @@ func _atualizar_cor_dash(delta: float) -> void:
 
 # --- CONGELAMENTO DE IMPACTO (hitstop) ---
 #
-# Para o jogo inteiro por alguns frames no instante do dash. Com time_scale em
-# 0 nenhum passo de física roda, então a contagem é feita em tempo real dentro
-# do _process (que continua sendo chamado).
+# Para o jogo inteiro por alguns frames no instante do dash. O tempo do jogo
+# quase não anda, então a contagem é feita em tempo real dentro do _process
+# (que continua sendo chamado).
+#
+# Quase parado, e NÃO zero: com time_scale em 0 a física continua rodando, só
+# que com passo 0, e a velocidade de uma plataforma que anda (AnimatableBody2D)
+# sai de 0 / 0 — quem está em cima dela ia parar em posição NaN e sumir.
+
+## Escala do tempo durante o congelamento: os 0,05 s do dash viram 0,05 ms de
+## jogo (o dash anda 0,05 px), parado para o olho.
+const ESCALA_CONGELADO := 0.001
 
 ## Congelamento de impacto para quem não é o dash: o bumerangue chama isto ao
 ## ativar um alvo. A trava lá dentro já cuida de dois pedidos ao mesmo tempo
@@ -610,7 +620,7 @@ func _congelar(segundos: float) -> void:
 	_escala_tempo_anterior = Engine.time_scale
 	_congelado_ate_ms = Time.get_ticks_msec() + int(segundos * 1000.0)
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	Engine.time_scale = 0.0
+	Engine.time_scale = ESCALA_CONGELADO
 
 
 func _descongelar() -> void:

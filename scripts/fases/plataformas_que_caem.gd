@@ -51,7 +51,7 @@ const _PLATAFORMA := preload("res://scripts/fases/plataforma_que_cai.gd")
 
 @export_group("Sons")
 @export var som_aviso: AudioStream = preload("res://sounds/drag.mp3")
-@export var som_queda: AudioStream = preload("res://plataforma-caindo-som.mp3")
+@export var som_queda: AudioStream = preload("res://sounds/plataforma-caindo-som.mp3")
 @export var som_retorno: AudioStream = preload("res://sounds/POP.mp3")
 
 

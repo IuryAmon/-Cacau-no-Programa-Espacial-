@@ -11,7 +11,7 @@ extends CanvasLayer
 # A cortina não mora em cena nenhuma: ela se pendura na raiz da árvore, escurece,
 # troca a cena, espera a nova ficar pronta, clareia e some sozinha. Por isso a
 # cena que chega não precisa fazer nada para aparecer clareando. É assim que o
-# world1 abre vindo do menu sem ter sido mexido.
+# world1 abre vindo da introdução sem ter sido mexido.
 #
 # POR QUE NÃO A FadeTela, a cortina das portas do jogo: ela apaga os HUDs que
 # são autoload (equipamentos, objetivos, caderno) e conta com a cena de destino
@@ -31,6 +31,9 @@ const CENA_MENU := "res://scenes/menu_principal.tscn"
 const CENA_LABORATORIO := "res://scenes/laboratorio/menu_laboratorio.tscn"
 ## Onde o modo história começa.
 const CENA_HISTORIA := "res://scenes/world1.tscn"
+## O que o MODO HISTÓRIA mostra antes dela: a introdução, que leva ao world1
+## sozinha quando acaba (scripts/introducao.gd).
+const CENA_INTRODUCAO := "res://scenes/introducao.tscn"
 
 ## Acima de tudo: do caderno aberto (100) e do cursor do controle (110).
 const CAMADA := 120

@@ -16,8 +16,12 @@ extends CanvasLayer
 #                     está: no canto ela cobriria a tela), os cilindros vão
 #                     para o canto da tela e a planta do foguete aparece ao
 #                     lado: cada cilindro é arrastado até o seu encaixe.
-#   3. BALANCEAMENTO  some tudo e entra a equação — mesmas moléculas, mesmas
-#                     falas do cientista —, agora dentro da mesma tela.
+#   3. BALANCEAMENTO  some tudo e entra a equação, dentro da mesma tela. De
+#                     cima para baixo: a contagem dos átomos (Reagentes /
+#                     Produtos), a equação escrita e, embaixo dela, as
+#                     moléculas — cada termo da equação em cima da coluna do
+#                     desenho dele (scripts/ui/equacao_sobre_colunas.gd). O
+#                     Dr. Chico balanceia junto com a pessoa (ver ROTEIRO).
 #   4. IGNIÇÃO        equação certa: o foguete volta à tela e acende.
 #
 # Os cilindros só saem do inventário quando o puzzle termina (quem consome é o
@@ -39,32 +43,64 @@ const ITENS := [ITEM_H2, ITEM_O2]
 const TIMELINE_DICA_EQUACAO_DOBRADA := "cientista_dica_equacao_dobrada"
 
 # ── Balanceamento guiado ──
-# Em vez de explicar tudo e depois soltar a pessoa, o Dr. Chico monta a
-# equação JUNTO com ela, uma molécula por vez. Cada passo:
-#   1. acende o que ele vai comentar ("mostrar"), com a contagem exata que
-#      ele cita em evidência ("enfase"), e fala ("fala"). Com
-#      "acender_no_sinal", o holofote espera a fala chegar no [signal] de
-#      mesmo nome da timeline — a primeira fala só acende os painéis quando
-#      ele cita os reagentes e os produtos;
-#   2. leva o holofote e a seta para o botão que ele pede ("botao") — só esse
-#      botão responde; vazio = a pessoa decide sozinha;
-#   3. espera os coeficientes [H2, O2, H2O] chegarem em "meta" e passa ao
-#      próximo passo (meta vazia = o passo termina pelo próprio botão).
-# O caminho é o raciocínio de quem balanceia de verdade: iguala H, o que
-# desiguala O; iguala O (que só vem em dupla), o que desiguala H de novo.
+# Em vez de explicar tudo e depois soltar a pessoa, o Dr. Chico balanceia a
+# equação JUNTO com ela, pelo método que ele ensina:
+#
+#   1º  UMA MOLÉCULA DE CADA substância — a reação precisa ter todos os
+#       reagentes e todos os produtos;
+#   2º  contar os átomos de cada elemento dos dois lados e adicionar uma
+#       molécula ONDE O ELEMENTO ESTÁ EM MENOR QUANTIDADE;
+#   3º  repetir, até TODOS os elementos estarem igualados.
+#
+# Na queima do hidrogênio, [H2, O2, H2O]:
+#   1-1-1   H 2|2   O 2|1   falta oxigênio nos produtos   -> mais uma H2O
+#   1-1-2   H 2|4   O 2|2   falta hidrogênio nos reagentes -> mais uma H2
+#   2-1-2   H 4|4   O 2|2   tudo igualado
+#
+# Cada passo do ROTEIRO:
+#   "fala"     a timeline que ele diz antes do clique. Vazia = sem fala: o
+#              holofote só passa para o botão seguinte (é o que faz "uma de
+#              cada" ser UMA instrução, com três cliques).
+#   "mostrar"  o que o holofote acende quando a fala abre, e "enfase" a
+#              contagem exata que ele cita, em evidência. Os dois vazios = a
+#              fala começa sem holofote.
+#   "sinais"   troca o holofote no meio da fala: {nome: {"mostrar": [...],
+#              "enfase": [...]}}. A timeline solta [signal arg="nome"] na frase
+#              que comenta aquilo — é assim que a moldura passa do hidrogênio
+#              para o oxigênio na hora em que ele fala de cada um.
+#   "botao"    o único botão que responde, com o holofote e a seta nele. Vazio
+#              = a pessoa decide sozinha.
+#   "meta"     os coeficientes [H2, O2, H2O] que encerram o passo (vazia = o
+#              passo termina pelo próprio botão).
+#
+# Nomes que "mostrar" e "enfase" aceitam: ver _retangulos_para().
 const PASTA_FALAS := "res://timelines/"
 const ROTEIRO := [
-	{"fala": "cientista_balanceamento_1", "mostrar": ["reagentes", "produtos"], "enfase": [],
-		"acender_no_sinal": "mostrar_reagentes_e_produtos", "botao": "mais_h2", "meta": [1, 0, 0]},
-	{"fala": "cientista_balanceamento_2", "mostrar": ["reagentes"], "enfase": ["reagentes_h"],
-		"botao": "mais_h2o", "meta": [1, 0, 1]},
-	{"fala": "cientista_balanceamento_3", "mostrar": ["produtos"], "enfase": ["produtos_o"],
-		"botao": "mais_o2", "meta": [1, 1, 1]},
-	{"fala": "cientista_balanceamento_4", "mostrar": ["reagentes", "produtos"],
-		"enfase": ["reagentes_o", "produtos_o"], "botao": "mais_h2o", "meta": [1, 1, 2]},
-	{"fala": "cientista_balanceamento_5", "mostrar": ["reagentes", "produtos"],
-		"enfase": ["reagentes_h", "produtos_h"], "botao": "", "meta": [2, 1, 2]},
-	{"fala": "cientista_balanceamento_6", "mostrar": ["reagentes", "produtos"], "enfase": [],
+	# 1º: uma molécula de cada.
+	{"fala": "cientista_balanceamento_1", "mostrar": [], "enfase": [],
+		"sinais": {
+			"mostrar_reagentes_e_produtos": {"mostrar": ["reagentes", "produtos"], "enfase": []},
+			"uma_de_cada": {"mostrar": ["equacao"], "enfase": []},
+		},
+		"botao": "mais_h2", "meta": [1, 0, 0]},
+	{"fala": "", "botao": "mais_o2", "meta": [1, 1, 0]},
+	{"fala": "", "botao": "mais_h2o", "meta": [1, 1, 1]},
+	# 2º: onde o elemento está em menor quantidade — o oxigênio, nos produtos.
+	{"fala": "cientista_balanceamento_2", "mostrar": ["equacao"], "enfase": [],
+		"sinais": {
+			"hidrogenio": {"mostrar": ["reagentes", "produtos"], "enfase": ["reagentes_h", "produtos_h"]},
+			"oxigenio": {"mostrar": ["reagentes", "produtos"], "enfase": ["reagentes_o", "produtos_o"]},
+		},
+		"botao": "mais_h2o", "meta": [1, 1, 2]},
+	# 3º: de novo — agora é o hidrogênio, nos reagentes. Quem decide é a pessoa.
+	{"fala": "cientista_balanceamento_3", "mostrar": ["reagentes", "produtos"],
+		"enfase": ["reagentes_o", "produtos_o"],
+		"sinais": {
+			"hidrogenio": {"mostrar": ["reagentes", "produtos"], "enfase": ["reagentes_h", "produtos_h"]},
+		},
+		"botao": "", "meta": [2, 1, 2]},
+	# Todos os elementos igualados.
+	{"fala": "cientista_balanceamento_4", "mostrar": ["reagentes", "produtos"], "enfase": [],
 		"botao": "ignicao", "meta": []},
 ]
 ## Respiro entre o clique certo e a próxima fala: o tempo de as moléculas
@@ -84,6 +120,10 @@ const TXT_RODAPE_FALTA_H2 := "CILINDRO DE HIDROGÊNIO NÃO ENCONTRADO"
 const TXT_RODAPE_FALTA_O2 := "CILINDRO DE OXIGÊNIO NÃO ENCONTRADO"
 
 const FONTE_EQUACAO := preload("res://assets/fonts/ari-w9500-display.ttf")
+const EquacaoSobreColunas := preload("res://scripts/ui/equacao_sobre_colunas.gd")
+## A letra da equação escrita em cima das moléculas, e a dos índices dela.
+const TAMANHO_EQUACAO := 33
+const TAMANHO_INDICE := 11
 
 # ── Tubo receptor (medidas em texels de "tubo receptor.png") ──
 ## Boca do tubo: a área em que o item pode ser solto.
@@ -209,7 +249,12 @@ var _botao_do_passo: Control = null
 @onready var cartao_o2:       Control        = $RootControl/Tela/Display/CartaoO2
 @onready var grupo_equacao:   Control        = $RootControl/Tela/Display/GrupoEquacao
 @onready var painel_equacao:  Panel          = $RootControl/Tela/Display/GrupoEquacao/EquacaoPanel
-@onready var linha_equacao:   HBoxContainer  = $RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/PainelEquacaoEscrita/LinhaEquacao
+@onready var linha_equacao:   Control        = $RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/PainelEquacaoEscrita/LinhaEquacao
+# O "+", a seta e o "+ Energia" do meio dos desenhos: a equação escrita logo
+# acima põe os dela em cima destes.
+@onready var label_mais:      Label          = $RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/LabelMais
+@onready var label_seta:      Label          = $RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/LabelSeta
+@onready var label_energia:   Label          = $RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/LabelEnergia
 @onready var botao_mais_h2:   Panel          = $RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/BotaoMaisH2
 @onready var botao_menos_h2:  Panel          = $RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/BotaoMenosH2
 @onready var botao_mais_o2:   Panel          = $RootControl/Tela/Display/GrupoEquacao/EquacaoPanel/BotaoMaisO2
@@ -990,27 +1035,20 @@ func _bbcode_valor_atomos(h_txt: String, cor_h: Color, o_txt: String, cor_o: Col
 		cor_h.to_html(false), h_txt, cor_o.to_html(false), o_txt,
 	]
 
-# Monta "N H2 + N O2 -> N H2O + Energia" com os números "2" em subscrito de verdade
-# (menores e rebaixados), já que o BBCode do RichTextLabel não tem tag de subscrito.
+# Escreve "N H2 + N O2 -> N H2O + Energia" logo acima das moléculas: cada termo
+# centrado em cima da coluna do desenho dele (a seta que soma moléculas é o
+# eixo da coluna), e o "+", a seta e o "+ Energia" em cima dos que ficam no meio
+# dos desenhos. Os "2" são índices de verdade, menores e rebaixados.
 func _reconstruir_equacao_escrita(coef_h2_txt: String, coef_o2_txt: String, coef_h2o_txt: String, cor: Color):
-	for filho in linha_equacao.get_children():
-		filho.free()
-	_add_texto_sub(linha_equacao, coef_h2_txt + " H", false, cor, 33, 11)
-	_add_texto_sub(linha_equacao, "2", true, cor, 33, 11)
-	_add_texto_sub(linha_equacao, "  +  " + coef_o2_txt + " O", false, cor, 33, 11)
-	_add_texto_sub(linha_equacao, "2", true, cor, 33, 11)
-	_add_texto_sub(linha_equacao, "   →   " + coef_h2o_txt + " H", false, cor, 33, 11)
-	_add_texto_sub(linha_equacao, "2", true, cor, 33, 11)
-	_add_texto_sub(linha_equacao, "O  +  Energia", false, cor, 33, 11)
-
-func _add_texto_sub(container: Control, texto: String, subscrito: bool, cor: Color, tamanho_normal: int, tamanho_sub: int):
-	var lbl := Label.new()
-	lbl.text = texto
-	lbl.add_theme_font_override("font", FONTE_EQUACAO)
-	lbl.add_theme_font_size_override("font_size", tamanho_sub if subscrito else tamanho_normal)
-	lbl.add_theme_color_override("font_color", cor)
-	lbl.size_flags_vertical = Control.SIZE_SHRINK_END if subscrito else Control.SIZE_SHRINK_CENTER
-	container.add_child(lbl)
+	var meio := func(no: Control) -> float: return EquacaoSobreColunas.x_do_meio(linha_equacao, no)
+	EquacaoSobreColunas.escrever(linha_equacao, [
+		EquacaoSobreColunas.termo(coef_h2_txt, "H2", meio.call(botao_mais_h2)),
+		EquacaoSobreColunas.operador("+", meio.call(label_mais)),
+		EquacaoSobreColunas.termo(coef_o2_txt, "O2", meio.call(botao_mais_o2)),
+		EquacaoSobreColunas.operador("→", meio.call(label_seta)),
+		EquacaoSobreColunas.termo(coef_h2o_txt, "H2O", meio.call(botao_mais_h2o)),
+		EquacaoSobreColunas.solto("+ Energia", EquacaoSobreColunas.x_da_esquerda(linha_equacao, label_energia)),
+	], cor, TAMANHO_EQUACAO, TAMANHO_INDICE)
 
 func _verificar_equacao():
 	if coeficientes.has(0):
@@ -1044,36 +1082,47 @@ func _executar_passo(indice: int):
 	_botao_do_passo = null
 	_em_transicao = true
 
+	var com_fala: bool = String(passo.get("fala", "")) != ""
+
 	# Depois de um clique certo, a tela fica livre por um instante: é quando as
 	# moléculas pulam e a contagem muda — exatamente o que ele vai comentar.
+	# (Sem fala a seguir, o holofote não apaga: ele desliza do botão que acabou
+	# de ser apertado para o próximo.)
 	if indice > 0:
-		destaque.limpar()
+		if com_fala:
+			destaque.limpar()
 		await get_tree().create_timer(PAUSA_ENTRE_PASSOS).timeout
 		if sessao != _sessao:
 			return
 
-	var acender := func() -> void:
-		destaque.focar(_retangulos_para(passo["mostrar"]), false, _retangulos_para(passo["enfase"]))
-	var sinal: String = passo.get("acender_no_sinal", "")
-	var ao_sinal := func(argumento: Variant) -> void:
-		if argumento is String and argumento == sinal and sessao == _sessao:
-			acender.call()
-	if sinal.is_empty():
-		# O holofote acende ANTES da fala, para a pessoa já estar olhando para
-		# o lugar certo quando o texto chegar nele.
-		acender.call()
-		await get_tree().create_timer(ESPERA_ANTES_DA_FALA).timeout
+	# Passo sem fala: a instrução anterior ainda vale ("uma de cada"), e só o
+	# holofote passa para o botão seguinte.
+	if com_fala:
+		var mostrar: Array = passo.get("mostrar", [])
+		var enfase: Array = passo.get("enfase", [])
+		if not (mostrar.is_empty() and enfase.is_empty()):
+			# O holofote acende ANTES da fala, para a pessoa já estar olhando
+			# para o lugar certo quando o texto chegar nele.
+			destaque.focar(_retangulos_para(mostrar), false, _retangulos_para(enfase))
+			await get_tree().create_timer(ESPERA_ANTES_DA_FALA).timeout
+			if sessao != _sessao:
+				return
+		# No meio da fala o holofote anda: cada [signal] da timeline o leva
+		# para o que o cientista está citando naquela frase.
+		var sinais: Dictionary = passo.get("sinais", {})
+		var ao_sinal := func(argumento: Variant) -> void:
+			if not (argumento is String and sinais.has(argumento)) or sessao != _sessao:
+				return
+			var foco: Dictionary = sinais[argumento]
+			destaque.focar(_retangulos_para(foco.get("mostrar", [])), false,
+				_retangulos_para(foco.get("enfase", [])))
+		if not sinais.is_empty():
+			Dialogic.signal_event.connect(ao_sinal)
+		await _falar_cientista(PASTA_FALAS + passo["fala"] + ".dtl")
+		if Dialogic.signal_event.is_connected(ao_sinal):
+			Dialogic.signal_event.disconnect(ao_sinal)
 		if sessao != _sessao:
 			return
-	else:
-		# A fala começa sem holofote: ele só acende quando o cientista cita o
-		# que está nele (o [signal] no meio da timeline).
-		Dialogic.signal_event.connect(ao_sinal)
-	await _falar_cientista(PASTA_FALAS + passo["fala"] + ".dtl")
-	if Dialogic.signal_event.is_connected(ao_sinal):
-		Dialogic.signal_event.disconnect(ao_sinal)
-	if sessao != _sessao:
-		return
 
 	var botao := _botao_por_nome(passo["botao"])
 	_botao_do_passo = botao
@@ -1104,10 +1153,17 @@ func _botao_por_nome(nome: String) -> Control:
 			return botao_ignicao
 	return null
 
+## Os lugares da tela que o holofote sabe acender, pelo nome:
+##   "reagentes" / "produtos"       o painel de contagem de cada lado
+##   "reagentes_h", "reagentes_o",
+##   "produtos_h", "produtos_o"     só o "H = x" ou o "O = y" de um painel
+##   "equacao"                      a equação escrita, de ponta a ponta
 func _retangulos_para(nomes: Array) -> Array[Rect2]:
 	var saida: Array[Rect2] = []
 	for nome in nomes:
 		match nome:
+			"equacao":
+				saida.append(_retangulo_da_equacao())
 			"reagentes":
 				saida.append(_retangulo_do_painel(label_reagentes_titulo, label_reagentes_valor))
 			"produtos":
@@ -1121,6 +1177,17 @@ func _retangulos_para(nomes: Array) -> Array[Rect2]:
 			"produtos_o":
 				saida.append(_retangulo_da_contagem(label_produtos_valor, "O"))
 	return saida
+
+# A equação escrita inteira, do primeiro coeficiente ao "+ Energia", com uma
+# folga em volta (os índices das fórmulas descem um pouco da linha).
+func _retangulo_da_equacao() -> Rect2:
+	var total := Rect2()
+	for caixa: Control in linha_equacao.get_children():
+		for letra: Control in caixa.get_children():
+			var onde := letra.get_global_rect()
+			total = onde if total.size == Vector2.ZERO else total.merge(onde)
+	var escala := linha_equacao.get_global_transform().get_scale()
+	return total.grow_individual(14.0 * escala.x, 4.0 * escala.y, 14.0 * escala.x, 6.0 * escala.y)
 
 # Só o pedaço "H = x" ou "O = y" do valor de um painel. O texto é centrado no
 # RichTextLabel, então a posição sai da largura medida de cada pedaço com a

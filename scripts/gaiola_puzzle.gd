@@ -10,6 +10,18 @@ extends Node2D
 # "fechada". Perto dela, o E abre o puzzle_cena — ou abre direto, se não houver
 # puzzle. Resolvido: toca "abrindo" uma vez, para em "aberta" e só então solta
 # o item. Aberta uma vez, continua aberta ao recarregar a cena (EstadoMundo).
+#
+# O PUZZLE PELA METADE também não se perde numa morte. O puzzle que quiser
+# guardar o que já foi feito dentro dele (a etapa 1 do maçarico, o átomo de
+# carbono montado até a metade) oferece duas coisas, as duas opcionais:
+#   sinal   progresso_mudou(dados: Dictionary)   "anote isto"
+#   método  restaurar_progresso(dados)           "era assim que eu estava"
+# A gaiola guarda os dados no EstadoMundo, em nome DELA (o caminho dela no
+# mapa), e devolve ao puzzle novo quando a cena recarrega. O puzzle em si
+# continua sem saber onde está: aberto fora de uma gaiola, começa do zero.
+
+## A marca, no EstadoMundo, do que já foi feito dentro do puzzle desta gaiola.
+const MARCA_PROGRESSO := "progresso_do_puzzle"
 
 @export_group("Puzzle")
 # Arraste aqui a cena do puzzle deste item (ex: puzzle_hidrogenio.tscn).
@@ -44,6 +56,7 @@ func _ready():
 		puzzle_ui = puzzle_cena.instantiate() as CanvasLayer
 		add_child(puzzle_ui)
 		puzzle_ui.puzzle_resolvido.connect(_on_puzzle_resolvido)
+		_ligar_progresso_do_puzzle()
 
 	# Desativa o item externo enquanto a gaiola está fechada
 	if item_alvo:
@@ -65,6 +78,20 @@ func _ready():
 	if exclamacao:
 		exclamacao.visible = false
 		exclamacao.stop()
+
+## O que já foi feito dentro do puzzle volta para ele (a cena recarregou por
+## morte ou por troca de fase), e o que for feito daqui em diante fica anotado.
+func _ligar_progresso_do_puzzle() -> void:
+	var guardado: Variant = EstadoMundo.ler(self, MARCA_PROGRESSO)
+	if guardado is Dictionary and puzzle_ui.has_method("restaurar_progresso"):
+		puzzle_ui.restaurar_progresso(guardado)
+	if puzzle_ui.has_signal("progresso_mudou"):
+		puzzle_ui.connect("progresso_mudou", _ao_mudar_progresso_do_puzzle)
+
+
+func _ao_mudar_progresso_do_puzzle(dados: Dictionary) -> void:
+	EstadoMundo.guardar(self, MARCA_PROGRESSO, dados.duplicate(true))
+
 
 func _process(_delta: float):
 	if jogador_na_area and not puzzle_concluido and Interacao.pediu():

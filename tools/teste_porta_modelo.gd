@@ -111,7 +111,8 @@ func _testar_portas_nas_cenas() -> void:
 	# Quem recebe em cada cena: tag_aqui -> porta.
 	var recebe := {}
 	var saidas: Array[Dictionary] = []
-	for caminho in [LAB, FASE1, CORREDOR, FASE2, FASE3, FASE_FINAL, SIMULADOR]:
+	for caminho in [LAB, FASE1, CORREDOR, FASE2, MissaoNitrogenio.CENA_COMPRESSOR, MissaoNitrogenio.CENA_DESTILACAO,
+			MissaoNitrogenio.CENA_TORRE, MissaoNitrogenio.CENA_TELHADO, FASE3, FASE_FINAL, SIMULADOR]:
 		await _abrir(caminho)
 		var cena := get_tree().current_scene
 		recebe[caminho] = {}

@@ -2,7 +2,7 @@ extends TelaInterativa
 
 # --- QUE ÁTOMO É ESSE? (Laboratório) ---
 #
-# O contrário do "Monte seu átomo": o computador desenha um átomo no modelo de
+# O contrário do "Monte seu átomo": a tela desenha um átomo no modelo de
 # camadas (o AtomoCamadas) e a pessoa diz de que elemento ele é, escolhendo uma
 # de quatro caixas da tabela periódica.
 #
@@ -20,8 +20,8 @@ extends TelaInterativa
 #             elétron também não muda o elemento.
 #
 # São PERGUNTAS perguntas por partida, de átomos cada vez maiores (ver FASES),
-# sem repetir elemento. Depois de cada resposta a tela mostra os números do
-# átomo (Z, A e a carga) e o terminal explica; um clique passa para a próxima.
+# sem repetir elemento. Depois de cada resposta o rodapé explica (quantos prótons o
+# núcleo tem, e que elemento é esse); um clique passa para a próxima.
 # No fim, o placar.
 #
 # ONDE MEXER:
@@ -57,7 +57,7 @@ const TXT_ERRADO := "NÃO É %s. O NÚCLEO TEM %d %s: É %s"
 const TXT_CONTINUAR := "CLIQUE PARA CONTINUAR"
 const TXT_VER_PLACAR := "CLIQUE PARA VER O PLACAR"
 const TXT_PLACAR := "%d DE %d"
-## O que o computador diz no fim, pelo tanto de acertos (do pior para o melhor).
+## O que a tela diz no fim, pelo tanto de acertos (do pior para o melhor).
 const TXT_FINAIS := [
 	[0, "CONTE OS PRÓTONS COM CALMA E TENTE DE NOVO"],
 	[4, "BOM COMEÇO! MAIS UMA RODADA?"],
@@ -83,26 +83,22 @@ var _sorteio := RandomNumberGenerator.new()
 var _ja_sairam: Array[int] = []
 var _tempo: float = 0.0
 
-@onready var computador: ComputadorDoLaboratorio = $Computador
-@onready var grupo_jogo: Control = $Computador/Display/Conteudo/GrupoJogo
-@onready var atomo: AtomoCamadas = $Computador/Display/Conteudo/GrupoJogo/Atomo
-@onready var numero_atomico: Label = $Computador/Display/Conteudo/GrupoJogo/Propriedades/NumeroAtomico
-@onready var numero_de_massa: Label = $Computador/Display/Conteudo/GrupoJogo/Propriedades/NumeroDeMassa
-@onready var carga: Label = $Computador/Display/Conteudo/GrupoJogo/Propriedades/Carga
-@onready var legenda_da_carga: Label = $Computador/Display/Conteudo/GrupoJogo/Propriedades/LegendaCarga
-@onready var placar: Label = $Computador/Display/Conteudo/GrupoJogo/Placar
-@onready var continuar: Label = $Computador/Display/Conteudo/GrupoJogo/Continuar
-@onready var grupo_fim: Control = $Computador/Display/Conteudo/GrupoFim
-@onready var placar_final: Label = $Computador/Display/Conteudo/GrupoFim/Placar
-@onready var mensagem_final: Label = $Computador/Display/Conteudo/GrupoFim/Mensagem
-@onready var botao_de_novo: Panel = $Computador/Display/Conteudo/GrupoFim/BotaoDeNovo
-@onready var botao_sair: Panel = $Computador/Display/Conteudo/GrupoFim/BotaoSair
+@onready var painel: PainelDaAtividade = $Painel
+@onready var grupo_jogo: Control = $Painel/Display/Conteudo/GrupoJogo
+@onready var atomo: AtomoCamadas = $Painel/Display/Conteudo/GrupoJogo/Atomo
+@onready var placar: Label = $Painel/Display/Conteudo/GrupoJogo/Placar
+@onready var continuar: Label = $Painel/Display/Conteudo/GrupoJogo/Continuar
+@onready var grupo_fim: Control = $Painel/Display/Conteudo/GrupoFim
+@onready var placar_final: Label = $Painel/Display/Conteudo/GrupoFim/Placar
+@onready var mensagem_final: Label = $Painel/Display/Conteudo/GrupoFim/Mensagem
+@onready var botao_de_novo: Panel = $Painel/Display/Conteudo/GrupoFim/BotaoDeNovo
+@onready var botao_sair: Panel = $Painel/Display/Conteudo/GrupoFim/BotaoSair
 ## As quatro caixas das alternativas.
 @onready var caixas: Array[CaixaElemento] = [
-	$Computador/Display/Conteudo/GrupoJogo/Opcoes/Opcao1 as CaixaElemento,
-	$Computador/Display/Conteudo/GrupoJogo/Opcoes/Opcao2 as CaixaElemento,
-	$Computador/Display/Conteudo/GrupoJogo/Opcoes/Opcao3 as CaixaElemento,
-	$Computador/Display/Conteudo/GrupoJogo/Opcoes/Opcao4 as CaixaElemento,
+	$Painel/Display/Conteudo/GrupoJogo/Opcoes/Opcao1 as CaixaElemento,
+	$Painel/Display/Conteudo/GrupoJogo/Opcoes/Opcao2 as CaixaElemento,
+	$Painel/Display/Conteudo/GrupoJogo/Opcoes/Opcao3 as CaixaElemento,
+	$Painel/Display/Conteudo/GrupoJogo/Opcoes/Opcao4 as CaixaElemento,
 ]
 
 
@@ -116,10 +112,10 @@ func _ao_abrir() -> void:
 		func() -> bool: return estado == Estado.FIM)
 	registrar_alvo("sair", botao_sair.get_global_rect, voltar,
 		func() -> bool: return estado == Estado.FIM)
-	# Respondida, o clique em qualquer lugar da tela do computador continua.
-	registrar_alvo("continuar", computador.retangulo_do_vidro, avancar,
+	# Respondida, o clique em qualquer lugar da área da atividade continua.
+	registrar_alvo("continuar", painel.retangulo_do_conteudo, avancar,
 		func() -> bool: return estado == Estado.RESPONDIDA)
-	computador.ligar()
+	painel.aparecer()
 	recomecar()
 
 
@@ -212,18 +208,13 @@ func _perguntar() -> void:
 		caixas[i].scale = Vector2.ONE
 	_pintar_as_caixas()
 	atomo.definir(int(atual["z"]), int(atual["neutrons"]), int(atual["eletrons"]))
-	numero_atomico.text = "Z = ?"
-	numero_de_massa.text = "A = ?"
-	carga.text = "CARGA ?"
-	legenda_da_carga.text = ""
 	continuar.hide()
-	computador.definir_cabecalho(TXT_PERGUNTA % [numero, PERGUNTAS])
+	painel.definir_cabecalho(TXT_PERGUNTA % [numero, PERGUNTAS])
 	placar.text = TXT_ACERTOS % acertos
-	computador.definir_led(ComputadorDoLaboratorio.COR_LED_PARADO, true)
-	computador.definir_rodape(dica_da_pergunta())
+	painel.definir_rodape(dica_da_pergunta())
 
 
-## O que o terminal diz enquanto espera a resposta.
+## O que o rodapé diz enquanto espera a resposta.
 func dica_da_pergunta() -> String:
 	match String(atual.get("tipo", "neutro")):
 		"ion":
@@ -245,24 +236,15 @@ func responder(qual: int) -> void:
 	if certo:
 		acertos += 1
 		tocar("certo")
-		computador.definir_led(ComputadorDoLaboratorio.COR_LED_CERTO)
-		computador.avisar(TXT_CERTO % [z, palavra, Elementos.nome(z).to_upper()],
-			ComputadorDoLaboratorio.COR_CERTO, -1.0)
+		painel.avisar(TXT_CERTO % [z, palavra, Elementos.nome(z).to_upper()],
+			PainelDaAtividade.COR_CERTO, -1.0)
 		_pular(caixas[qual])
 	else:
 		tocar("erro")
-		computador.definir_led(ComputadorDoLaboratorio.COR_LED_ATENCAO)
-		computador.avisar(TXT_ERRADO % [Elementos.nome(opcoes[qual]).to_upper(), z, palavra,
-			Elementos.nome(z).to_upper()], ComputadorDoLaboratorio.COR_ERRO, -1.0)
+		painel.avisar(TXT_ERRADO % [Elementos.nome(opcoes[qual]).to_upper(), z, palavra,
+			Elementos.nome(z).to_upper()], PainelDaAtividade.COR_ERRO, -1.0)
 		_tremer(caixas[qual])
 	placar.text = TXT_ACERTOS % acertos
-	# Os números do átomo aparecem: é a explicação da resposta.
-	var massa := z + int(atual["neutrons"])
-	var diferenca := z - int(atual["eletrons"])
-	numero_atomico.text = "Z = %d" % z
-	numero_de_massa.text = "A = %d" % massa
-	carga.text = "CARGA %s" % Elementos.carga_escrita(diferenca)
-	legenda_da_carga.text = "ÁTOMO NEUTRO" if diferenca == 0 else ("CÁTION" if diferenca > 0 else "ÂNION")
 	continuar.text = TXT_VER_PLACAR if numero >= PERGUNTAS else TXT_CONTINUAR
 	continuar.show()
 	_pintar_as_caixas()
@@ -275,13 +257,12 @@ func _mostrar_o_fim() -> void:
 	grupo_fim.show()
 	placar_final.text = TXT_PLACAR % [acertos, PERGUNTAS]
 	mensagem_final.text = mensagem_do_fim(acertos)
-	computador.definir_cabecalho("FIM DA PARTIDA")
-	computador.definir_rodape("ESCOLHA: OUTRA PARTIDA OU VOLTAR AO LABORATÓRIO")
-	computador.definir_led(ComputadorDoLaboratorio.COR_LED_AZUL)
+	painel.definir_cabecalho("FIM DA PARTIDA")
+	painel.definir_rodape("ESCOLHA: OUTRA PARTIDA OU VOLTAR AO LABORATÓRIO")
 	tocar("sucesso")
 
 
-## O que o computador diz com este tanto de acertos.
+## O que a tela diz com este tanto de acertos.
 static func mensagem_do_fim(quantos: int) -> String:
 	var texto := String(TXT_FINAIS[0][1])
 	for faixa: Array in TXT_FINAIS:
@@ -404,9 +385,9 @@ func _pintar_as_caixas() -> void:
 			if alvo_em_foco() == "opcao_%d" % (i + 1):
 				caixa.destaque = EstiloHUD.CLARO
 		elif opcoes[i] == int(atual["z"]):
-			caixa.destaque = ComputadorDoLaboratorio.COR_CERTO
+			caixa.destaque = PainelDaAtividade.COR_CERTO
 		elif i == escolhida:
-			caixa.destaque = ComputadorDoLaboratorio.COR_ERRO
+			caixa.destaque = PainelDaAtividade.COR_ERRO
 		else:
 			caixa.apagada = true
 

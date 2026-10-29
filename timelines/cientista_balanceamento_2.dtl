@@ -1,3 +1,9 @@
-join cientista (cientista_feliz) leftmost [mirrored="true"]
-cientista: Repare nos reagentes. Já temos 2 átomos de hidrogênio, porque cada molécula de hidrogênio tem dois.
-cientista (cientista_feliz): Vamos igualar do outro lado. Adicione uma molécula do produto.
+join cientista (cientista_mto_feliz) leftmost [mirrored="true"]
+cientista (cientista_mto_feliz): Uma de cada! E olha só o produto dessa reação, é água!
+cientista (cientista_feliz): Por isso o hidrogênio é um dos combustíveis mais limpos que existem. Queimando com oxigênio, ele não solta gás carbônico nem fuligem, só vapor de água.
+cientista: Agora vamos contar os átomos de cada elemento, dos dois lados.
+[signal arg="hidrogenio"]
+cientista: Hidrogênio, 2 nos reagentes e 2 nos produtos. Esse já está igualado.
+[signal arg="oxigenio"]
+cientista (cientista_serio): Oxigênio, 2 nos reagentes e só 1 nos produtos.
+cientista (cientista_feliz): Então adicionamos uma molécula onde o elemento está em menor quantidade. Está faltando oxigênio nos produtos, adicione mais uma molécula de água.

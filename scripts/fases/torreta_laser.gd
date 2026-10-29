@@ -161,10 +161,11 @@ const TEMPO_TOMBO := 0.55
 ## torreta como se ela não estivesse ali — sem estrago, sem baque e sem o
 ## tranco de acerto. Ligue só numa torreta que deva ser desarmada.
 @export var quebravel: bool = false
-## Ligado, ela continua quebrada depois de morrer e recarregar a fase. Use nas
-## que fazem parte de um puzzle: refazer o mesmo arremesso a cada morte vira
-## pedágio, não desafio.
-@export var persistir: bool = false
+## Ligado (padrão), ela continua quebrada depois de a Cacau morrer e a fase
+## recarregar, e também quando ela sai e volta: torreta estragada não se
+## conserta sozinha, e refazer o mesmo arremesso a cada morte vira pedágio, não
+## desafio. Desligue só numa torreta que deve mesmo voltar a cada vida.
+@export var persistir: bool = true
 ## Tinta da carcaça queimada. Vale só para a ARTE — fumaça e faísca não herdam.
 @export var cor_avariada: Color = Color(0.62, 0.60, 0.58)
 ## Faixa (sorteada) entre uma chispa do curto e a próxima. Os dois campos

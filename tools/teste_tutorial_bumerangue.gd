@@ -4,7 +4,8 @@ extends Node
 # coleta (scripts/ui/tutorial_ferramenta.gd) e a telinha animada dela
 # (scenes/ui/demo_bumerangue.tscn).
 #
-#   * o catálogo: só o bumerangue tem tutorial, e o texto é uma frase só;
+#   * o catálogo: o bumerangue tem tutorial, e o texto é uma frase só (a
+#     mochila e o maçarico têm o deles: tools/teste_tutoriais_ferramentas);
 #   * as teclas são as desenhadas da folha do teclado: o F existe ao lado do E,
 #     com os quatro quadros de apertar, e é ele que os equipamentos, a ficha
 #     e a telinha mostram (o □, de controle na mão);
@@ -82,7 +83,7 @@ func _testar_catalogo() -> void:
 	print("\n--- O CATALOGO ---")
 	var dados := CatalogoFerramentas.tutorial("bumerangue")
 	_checar(not dados.is_empty(), "o bumerangue tem tutorial")
-	_checar(CatalogoFerramentas.tutorial("macarico").is_empty()
+	_checar(CatalogoFerramentas.tutorial("sinalizador").is_empty()
 		and CatalogoFerramentas.tutorial("nao_existe").is_empty(),
 		"ferramenta sem o campo (e ferramenta que nao existe) nao tem")
 	_checar(dados.get("texto", "") == FRASE, "o texto e a frase pedida, e so ela")
@@ -602,7 +603,7 @@ func _testar_na_fase() -> void:
 		await _quadros(3)
 	_checar(ficha.esta_aberto() and get_tree().paused, "o direcional nao fecha o tutorial")
 	var primeiro := true
-	for caso: Array in [["o X", JOY_BUTTON_A, &"jump"], ["a bolinha", JOY_BUTTON_B, &"dash"],
+	for caso: Array in [["o X", JOY_BUTTON_A, &"jump"], ["a bolinha", JOY_BUTTON_B, &""],
 			["o quadrado", JOY_BUTTON_X, &"arremessar"], ["o triangulo", JOY_BUTTON_Y, &""]]:
 		if not primeiro:
 			FerramentasHUD.ensinar("bumerangue")

@@ -9,8 +9,14 @@ extends Node
 
 var _falhas := 0
 
+## O rádio da entrada da oficina chama a Cacau na chegada: a fala dele deixava
+## a árvore presa num diálogo e o congelamento do dash nunca voltava, então os
+## testes contam a chamada como já ouvida.
+const RADIO_DA_OFICINA := "/root/Fase1Oficina/Entrada/RadioDrChico"
+
 
 func _ready() -> void:
+	EstadoMundo._feitos[RADIO_DA_OFICINA] = true
 	await _testar_fase1()
 	await _testar_fase1_2()
 	await _testar_fase2()
@@ -151,7 +157,7 @@ func _testar_fase1_2() -> void:
 ## céu e o chão da área aberta) e o que faz a cena abrir e a Cacau entrar e
 ## sair. Quando a fase nova ganhar objetos, os testes deles entram aqui.
 func _testar_fase2() -> void:
-	print("\n--- FASE 2: NITROGENIO (em branco) ---")
+	print("\n--- FASE 2: NITROGENIO (a rua) ---")
 	var f := await _abrir("res://scenes/fases/fase2_torre.tscn")
 
 	# Nada da antiga Torre de Gases ficou.
@@ -302,6 +308,10 @@ func _testar_final() -> void:
 
 func _testar_dash() -> void:
 	print("\n--- DASH DA MOCHILA ---")
+	# A mochila e o bumerangue têm arte: dados na mão, a ficha de coleta (e o
+	# tutorial) subiria e pararia o jogo no meio do dash. Aqui eles vêm direto
+	# para os equipamentos, como no atalho de debug.
+	FerramentasHUD.apresentar_ferramentas = false
 	var f := await _abrir("res://scenes/fases/fase2_torre.tscn")
 	var player: CharacterBody2D = f.get_node("Player")
 	var ferramentas = player.get_node("Ferramentas")
@@ -324,7 +334,8 @@ func _testar_dash() -> void:
 	_checar(player.esta_invencivel_dash, "dash liga esta_invencivel_dash")
 	_checar(is_equal_approx(player.velocity.y, -FerramentasPlayer.DASH_VELOCIDADE),
 		"dash sobe na velocidade cheia")
-	_checar(is_zero_approx(Engine.time_scale), "congelamento de impacto parou o jogo")
+	_checar(Engine.time_scale > 0.0 and Engine.time_scale <= FerramentasPlayer.ESCALA_CONGELADO,
+		"congelamento de impacto quase parou o jogo (sem zerar o passo da fisica)")
 	var sprite: AnimatedSprite2D = player.get_node("AnimatedSprite2D")
 	_checar(sprite.animation == "run" and sprite.frame == sprite.sprite_frames.get_frame_count("run") - 1,
 		"pose do dash trava no ultimo frame do run")
@@ -374,5 +385,6 @@ func _testar_dash() -> void:
 	correndo.queue_free()
 	de_re.queue_free()
 	de_lado.queue_free()
+	FerramentasHUD.apresentar_ferramentas = true
 
 	await _fechar(f)

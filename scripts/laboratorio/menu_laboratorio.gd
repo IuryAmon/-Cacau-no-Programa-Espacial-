@@ -10,6 +10,8 @@ extends TelaInterativa
 #   MONTE SEU ÁTOMO     o puzzle do bumerangue, com qualquer átomo
 #   QUE ÁTOMO É ESSE?   o computador desenha o átomo, a pessoa diz o elemento
 #   BALANCEAMENTO       o puzzle do foguete e o do maçarico, com muitas reações
+#   COMPRESSOR DE AR    o compressor da fase do nitrogênio, virado simulador de
+#                       gases: P · V = n · R · T
 #   DESTILADOR          a coluna de destilação, com várias misturas
 #   TABELA PERIÓDICA    os 118 elementos, na caixa do caderno da Cacau
 #
@@ -32,6 +34,9 @@ const ATIVIDADES := [
 	{"chave": "balanceamento", "nome": "BALANCEAMENTO",
 		"descricao": "Acerte os coeficientes das reações, em três níveis.",
 		"cena": "res://scenes/laboratorio/balanceamento.tscn"},
+	{"chave": "compressor", "nome": "COMPRESSOR DE AR",
+		"descricao": "Aperte, esquente e encha a caixa de ar até estourar.",
+		"cena": "res://scenes/laboratorio/compressor.tscn"},
 	{"chave": "destilador", "nome": "DESTILADOR",
 		"descricao": "Mude a temperatura e separe as misturas.",
 		"cena": "res://scenes/laboratorio/destilador.tscn"},
@@ -59,6 +64,11 @@ const TINTA_FRACA := Color8(0x8a, 0x6d, 0x52)
 ## Os átomos que giram nos cartões: [prótons, nêutrons, elétrons].
 const ATOMO_DO_MONTE := [3, 4, 3]
 const ATOMO_DO_QUIZ := [6, 6, 6]
+
+## O compressor do mapa da fase do nitrogênio, e as fichas das letras da
+## equação, que são as da tela dele.
+const ARTE_DO_COMPRESSOR := preload("res://assets/fase nitrogenio/compressor de ar.png")
+const TELA_DO_COMPRESSOR := preload("res://scripts/laboratorio/compressor.gd")
 
 ## O átomo desenhado em cada cartão que tem um (chave -> AtomoCamadas).
 var _atomos := {}
@@ -197,6 +207,8 @@ func _desenhar_a_figura(chave: String, figura: Rect2) -> void:
 			CaixaElemento.desenhar(painel, meio + Vector2(34, -46), 0, 1, false, false)
 		"balanceamento":
 			_desenhar_a_reacao(meio)
+		"compressor":
+			_desenhar_o_compressor(figura)
 		"destilador":
 			_desenhar_a_coluna(figura)
 		"tabela":
@@ -225,6 +237,19 @@ func _desenhar_a_reacao(meio: Vector2) -> void:
 		else:
 			PecasDoLaboratorio.escrever_no_meio(painel, Vector2(x + larguras[i] * 0.5, meio.y), peca, 33, TINTA)
 		x += larguras[i] + 10.0
+
+
+## O compressor de ar do mapa (em escala 2, assentado no fio do cartão) e, ao
+## lado, as fichas de P, V, n e T.
+func _desenhar_o_compressor(figura: Rect2) -> void:
+	var tamanho := ARTE_DO_COMPRESSOR.get_size() * 2.0
+	var canto := Vector2(figura.get_center().x - tamanho.x * 0.5 - 52.0, figura.end.y + 2.0 - tamanho.y).round()
+	painel.draw_texture_rect(ARTE_DO_COMPRESSOR, Rect2(canto, tamanho), false)
+	var grade := Vector2(canto.x + tamanho.x + 48.0, figura.get_center().y - 22.0)
+	var letras := ["P", "V", "n", "T"]
+	for i in letras.size():
+		var meio := grade + Vector2((i % 2) * 48.0, floorf(i / 2.0) * 48.0)
+		TELA_DO_COMPRESSOR.desenhar_ficha(painel, meio, letras[i], 40.0, 22)
 
 
 ## A coluna de aço da fase do nitrogênio, com três moléculas do ar ao lado.

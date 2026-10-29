@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="PerfilDeLuz" format=3]
+
+[ext_resource type="Script" uid="uid://cb734pivjjar3" path="res://scripts/luz/perfil_de_luz.gd" id="1_perfil"]
+
+[resource]
+script = ExtResource("1_perfil")
+sol = 0.0
+ambiente = Color(0.66, 0.71, 0.84, 1)
+postes = 1.0

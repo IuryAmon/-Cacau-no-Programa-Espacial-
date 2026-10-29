@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://bmgkds67hbool" path="res://scenes/player.tscn" id="5_player"]
 [ext_resource type="Script" uid="uid://txyd3f255aod" path="res://scripts/fases/paralaxe_da_frente.gd" id="6_frente"]
 [ext_resource type="PackedScene" uid="uid://hh5m5ow4cwea" path="res://scenes/fases/componentes/morcego.tscn" id="7_morcego"]
+[ext_resource type="AudioStream" uid="uid://d3ybrukb5t8my" path="res://sounds/Trilhas/esgoto ou algo assim.mp3" id="8_musica"]
 
 [sub_resource type="Gradient" id="Gradient_luz"]
 offsets = PackedFloat32Array(0, 0.5, 1)
@@ -22,6 +23,7 @@ size = Vector2(96, 384)
 
 [node name="CorredorPatio" type="Node2D" unique_id=283792563]
 script = ExtResource("1_script")
+musica = ExtResource("8_musica")
 
 [node name="Fundo" type="TileMapLayer" parent="." unique_id=404155538]
 z_index = -20

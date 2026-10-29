@@ -22,7 +22,5 @@ cientista (cientista_mto_feliz): Ah! E o hidrogênio e o oxigênio você já con
 cientista (cientista_feliz): Olha só!
 do DialogicBridge.entregar_h_e_o()
 cientista (cientista_mto_feliz): Viu? H e O acesos no painel. Então faltam só quatro.
-cientista (cientista_feliz): O carbono está na Oficina do Carbono, na ala de pirólise.
-cientista: O nitrogênio fica lá no alto da Torre de Gases, na estufa.
-cientista (cientista_serio): E o fósforo e o enxofre estão no subsolo, descendo pelo fosso de ventilação. Mas cuidado... lá embaixo é bem escuro.
+cientista (cientista_serio): Eles estão espalhados pelas áreas do centro espacial. Você precisa reunir todos se quiser passar no teste.
 cientista (cientista_mto_feliz): Com as seis letras acesas no painel, a Torre de Lançamento se abre pra você. Bem-vinda à seleção!

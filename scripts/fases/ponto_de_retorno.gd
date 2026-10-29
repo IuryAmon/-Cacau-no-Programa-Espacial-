@@ -23,6 +23,14 @@ extends RefCounted
 # aqui (marcar_morte) antes de recarregar, e toda cena que abre sem esse aviso
 # é tratada como visita nova.
 #
+# Esta "visita" é também o prazo do que o EstadoMundo guarda com
+# guardar_na_visita() (a vida que sobrou a um morcego do corredor): quando a
+# cena abre sem ser por morte, é aqui que essa memória é esquecida.
+#
+# O QUE ISTO NÃO GUARDA: o estado da fase. A caixa elétrica quebrada, os
+# espinhos desligados e a torreta estragada lembram sozinhos, no EstadoMundo, e
+# valem com ou sem ponto de retorno — morrer nunca desfaz progresso.
+#
 # Tudo é "static var" — sobrevive à troca de cena, igual ao EstadoMundo.
 
 ## Cena (arquivo .tscn) em que o ponto foi gravado.
@@ -111,6 +119,13 @@ static func esquecer() -> void:
 	_bandeira = ""
 
 
+## Para quem guarda algo que só vale nesta visita (EstadoMundo.guardar_na_visita):
+## garante que a cena de "no" já foi conferida — visita nova ou volta de morte.
+static func conferir_visita(no: Node) -> void:
+	if no != null and no.is_inside_tree():
+		_sincronizar(no.get_tree())
+
+
 # Na primeira consulta de cada cena aberta, decide se o ponto continua valendo:
 # só se a cena abriu por morte E o ponto é desta mesma cena. Roda de novo só
 # quando a instância da cena muda, então a ordem de _ready() entre bandeiras,
@@ -129,3 +144,7 @@ static func _sincronizar(tree: SceneTree) -> void:
 	_renasceu = voltou_de_morte and _tem_ponto and _cena == cena.scene_file_path
 	if not _renasceu:
 		esquecer()
+	# O que só vale "nesta visita" (o morcego que ela já matou) acaba junto com
+	# a visita — e continua valendo numa volta de morte, com ou sem ponto gravado.
+	if not voltou_de_morte:
+		EstadoMundo.esquecer_a_visita()

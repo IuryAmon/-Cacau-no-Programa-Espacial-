@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://ch4ywwfc55peh"
+path="res://.godot/imported/bossa nova estilo stardew valley3.mp3-cf01001b3a47e4f61070bbbb24e72eb7.mp3str"
+
+[deps]
+
+source_file="res://sounds/Trilhas/bossa nova estilo stardew valley3.mp3"
+dest_files=["res://.godot/imported/bossa nova estilo stardew valley3.mp3-cf01001b3a47e4f61070bbbb24e72eb7.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -24,16 +24,47 @@ extends Area2D
 #
 # Numa cena sem Atmosfera (ou em que o sol já se pôs) nada disso acontece: a
 # fala e o coração tocam como antes e o controle volta na hora.
+#
+# A MÚSICA da cena também é daqui:
+#
+#   balão de exclamação ──> toca o piano G e a trilha some (TrilhaSonora.pausar)
+#   o piano termina     ──> um respiro em silêncio, e entra "vendo foguete2",
+#                           em loop, até a cena acabar
+#   controle volta      ──> "vendo foguete2" some e a trilha volta
+#                           (TrilhaSonora.continuar): com o sol posto, já é a
+#                           música do crepúsculo; sem pôr do sol, a mesma de
+#                           antes, de onde tinha parado
+#
+# Sem pôr do sol, a cena acaba quando o coração some.
 
 ## Segundos entre o coração aparecer e o sol começar a descer.
 @export var respiro_antes_do_sol := 0.8
 ## Segundos olhando o crepúsculo, com o sol já posto, antes de ela falar.
 @export var respiro_depois_do_sol := 1.2
 
+@export_group("Música")
+## A nota de piano que toca junto com o balão de exclamação.
+@export var som_do_susto: AudioStream = preload("res://sounds/Trilhas/piano G.mp3")
+@export var volume_do_susto_db := -8.0
+## A música da cena, no lugar da trilha (toca em loop).
+@export var musica_do_foguete: AudioStream = preload("res://sounds/Trilhas/vendo foguete2.mp3")
+@export var volume_da_musica_db := -6.0
+## Segundos em silêncio entre o piano acabar e a música da cena entrar.
+@export var espera_antes_da_musica := 1.0
+## Segundos para a trilha sumir quando o balão aparece.
+@export var fade_da_trilha := 0.2
+## Segundos para "vendo foguete2" sumir e para a trilha voltar.
+@export var fade_de_volta := 1.5
+
 ## A fala dela depois que o sol se põe.
 const TIMELINE_ANOITECENDO := "cacau_anoitecendo"
+## Volume de "sem som" para os fades.
+const MUDO_DB := -60.0
 
 var _disparado: bool = false
+var _susto: AudioStreamPlayer
+var _musica: AudioStreamPlayer
+var _cena_acabou: bool = false
 
 func _ready() -> void:
 	# Ela já viu o foguete (nesta volta ao world1 ou antes de morrer): a cena
@@ -49,7 +80,12 @@ func _on_body_entered(body: Node2D) -> void:
 	_disparado = true
 	if not body.has_method("reagir_ao_avistar_foguete"):
 		return
+	# O tocador do piano já fica pronto aqui, para a nota sair no mesmo quadro
+	# do balão.
+	if som_do_susto:
+		_susto = _novo_tocador(som_do_susto, volume_do_susto_db)
 
+	body.avistou_o_foguete.connect(_trocar_a_musica, CONNECT_ONE_SHOT)
 	var atmosfera := Atmosfera.da_cena(self)
 	if atmosfera != null and atmosfera.pode_por_o_sol():
 		body.segurar_apos_o_foguete = true
@@ -57,6 +93,7 @@ func _on_body_entered(body: Node2D) -> void:
 		body.fala_do_foguete_terminou.connect(_por_o_sol.bind(body, atmosfera), CONNECT_ONE_SHOT)
 	else:
 		body.fala_do_foguete_terminou.connect(_registrar, CONNECT_ONE_SHOT)
+		body.cena_do_foguete_terminou.connect(_voltar_a_musica, CONNECT_ONE_SHOT)
 	body.reagir_ao_avistar_foguete($CollisionShape2D)
 
 
@@ -88,6 +125,54 @@ func _por_o_sol(player: Node2D, atmosfera: Atmosfera) -> void:
 	if is_instance_valid(player):
 		player.segurar_apos_o_foguete = false
 		player.pode_se_mover = true
+	_voltar_a_musica()
+
+
+## O balão pulou: o piano G toca, a trilha some e, um respiro depois de o
+## piano terminar, entra "vendo foguete2".
+func _trocar_a_musica() -> void:
+	TrilhaSonora.pausar(fade_da_trilha)
+
+	if _susto:
+		_susto.play()
+		await _susto.finished
+		_susto.queue_free()
+	await _esperar(espera_antes_da_musica)
+	if _cena_acabou or musica_do_foguete == null:
+		return
+
+	# Uma cópia em loop: a cena pode durar mais que a música.
+	var musica := musica_do_foguete.duplicate()
+	if "loop" in musica:
+		musica.loop = true
+	_musica = _novo_tocador(musica, volume_da_musica_db)
+	_musica.play()
+
+
+## A cena acabou: "vendo foguete2" some e a trilha volta (a do crepúsculo, se
+## o sol se pôs).
+func _voltar_a_musica() -> void:
+	_cena_acabou = true
+	if _musica:
+		var musica := _musica
+		_musica = null
+		var some := create_tween()
+		some.tween_property(musica, "volume_db", MUDO_DB, fade_de_volta)
+		some.tween_callback(musica.queue_free)
+	TrilhaSonora.continuar(fade_de_volta)
+
+
+## "Vendo foguete2" está tocando no lugar da trilha.
+func tocando_a_musica_do_foguete() -> bool:
+	return _musica != null and _musica.playing
+
+
+func _novo_tocador(som: AudioStream, volume_db: float) -> AudioStreamPlayer:
+	var tocador := AudioStreamPlayer.new()
+	tocador.stream = som
+	tocador.volume_db = volume_db
+	add_child(tocador)
+	return tocador
 
 
 ## Espera em tempo de JOGO (o mesmo relógio dos tweens da cena).

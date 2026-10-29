@@ -142,6 +142,68 @@ static func ponto(raio: int, degraus: int = 0, pontilhado: float = 0.5, queda: f
 	return _guardar(chave, w, w, dados, fonte, degraus <= 0)
 
 
+## Um clarão em volta de um retângulo aceso — o vidro de uma janela, brilhando
+## no ar. Dentro do retângulo é o máximo; fora, cai até [param raio]. Mesmas
+## medidas e mesmo retorno do [method cone]; "fonte" é o centro do retângulo.
+static func retangulo(largura: int, altura: int, raio: int, degraus: int = 0, pontilhado: float = 0.5) -> Dictionary:
+	var chave := "retangulo:%d:%d:%d:%d:%.3f" % [largura, altura, raio, degraus, pontilhado]
+	if _guardadas.has(chave):
+		return _guardadas[chave]
+
+	var w := largura + (raio + 2) * 2
+	var h := altura + (raio + 2) * 2
+	var dados := PackedByteArray()
+	dados.resize(w * h)
+	var fonte := Vector2(w * 0.5, h * 0.5)
+	var meio := Vector2(largura * 0.5, altura * 0.5)
+	for y in h:
+		var fora_y := maxf(absf(float(y) + 0.5 - fonte.y) - meio.y, 0.0)
+		for x in w:
+			var fora_x := maxf(absf(float(x) + 0.5 - fonte.x) - meio.x, 0.0)
+			var valor := clampf(1.0 - sqrt(fora_x * fora_x + fora_y * fora_y) / float(raio), 0.0, 1.0)
+			dados[y * w + x] = _byte(valor * valor, x, y, degraus, pontilhado)
+
+	return _guardar(chave, w, h, dados, fonte, degraus <= 0)
+
+
+## Uma fileira de clarões redondos numa luz só — as janelas de um andar. Cada
+## um é igual ao do [method ponto], e onde dois se encostam a luz soma.
+## [param centros] é a distância de cada um ao primeiro, em pixels de arte, da
+## esquerda para a direita. Mesmo retorno do [method cone]; "fonte" é o centro
+## do primeiro.
+static func fileira(raio: int, centros: Array[int], degraus: int = 0, pontilhado: float = 0.5, queda: float = 1.6) -> Dictionary:
+	var chave := "fileira:%d:%s:%d:%.3f:%.3f" % [raio, centros, degraus, pontilhado, queda]
+	if _guardadas.has(chave):
+		return _guardadas[chave]
+
+	var meia := raio + 2
+	var w := centros[centros.size() - 1] + meia * 2
+	var h := meia * 2
+	var fonte := Vector2(meia, meia)
+	# Um clarão só depende da distância ao centro dele: a metade de cima é
+	# contada uma vez e somada em cada centro; a de baixo é o espelho dela.
+	var soma := PackedFloat32Array()
+	soma.resize(w * meia)
+	for y in meia:
+		var py := fonte.y - (float(y) + 0.5)
+		for x in meia * 2:
+			var px := fonte.x - (float(x) + 0.5)
+			var valor := pow(clampf(1.0 - sqrt(px * px + py * py) / float(raio), 0.0, 1.0), queda)
+			if valor <= 0.0:
+				continue
+			for centro in centros:
+				soma[y * w + centro + x] += valor
+
+	var dados := PackedByteArray()
+	dados.resize(w * h)
+	for y in h:
+		var linha := (y if y < meia else h - 1 - y) * w
+		for x in w:
+			dados[y * w + x] = _byte(minf(soma[linha + x], 1.0), x, y, degraus, pontilhado)
+
+	return _guardar(chave, w, h, dados, fonte, degraus <= 0)
+
+
 # O byte de um pixel, a partir do valor liso de 0 a 1. Sem degraus, é o próprio
 # valor. Com degraus, ele é derrubado para "degraus" patamares, e só o fim de
 # cada patamar é pontilhado (a fração "pontilhado" dele); o resto é chapado.

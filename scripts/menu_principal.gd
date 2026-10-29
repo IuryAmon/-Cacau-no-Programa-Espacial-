@@ -4,7 +4,9 @@ extends TelaInterativa
 #
 # A primeira tela do jogo. Dois modos:
 #
-#   MODO HISTÓRIA   a aventura da Cacau: começa no world1, como sempre começou.
+#   MODO HISTÓRIA   a aventura da Cacau: abre com a introdução (o acidente de
+#                   2003 em Alcântara, scenes/introducao.tscn), que segue
+#                   sozinha para o world1.
 #   LABORATÓRIO     os puzzles e as simulações da história, soltos, para
 #                   brincar e treinar (scenes/laboratorio/menu_laboratorio.tscn).
 #
@@ -91,7 +93,7 @@ func _a_cada_quadro(_delta: float) -> void:
 func escolher(chave: String) -> void:
 	match chave:
 		"historia":
-			ir_para(TransicaoDeCena.CENA_HISTORIA)
+			ir_para(TransicaoDeCena.CENA_INTRODUCAO)
 		"laboratorio":
 			ir_para(TransicaoDeCena.CENA_LABORATORIO)
 		"sair":

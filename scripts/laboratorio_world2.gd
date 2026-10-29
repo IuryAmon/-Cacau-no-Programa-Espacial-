@@ -13,6 +13,10 @@ extends Node2D
 
 ## Quanto a tela leva para clarear na chegada.
 @export var duracao_clarear: float = 1.0
+## Onde a sala acaba à direita: o fim do chão e da parede do fundo, depois do
+## fosso de ventilação. A câmera não passa daqui (senão mostra o vazio) e o
+## nó ParedeDireita, encostado nesta linha, segura a Cacau.
+@export var fim_da_sala: int = 3564
 
 @onready var _camera: Camera2D = $Player/Camera2D
 @onready var _dialog_box_player: Node2D = $Player/dialog_box_player
@@ -22,6 +26,7 @@ extends Node2D
 
 func _ready() -> void:
 	_camera.limit_left = 142
+	_camera.limit_right = fim_da_sala
 	_camera.limit_bottom = 250
 
 	_dialog_box_player.visible = false
@@ -41,6 +46,13 @@ func _ready() -> void:
 # scenes/laboratório_(world_2).tscn e arraste cada um na viewport, com o
 # cenário da sala em volta — antes eles estavam dentro de hub_fases.tscn e só
 # dava para posicioná-los no vazio, sem ver onde caíam de verdade.
+#
+# Da esquerda para a direita: PortaOficina, PortaTorre, o PainelChonps com o
+# ReceptorChonps embaixo, PortaLancamento, PortaSimulador e, depois dele, o
+# FossoVentilacao no piso. Painel e receptor ficam no MEIO das duas portas
+# vizinhas (x = 2155, entre a PortaTorre em 1650 e a PortaLancamento em
+# 2659): mudou uma dessas portas de lugar, recentralize os dois, sempre no
+# mesmo x. A sala acaba em fim_da_sala (aqui em cima), com o nó ParedeDireita.
 func _montar_conteudo_de_fases() -> void:
 	FerramentasPlayer.instalar($Player)
 

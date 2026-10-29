@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/luz/poste_de_luz.gd" id="1_poste"]
+[ext_resource type="PackedScene" path="res://scenes/luz/luz_de_poste.tscn" id="2_luz"]
+
+[node name="PosteDeLuz" type="Node2D"]
+script = ExtResource("1_poste")
+metadata/_edit_group_ = true
+
+[node name="Luz" parent="." instance=ExtResource("2_luz")]
+position = Vector2(64, -245)

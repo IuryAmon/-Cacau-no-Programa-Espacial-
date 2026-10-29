@@ -141,13 +141,16 @@ func chamar() -> void:
 	_relogio = 0.0
 	_proximo_bipe = 0.0
 	_proxima_onda = 0.0
-	await get_tree().create_timer(duracao_da_chamada).timeout
+	# O relógio da chamada para com o jogo pausado (o menu de pausa, o caderno):
+	# senão a fala abriria parada atrás da tela.
+	await get_tree().create_timer(duracao_da_chamada, false).timeout
 	if not is_inside_tree():
 		return
-	# Outra conversa abriu no meio da chamada: espera ela acabar.
-	while Dialogic.current_timeline != null:
+	# Outra conversa abriu no meio da chamada (ou o jogo parou): espera.
+	while is_inside_tree() and (Dialogic.current_timeline != null or get_tree().paused):
 		await get_tree().process_frame
-	_abrir_canal()
+	if is_inside_tree():
+		_abrir_canal()
 
 
 # --- A HORA DE CHAMAR ---
@@ -158,15 +161,19 @@ func chamar() -> void:
 
 func _chamar_quando_ela_chegar() -> void:
 	await get_tree().process_frame
-	while not _hora_de_chamar():
+	# A cena pode ser trocada antes da hora chegar (saiu correndo pela porta):
+	# fora da árvore, o rádio desiste.
+	while is_inside_tree() and not _hora_de_chamar():
 		await get_tree().process_frame
-	await get_tree().create_timer(espera_antes_de_chamar).timeout
+	if not is_inside_tree():
+		return
+	await get_tree().create_timer(espera_antes_de_chamar, false).timeout
 	if is_inside_tree():
 		chamar()
 
 
 func _hora_de_chamar() -> bool:
-	if Dialogic.current_timeline != null:
+	if Dialogic.current_timeline != null or get_tree().paused:
 		return false
 	if get_tree().root.find_child("FadeTela", true, false) != null:
 		return false

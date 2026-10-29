@@ -35,6 +35,7 @@ const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 ## tela inteira, como o da ficha de coleta.
 const CAMADA_TUTORIAL := 96
 
+var _ancora: Control = null
 var _equipamentos: EquipamentosHUD = null
 var _tutorial: TutorialFerramenta = null
 var _habilidade_no_tutorial: String = ""
@@ -50,6 +51,7 @@ func _ready() -> void:
 	raiz.set_anchors_preset(Control.PRESET_FULL_RECT)
 	raiz.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(raiz)
+	_ancora = raiz
 
 	_equipamentos = EquipamentosHUD.new()
 	_equipamentos.name = "Equipamentos"
@@ -67,14 +69,24 @@ func _ready() -> void:
 
 	Progresso.habilidade_conquistada.connect(_on_habilidade_conquistada)
 	# Trocou de teclado para controle (ou o contrário): as teclas embaixo dos
-	# equipamentos viram o botão.
-	Controle.mudou.connect(func(_em_uso: bool) -> void: _equipamentos.queue_redraw())
+	# equipamentos viram o botão, e a frase do tutorial aberto também.
+	Controle.mudou.connect(func(_em_uso: bool) -> void:
+		_equipamentos.queue_redraw()
+		_tutorial.atualizar_teclas())
 
 	# Rede de segurança: se por algum caminho a personagem já tiver ferramenta
 	# antes deste nó existir, a ficha dela nasce pronta, sem apresentação.
 	for habilidade in Progresso.HABILIDADES:
 		if Progresso.tem_habilidade(habilidade):
 			_equipar(habilidade, false)
+
+
+# Fora da história (o menu inicial, o Laboratório, a introdução) não há Cacau, e
+# os equipamentos dela não aparecem. Com a cena no meio da troca (current_scene
+# vazia), fica como estava: a recarga de uma morte não pisca o canto.
+func _process(_delta: float) -> void:
+	if get_tree().current_scene != null:
+		_ancora.visible = get_tree().get_first_node_in_group(&"player") != null
 
 
 # --- APRESENTAÇÃO DA FERRAMENTA NOVA ---
@@ -155,7 +167,7 @@ func tutorial_aberto() -> bool:
 
 # QUEM FECHA A FICHA
 #   Qualquer tecla de AÇÃO do jogo: espaço, enter, ESC, shift, F, E... e, no
-#   controle, ✕ ○ □ △. A ficha mostra o E no canto (o □, de controle), como
+#   controle, ✕ ○ □ △ e o R2. A ficha mostra o E no canto (o □, de controle), como
 #   a ficha de coleta, mas a pessoa pode apertar o que tiver na mão. Só as
 #   teclas de ANDAR não fecham (WASD, setas, direcional e analógico), nem
 #   tecla que não faz nada no jogo.
@@ -174,8 +186,11 @@ func _input(evento: InputEvent) -> void:
 ## O toque (novo, não o de tecla segurada) é de alguma ação do jogo? Vale
 ## qualquer ação do mapa de entrada do projeto — as que existem hoje e as que
 ## vierem. Ficam de fora só as "ui_*" da engine: é com elas que a Cacau anda, e
-## as teclas das outras (enter, espaço, ESC) já são de ações do jogo.
+## as teclas das outras (enter, espaço, ESC) já são de ações do jogo. A exceção
+## é o "ui_cancel": o ○ do controle só mora nele desde que o dash foi para o R2.
 func _e_tecla_de_acao(evento: InputEvent) -> bool:
+	if evento.is_action_pressed(&"ui_cancel"):
+		return true
 	for acao in InputMap.get_actions():
 		if not String(acao).begins_with("ui_") and evento.is_action_pressed(acao):
 			return true

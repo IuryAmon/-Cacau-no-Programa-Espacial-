@@ -1,0 +1,160 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://bpk2n54weke2r" path="res://scripts/porta_simulador.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/porta/porta predio.png" id="2_porta"]
+[ext_resource type="Script" uid="uid://byavbxtivmb8w" path="res://scripts/icone_tecla_reativo.gd" id="5_icone_tecla"]
+[ext_resource type="Texture2D" uid="uid://cfiut0eh7ggs8" path="res://assets/UI/gdb-keyboard-2.png" id="6_teclado"]
+[ext_resource type="Texture2D" uid="uid://8fynctyjqpl5" path="res://assets/UI/gdb-playstation-2.png" id="7_controle"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="8_fonte"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_porta"]
+size = Vector2(200, 222)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_porta"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_porta")
+}],
+"loop": false,
+"name": &"abrindo",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_porta")
+}],
+"loop": true,
+"name": &"fechada",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_porta")
+}],
+"loop": false,
+"name": &"fechando",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w1"]
+atlas = ExtResource("6_teclado")
+region = Rect2(80, 48, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w2"]
+atlas = ExtResource("6_teclado")
+region = Rect2(80, 160, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w3"]
+atlas = ExtResource("6_teclado")
+region = Rect2(80, 272, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w4"]
+atlas = ExtResource("6_teclado")
+region = Rect2(80, 384, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_tecla_w"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w4")
+}],
+"loop": true,
+"name": &"default",
+"speed": 9.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_direcional_bg"]
+atlas = ExtResource("7_controle")
+region = Rect2(5, 495, 46, 45)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_direcional_bg"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_direcional_bg")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cima1"]
+atlas = ExtResource("7_controle")
+region = Rect2(16, 544, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cima2"]
+atlas = ExtResource("7_controle")
+region = Rect2(32, 544, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_seta_cima"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cima1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cima2")
+}],
+"loop": true,
+"name": &"default",
+"speed": 4.0
+}]
+
+[node name="PortaPredio" type="Area2D"]
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_porta")
+
+[node name="SpritePorta" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 20)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_porta")
+animation = &"fechada"
+
+[node name="PontoDeSaida" type="Marker2D" parent="."]
+position = Vector2(0, 84.6)
+
+[node name="SomAbrindo" type="AudioStreamPlayer2D" parent="."]
+
+[node name="SomFechando" type="AudioStreamPlayer2D" parent="."]
+
+[node name="IconeTeclaW" type="AnimatedSprite2D" parent="."]
+position = Vector2(-74.0625, -112)
+scale = Vector2(3.2499936, 3.2499936)
+sprite_frames = SubResource("SpriteFrames_tecla_w")
+autoplay = "default"
+script = ExtResource("5_icone_tecla")
+
+[node name="Label" type="Label" parent="IconeTeclaW"]
+offset_left = 13.846172
+offset_top = -3.692312
+offset_right = 29.846172
+offset_bottom = 20.307688
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/line_spacing = 8
+theme_override_fonts/font = ExtResource("8_fonte")
+theme_override_font_sizes/font_size = 11
+text = "ou"
+horizontal_alignment = 1
+
+[node name="DirecionalControle" type="AnimatedSprite2D" parent="."]
+position = Vector2(70.9375, -120)
+scale = Vector2(2.7166662, 2.7166665)
+sprite_frames = SubResource("SpriteFrames_direcional_bg")
+
+[node name="cima" type="AnimatedSprite2D" parent="DirecionalControle"]
+position = Vector2(4.0000243, -5.199997)
+sprite_frames = SubResource("SpriteFrames_seta_cima")
+autoplay = "default"
+script = ExtResource("5_icone_tecla")

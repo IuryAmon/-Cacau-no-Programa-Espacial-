@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/fases/cilindro_de_nitrogenio.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/fase nitrogenio/cilindro de nitrogenio.png" id="2_arte"]
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/icone_interagir.tscn" id="3_tecla"]
+[ext_resource type="Script" uid="uid://dx3e4o4vfhvnf" path="res://scripts/luz/luz_pontual.gd" id="4_luz"]
+[ext_resource type="AudioStream" uid="uid://bbwytlsg4i0cd" path="res://sounds/CollectSound.mp3" id="5_som"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_pegar"]
+size = Vector2(90, 100)
+
+[node name="CilindroDeNitrogenio" type="Area2D"]
+collision_layer = 0
+script = ExtResource("1_script")
+
+[node name="Luz" type="Node2D" parent="."]
+position = Vector2(0, -38)
+script = ExtResource("4_luz")
+cor = Color(0.42, 0.92, 0.52, 1)
+energia = 0.9
+raio = 120.0
+
+[node name="Sprite" type="Sprite2D" parent="."]
+z_index = 1
+scale = Vector2(2, 2)
+texture = ExtResource("2_arte")
+centered = false
+offset = Vector2(-7, -37)
+
+[node name="Colisao" type="CollisionShape2D" parent="."]
+position = Vector2(0, -40)
+shape = SubResource("RectangleShape2D_pegar")
+
+[node name="Dica" parent="." instance=ExtResource("3_tecla")]
+z_index = 1
+position = Vector2(0, -104)
+
+[node name="Som" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("5_som")

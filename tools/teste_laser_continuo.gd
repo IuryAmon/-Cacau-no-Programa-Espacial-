@@ -10,7 +10,7 @@ const FASE := "res://scenes/fases/fase1_oficina.tscn"
 ## nome -> [boca de onde sai, boca onde chega]
 const LASERS := {
 	"LaserContinuo1": [Vector2(5898, -960), Vector2(6390, -960)],
-	"LaserContinuo2": [Vector2(4938, -960), Vector2(5686, -960)],
+	"LaserContinuo2": [Vector2(4938, -960), Vector2(5622, -960)],
 	"LaserContinuo3": [Vector2(3658, -960), Vector2(4342, -960)],
 	"LaserContinuo4": [Vector2(4640, -1366), Vector2(4640, -1066)],
 }

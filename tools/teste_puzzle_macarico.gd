@@ -6,6 +6,10 @@ extends Node
 #
 # Joga o puzzle com cliques de mouse de verdade nas setas e no botão:
 #
+#   * a arrumação da tela, nas duas etapas: a contagem dos átomos (Reagentes /
+#     Produtos) no alto, a equação escrita embaixo dela e, embaixo da equação,
+#     as moléculas — cada termo escrito centrado em cima da coluna do desenho
+#     dele, sem uma peça cobrir a outra;
 #   * a folha acha os 9 desenhos na ordem das linhas, monta o CO a partir do
 #     CO₂, e H₂/O₂/H₂O continuam idênticos aos da folha antiga do foguete;
 #   * vale QUALQUER resposta balanceada: sem coeficientes e desbalanceada são
@@ -24,6 +28,7 @@ extends Node
 # na pasta, para conferir o layout a olho.
 
 const PUZZLE := "res://scenes/puzzle_macarico.tscn"
+const EquacaoSobreColunas := preload("res://scripts/ui/equacao_sobre_colunas.gd")
 const PUZZLE_DO_BUMERANGUE := "res://scenes/puzzle_carbono.tscn"
 const FASE := "res://scenes/fases/fase1_oficina.tscn"
 const GAIOLA_VIDRO := "res://scenes/fases/componentes/gaiola_vidro_eletrica.tscn"
@@ -111,6 +116,38 @@ func _testar_folha() -> void:
 
 # ─────────────────────────────────────────────────────────────
 
+## A arrumação da tela, de cima para baixo: (a etapa anterior,) a contagem dos
+## átomos, a equação escrita e as moléculas — com cada termo escrito em cima da
+## coluna do desenho dele. Devolve o que estiver fora do lugar.
+func _fora_da_arrumacao(puzzle: CanvasLayer) -> PackedStringArray:
+	var problemas := PackedStringArray()
+	var linha: Control = puzzle.linha_equacao
+	var faixa := linha.get_global_rect()
+	var vidro: Rect2 = puzzle.display.get_global_rect()
+	for valor: Control in [puzzle.reagentes_valor, puzzle.produtos_valor]:
+		if valor.get_global_rect().end.y > faixa.position.y + 0.5:
+			problemas.append("a contagem não está acima da equação")
+	if puzzle.reagentes_titulo.get_global_rect().end.y > puzzle.reagentes_valor.get_global_rect().position.y + 0.5:
+		problemas.append("o título Reagentes não está acima da contagem")
+	if puzzle.resumo.visible and puzzle.resumo.get_global_rect().end.y > puzzle.reagentes_titulo.get_global_rect().position.y + 0.5:
+		problemas.append("a etapa anterior por cima do título Reagentes")
+	if EquacaoSobreColunas.quantos_termos(linha) != puzzle._termos.size():
+		problemas.append("%d termos escritos para %d colunas" % [EquacaoSobreColunas.quantos_termos(linha), puzzle._termos.size()])
+		return problemas
+	for i in puzzle._termos.size():
+		var coluna: TermoEquacao = puzzle._termos[i]
+		var escrito := EquacaoSobreColunas.retangulo_do_termo(linha, i)
+		if escrito.end.y > coluna.botao_mais.get_global_rect().position.y + 0.5:
+			problemas.append("o termo %s escrito não está acima da coluna dele" % coluna.formula)
+		if absf(EquacaoSobreColunas.meio_do_termo(linha, i) - coluna.retangulo_do_botao(1).get_center().x) > 1.5:
+			problemas.append("o termo %s escrito não está centrado na coluna" % coluna.formula)
+		if not vidro.encloses(escrito):
+			problemas.append("o termo %s escrito sai da tela" % coluna.formula)
+	if EquacaoSobreColunas.menor_folga(linha) < 0.0:
+		problemas.append("uma peça da equação por cima da vizinha (%.1f)" % EquacaoSobreColunas.menor_folga(linha))
+	return problemas
+
+
 func _testar_puzzle() -> void:
 	print("\n--- PUZZLE DO MAÇARICO ---")
 	var puzzle := (load(PUZZLE) as PackedScene).instantiate() as CanvasLayer
@@ -127,6 +164,10 @@ func _testar_puzzle() -> void:
 		"o cabeçalho é LIBERAÇÃO DO MAÇARICO (ETAPA 1/2)")
 	_checar(puzzle.aura.visible and puzzle.aura.modulate.a == 1.0,
 		"o brilho esverdeado da tela já está aceso na etapa 1")
+	_checar(EquacaoSobreColunas.texto(puzzle.linha_equacao) == "? C2H2 + ? O2 → ? CO + ? H2",
+		"a equação escrita: %s" % EquacaoSobreColunas.texto(puzzle.linha_equacao))
+	var fora := _fora_da_arrumacao(puzzle)
+	_checar(fora.is_empty(), "etapa 1: a contagem no alto, a equação embaixo dela e cada termo em cima da molécula dele %s" % [fora])
 	await _capturar("1_etapa1_inicio")
 
 	# Confirmar sem escolher nada.
@@ -157,6 +198,11 @@ func _testar_puzzle() -> void:
 	await _definir(puzzle, [2, 2, 4, 2])
 	_checar(puzzle.reagentes_titulo.get_theme_color("font_color") == Color.GREEN,
 		"balanceada, Reagentes e Produtos ficam verdes")
+	_checar(EquacaoSobreColunas.texto(puzzle.linha_equacao) == "2 C2H2 + 2 O2 → 4 CO + 2 H2"
+		and EquacaoSobreColunas.cor(puzzle.linha_equacao) == Color.GREEN,
+		"e a equação escrita também: %s" % EquacaoSobreColunas.texto(puzzle.linha_equacao))
+	fora = _fora_da_arrumacao(puzzle)
+	_checar(fora.is_empty(), "com os coeficientes postos, cada termo continua em cima da molécula dele %s" % [fora])
 	await _clicar_confirmar(puzzle)
 	_checar(puzzle.travado, "2-2-4-2 (multiplicada) conclui a etapa 1")
 	_checar(puzzle._rodape_texto == "BALANCEADA! FORMA MAIS SIMPLES: 1-1-2-1",
@@ -173,6 +219,10 @@ func _testar_puzzle() -> void:
 	_checar(puzzle.texto_botao.text == "ACENDER MAÇARICO", "o botão vira ACENDER MAÇARICO")
 	_checar(puzzle.cabecalho.text == "LIBERAÇÃO DO MAÇARICO (ETAPA 2/2)",
 		"o cabeçalho vira LIBERAÇÃO DO MAÇARICO (ETAPA 2/2)")
+	_checar(EquacaoSobreColunas.texto(puzzle.linha_equacao) == "? CO + ? H2 + ? O2 → ? CO2 + ? H2O",
+		"a equação da etapa 2: %s" % EquacaoSobreColunas.texto(puzzle.linha_equacao))
+	fora = _fora_da_arrumacao(puzzle)
+	_checar(fora.is_empty(), "etapa 2 (5 termos): tudo no lugar, e a etapa 1 escrita acima da contagem %s" % [fora])
 	await _capturar("4_etapa2_inicio")
 
 	# Desbalanceada no oxigênio.

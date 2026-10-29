@@ -14,8 +14,11 @@ extends RefCounted
 # A ARTE DAS AMOSTRAS:
 #   H e O  -> os próprios cilindros do prólogo (assets/itens/CILINDRO.png);
 #   C      -> o carvão vegetal da retorta (assets/itens/Carvão.png);
-#   N, P, S -> ainda sem arte: sai um frasco provisório desenhado por código,
-#              na cor do elemento e com a letra.
+#   N      -> o cilindro verde de nitrogênio que sai da coluna de destilação
+#             ("assets/fase nitrogenio/cilindro de nitrogenio.png", ver
+#             ARTE_PROPRIA);
+#   P, S   -> ainda sem arte: sai um frasco provisório desenhado por código,
+#             na cor do elemento e com a letra.
 # Para trocar qualquer uma, salve o PNG em
 #   res://assets/itens/amostras/amostra_<LETRA>.png   (ex: amostra_N.png)
 # e ele passa a valer no jogo inteiro — ficha de coleta, mochila e o pulo para
@@ -61,6 +64,11 @@ const RECADO_ENTREGA := "Leve ao receptor do painel CHONPS, no laboratório."
 
 const TEXTURA_CILINDROS := preload("res://assets/itens/CILINDRO.png")
 const TEXTURA_CARVAO := preload("res://assets/itens/Carvão.png")
+## Amostras com arte própria fora da pasta das amostras: o nitrogênio é o
+## cilindro verde que sai da coluna de destilação da fase 2.
+const ARTE_PROPRIA := {
+	"N": "res://assets/fase nitrogenio/cilindro de nitrogenio.png",
+}
 ## Onde cada cilindro mora na folha CILINDRO.png (mesmos recortes do world1).
 const RECORTE_CILINDRO := {
 	"H": Rect2(16, 28, 12, 36),
@@ -107,6 +115,8 @@ static func textura(letra: String) -> Texture2D:
 	var caminho := PASTA_ARTE % letra
 	if ResourceLoader.exists(caminho):
 		tex = load(caminho)
+	elif ARTE_PROPRIA.has(letra) and ResourceLoader.exists(ARTE_PROPRIA[letra]):
+		tex = load(ARTE_PROPRIA[letra])
 	elif RECORTE_CILINDRO.has(letra):
 		var atlas := AtlasTexture.new()
 		atlas.atlas = TEXTURA_CILINDROS

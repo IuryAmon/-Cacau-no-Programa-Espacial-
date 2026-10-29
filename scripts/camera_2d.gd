@@ -108,6 +108,8 @@ func _process(delta: float) -> void:
 # as trocas deslizarem), o tremor no offset e o aproximar()/restaurar() dos
 # diálogos.
 func _atualizar_enquadramento() -> void:
+	if _solta_no_voo_livre():
+		return
 	var alvo := get_parent() as Node2D
 	if alvo == null:
 		return
@@ -172,6 +174,48 @@ func _atualizar_enquadramento() -> void:
 	if _primeiro_quadro:
 		_primeiro_quadro = false
 		reset_smoothing()
+
+
+# --- MODO DEV: CÂMERA SOLTA NO VOO LIVRE (ver modo_dev.gd) ---
+#
+# Voando, a câmera esquece os limites da cena (e os andares, zonas e trilhos)
+# e vai aonde a personagem for. Ao pousar, volta aos limites de antes e ao zoom
+# da fase — a roda do mouse só mexe no zoom durante o voo.
+
+const SEM_LIMITE := 10000000
+## Os limites de antes do voo (vazio = não está voando).
+var _limites_antes_do_voo: Array[int] = []
+
+
+## Solta ou devolve a câmera conforme o voo. True enquanto ela está solta.
+func _solta_no_voo_livre() -> bool:
+	if ModoDev.voando:
+		if _limites_antes_do_voo.is_empty():
+			# Um andar, zona ou trilho comandava: os limites "de antes" são os
+			# da fase, guardados por ele.
+			if _limites_guardados:
+				limit_left = _limite_left_fase
+				limit_right = _limite_right_fase
+				limit_top = _limite_top_fase
+				limit_bottom = _limite_bottom_fase
+				_limites_guardados = false
+			_andar_ativo = null
+			_zona_ativa = null
+			_trilho_ativo = null
+			_limites_antes_do_voo = [limit_left, limit_top, limit_right, limit_bottom]
+			limit_left = -SEM_LIMITE
+			limit_top = -SEM_LIMITE
+			limit_right = SEM_LIMITE
+			limit_bottom = SEM_LIMITE
+		return true
+	if not _limites_antes_do_voo.is_empty():
+		limit_left = _limites_antes_do_voo[0]
+		limit_top = _limites_antes_do_voo[1]
+		limit_right = _limites_antes_do_voo[2]
+		limit_bottom = _limites_antes_do_voo[3]
+		_limites_antes_do_voo.clear()
+		zoom = zoom_padrao
+	return false
 
 
 # Andar: assume só quando a personagem pisa dentro dele (chegar pulando não

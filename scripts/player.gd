@@ -19,9 +19,10 @@ var esta_no_knockback: bool = false
 @export var som_dano_arquivo: AudioStream
 @export var som_macarico_arquivo: AudioStream
 
-# --- VARIÁVEIS DO PULO DUPLO ---
-@export var max_jumps: int = 5
-var jumps_left: int = 5
+# --- VARIÁVEIS DO PULO ---
+# Um pulo só, em todo o jogo: no ar, quem dá o impulso extra é o jato da mochila.
+@export var max_jumps: int = 1
+var jumps_left: int = 1
 
 # --- VARIÁVEIS DE OTIMIZAÇÃO (COIOTE E BUFFER) ---
 @export var coyote_duration: float = 0.15     
@@ -44,6 +45,9 @@ var esta_invencivel_dash: bool = false
 const TIMELINE_FOGUETE := "cacau_ve_foguete"
 var _fala_foguete_feita: bool = false
 var _foguete_destino_x: float = 0.0
+## O balão de exclamação acabou de pular: é aqui que ela vê o foguete. Quem
+## dirige a cena troca a música a partir daqui.
+signal avistou_o_foguete
 ## A fala acabou e o balão de coração está subindo. Quem dirige a cena
 ## (colisao_cena_foguete.gd) começa o pôr do sol a partir daqui.
 signal fala_do_foguete_terminou
@@ -204,11 +208,22 @@ func _physics_process(delta: float) -> void:
 	if animacao_controlada_externamente:
 		return
 
+	# Modo dev voando (ver "VOO LIVRE" lá embaixo): nada do resto vale — nem
+	# gravidade, nem chão, nem a queda no buraco.
+	if _sincronizar_voo_livre():
+		_voar()
+		return
+
 	if ferramenta_controla_movimento:
 		move_and_slide()
 		return
 
 	if position.y > limite_queda:
+		if ModoDev.ativo:
+			# Modo dev: em vez de morrer no buraco, ela volta a voar.
+			ModoDev.voar(true)
+			velocity = Vector2.ZERO
+			return
 		current_health = 0
 		velocity = Vector2.ZERO
 		pode_se_mover = false
@@ -562,10 +577,9 @@ func reagir_ao_avistar_foguete(colisao_shape: CollisionShape2D) -> void:
 	if _animated_sprite:
 		_animated_sprite.play("idle")
 
-	# Ela cai e fica parada um instante antes de qualquer reação
-	await get_tree().create_timer(1.0).timeout
-
-	# Só então o balão de exclamação pisca acima da cabeça
+	# O balão de exclamação e o piano (quem dirige a cena toca) saem na hora em
+	# que ela entra no mirante, no mesmo quadro — mesmo que ainda esteja caindo.
+	avistou_o_foguete.emit()
 	if _exclamacao_foguete:
 		PopupFX.mostrar(_exclamacao_foguete)
 
@@ -607,7 +621,12 @@ func _on_fala_foguete_terminou() -> void:
 func soltar_coracao_do_foguete() -> void:
 	segurar_coracao_do_foguete = false
 	if _coracao_foguete:
-		await PopupFX.esconder(_coracao_foguete)
+		# Espera o balão sumir, e não o tween: se a volta da animação acabar
+		# agora, _on_fala_foguete_terminou também chama esconder() e mata o
+		# tween daqui, que aí nunca terminaria (a cena travava).
+		PopupFX.esconder(_coracao_foguete)
+		while _coracao_foguete.visible:
+			await get_tree().process_frame
 
 # Chamada de dentro da timeline do Dialogic (via DialogicBridge, evento "do")
 # para andar sem fechar o diálogo — o Dialogic aguarda esse await antes de
@@ -780,7 +799,7 @@ func curar(quantidade: int) -> int:
 
 # --- FUNÇÃO DE DANO E KNOCKBACK COM STUN ---
 func take_damage(amount: int, direcao_recuo: Vector2 = Vector2.ZERO) -> void:
-	if esta_invencivel or esta_invencivel_dash or current_health <= 0:
+	if esta_invencivel or esta_invencivel_dash or current_health <= 0 or ModoDev.ativo:
 		# O golpe não entrou: a marca da lâmina morre aqui, senão ela sobraria
 		# guardada e a PRÓXIMA morte (uma queda, por exemplo) viria despedaçada.
 		_morte_de_corte = false
@@ -921,14 +940,27 @@ func _debug_avancar_a_hora() -> void:
 func _debug_pegar_todas_ferramentas() -> void:
 	if not OS.is_debug_build():
 		return
-	var pegas := PackedStringArray()
-	FerramentasHUD.apresentar_ferramentas = false
-	for habilidade in Progresso.HABILIDADES:
-		if not Progresso.tem_habilidade(habilidade):
-			Progresso.dar_habilidade(habilidade)
-			pegas.append(habilidade)
-	FerramentasHUD.apresentar_ferramentas = true
+	var pegas := ModoDev.dar_todas_as_ferramentas()
 	print("DEBUG [Player]: ferramentas pegas via tecla P -> ", pegas if not pegas.is_empty() else "nenhuma (já tinha todas)")
+	_debug_pegar_cilindro_de_ar()
+
+
+## Na fase do nitrogênio, o P também põe na mochila o cilindro vazio do
+## telhado — para ir direto ao compressor testar o puzzle. Se o cilindro já
+## saiu do telhado (na mochila, acoplado ou já cheio), não faz nada.
+func _debug_pegar_cilindro_de_ar() -> void:
+	var cena := get_tree().current_scene
+	if cena == null or not cena.scene_file_path in [MissaoNitrogenio.CENA_RUA,
+			MissaoNitrogenio.CENA_COMPRESSOR, MissaoNitrogenio.CENA_DESTILACAO,
+			MissaoNitrogenio.CENA_TORRE, MissaoNitrogenio.CENA_TELHADO]:
+		return
+	if MissaoNitrogenio.tem_cilindro_vazio() or MissaoNitrogenio.cilindro_acoplado \
+			or MissaoNitrogenio.compressor_concluido():
+		print("DEBUG [Player]: cilindro de ar via tecla P -> nenhum (já saiu do telhado)")
+		return
+	Inventario.adicionar_item(MissaoNitrogenio.ID_CILINDRO_VAZIO, MissaoNitrogenio.NOME_CILINDRO_VAZIO,
+		MissaoNitrogenio.TEXTURA_CILINDRO_VAZIO, MissaoNitrogenio.DESCRICAO_CILINDRO_VAZIO)
+	print("DEBUG [Player]: cilindro de ar pego via tecla P")
 
 
 func _debug_pegar_todas_amostras() -> void:
@@ -944,6 +976,47 @@ func _debug_pegar_todas_amostras() -> void:
 			AmostraChonps.descricao(letra))
 		pegas.append(letra)
 	print("DEBUG [Player]: amostras pegas via tecla O -> ", pegas if not pegas.is_empty() else "nenhuma (já estavam na mão ou no painel)")
+
+
+# --- MODO DEV: VOO LIVRE (ver scripts/modo_dev.gd) ---
+#
+# Voando, ela anda em 8 direções sem gravidade e atravessa tudo: a máscara de
+# colisão vai a zero, então o move_and_slide não bate em nada. A CAMADA dela
+# continua a mesma — portas, elevadores e gatilhos (Area2D) seguem vendo ela.
+# Quem liga e desliga é o ModoDev; aqui ela só acompanha, quadro a quadro, e
+# por isso o voo continua valendo depois de uma troca de cena.
+
+const VELOCIDADE_DO_VOO := 700.0
+const VELOCIDADE_DO_VOO_RAPIDO := 1800.0
+
+## A máscara de colisão de antes do voo (-1 = não está voando).
+var _mascara_antes_do_voo: int = -1
+
+
+## Põe a personagem no estado que o ModoDev pede e diz se ela está voando.
+func _sincronizar_voo_livre() -> bool:
+	if ModoDev.voando and _mascara_antes_do_voo < 0:
+		_mascara_antes_do_voo = collision_mask
+		collision_mask = 0
+		maior_velocidade_queda = 0.0
+		esta_no_knockback = false
+	elif not ModoDev.voando and _mascara_antes_do_voo >= 0:
+		collision_mask = _mascara_antes_do_voo
+		_mascara_antes_do_voo = -1
+		velocity = Vector2.ZERO
+	return ModoDev.voando
+
+
+func _voar() -> void:
+	var direcao := Vector2.ZERO
+	if pode_se_mover and not Interacao.ocupada():
+		direcao = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	var rapido := Input.is_action_pressed("dash")
+	velocity = direcao * (VELOCIDADE_DO_VOO_RAPIDO if rapido else VELOCIDADE_DO_VOO)
+	move_and_slide()
+	_atualizar_animacoes(direcao.x)
+	if direcao.x != 0.0 and _animated_sprite and not usando_ferramenta:
+		_animated_sprite.flip_h = direcao.x < 0.0
 
 func _on_area_2d_body_entered(body: Node2D) -> void:
 	if body == self:

@@ -25,6 +25,11 @@ static var revelou_dr_chico: bool = false
 ## consome isso para nascer com o player na saída do próprio laser.
 static var chegando_pelo_laser: bool = false
 
+## True quando a introdução do modo história acaba (ou é pulada) e leva ao
+## world1: ele consome isso para abrir com a Cacau entrando correndo (ver
+## abertura_da_historia.gd).
+static var abertura_pendente: bool = false
+
 ## True depois que a Cacau viu o foguete do mirante (a ceninha do "nunca tinha
 ## visto um tão de perto"). A cena não repete — nem se ela morrer e a fase
 ## recarregar antes de chegar ao laboratório.
@@ -119,3 +124,33 @@ static func ler(no: Node, marca: String, padrao: Variant = null) -> Variant:
 ## O ler() pelo caminho, como o ja_feito_caminho().
 static func ler_caminho(caminho: String, marca: String, padrao: Variant = null) -> Variant:
 	return _valores.get(_chave_do_caminho(caminho, marca), padrao)
+
+
+# --- O QUE VALE SÓ NESTA VISITA ---
+#
+# Tudo acima vale até o jogo fechar. Isto aqui vale menos: só enquanto a
+# personagem continua na MESMA visita à cena — sobrevive a uma morte (que
+# recarrega a cena) e é esquecido quando ela sai por uma porta ou passagem. É a
+# mesma duração do PontoDeRetorno, e é ele quem avisa quando a visita acabou.
+#
+# Serve para o que volta a cada visita mas não pode voltar a cada MORTE: o
+# morcego dos corredores, que renasce quando ela entra de novo no corredor, mas
+# continua morto (ou ferido) se quem morreu foi ela.
+static var _da_visita: Dictionary = {}
+
+
+static func guardar_na_visita(no: Node, marca: String, valor: Variant) -> void:
+	PontoDeRetorno.conferir_visita(no)
+	_da_visita[_chave(no, marca)] = valor
+
+
+static func ler_da_visita(no: Node, marca: String, padrao: Variant = null) -> Variant:
+	# Quem pergunta no próprio _ready() chega antes da fase: é a pergunta que
+	# faz o PontoDeRetorno reparar que a cena abriu numa visita nova.
+	PontoDeRetorno.conferir_visita(no)
+	return _da_visita.get(_chave(no, marca), padrao)
+
+
+## Chamado pelo PontoDeRetorno quando uma cena abre sem ser por morte.
+static func esquecer_a_visita() -> void:
+	_da_visita.clear()

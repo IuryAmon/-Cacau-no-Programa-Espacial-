@@ -11,6 +11,10 @@ extends Area2D
 # "recebe_chegada" toca a mesma sequência de trás pra frente — ela abre, o
 # player aparece no vão, desce e sai andando, e a porta fecha atrás dele.
 #
+# Com "fica_aberta_na_viagem" (o portão de rolamento), a ida pula o fechar: a
+# porta abre, o player entra e a tela já apaga. A porta do outro lado aparece
+# aberta, ele sai e só ela fecha.
+#
 # Cenas prontas com esta estrutura:
 #   scenes/porta_simulador.tscn                        (sprites porta1..porta24)
 #   scenes/fases/componentes/porta_ala_eletrolise.tscn (sprites do spritesheet
@@ -20,6 +24,10 @@ extends Area2D
 #     "porta modelo.png" — a das entradas das fases que ainda não têm arte
 #     própria: Torre de Gases, Torre de Lançamento, as voltas ao laboratório e
 #     a cápsula)
+#   scenes/fases/componentes/porta_rolamento.tscn      (o portão de garagem da
+#     sala do compressor, na rua da fase 2: "porta de rolamento .png", 11
+#     quadros de 146x98, cada um com o seu tempo, casado com o som — ver "O
+#     portão de rolamento" em docs/COMO_EDITAR_AS_FASES.md)
 #
 # A viagem também conversa com a PortaFase (porta_fase.gd), que só sobrou no
 # alçapão do fosso de ventilação: a tag vai também para o Progresso.spawn_tag,
@@ -41,6 +49,10 @@ static var chegando_por_porta: bool = false
 ## chegada — é o caso das portas antigas, que nem preenchem tag nenhuma.
 static var tag_chegada: String = ""
 
+## Marcado por quem trocou de cena SEM fechar (ver "fica_aberta_na_viagem"): a
+## porta que recebe o player já nasce aberta e só fecha depois que ele sai.
+static var chegando_com_porta_aberta: bool = false
+
 @export_group("Destino")
 ## Cena para onde a porta leva. Se ficar vazio, a porta continua só
 ## teleportando o player para o ponto de nascimento da própria cena.
@@ -51,6 +63,10 @@ static var tag_chegada: String = ""
 @export var tag_destino: String = ""
 ## Quanto tempo a tela leva para apagar antes de carregar a cena de destino.
 @export var duracao_fade_cena: float = 0.7
+## Se true, a porta não fecha antes de trocar de cena: ela abre, o player entra
+## e a tela já apaga. A porta da cena de destino aparece aberta, ele sai e só
+## então ela fecha — a viagem fica mais corrida (é o portão de rolamento).
+@export var fica_aberta_na_viagem: bool = false
 
 @export_group("Chegada")
 ## True na porta que RECEBE o player vindo de outra cena.
@@ -90,6 +106,12 @@ static var tag_chegada: String = ""
 @export var pausa_antes_de_fechar: float = 0.0
 # Respiro entre a porta fechar e o teleporte acontecer
 @export var pausa_antes_do_teleporte: float = 0.25
+
+@export_group("Som")
+## De que segundo o som de fechar começa a tocar. O somPorta_fechando.wav tem
+## quase meio segundo de silêncio e um estalo antes da porta andar, que fica
+## de fora; um som já cortado no ponto certo (o da porta de rolamento) usa 0.
+@export var inicio_som_fechando: float = 0.46
 
 var _player: Node2D = null
 var _player_dentro: bool = false
@@ -143,10 +165,12 @@ func _ready() -> void:
 	var veio_por_porta := chegando_por_porta and tag_chegada == tag_aqui
 	var veio_pelo_alcapao := Progresso.spawn_tag != "" and Progresso.spawn_tag == tag_aqui
 	if recebe_chegada and (veio_por_porta or veio_pelo_alcapao):
+		var aberta := veio_por_porta and chegando_com_porta_aberta
 		chegando_por_porta = false
+		chegando_com_porta_aberta = false
 		tag_chegada = ""
 		Progresso.spawn_tag = ""
-		_receber_jogador()
+		_receber_jogador(aberta)
 		return
 
 	# Morreu antes de qualquer bandeira ou sala: a fase recarrega e ela renasce
@@ -221,7 +245,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not interativa or _ocupada or not _player_dentro or _player == null:
 		return
 	# Diálogo, popup ou puzzle na tela: o mundo não recebe comando nenhum.
-	if Interacao.ocupada():
+	# Voando no modo dev, o W é subir (a porta abre no E, em _process).
+	if Interacao.ocupada() or ModoDev.voando:
 		return
 	# W já está mapeado em "ui_up"; KEY_W fica como reserva
 	var apertou_w = event.is_action_pressed("ui_up") \
@@ -241,6 +266,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_usar_porta()
 
 func _process(_delta: float) -> void:
+	# Voando no modo dev o W é subir: a porta abre no E (ver modo_dev.gd).
+	if ModoDev.voando and interativa and not _ocupada and _player_dentro and _player != null \
+			and Interacao.pediu():
+		_usar_porta()
+		return
 	if not interativa or not _pedido_pendente or _ocupada or not _player_dentro or _player == null:
 		return
 	if not _player.has_method("is_on_floor") or _player.is_on_floor():
@@ -250,10 +280,14 @@ func _process(_delta: float) -> void:
 # --- CHEGADA: O PLAYER VEM DE OUTRA CENA POR ESTA PORTA ---
 # Chamado ainda no _ready(), antes de qualquer coisa ser desenhada, para o
 # player não piscar no ponto de nascimento da cena.
-func _receber_jogador() -> void:
+func _receber_jogador(ja_aberta: bool = false) -> void:
 	var player := _preparar_player_no_vao()
 	if player == null:
 		return
+	# A porta de onde ele veio não fechou: esta já aparece aberta, no último
+	# quadro do "abrindo".
+	if ja_aberta:
+		_mostrar_aberta()
 
 	# A entrada é o primeiro ponto de retorno da visita: morrer antes de
 	# qualquer bandeira ou sala faz renascer aqui e sair pela porta de novo
@@ -262,7 +296,8 @@ func _receber_jogador() -> void:
 	# a fase já renasce com a câmera enquadrada no lugar certo.
 	PontoDeRetorno.registrar(self, _posicao_no_vao())
 
-	# A tela chega apagada da cena anterior: clareia mostrando a porta fechada.
+	# A tela chega apagada da cena anterior: clareia mostrando a porta fechada
+	# (ou aberta, se a de lá não fechou).
 	#
 	# O encaixe no vão vai como "antes_de_clarear" de propósito: se ele ficasse
 	# só no começo de sair_da_porta(), o mundo clarearia com a câmera ainda no
@@ -353,10 +388,12 @@ func sair_da_porta(player: Node2D) -> void:
 	if pausa_antes_de_sair > 0.0:
 		await get_tree().create_timer(pausa_antes_de_sair).timeout
 
-	# 2) Porta abrindo (porta1 -> porta12)
-	_sprite.play("abrindo")
-	_som_abrindo.play()
-	await _sprite.animation_finished
+	# 2) Porta abrindo (porta1 -> porta12) — a não ser que já esteja aberta,
+	# esperando por ele (chegada de uma porta que não fechou).
+	if not _esta_aberta():
+		_sprite.play("abrindo")
+		_som_abrindo.play()
+		await _sprite.animation_finished
 
 	# 3) Ele aparece em fade dentro do vão iluminado
 	var tween_fade := create_tween()
@@ -370,7 +407,7 @@ func sair_da_porta(player: Node2D) -> void:
 	# parado na frente da porta; com um valor maior, ele ainda anda para longe
 	# enquanto ela fecha.
 	_sprite.play("fechando")
-	_som_fechando.play(0.46)
+	_som_fechando.play(inicio_som_fechando)
 
 	if distancia_saida > 0.0:
 		var destino := _ponto_saida.global_position + Vector2(direcao_saida * distancia_saida, 0.0)
@@ -456,12 +493,19 @@ func _usar_porta() -> void:
 	if anim_sprite:
 		anim_sprite.stop()
 
+	# A porta que fica aberta na viagem não fecha: a tela já apaga com ela
+	# aberta, e a porta do outro lado é que fecha atrás dele.
+	if fica_aberta_na_viagem and not cena_destino.is_empty():
+		chegando_com_porta_aberta = true
+		_ir_para_o_destino()
+		return
+
 	if pausa_antes_de_fechar > 0.0:
 		await get_tree().create_timer(pausa_antes_de_fechar).timeout
 
 	# 4) Só agora, com o player já dentro, a porta fecha
 	_sprite.play("fechando")
-	_som_fechando.play(0.46)
+	_som_fechando.play(inicio_som_fechando)
 	await _sprite.animation_finished
 
 	if pausa_antes_do_teleporte > 0.0:
@@ -470,11 +514,8 @@ func _usar_porta() -> void:
 	# 5) A porta leva para outra cena: a viagem acaba aqui. A tela apaga com a
 	# porta já fechada e o jogo carrega o destino (que clareia sozinho).
 	if not cena_destino.is_empty():
-		chegando_por_porta = true
-		tag_chegada = tag_destino
-		# Para o alçapão do fosso, que é uma PortaFase e só lê o Progresso.
-		Progresso.spawn_tag = tag_destino
-		await FadeTela.trocar_cena(self, cena_destino, duracao_fade_cena)
+		chegando_com_porta_aberta = false
+		await _ir_para_o_destino()
 		return
 
 	# 6) Sem destino: teleporte para o ponto de nascimento do player
@@ -496,6 +537,26 @@ func _usar_porta() -> void:
 	_sprite.play("fechada")
 	_player_dentro = false
 	_ocupada = false
+
+# --- TROCA PARA A CENA DE DESTINO, AVISANDO QUAL PORTA RECEBE O PLAYER ---
+func _ir_para_o_destino() -> void:
+	chegando_por_porta = true
+	tag_chegada = tag_destino
+	# Para o alçapão do fosso, que é uma PortaFase e só lê o Progresso.
+	Progresso.spawn_tag = tag_destino
+	await FadeTela.trocar_cena(self, cena_destino, duracao_fade_cena)
+
+# --- A PORTA PARADA ABERTA (o último quadro do "abrindo") ---
+func _mostrar_aberta() -> void:
+	if not _sprite.sprite_frames or not _sprite.sprite_frames.has_animation("abrindo"):
+		return
+	_sprite.play("abrindo")
+	_sprite.pause()
+	_sprite.frame = _sprite.sprite_frames.get_frame_count("abrindo") - 1
+
+func _esta_aberta() -> bool:
+	return _sprite.animation == "abrindo" and not _sprite.is_playing() \
+		and _sprite.frame == _sprite.sprite_frames.get_frame_count("abrindo") - 1
 
 # --- ANDA O PLAYER ATÉ "destino" TOCANDO A ANIMAÇÃO DE CORRIDA ---
 func _mover_player(destino: Vector2, duracao: float, anim_sprite: AnimatedSprite2D) -> void:

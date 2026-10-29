@@ -15,6 +15,15 @@ extends Area2D
 # primeira vez fica anotada no EstadoMundo (ja_explicou), para o dia em que a
 # fase quiser cobrar isso antes de liberar os puzzles.
 #
+# A AMOSTRA (o fim do caminho do nitrogênio, ver MissaoNitrogenio): quando a
+# Cacau chega correndo com o cilindro de ar líquido do compressor, o E não
+# explica — RECEBE a amostra. Ela vai até a coluna, o cilindro sai das costas
+# dela e encaixa na base, o relógio da amostra para ("CONECTADA!") e abre a
+# tela em que ela mesma destila o ar (scenes/puzzle_destilacao.tscn, campo
+# "tela_da_destilacao"). Fechar no meio deixa a amostra na coluna: o E volta
+# para a tela. Separado o ar e retirado o nitrogênio, sai o sinal
+# "nitrogenio_pronto" (o cilindro verde aparece na sala).
+#
 # A ARTE é "assets/fase nitrogenio/coluna de destilação.png", que tem dois
 # desenhos lado a lado: o de aço (o que se vê aqui, pelo region_rect do
 # Sprite) e o de raio X (que só a tela da explicação usa).
@@ -45,9 +54,24 @@ const TEMPO_DO_PULSO := 1.0
 ## A tela da explicação que o E abre.
 @export var explicacao: PackedScene
 
+@export_group("A amostra (fase do nitrogênio)")
+## A tela em que a pessoa destila a amostra que trouxe do compressor.
+@export var tela_da_destilacao: PackedScene = preload("res://scenes/puzzle_destilacao.tscn")
+## O Dr. Chico na primeira vez que essa tela abre.
+@export var fala_da_destilacao: String = "cientista_destilacao"
+
 ## A explicação abriu / acabou de fechar.
 signal explicacao_abriu
 signal explicacao_fechou
+## A amostra entrou na coluna (o relógio dela parou).
+signal amostra_recebida
+## A coluna separou o ar e o nitrogênio foi retirado.
+signal nitrogenio_pronto
+
+const CAMADA_DA_DESTILACAO := 98
+
+var _recebendo: bool = false
+var _destilacao: TelaDaDestilacao = null
 
 var _jogador: Node2D = null
 var _tela: ExplicacaoDestilador = null
@@ -75,7 +99,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	var perto := _jogador != null and not explicando()
+	var perto := _jogador != null and not explicando() and not _recebendo and not destilando()
 	if perto != _dica_visivel:
 		_dica_visivel = perto
 		_atualizar_dica()
@@ -84,7 +108,105 @@ func _process(delta: float) -> void:
 	# pediu() por último: ele queima o toque, e só pode queimar quando a
 	# coluna vai mesmo responder.
 	if perto and Interacao.pediu():
+		usar()
+
+
+## O que o E faz. Na fase do nitrogênio a coluna também recebe a amostra de
+## ar líquido (ver MissaoNitrogenio): carregando a amostra, a Cacau a entrega
+## e a tela da destilação abre; com a amostra já dentro, o E volta para essa
+## tela. Fora disso, é a explicação do Dr. Chico.
+func usar() -> void:
+	if MissaoNitrogenio.carregando_amostra():
+		receber_amostra()
+	elif MissaoNitrogenio.amostra_na_coluna:
+		abrir_destilacao()
+	else:
 		explicar()
+
+
+func destilando() -> bool:
+	return _destilacao != null and is_instance_valid(_destilacao)
+
+
+## A Cacau entrega a amostra: ela vai até a coluna, o cilindro sai das costas
+## dela e encaixa na base, o relógio para e a tela da destilação abre.
+func receber_amostra() -> void:
+	if _recebendo or not MissaoNitrogenio.carregando_amostra():
+		return
+	_recebendo = true
+	var cacau := get_tree().get_first_node_in_group("player") as CharacterBody2D
+	if cacau and cacau.has_method("recuar_ate_x"):
+		var lado := signf(cacau.global_position.x - global_position.x)
+		if lado == 0.0:
+			lado = -1.0
+		await cacau.recuar_ate_x(global_position.x + lado * 70.0)
+	_olhar_para_a_coluna()
+	if cacau and "pode_se_mover" in cacau:
+		cacau.pode_se_mover = false
+	# O cilindro das costas voa até a entrada da coluna (a base).
+	var contagem := get_tree().current_scene.get_node_or_null(ContagemDaAmostra.NOME) as ContagemDaAmostra
+	var cilindro: Sprite2D = contagem.tirar_cilindro_das_costas() if contagem else null
+	MissaoNitrogenio.entregar_amostra_na_coluna()
+	amostra_recebida.emit()
+	if cilindro and is_instance_valid(cilindro):
+		var onde := cilindro.global_position
+		cilindro.get_parent().remove_child(cilindro)
+		add_child(cilindro)
+		cilindro.global_position = onde
+		cilindro.z_index = 2
+		var destino := Vector2(0.0, -24.0)
+		var voo := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+		voo.set_parallel(true)
+		voo.tween_property(cilindro, "position", destino, 0.45)
+		voo.tween_property(cilindro, "rotation", 0.0, 0.45)
+		voo.tween_property(cilindro, "scale", Vector2(1.0, 1.0), 0.45)
+		await voo.finished
+		var some := create_tween()
+		some.tween_property(cilindro, "modulate:a", 0.0, 0.3)
+		await some.finished
+		cilindro.queue_free()
+	if cacau and "pode_se_mover" in cacau:
+		cacau.pode_se_mover = true
+	_recebendo = false
+	abrir_destilacao()
+
+
+## A tela em que a pessoa separa o ar (com a amostra dentro da coluna).
+func abrir_destilacao() -> void:
+	if destilando() or tela_da_destilacao == null:
+		return
+	var camada := CanvasLayer.new()
+	camada.name = "TelaDaDestilacao"
+	camada.layer = CAMADA_DA_DESTILACAO
+	camada.process_mode = Node.PROCESS_MODE_ALWAYS
+	_destilacao = tela_da_destilacao.instantiate() as TelaDaDestilacao
+	if not MissaoNitrogenio.explicou_a_destilacao:
+		_destilacao.fala_de_abertura = fala_da_destilacao
+		MissaoNitrogenio.explicou_a_destilacao = true
+	_destilacao.nitrogenio_retirado.connect(_ao_retirar_o_nitrogenio)
+	_destilacao.fechou.connect(_ao_fechar_a_destilacao)
+	camada.add_child(_destilacao)
+	get_tree().current_scene.add_child(camada)
+	_parar_a_cacau(true)
+
+
+func _ao_fechar_a_destilacao() -> void:
+	_destilacao = null
+	_parar_a_cacau(false)
+
+
+func _ao_retirar_o_nitrogenio() -> void:
+	_destilacao = null
+	_parar_a_cacau(false)
+	MissaoNitrogenio.concluir_destilacao()
+	nitrogenio_pronto.emit()
+
+
+func _parar_a_cacau(parar: bool) -> void:
+	get_tree().paused = parar
+	var cacau := get_tree().get_first_node_in_group("player")
+	if cacau and "pode_se_mover" in cacau:
+		cacau.pode_se_mover = not parar
 
 
 ## Abre a explicação do Dr. Chico (o que o E faz).

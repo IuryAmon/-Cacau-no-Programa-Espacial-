@@ -13,6 +13,9 @@ extends Area2D
 #   SpriteAtivo   -> PNG opcional do alvo aceso; sem ele, o alvo só muda de cor
 #   Rotulo        -> texto que aparece acima (deixe vazio para esconder)
 #   permanece_ativo -> ligado para sempre (ventilador, alavanca) ou por "janela"
+#   persistir     -> o acerto continua valendo depois de morrer ou de sair da
+#                    fase (ver abaixo). Vem LIGADO: acertar é progresso, e
+#                    progresso não se perde morrendo.
 
 const CENA := "res://scenes/fases/componentes/alvo_bumerangue.tscn"
 
@@ -20,7 +23,12 @@ signal mudou(ativo: bool)
 
 @export var permanece_ativo: bool = true
 @export var janela: float = 3.5
-@export var persistir: bool = false
+## Ligado (padrão): o acerto fica anotado no EstadoMundo. Morrer recarrega a
+## fase, e o alvo volta do jeito que estava — o de trava ("permanece_ativo")
+## volta LIGADO; o de janela volta desligado (o tempo dele acabou junto com
+## aquela vida), mas sabendo que já foi acertado (ver "ja_acertado").
+## Desligue só num alvo que deve mesmo recomeçar a cada morte.
+@export var persistir: bool = true
 @export var rotulo: String = "":
 	set(valor):
 		rotulo = valor
@@ -28,6 +36,10 @@ signal mudou(ativo: bool)
 			_atualizar_rotulo()
 
 var ativo: bool = false
+## True depois do primeiro acerto — nesta vida ou, com "persistir", numa
+## anterior. Diferente de `ativo`, não volta atrás quando a janela fecha: é o
+## que diz à caixa elétrica que a tampa dela já foi arrebentada.
+var ja_acertado: bool = false
 var _tempo_restante: float = 0.0
 
 # Todos os slots visuais são OPCIONAIS: quem herda deste nó — a CaixaEletrica
@@ -58,7 +70,11 @@ func _ready() -> void:
 
 	add_to_group("alvo_bumerangue")
 	if persistir and EstadoMundo.ja_feito(self):
-		ativo = true
+		ja_acertado = true
+		# Só a trava volta ligada. O alvo de janela voltaria "ligado" com o
+		# tempo já vencido e desligaria no primeiro quadro, avisando a fase
+		# inteira de uma mudança que não aconteceu.
+		ativo = permanece_ativo
 	_atualizar_visual()
 
 
@@ -83,6 +99,7 @@ func atingir_bumerangue() -> void:
 	if ativo and permanece_ativo:
 		return
 	ativo = true
+	ja_acertado = true
 	_tempo_restante = janela
 	if persistir:
 		EstadoMundo.marcar_feito(self)

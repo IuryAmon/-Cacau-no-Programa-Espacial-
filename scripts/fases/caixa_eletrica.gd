@@ -156,10 +156,12 @@ func _ready() -> void:
 	if _brilho_aviso:
 		_brilho_aviso.modulate.a = 0.0
 
-	# Alvo que voltou ligado de uma morte/recarga (persistir): a caixa já nasce
-	# arrebentada e estalando, mas sem o baque do metal — aquele acerto
-	# aconteceu numa vida anterior.
-	if ativo:
+	# Caixa que já tinha sido acertada antes de uma morte/recarga (persistir):
+	# nasce arrebentada e estalando, mas sem o baque do metal — aquele acerto
+	# aconteceu numa vida anterior. Vale também para a caixa de JANELA, que
+	# volta desligada: tampa arrebentada não se conserta porque a Cacau morreu.
+	# A única que volta inteira é a que se conserta sozinha ao desligar.
+	if ja_acertado and (ativo or not restaurar_ao_desligar):
 		_quebrar(false)
 
 

@@ -101,6 +101,10 @@ enum Estado { DORMINDO, ACORDANDO, PAIRANDO, VOANDO, PREPARANDO, MERGULHANDO,
 const CENA := "res://scenes/fases/componentes/morcego.tscn"
 const GRUPO := &"morcego"
 const GRUPO_ALVO := &"alvo_bumerangue"
+## A vida que sobrou a ele NESTA VISITA (EstadoMundo.guardar_na_visita): dura
+## enquanto a Cacau não sai da cena, então atravessa a recarga de quando ela
+## morre e some quando ela vai embora — na visita seguinte o bando está inteiro.
+const MARCA_VIDA := "vida"
 
 const ANIM_DORMINDO := &"dormindo"
 const ANIM_VOANDO := &"voando"
@@ -309,9 +313,13 @@ const VOZES := 6
 ## Quantos acertos de bumerangue ele aguenta. Com 2 (o padrão), um arremesso
 ## que pega na ida e na volta mata; com 1, ele morre no primeiro toque.
 @export_range(1, 9, 1) var vida: int = 2
-## Ligado, ele continua morto depois de a fase recarregar (a Cacau morreu, ou
-## saiu e voltou). Desligado (o padrão), todo morcego volta ao teto a cada
-## visita — tem sempre um bando para matar no corredor.
+## Ligado, ele continua morto para sempre, mesmo depois de a Cacau sair e
+## voltar. Desligado (o padrão), todo morcego volta ao teto a cada VISITA — tem
+## sempre um bando para matar no corredor.
+##
+## Em qualquer dos dois, MORRER não devolve vida a ninguém: enquanto a Cacau
+## não sai da cena, o morcego morto continua morto e o ferido continua ferido,
+## mesmo com a fase recarregando (ver MARCA_VIDA).
 @export var persistir: bool = false
 
 @export_group("Ninho")
@@ -452,9 +460,16 @@ func _ready() -> void:
 	if persistir and EstadoMundo.ja_feito(self):
 		queue_free()
 		return
+	# A vida que sobrou nesta visita: quem morreu foi a Cacau, e a fase
+	# recarregou. O morcego que ela já tinha matado não volta, e o que ela já
+	# tinha acertado continua a um golpe de cair.
+	var vida_que_sobrou := int(EstadoMundo.ler_da_visita(self, MARCA_VIDA, vida))
+	if vida_que_sobrou <= 0:
+		queue_free()
+		return
 
 	add_to_group(GRUPO)
-	_vida = vida
+	_vida = mini(vida_que_sobrou, vida)
 	_ninho = global_position
 	_compasso = randf() * TAU
 	estado = Estado.DORMINDO if dorme_no_teto else Estado.PAIRANDO
@@ -1023,6 +1038,7 @@ func levar_golpe(rumo: Vector2 = Vector2.ZERO, forca: float = 0.0, dano_do_golpe
 
 	var estava_quieto: bool = estado == Estado.DORMINDO or estado == Estado.PAIRANDO
 	_vida -= maxi(dano_do_golpe, 1)
+	EstadoMundo.guardar_na_visita(self, MARCA_VIDA, maxi(_vida, 0))
 	_clarao_restante = CLARAO
 	_fechar_o_alvo(IMUNIDADE)
 	_estalo_do_golpe(rumo, _vida <= 0)
@@ -1100,6 +1116,7 @@ func vida_restante() -> int:
 func _morrer(rumo: Vector2, forca: float) -> void:
 	_vida = 0
 	_trocar_estado(Estado.MORTO)
+	EstadoMundo.guardar_na_visita(self, MARCA_VIDA, 0)
 	if persistir:
 		EstadoMundo.marcar_feito(self)
 

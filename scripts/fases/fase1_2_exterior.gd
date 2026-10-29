@@ -96,6 +96,15 @@ extends FaseBase
 # da fornalha tem luz própria (Patio/Retorta/LuzDoFogo), e todo poste pintado
 # no TileMap acende sozinho (nó PostesDeLuz). Ver docs/ILUMINACAO.md.
 #
+# OS POSTES (Postes/) SÓ ACENDEM DE NOITE. São dois da cena poste_de_luz.tscn:
+# PosteEntrada, na ponta por onde a Cacau chega, e PosteFornalha, depois da
+# fornalha (espelhado, com a lâmpada virada para ela). No crepúsculo ficam
+# apagados; quando a noite cai eles pegam piscando no meio dela, e daí em
+# diante o pátio abre com eles acesos. Quem manda é a Atmosfera: a chave
+# `postes_so_de_noite` e o instante `hora_dos_postes_no_anoitecer`, no grupo
+# Anoitecer. Arraste os postes para mudar o lugar (a origem é o pé: solte em
+# cima da grama, y = 512).
+#
 # DESENHO: o TileMapLayer do terreno está em z_index 1 — a personagem
 # (z_index 2) pisa NA FRENTE da grama, e a grama ainda cobre o pé do tronco
 # da árvore (z_index 0).
@@ -112,3 +121,13 @@ extends FaseBase
 # pancada do bumerangue sem código nenhum a mais. Se repintar a árvore em
 # outro lugar do TileMapLayer, mova junto a Frente e o nó Patio/ArvoreLenha
 # (o pé do tronco: é dele que saem a copa, o tronco e os galhos da lenha).
+#
+# O TAMANHO DA ÁRVORE é a `scale` do Terreno/Arvore: 1,3 por cima do 2 do
+# Terreno, ~500 px de altura, para ela ser GRANDE perto da Cacau. A
+# `position` dela compensa a escala para o pé do tronco ficar na grama, em
+# x = 404 (o ponto do Patio/ArvoreLenha): position = (404/2 − 219 × escala,
+# 256 − 256 × escala) — 219,256 é o pé do tronco nos tiles. Mudando o
+# tamanho, refaça a conta, mude na mesma proporção a Copa, o Tronco e os
+# Galhos de arvore_lenha.tscn (estão em 1,3) e confira a copa: ela tem de
+# acabar antes da fornalha, longe de quem está de maçarico na mão (o
+# teste_arvore_lenha confere).

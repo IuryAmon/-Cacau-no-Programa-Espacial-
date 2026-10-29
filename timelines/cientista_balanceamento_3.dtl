@@ -1,4 +1,6 @@
-join cientista (cientista_mto_feliz) leftmost [mirrored="true"]
-cientista (cientista_mto_feliz): Isso! Hidrogênio igualado, 2 de cada lado. E olha só o produto dessa reação, é água!
-cientista (cientista_feliz): Por isso o hidrogênio é um dos combustíveis mais limpos que existem. Queimando com oxigênio, ele não solta gás carbônico nem fuligem, só vapor de água.
-cientista: Só que essa água trouxe 1 oxigênio para os produtos. Adicione uma molécula de oxigênio.
+join cientista (cientista_feliz) leftmost [mirrored="true"]
+cientista (cientista_feliz): Oxigênio igualado, 2 de cada lado!
+[signal arg="hidrogenio"]
+cientista (cientista_serio): Só que a molécula de água trouxe junto mais 2 hidrogênios. Agora são 4 nos produtos e só 2 nos reagentes.
+cientista (cientista_feliz): É assim mesmo. Não dá para adicionar um átomo solto, só a molécula inteira. Por isso a gente repete a conta, até todos os elementos ficarem igualados.
+cientista (cientista_mto_feliz): Agora é com você. Qual elemento está em menor quantidade, e de que lado?

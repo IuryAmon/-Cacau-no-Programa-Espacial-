@@ -23,7 +23,8 @@ extends Node2D
 ## do pixel do cenário, liga [member pixelada].
 ##
 ## A [Atmosfera] regula a força pela hora ([member intensidade]): fraca ao
-## entardecer, com tudo à noite.
+## entardecer, com tudo à noite — ou apagada até a noite cair, numa fase com
+## [member Atmosfera.postes_so_de_noite] ligado (o pátio).
 
 const GRUPO := &"luz_artificial"
 ## Tamanho do pixel de arte no mundo (os tiles são 16 px em escala 2).
@@ -144,8 +145,8 @@ func _ready() -> void:
 	# Nasceu depois de a Atmosfera já ter distribuído o horário (os postes são
 	# achados um quadro depois da cena abrir): pergunta a ela.
 	var regente := get_tree().get_first_node_in_group(&"atmosfera")
-	if regente != null and regente.has_method(&"nivel_dos_postes"):
-		intensidade = regente.nivel_dos_postes()
+	if regente != null and regente.has_method(&"forca_de"):
+		intensidade = regente.forca_de(self)
 
 
 func _process(delta: float) -> void:
@@ -190,10 +191,14 @@ func _draw() -> void:
 
 ## Acende piscando — o estalo de uma lâmpada de rua pegando. [param atraso] é
 ## quanto esperar antes da primeira piscada (para os postes não acenderem todos
-## no mesmo quadro).
-func acender_piscando(atraso: float = 0.0) -> void:
+## no mesmo quadro). Com [param do_escuro] ela fica apagada durante o atraso:
+## é a lâmpada que estava desligada e só pega na vez dela.
+func acender_piscando(atraso: float = 0.0, do_escuro: bool = false) -> void:
 	_piscada += 1
 	var esta := _piscada
+	if do_escuro:
+		_chave = 0.0
+		_aplicar()
 	if atraso > 0.0:
 		await get_tree().create_timer(atraso).timeout
 	# Liga, falha, liga, falha, firma.

@@ -12,7 +12,11 @@ Tudo é arrastável, redimensionável e trocável direto no editor.
 | `scenes/fases/corredor_patio.tscn` | Corredor entre o elevador da oficina e o pátio — o elevador chega nele, e o fundo dele dá no pátio |
 | `scenes/fases/fase1_2_exterior.tscn` | Pátio da Oficina (fase 1.2) — tela única, a céu aberto; entra-se andando pela esquerda, vindo do corredor do pátio |
 | `scenes/fases/corredor_torre.tscn` | Corredor entre o laboratório e a fase 2 — a porta da torre dá nele, e o fundo dele dá na fase |
-| `scenes/fases/fase2_torre.tscn` | Fase 2, a do nitrogênio — **em branco**, sendo refeita do zero (só o céu e o chão da área aberta) |
+| `scenes/fases/fase2_torre.tscn` | Fase 2, a do nitrogênio: a rua da Torre de Gases, com os três prédios (ver "A fase 2", abaixo) |
+| `scenes/fases/fase2_sala_compressor.tscn` | A sala do compressor (o puzzle do gás) |
+| `scenes/fases/fase2_torre_interior.tscn` | A Torre de Gases por dentro: oito andares de subida |
+| `scenes/fases/fase2_telhado.tscn` | O telhado da torre (o cilindro de amostra e o elevador de carga) |
+| `scenes/fases/fase2_sala_destilacao.tscn` | A sala de destilação (a mochila de N₂, a coluna, o cilindro de N₂) |
 | `scenes/fases/fase3_subsolo.tscn` | Subsolo em blecaute (P + S) |
 | `scenes/fases/fase_final.tscn` | Torre de lançamento |
 | `scenes/fases/final_orbita.tscn` | Encerramento em órbita |
@@ -136,6 +140,21 @@ escuro atrás. Cada célula equivale a 32 px no mundo (tiles de 16 px com a
 camada em escala 2).
 
 Se você apagar um trecho de `Terreno`, o chão some de verdade — o jogador cai.
+
+**A faixa de cornija vazada.** A faixa de cornija do `Buildings.png` (tiles 0
+a 3 da primeira linha, na fonte 15 do `tileset_fases.tres`) tem duas versões:
+
+- a **alternativa 0**, sólida por todos os lados — o chão, o teto e as paredes
+  feitas da faixa girada;
+- a **alternativa 1**, **vazada** (one-way) — as lajes no meio da parede e os
+  telhados: a Cacau passa por baixo pulando, pisa em cima, e **S + espaço**
+  (↓ + ✕ no controle) a atravessa para baixo. Os passos nela soam como
+  concreto.
+
+Na paleta da aba TileMap, a alternativa aparece logo à direita do atlas. Ela
+só colide pintada numa camada com colisão: o `Terreno` ou, na rua da fase 2, a
+camada `Lajes` (lá o `Terreno` é só o chão de grama). Pintada numa camada de
+enfeite, como o `Fundo` ou o `Cenario`, ela é só desenho e a Cacau atravessa.
 
 ## Mudar tamanhos e comportamento
 
@@ -287,15 +306,20 @@ nunca entram em conflito: **vale sempre o mais recente**.
     sem pisar em chão seguro, e entrar morrendo ou no recuo de um golpe.
   - `ativa` desligado desativa a sala sem apagar o nó.
 
-A memória vale **só para mortes**. Sair por uma porta e voltar começa a fase
-do início (o player avisa o `PontoDeRetorno` antes de recarregar por morte;
-qualquer outra abertura de cena é uma visita nova). Não há save em arquivo:
-fechar o jogo esquece tudo.
+A memória do **lugar** vale só para mortes. Sair por uma porta e voltar começa
+a fase do início (o player avisa o `PontoDeRetorno` antes de recarregar por
+morte; qualquer outra abertura de cena é uma visita nova). Não há save em
+arquivo: fechar o jogo esquece tudo.
+
+O ponto de retorno guarda só ONDE ela renasce. O que ela já fez na fase (a
+caixa elétrica quebrada, os espinhos desligados, a torreta estragada, o domo
+aberto) é outra memória, que não depende de bandeira nenhuma: **morrer nunca
+desfaz progresso**. Ver "O que a fase lembra", mais abaixo.
 
 Teste automático (bandeira, sala, os dois juntos, sair e voltar, câmera):
 
 ```
-godot --headless --path . -s res://tools/teste_ponto_de_retorno.gd
+godot --headless --fixed-fps 60 --path . -s res://tools/teste_ponto_de_retorno.gd
 ```
 
 ## Plataformas que caem
@@ -432,6 +456,7 @@ No Inspetor:
 | `recebe_chegada` | Desligue no elevador que só leva e nunca recebe |
 | Tempos | Duração da porta, do percurso, das pausas e dos fades |
 | `requer_habilidade` | Deixa o elevador travado até a habilidade existir |
+| `cabine_aqui` | Desligado, o poço fica vazio: a cabine está parada no outro andar (some o desenho e o estrado) e o E dá a `fala_trancada`. Quem chega de elevador chega com a cabine, então a chegada liga isto sozinha; o resto é com o script da fase (a fase 2 guarda em que andar a cabine da torre ficou) |
 
 As duas pontas montadas hoje são `Entrada/ElevadorPatio` (na Oficina, sobe,
 tag `oficina` → `patio`) e `Elevador` (no corredor do pátio,
@@ -478,6 +503,13 @@ Duas propriedades ligam cada gaiola ao resto:
 - `puzzle_cena` → a cena do puzzle (vazio = abre direto com E);
 - `item_alvo` → o pickup que ela mantém desligado até abrir.
 
+**O puzzle pela metade não se perde numa morte.** A gaiola guarda, em nome
+dela, o que o puzzle anotar (a etapa 1 do maçarico concluída, quantas
+partículas já estão no átomo de carbono) e devolve ao puzzle novo quando a
+fase recarrega. O puzzle que quiser isso só precisa de um sinal
+`progresso_mudou(dados)` e de um método `restaurar_progresso(dados)` — está
+explicado no cabeçalho de `scripts/gaiola_puzzle.gd`.
+
 A **origem da gaiola é o pé da base**: encoste o nó no chão. O item fica em
 cima da base, dentro da cúpula — 4 px à esquerda e 55 px acima da origem da
 gaiola. Para mover, arraste os **dois** nós juntos (gaiola e pickup). A gaiola
@@ -489,7 +521,9 @@ fecharia o caminho do pátio.
 `scenes/puzzle_macarico.tscn`, na tela do computador
 (`assets/UI/Computador receptor/tela_computador.png`). É a mesma interface de
 balanceamento do puzzle do foguete, mas **sem a ajuda do cientista** — quem
-corrige é o rodapé da tela. Duas etapas:
+corrige é o rodapé da tela. A tela se arruma como a do foguete (ver "As telas
+de balanceamento", logo abaixo): contagem dos átomos no alto, equação escrita
+embaixo dela e cada termo em cima da molécula dele. Duas etapas:
 
 1. `C₂H₂ + O₂ → CO + H₂` — o acetileno reagindo com o oxigênio;
 2. `CO + H₂ + O₂ → CO₂ + H₂O` — os gases da etapa 1 queimando com oxigênio.
@@ -501,9 +535,61 @@ etapa 1, 1-1-2-1 ou qualquer múltiplo dele; na etapa 2, 1-1-1-1-1, 4-2-3-4-2,
 
 As reações e todos os textos ficam na constante `ETAPAS`, no
 topo de `scripts/puzzle_macarico.gd`. A coluna de cada substância (setas e
-tamanho das moléculas) é `scenes/ui/termo_equacao.tscn`. Durante os testes, a
-tecla **L** resolve o puzzle na hora; o teste automático é
+tamanho das moléculas) é `scenes/ui/termo_equacao.tscn`. Concluir a etapa 1
+fica guardado: fechar a tela, ou morrer, e voltar recomeça da etapa 2. Durante
+os testes, a tecla **L** resolve o puzzle na hora; o teste automático é
 `tools/teste_puzzle_macarico.tscn`.
+
+### As telas de balanceamento (foguete, maçarico e Laboratório)
+
+As três telas que desenham as moléculas têm a mesma arrumação, de cima para
+baixo:
+
+1. **a contagem dos átomos** — "Reagentes" e "Produtos", com "H = 4  O = 2"
+   embaixo de cada título (verde quando o elemento bate dos dois lados);
+2. **a equação escrita** — logo acima dos desenhos, com **cada termo centrado
+   em cima da coluna da molécula que ele representa** ("2 H₂O" em cima das
+   moléculas de água), e o "+" e a seta em cima dos vãos;
+3. **as colunas** — seta de cima, as moléculas, seta de baixo.
+
+Quem escreve a equação desse jeito, nas três telas, é
+`scripts/ui/equacao_sobre_colunas.gd`: ele recebe o x do meio de cada coluna
+e põe o termo ali. A letra é uma só para a linha inteira e encolhe até todo
+termo caber em cima da coluna dele.
+
+Na cena, o que dá para mexer:
+
+- **subir ou descer a equação** — o nó `LinhaEquacao` (no foguete, o pai dele,
+  `PainelEquacaoEscrita`). É um `Control` comum: a altura dele é a da linha,
+  e os termos são postos lá dentro pelo script;
+- **subir ou descer a contagem** — `LabelReagentesTitulo`, `LabelReagentesValor`
+  e os dois de `Produtos`;
+- **mover uma coluna** — no foguete, arraste os nós da coluna (`BotaoMaisH2`,
+  `MoleculasH2`, `BotaoMenosH2`...): o termo escrito acompanha a seta de cima
+  dela, que é o eixo da coluna. No maçarico e no Laboratório as colunas são
+  montadas pelo script (uma `termo_equacao.tscn` por substância) e a equação
+  segue junto.
+
+**O balanceamento guiado do Dr. Chico** (só no foguete) é a constante
+`ROTEIRO`, no topo de `scripts/puzzle_foguete.gd`, e as falas são as timelines
+`timelines/cientista_balanceamento_1` a `_4`. O método que ele ensina:
+
+1. **uma molécula de cada** substância — a reação precisa ter todos os
+   reagentes e todos os produtos (uma fala só; a seta passa pelos três botões);
+2. contar os átomos de cada elemento dos dois lados e adicionar uma molécula
+   **onde o elemento está em menor quantidade** (falta oxigênio nos produtos:
+   mais uma água);
+3. repetir até **todos os elementos estarem igualados** (a água trouxe
+   hidrogênio: falta nos reagentes — e esse último clique é da pessoa).
+
+Cada passo do roteiro diz a fala, o que o holofote acende, o botão pedido e os
+coeficientes que encerram o passo. Para o holofote trocar de lugar NO MEIO de
+uma fala, a timeline solta `[signal arg="nome"]` na frase certa e o passo
+declara esse nome em `"sinais"` (é assim que a moldura passa do "H = 2" para o
+"O = 1" quando ele fala de cada um). Os testes são
+`tools/teste_puzzle_foguete.tscn`, `tools/teste_puzzle_macarico.tscn` e
+`tools/teste_balanceamento.tscn`; com `-- --capturas=<pasta>` e sem
+`--headless` eles salvam uma imagem de cada momento.
 
 ### O puzzle do bumerangue (fase 1)
 
@@ -519,7 +605,9 @@ quatro seletores (`scenes/ui/seletor_particula.tscn`): prótons, nêutrons,
 camada K e camada L. A seta de cima põe uma partícula no átomo, a de baixo
 tira, e o número entre elas fica amarelo (falta), verde (bate) ou vermelho
 (passou). O que não cabe (o terceiro elétron na camada K) a seta recusa, e o
-rodapé diz por quê. Fechar a tela no meio não desmonta o átomo.
+rodapé diz por quê. Fechar a tela no meio não desmonta o átomo — nem morrer:
+na fase recarregada, as partículas que já estavam no átomo saem dos seletores
+e voltam ao lugar quando a tela abre.
 
 O átomo pedido, os textos do terminal e os raios do desenho ficam nas
 constantes do topo de `scripts/puzzle_carbono.gd`. Na cena, o átomo é
@@ -658,11 +746,47 @@ objeto do cenário sabe que objetivo existe.
   PortaMetal`). Renomeou ou moveu um nó que o roteiro consulta? Rode
   `tools/teste_objetivos.gd` (abaixo) — ele confere todos os caminhos.
 
-## O que a fase lembra ao sair e voltar
+## O que a fase lembra
 
-Não existe save em arquivo: tudo abaixo vale enquanto o jogo estiver aberto
-(fica no `EstadoMundo`, em `scripts/estado_mundo.gd`). Sair para o laboratório
-e voltar — ou morrer e recarregar — encontra a fase como ficou:
+**A regra: morrer nunca desfaz progresso.** Morrer recarrega a cena inteira,
+e cada objeto pergunta ao `EstadoMundo` (`scripts/estado_mundo.gd`) como ele
+tinha ficado. O que a Cacau quebrou, desligou, abriu, derreteu, comeu ou pegou
+continua assim — tenha sido antes ou depois da bandeira. Só recomeça o que é
+desafio de reflexo. Sair para o laboratório e voltar encontra a fase do mesmo
+jeito. Não existe save em arquivo: tudo vale enquanto o jogo estiver aberto.
+
+Na Oficina do Carbono (fase 1):
+
+| O quê | Depois de morrer |
+|---|---|
+| Caixa elétrica acertada (`AlvoFixo1`, `CaixaSerra`, `PainelA/B`) | continua arrebentada |
+| Espinhos de laser e serras desligados pela caixa | continuam recolhidos |
+| Torreta estragada pelo bumerangue | continua estragada, fumegando |
+| Barreira dos dois painéis | continua aberta |
+| Domo de vidro aberto, ferramenta pega | continuam (e o puzzle pela metade também: a etapa 1 do maçarico, o átomo de carbono) |
+| Porta de metal derretida | continua no chão (vale desde o começo do corte) |
+| Terminal do guincho resolvido | continua, e o elevador de carga volta a andar sozinho |
+| Cesta de maçãs comida | continua vazia |
+| Rádio do Dr. Chico | não chama de novo |
+| Objetivos cumpridos | continuam cumpridos |
+| A bandeira tocada | continua tremulando (é o ponto de retorno) |
+
+Recomeçam de propósito, a cada vida:
+
+- **a vida da Cacau**, cheia;
+- **plataformas que caem, plataforma móvel, plataforma de viagem e bolas
+  quicantes** — é o desafio do trecho;
+- **serras e espinhos SEM caixa elétrica** (`ArmadilhasFixas`), que nunca
+  desligam;
+- **a caixa empurrável**, que volta para onde estava quando ela entrou na fase
+  (ver abaixo: é o que desencalha uma caixa empurrada para onde não devia).
+
+E só até ela sair da cena: **os morcegos dos corredores**. Enquanto a Cacau
+não sai do corredor, o morcego morto continua morto e o ferido continua
+ferido, mesmo que ela morra e a cena recarregue; na visita seguinte o bando
+está inteiro de novo (ver "Os morcegos dos corredores").
+
+No resto do jogo, o mesmo vale para:
 
 - ferramentas pegas e gaiolas abertas; células do painel;
 - painéis do portão, barreira, caixa das serras (serras recolhidas) e o
@@ -677,103 +801,442 @@ e voltar — ou morrer e recarregar — encontra a fase como ficou:
   Morrer não conta — a fase recarrega com a caixa na posição da última saída,
   o que desencalha uma caixa empurrada para onde não devia.
 
-Não guardam de propósito: alvos temporizados (como o `AlvoFixo1` do treino),
-plataformas que caem, bolas quicantes e torretas.
+**Nos componentes, lembrar é o padrão** — uma caixa ou uma torreta nova,
+arrastada para a cena ou duplicada com `Ctrl+D`, já lembra sozinha:
+
+- **alvo de bumerangue e caixa elétrica** — `Persistir` vem ligado. O alvo de
+  trava (`Permanece Ativo`) volta ligado; o de janela (como o `AlvoFixo1`, de
+  2 s) volta desligado, porque o tempo dele acabou, mas a caixa continua com a
+  tampa arrebentada;
+- **espinhos de laser e serra** — com `Desligar Para Sempre` (o padrão), a
+  própria armadilha anota que foi desligada. Ela não depende de a caixa
+  lembrar, nem da ordem dos dois nós na cena. Com `Desligar Para Sempre`
+  desligado ela é uma passagem cronometrada, que recomeça de pé a cada vida;
+- **torreta** — `Persistir` vem ligado (só importa nas de `Quebravel` ligado).
+
+Desligue `Persistir` só num objeto que deve mesmo recomeçar a cada morte.
 
 Para um objeto novo lembrar do estado: `EstadoMundo.marcar_feito(self)` /
 `ja_feito(self)` para "já aconteceu", ou `guardar(self, "marca", valor)` /
 `ler(self, "marca", padrao)` para valores. Se só deve anotar na saída por
 porta, entre no grupo `EstadoMundo.GRUPO_SALVAR_AO_SAIR` e tenha um
-`salvar_ao_sair()`. Nos alvos de bumerangue, ligue `persistir` no Inspetor.
+`salvar_ao_sair()`. Para o que deve durar só enquanto ela não sai da cena (um
+inimigo que volta a cada visita), `guardar_na_visita(self, "marca", valor)` /
+`ler_da_visita(self, "marca", padrao)`. A chave de tudo isso é o **caminho do
+nó** na cena: renomear ou mudar de pai um nó que já foi resolvido faz o jogo
+esquecê-lo (só importa com o jogo aberto, já que não há save).
 
-## A fase 2 em branco
+O teste que joga a fase 1, mata a Cacau e confere a tabela acima, linha por
+linha (mais os morcegos do corredor):
 
-A antiga Torre de Gases e Estufa saiu inteira de `fase2_torre.tscn`. A cena
-ficou só com o palco, para a fase do nitrogênio ser montada do zero:
+```
+godot --headless --fixed-fps 60 --path . res://tools/teste_estado_da_fase1.tscn
+```
 
-- `BG` — o céu de camadas da área aberta (o mesmo do pátio da fase 1.2). O
-  céu e a lua ficam presos na tela; a serra, os morros e as matas andam mais
-  devagar que a câmera, só na horizontal, e se repetem sozinhos;
-- `Atmosfera` e `PostesDeLuz` — a hora da fase (noite, com a lua) e a luz dos
-  postes pintados no TileMap. Ver [`docs/ILUMINACAO.md`](ILUMINACAO.md);
-- `Terreno` — o chão de grama da área aberta, reto (o topo em y = 512). Ele
-  começa ANTES da beirada esquerda da tela, em x = -448: é nesse trecho de
-  fora do quadro que a Cacau nasce e some. Pinte o resto por cima;
-- `Paredes` — duas paredes invisíveis, para a Cacau não cair para fora do
-  mapa. A da esquerda fica recuada (x = -420), para lá do trecho em que ela
-  chega e sai andando. Mova junto quando esticar o chão;
-- `PassagemCorredor` — a fase **não tem porta**. Esta é a ponta esquerda dela,
-  uma `PassagemDeCena` (`scripts/fases/passagem_de_cena.gd`): a Cacau chega do
-  corredor da torre vindo de fora do quadro e entrando andando; andando para a
-  esquerda e cruzando a linha, a cena troca sozinha e ela volta para o fundo
-  do corredor (ver abaixo). A linha fica em x = 24, logo depois da beirada da
-  câmera;
-- `LimitesDaCamera`, `SpawnPadrao` e `Player`, como em toda fase;
-- `Destilador` — a coluna de destilação, logo no começo. Ver "A coluna de
-  destilação", abaixo.
+## A fase 2: a Torre de Gases (o nitrogênio)
 
-O que ainda falta voltar para o jogo fechar: a **mochila de N₂** e a
-**amostra de nitrogênio (N)**, que eram pegas aqui. Na lista de objetivos, a
-trilha do nitrogênio (`scripts/roteiro_objetivos.gd`) ficou só com "entrar",
-"pegar a mochila", "pegar o N" e "entregar o N" — os passos da alavanca, da
-chapa do armário e do ciclo do nitrogênio saíram junto com os objetos.
+A fase do nitrogênio é uma **rua com três prédios**, e cada prédio é uma cena.
+Da esquerda para a direita:
 
-Atenção: o `tools/gerar_cenas_fases.tscn` (logo abaixo) ainda sabe montar a
-Torre antiga e sobrescreveria esta cena.
+| Cena | O que é |
+|---|---|
+| `fase2_torre.tscn` | A **rua**: o prédio escuro do compressor (com o portão de rolamento), a torre de tijolo (com o elevador de carga subindo pela fachada) e o prédio verde da destilação |
+| `fase2_sala_compressor.tscn` | A **sala do compressor**: o mesmo prédio escuro por dentro, com o compressor de ar e o puzzle do gás |
+| `fase2_torre_interior.tscn` | A **torre por dentro**: oito andares de subida até a porta do telhado |
+| `fase2_telhado.tscn` | O **telhado**: o cilindro de amostra e o elevador de carga que desce para a rua |
+| `fase2_sala_destilacao.tscn` | A **sala de destilação**: montada igual à sala do compressor, com a mochila de N₂, a coluna e o cilindro verde de nitrogênio |
+
+**O caminho**, em ordem: pegar a **mochila de N₂** na sala de destilação (ela
+é que alcança o primeiro degrau da torre) → subir a **torre** até o telhado e
+pegar o **cilindro de amostra vazio** → descer de **elevador** → no
+**compressor**, apertar e gelar o ar até virar líquido dentro do cilindro →
+**correr** com a amostra gelada até a coluna antes que ela esquente e estoure →
+**destilar** o ar → pegar o **cilindro verde de N₂** → levar ao painel CHONPS,
+no laboratório. A lista de objetivos (`scripts/roteiro_objetivos.gd`, trilha
+`nitrogenio`) acompanha passo a passo.
+
+Quem guarda o que já foi feito entre as salas é a
+`scripts/fases/missao_nitrogenio.gd` (cilindro preso no compressor, a amostra
+na mão, a amostra na coluna, a subida da torre...): o mesmo truque do
+`EstadoMundo`, com `static var`, então sair de uma sala e voltar encontra tudo
+como estava. Fechar o jogo esquece. As portas e os elevadores se acham pelas
+tags (`tag_aqui`/`tag_destino`), como no resto do jogo — o
+`tools/teste_fase2.tscn` confere todos os pares.
+
+### A rua
+
+- `PortaTorre`, `PortaDestilacao` — as portas da torre e da destilação
+  (`componentes/porta_predio.tscn`, a mesma nas outras portas da fase 2: o
+  vão escuro de moldura verde do `Buildings.png`, montado no
+  `assets/porta/porta predio.png` — 4×6 tiles, desenhado em escala 2. Ela não
+  tem folha nem som: a Cacau entra e sai do escuro com a animação de sempre).
+  Arraste pelo meio;
+- `PortaCompressor` — o **portão de rolamento** do prédio escuro, o primeiro
+  da rua (x = 512), que leva à sala do compressor
+  (`componentes/porta_rolamento.tscn`, ver "O portão de rolamento", abaixo).
+  Na volta da sala a Cacau sai andando para a direita, o lado da destilação.
+  Arraste pelo meio: o pé do portão fica 116 px abaixo do nó, e o painel de
+  luzes vai junto;
+- `ElevadorDeCarga` — o elevador que sobe pela fachada da torre até o telhado
+  (um `ElevadorFase`, como o da oficina). A cabine começa **parada lá em
+  cima**: aqui embaixo o poço fica vazio (sem cabine e sem estrado) e o E nele
+  só dá a fala `cacau_elevador_parado`. Quando a Cacau sobe a torre pela escada
+  e desce nela, a cabine vem junto — e daí em diante fica no andar em que ela a
+  deixou (`MissaoNitrogenio.elevador_no_telhado`): é o atalho de ida e volta.
+  Na cena ele está com `cabine_aqui` desligado, então no editor só aparece o
+  contorno de onde a cabine para;
+- `Postes` — os seis postes da rua (um de cada lado do prédio do compressor,
+  um antes da torre, um antes da destilação e dois no terreno vazio do fim da
+  rua). Cada um é a cena
+  `scenes/luz/poste_de_luz.tscn`, com a luz dentro: arraste pelo pé, que fica
+  no chão (y = 512). Para pôr mais um, arraste a cena para dentro de `Postes`.
+  No Inspector, `altura` (em tiles) e `espelhado` (braço para a esquerda);
+- `Cenario` / `Cenario/Cenario 2` — os prédios, no tileset da cidade
+  (`Buildings.png`): o prédio escuro do compressor (colunas 6 a 26, com o cano
+  na 27 e a caçamba até a 29), no lugar do antigo prédio de concreto (colunas
+  9 a 27), que saiu da rua; a torre de
+  tijolo (48 a 69, subindo até a fileira -70, bem acima do que a câmera
+  alcança) com o poço do elevador (os trilhos nas colunas 63 e 67), o prédio
+  verde da destilação (88 a 108). Depois da destilação vem a garagem (colunas
+  110 a 121) e um terreno vazio (colunas 122 a 169). O portão e o painel do
+  prédio do compressor não são pintados: são a `PortaCompressor`, animada, no
+  vão da fachada (colunas 12 a 19). A rua vai até x = 5504 (`LimitesDaCamera` e `ParedeDireita`);
+  o que está pintado depois disso (a casa marrom, o banco e a placa, da coluna
+  173 em diante) fica fora da área jogável;
+- `Lajes` — as lajes em que dá para subir, com colisão (tileset das fases):
+  as duas faixas de cornija do prédio do compressor, a do meio (fileira 9) e
+  a do telhado (fileira 2), na versão **vazada** (ver "Pintar o cenário"). Ficam
+  numa camada própria porque o `Terreno` da rua é só o chão de grama. As faixas
+  giradas das quinas da torre e dos trilhos do elevador continuam no
+  `Cenario`, sem colisão — senão a torre virava escada por fora;
+- o resto (`BG`, `Atmosfera`, `PostesDeLuz`, `Terreno`, `Paredes`,
+  `PassagemCorredor`) é o palco de antes: ver "O corredor da torre", abaixo.
+
+**Com a amostra gelada na mão** a rua só deixa ir para a destilação (ou voltar
+ao compressor): a saída para o corredor, a porta da torre e o elevador barram,
+e a Cacau diz que não dá tempo (`cacau_amostra_pressa`). Quem barra é o
+próprio `fase2_torre.gd`.
+
+### O portão de rolamento (a entrada do compressor)
+
+`componentes/porta_rolamento.tscn` é a porta da oficina (`porta_simulador.gd`)
+com o `assets/fase nitrogenio/porta de rolamento .png`: 11 quadros de 146x98
+(com 1 px transparente em volta do desenho), em escala 1,8. O quadro 0 é o
+portão fechado, do 1 ao 9 ele sobe e no 10 a trava lá de cima fecha. O vão
+aberto é transparente: quem pinta o escuro de dentro é o `FundoDoVao`, atrás
+do `SpritePorta`. A mesma cena é a porta da rua e a porta da sala por dentro.
+
+**O painel ao lado** (`Painel`, `scripts/fases/painel_do_portao.gd`) é o tile
+11,6 do `Buildings.png`, com quatro quadradinhos vermelhos. Enquanto o portão
+sobe eles ficam verdes, um por um de cima para baixo, e o último acende na
+trava; no baque do portão fechando voltam todos ao vermelho. O verde é o
+quadradinho do painel vizinho na mesma folha (tile 12,6): cada `Luz` é um
+recorte dele, posto em cima de um vermelho. Em que quadro do abrindo cada luz
+acende fica em `quadros_que_acendem` (hoje 0, 4, 7 e 10).
+
+**O som manda no tempo.** Os dois sons saem da gravação
+`sounds/porta de Rolamento.mp3` (6,7 s, que fica lá, intacta):
+
+| Arquivo | O que é |
+|---|---|
+| `sounds/porta_rolamento_abrindo.wav` | 2,39 s: a gravação a partir de 3,939 s (ficaram de fora o quase 1 s de silêncio e o começo do rolo). O rolo, até o silêncio antes do clunk (5,700 s), toca 25% mais rápido sem mudar o tom (rubberband); o clunk e o fim tocam como foram gravados, emendados numa fusão de 30 ms nesse silêncio. Fade-in de 0,16 s e fade-out nos últimos 0,35 s. O rolo morre aos poucos e a trava faz *clunk* em 1,466 s (e de novo em 1,575 s) |
+| `sounds/porta_rolamento_fechando.wav` | 1,65 s: o pedaço do rolo logo antes desse (3,174 s a 3,900 s), emendado numa fusão de 30 ms no instante antes do clunk: o rolo para de uma vez quando o portão bate no chão (0,727 s) |
+
+Os dois têm o mesmo ganho (pico em -1,9 dBFS, como os sons gerados do
+compressor) e são mono, 16 bits, 44,1 kHz. Para refazer (ffmpeg 8.1):
+
+```
+ffmpeg -i "sounds/porta de Rolamento.mp3" -filter_complex "[0:a]asplit=2[a][b];[a]atrim=start_sample=173694:end_sample=251359,asetpts=PTS-STARTPTS,rubberband=tempo=1.25,afade=t=in:st=0:d=0.16:curve=qsin[ra];[b]atrim=start_sample=251359,asetpts=PTS-STARTPTS[rb];[ra][rb]acrossfade=ns=1323:c1=qsin:c2=qsin,afade=t=out:st=2.042608:d=0.35:curve=qsin,volume=-1.6589dB,aresample=osf=s16:dither_method=triangular[out]" -map "[out]" -ac 1 -ar 44100 -c:a pcm_s16le -map_metadata -1 -fflags +bitexact -flags:a +bitexact sounds/porta_rolamento_abrindo.wav
+
+ffmpeg -i "sounds/porta de Rolamento.mp3" -filter_complex "[0:a]asplit=2[a][b];[a]atrim=start_sample=139968:end_sample=171985,asetpts=PTS-STARTPTS,afade=t=in:st=0:d=0.005:curve=qsin[r];[b]atrim=start_sample=253873,asetpts=PTS-STARTPTS[k];[r][k]acrossfade=ns=1323:c1=qsin:c2=qsin,afade=t=out:st=1.30272:d=0.35:curve=qsin,volume=-1.6589dB,aresample=osf=s16:dither_method=triangular[out]" -map "[out]" -ac 1 -ar 44100 -c:a pcm_s16le -map_metadata -1 -fflags +bitexact -flags:a +bitexact sounds/porta_rolamento_fechando.wav
+```
+
+**Os quadros seguem o som.** Cada quadro do `SpritePorta` tem a sua duração (a
+animação roda a 10 quadros por segundo: duração 1,0 = 0,1 s):
+
+- **abrindo** (1,59 s): o quadro 0 segura 0,064 s enquanto o som cresce; do 1
+  ao 9 o portão sobe desacelerando, como o rolo morrendo (cada quadro um pouco
+  mais longo que o anterior, de 0,10 s a 0,21 s); o 9, aberto, espera o motor
+  parar; o 10, a trava, entra no clunk (1,466 s) e a Cacau entra logo depois
+  do segundo — o resto do som toca enquanto ela anda;
+- **fechando** (0,90 s): o 10 solta a trava no estalo do começo, o portão desce
+  em velocidade constante (0,075 s por quadro) e o 0, fechado, entra na batida
+  no chão (0,727 s).
+
+Cortou o som de outro jeito? O `tools/teste_porta_rolamento.tscn` lê o .wav,
+acha o clunk e mostra onde caíram o quadro da trava e o da porta fechada: é só
+ajustar as durações até bater. O som de fechar já vem cortado no ponto certo,
+por isso esta porta tem `inicio_som_fechando` = 0 (as outras pulam o meio
+segundo de silêncio do começo do `somPorta_fechando.wav`).
+
+**Ele não fecha na ida.** O portão tem `fica_aberta_na_viagem` ligado: ao
+entrar, ele abre, a Cacau entra e a tela já apaga, com ele aberto. Na outra
+cena o portão de lá aparece aberto (o último quadro do `abrindo`, com o painel
+todo verde), ela sai andando e só então ele fecha. As outras portas continuam
+fechando antes de trocar de cena.
+
+### A sala do compressor e o puzzle do gás
+
+A sala é o prédio escuro da rua **por dentro**, com a mesma arte de fora (o
+`Buildings.png`), para entrar e sair sem trocar de mundo:
+
+- `Terreno` — a estrutura em corte, no tileset das fases (fonte 15, a do
+  `Buildings.png`): a faixa de cornija sólida no teto (fileira -2) e no piso
+  (fileira 16), a faixa girada nas paredes (colunas 0 e 42), a base escura
+  (4,4) por fora delas e, na fileira 7, a **laje do meio**, de parede a parede,
+  na versão vazada (ver "Pintar o cenário"). A Cacau sobe nela pulando, e
+  desce com S + espaço. O som dos passos sai do metadado `superficie` da
+  camada (`concreto`);
+- `Fundo` — a parede verde: o topo escuro (8,0) embaixo de cada faixa, a
+  parede (8,1) e as quinas (7,x) nas pontas;
+- `Cenario` — as luminárias, embaixo do teto e da laje do meio (tileset da
+  cidade);
+- `Janelas` — as janelas, no mesmo tileset, numa camada só delas em escala 3
+  (uma vez e meia o resto da sala, para não sumirem na parede alta);
+- `LimitesDaCamera` — de x = 0 a 1376 (as bordas de fora das duas paredes) e
+  de y = 64 a 576, com o `zoom_da_camera` 1,7578125 da Cacau;
+- `PortaRua` — o mesmo portão de rolamento, com o painel, par da
+  `PortaCompressor`, em escala 1,25 (maior que isso encosta na luminária). Os
+  filhos dele estão editáveis na cena: o `PontoDeSaida` foi acertado para ela
+  sair no chão, e os ícones do W e do direcional, para o tamanho de sempre,
+  na frente do topo do portão; a `PlacaPV` fica embaixo da faixa do meio.
+
+A sala de destilação é esta mesma montagem, tile por tile (ver "A sala de
+destilação"): mexendo nas camadas ou na câmera de uma, mexa na outra igual.
+
+`CompressorDeAr` (`componentes/compressor_de_ar.tscn`) é a máquina do mapa:
+
+- **sem o cilindro**, o E aproxima a câmera da máquina e a Cacau comenta que
+  dá para pôr um cilindro ali;
+- **com o cilindro**, ele é acoplado e abre o puzzle
+  (`scenes/puzzle_compressor.tscn`, `scripts/puzzle_compressor.gd`): uma
+  câmara com o ar da sala em cima do cilindro, o **êmbolo** que diminui o
+  volume, o **resfriador** (o termômetro) e o **manômetro** no gargalo. O
+  cilindro aguenta 4 atm: apertar sem resfriar estoura (na temperatura da
+  sala, todo o ar no cilindro daria 8 atm). Resfriando, a pressão cai
+  (P·V = n·R·T) e, frio o bastante, o ar começa a **virar líquido** e a
+  pressão para de subir. Com todo o ar no cilindro e pelo menos 20% líquido, a
+  válvula fecha e a Cacau sai correndo com a amostra.
+
+A física é de verdade, e mora toda em `scripts/laboratorio/`:
+`gas_fechado.gd` (gás ideal, trabalho do êmbolo, troca de calor, a condensação
+do ar com as pressões de vapor do N₂, O₂ e Ar) e `maquina_de_compressao.gd`
+(os números da máquina: volumes, a pressão de ruptura, o resfriador). O
+desenho do aparelho é `scripts/ui/camara_de_compressao.gd`. A tela tem o
+`modo_historia` desligável, para virar atividade do Laboratório depois.
+
+**Estourou?** A explosão (`scripts/fx/explosao_do_cilindro.gd`) e o fim de
+jogo (`scripts/ui/tela_game_over.gd`). Tentar de novo devolve o cilindro vazio
+preso no compressor, com a máquina do começo.
+
+**A corrida.** Fechada a válvula, o relógio da amostra
+(`scripts/ui/contagem_da_amostra.gd`) aparece no alto da tela e o cilindro vai
+nas costas da Cacau. A amostra **esquenta** de verdade (o calor da sala entra,
+o líquido ferve, a pressão sobe): quanto mais fria e mais líquida ela saiu do
+compressor, mais tempo aguenta. O relógio não anda com fala ou tela aberta.
+Chegou a 4 atm, estoura nas costas dela: fim de jogo.
+
+### A sala de destilação
+
+A sala é **a sala do compressor, tile por tile**: as camadas `Terreno`,
+`Fundo`, `Cenario` e `Janelas` têm os mesmos tiles nas mesmas posições (a
+laje vazada do meio, a parede verde, as luminárias, as janelas em escala 3), e
+a câmera é a mesma (`LimitesDaCamera` e o `zoom_da_camera` da Cacau). Mudou uma
+sala, mude a outra igual: o `teste_fase2` compara as duas célula por célula. O
+que é só desta sala são os objetos:
+
+- `PortaRua` — a `porta_predio`, par da `PortaDestilacao` da rua, no térreo,
+  à esquerda;
+- `Mochila` — a mochila de N₂ num pedestal (um `PickupHabilidade` com
+  `habilidade = "mochila"`; a arte sai do catálogo de ferramentas), entre a
+  porta e a primeira janela do térreo;
+- `Destilador` — a coluna de destilação, no vão entre as duas primeiras
+  janelas: alta como é, passa na frente da laje do meio, e esse é o vão em que
+  ela não cobre janela nem luminária nos dois andares. Ver a seção dela, logo
+  abaixo. Sem a
+  amostra, o E abre a explicação do Dr. Chico; **com a amostra**, o E recebe o
+  cilindro, o relógio para e abre a tela em que a Cacau destila o ar
+  (`scenes/puzzle_destilacao.tscn`, script `scripts/puzzle_destilacao.gd`): o
+  simulador do Laboratório só com o ar. Ela esquenta o fundo até o vapor levar
+  quase todo o nitrogênio para o topo — pelo menos 75% dele
+  (`RECUPERACAO_MINIMA`), com pelo menos 80% de pureza (`PUREZA_MINIMA`) — e o
+  oxigênio ficar sendo a maioria no fundo; aí retira o nitrogênio do topo.
+  Com a amostra do jogo, isso acontece com o fundo entre -190 e -183 °C (topo
+  com 91 a 95% de N₂: nunca 100%). Acima dos -183 °C do oxigênio o fundo
+  ferve até secar e suja o topo, e só RECOMEÇAR desfaz;
+- `CilindroDeNitrogenio` — o cilindro **verde** de N₂ (a amostra do elemento
+  N). Fica escondido até a destilação acabar e salta da coluna para o lugar
+  dele, depois da segunda janela; o campo `destilador` aponta para ela;
+- `PlacaEbulicao` (em `Enfeites`) — os pontos de ebulição, na parede livre do
+  térreo, à direita.
+
+### A torre por dentro
+
+Oito andares empilhados, de 20 fileiras cada (34 células de largura): o piso do
+andar k tem o topo na fileira `16 - 20·k`. A laje entre dois andares tem um
+**buraco**, e passar por ele é chegar ao andar de cima. Os buracos alternam de
+lado — cair do fim de um andar não devolve ao andar de baixo.
+
+| Andar | Tema |
+|---|---|
+| 0, térreo | A porta da rua e o **primeiro degrau**, a 8 células do chão: o pulo duplo não chega, só pulo + jato da mochila. Sem a mochila, embaixo dele (`AvisoDegrauAlto`) a Cacau comenta que é alto demais |
+| 1 | Piso inteiro de **espinhos de laser**, vigas em escada por cima |
+| 2 | A chaminé de **serras**, entre um pilar pendurado no teto e a parede. A `CaixaDasSerras`, no alto da esquerda, alimenta as serras da chaminé: o bumerangue nela as recolhe (as do piso continuam) |
+| 3 | **Plataformas que caem** (as laranja) sobre laser e as **válvulas de purga**: encostar recarrega o jato no ar |
+| 4 | **Morcegos** nos tetos; uma cesta de maçãs |
+| 5 | Três **torretas** quebráveis (o bumerangue desarma cada uma de uma vez) |
+| 6 | **Chamas** (o jato de N₂ apaga: nitrogênio não alimenta o fogo) e o **vapor** que empurra para a direita. O `Ventilador` é um alvo: acertou, o vapor para |
+| 7 | O **laser** a meia altura, a **plataforma móvel** por baixo de uma fileira de espinhos (de pé ela passa; pulando, não) e a portinha do telhado |
+
+Cada andar tem uma bandeira de checkpoint perto de onde se chega e uma placa
+com o nome dele.
+
+**Para mexer na geometria** (camada `Terreno`, `tileset_fases`):
+
+- a pedra do laboratório (a moldura de 8 × 8 do `level_tileset`) é o chão, o
+  teto, as paredes e os patamares; as **vigas** de mão única são os tiles
+  `(10..15, 0)` (a fileira de baixo, `(10..15, 1)`, é só o corpo, sem
+  colisão); o **bloquinho** de 2 × 2 é `(10..11, 2..3)`;
+- as **plataformas que caem** são os tiles laranja da fonte 0
+  (`Plataformas.png`): o retângulo `PlataformasQueCaem` cobre a torre inteira,
+  então é só pintar;
+- **as contas da Cacau**: o pulo sobe 94 px (2 células folgado), o pulo duplo
+  188 (5 células), pulo + jato ~398. Degrau de **3 células** (96 px) não
+  existe na torre: parece dar num pulo e não dá. Embaixo de laje, para ficar
+  de pé, 3 células livres;
+- `tools/teste_subida_torre.tscn` sobe a torre inteira, salto por salto, com
+  as teclas de verdade (sem as armadilhas): rode depois de mexer nos andares.
+
+**Os puzzles da torre.** Todo nó cujo nome começa com `Puzzle` junta ALVOS (os
+`AlvoBumerangue` filhos dele — uma `CaixaEletrica` também é um) e EFEITOS (os
+outros filhos): com todos os alvos acesos, cada `CorrenteVapor` desliga, cada
+`Barreira` se abre e cada `BlocoAlternavel` some (um alvo de janela que apaga
+traz o bloco de volta). Para um puzzle novo, é só montar outro grupo
+`Puzzle...` (quem liga é o `fase2_torre_interior.gd`). A arte do alvo, da
+válvula e da comporta é `assets/fase nitrogenio/alvo.png`, `alvo aceso.png`,
+`valvula de purga.png` e `comporta.png`.
+
+A câmera é a `ZonaDaTorre` (uma `ZonaCamera`): o meio fica travado na
+horizontal e ela só sobe quando a Cacau pousa. A luz é o perfil
+`assets/luz/torre.tres` (as salas usam `fase2_interior.tres`); as luminárias
+são as pontas do poste do `Props-01` pintadas embaixo de cada laje — o
+`PostesDeLuz` acende sozinho.
+
+**As janelas** (camada `Janelas`, tileset da cidade) estão em escala 3, do
+tamanho das das salas do compressor e da destilação: 96 × 144 px, em células
+de 48 px. Um andar tem 640 px, que não é múltiplo de 48, então as janelas não
+ficam exatamente na mesma altura em todos os andares (variam até 32 px). Três
+por andar, logo abaixo das luminárias; embaixo delas ficam as placas dos
+andares. Pintando uma janela, deixe-a fora das placas e das portas: o
+`teste_fase2` confere.
+
+### O telhado
+
+- `PortaEscada` — a portinha da casinha da escada (a `porta_predio` em 75%),
+  o par da `PortaTelhado` do último andar. O telhado da casinha (a faixa de
+  cornija na fileira 9) fica no `Terreno`, na versão vazada: dá para subir em
+  cima dela;
+- `CilindroDeAr` — o cilindro de amostra vazio
+  (`componentes/cilindro_do_telhado.tscn`): o E pega, a ficha sobe e a Cacau
+  diz para onde ele vai. Não volta mais;
+- `ElevadorDeCarga` — desce para a rua (`direcao` = DESCE). A cabine começa
+  aqui e fica no andar em que a Cacau a deixou: se ela desceu nele e voltou
+  pela escada, o poço está vazio e o E dá a fala `cacau_elevador_la_embaixo`.
+  Embaixo da laje fica o **mesmo poço da fachada da rua** — os trilhos e a
+  faixa escura do `Buildings.png`, no `Cenario` (colunas 31 a 35, fileiras 17
+  a 19), com um vão nos tijolos do `Terreno` ali — e a cabine fica no meio
+  dele (x = 1072). Como na rua, ela desce pela frente do poço, à vista. Mudando
+  o elevador de lugar, leve o poço junto (o trilho é o tile 1,0 girado: veja
+  como está pintado);
+- `Paredes` — duas paredes invisíveis (`ParedeEsquerda` em x = 0,
+  `ParedeDireita` em x = 1408, nas bordas da câmera, bem altas): a Cacau
+  não consegue pular a mureta e cair do telhado;
+- `BG` — o mesmo céu da rua, com a serra e a mata bem mais baixas no
+  horizonte (lá de cima sobra céu).
+
+Chegar ao telhado marca a subida e, na primeira vez, a Cacau comenta
+(`cacau_torre_telhado`).
+
+**As falas novas** (todas em `timelines/`):
+`cacau_compressor_sem_cilindro`, `cientista_compressor`,
+`cacau_compressor_concluido`, `cacau_amostra_pressa`, `cacau_degrau_alto`,
+`cacau_torre_telhado`, `cacau_cilindro_pego`, `cacau_elevador_parado`,
+`cacau_elevador_la_embaixo`, `cientista_destilacao` e `cacau_tem_nitrogenio`.
+
+**Atalhos de teste.** A tecla **L** deixa pronta na hora a amostra do
+compressor e a separação da destilação; a **N** equipa a mochila.
 
 ## A coluna de destilação (fase 2)
 
-No começo da fase 2 fica a coluna de destilação
+Na sala de destilação da fase 2 fica a coluna de destilação
 (`scenes/fases/componentes/destilador.tscn`). Chegando perto, o botão (E, ou □
 de controle) acende na frente dela e a coluna ganha um contorno branco.
 Apertando, o jogo para e **o Dr. Chico explica, pelo rádio, como ela separa o
 ar**: a coluna sai do mapa, vem para a esquerda da tela, uma faixa de luz desce
 por ela e o aço vira o desenho preto de raio X.
 
-**Como uma coluna dessas funciona** (é o que o desenho mostra):
+**Como uma coluna dessas funciona** (é o que o desenho mostra — e não é
+encenado: é a conta do simulador do Laboratório, ver `docs/LABORATORIO.md`):
 
-- cada substância ferve numa temperatura, o **ponto de ebulição**: o
-  nitrogênio a -196 °C, o argônio a -186 °C, o oxigênio a -183 °C. Mais quente
-  que isso ela é gás; mais fria, líquido;
+- cada substância tem um **ponto de ebulição**: o nitrogênio -196 °C, o
+  argônio -186 °C, o oxigênio -183 °C. Mas **evaporar** elas evaporam abaixo
+  dele: as moléculas mais agitadas da superfície escapam em qualquer
+  temperatura — é assim que a roupa seca no varal, sem ferver. **Ferver** é o
+  vapor se formar dentro do líquido, em bolhas: é o que acontece no ponto de
+  ebulição;
+- uma **mistura** ferve numa temperatura entre os pontos de ebulição das
+  substâncias dela: o ar líquido, a uns -194 °C. E o vapor que sai tem de
+  tudo: é rico em nitrogênio, o que evapora mais fácil, mas leva oxigênio e
+  argônio junto — eles evaporam ali uns 10 °C abaixo do ponto de ebulição
+  deles;
 - o calor não vem de máquina nenhuma: a -200 °C o ar líquido é muito mais
   frio que tudo em volta, e o **calor do ambiente** vai entrando nele sozinho
   (as setinhas laranja embaixo do piso). Quem tira calor é o **resfriador**, a
   serpentina dentro da cúpula. Por isso o fundo, onde está o líquido, é o
-  lugar menos frio (-183 °C) e o topo o mais frio (-196 °C), e cada andar do
-  meio fica entre um e outro. É a régua colorida colada na coluna;
-- o fundo não passa de -183 °C enquanto houver oxigênio líquido lá: um líquido
-  fervendo não fica mais quente que o ponto de ebulição dele (a água na
-  panela não passa de 100 °C);
-- o gás sobe porque é gás, e esfria no caminho porque vai passando por andares
-  cada vez mais frios. Quando chega no andar que está no ponto de ebulição
-  dele, vira líquido de novo e fica ali (a tampa da panela: o vapor sobe,
-  encosta na tampa fria e vira gota);
-- resultado: o nitrogênio, que é o que ferve mais fácil, só vira líquido lá no
-  topo; o argônio para um andar acima do fundo; o oxigênio, o mais difícil de
-  ferver, nem sai do fundo. Numa coluna de verdade é assim: oxigênio líquido
-  embaixo, nitrogênio em cima, argônio no meio.
+  lugar menos frio e o topo o mais frio (-196 °C), e cada andar do meio fica
+  entre um e outro. É a régua colorida colada na coluna;
+- fervendo, o fundo não esquenta: o calor vai todo para virar vapor (a água
+  na panela não passa de 100 °C). Mas, como sai mais nitrogênio, o líquido que
+  fica vai ficando mais rico em oxigênio e ferve cada vez mais quente;
+- o vapor sobe e esfria. Numa bandeja ele condensa (a tampa da panela: o vapor
+  encosta no frio e vira gota) ou passa; a bandeja quente demais para o
+  líquido dela ferve de novo, e a que enche transborda para a de baixo. Cada
+  vez que condensa e evapora, o vapor fica mais rico em nitrogênio: é a
+  destilação **fracionada**;
+- resultado: o topo fica rico em nitrogênio (95%), o fundo rico em oxigênio
+  (67%, com o argônio e um pouco de nitrogênio) e as bandejas do meio com
+  misturas. **Nada sai 100% puro** — numa coluna de verdade também não; com
+  muitas bandejas, chega-se perto.
 
-O que acontece na tela, fala por fala:
+O que acontece na tela, fala por fala (o nome de cada marca vem antes):
 
-1. a coluna vira o desenho de raio X;
-2. o ar entra no fundo já **líquido**, a -200 °C, e aparecem as fichas do que
-   ele é feito: N₂ 78%, Ar 1%, O₂ 21% (na ordem dos andares da coluna);
-3. cada ficha mostra o **ponto de ebulição** da substância;
-4. o líquido vai ganhando calor do ambiente e o fundo fica menos frio aos
-   poucos (a plaquinha dele vai contando). Passando de -196 °C o **nitrogênio
-   ferve**: só as moléculas dele saem do líquido e sobem como gás, pelas
-   fendas;
-5. um sopro de geada no resfriador: no topo, a -196 °C, o nitrogênio **vira
-   líquido de novo**;
-6. o fundo chega a -183 °C: a -186 °C ferve o **argônio**, que
-   sobe um andar só; o **oxigênio fica** no fundo. A plaquinha de cada andar
-   toma a cor e o desenho de quem ficou ali;
-7. o título vira **DESTILAÇÃO FRACIONADA**.
+1. `raio_x` — a coluna vira o desenho de raio X;
+2. `ar` — o ar entra no fundo já **líquido**, a -200 °C, e aparecem as fichas
+   do que ele é feito: N₂ 78%, Ar 1%, O₂ 21% (na ordem dos andares da
+   coluna);
+3. `ebulicao` — cada ficha mostra o **ponto de ebulição** da substância;
+4. `evaporar` — ainda a -200 °C, nada ferve, mas moléculas da superfície
+   pulam para fora e voltam: a **evaporação** abaixo do ponto de ebulição;
+5. `varal` — a fala compara com a roupa no varal; o desenho segue igual;
+6. `ferver` — o calor do ambiente leva o fundo até o ponto de ebulição da
+   mistura (a plaquinha dele vai contando) e ela **ferve**: o vapor sobe pelas
+   fendas. A ficha de cada substância que começa a evaporar dá um pulo — a do
+   oxigênio também, muito abaixo dos -183 °C dele;
+7. `vapor` — a fala diz do que o vapor é feito; o desenho segue;
+8. `esfriar` — um sopro de geada no resfriador: lá em cima o vapor **vira
+   líquido de novo**, quase todo nitrogênio;
+9. `separar` — o fundo segue até -188 °C e a coluna assenta; a plaquinha de
+   cada andar toma a cor de quem é a maioria ali;
+10. `pureza` — aparecem as etiquetas do topo e do fundo ("95% NITROGÊNIO",
+    "67% OXIGÊNIO"): ricos, mas não puros;
+11. `fim` — o título vira **DESTILAÇÃO FRACIONADA**.
 
-Os termos: o que separa as substâncias é o **ponto de ebulição** (não o de
-fusão, que é sólido ↔ líquido); líquido virando gás fervendo é **ebulição**,
-gás virando líquido é **condensação**; o processo é a **destilação
-fracionada** do ar líquido.
+Os termos: **evaporação** é o líquido virando gás pela superfície, em qualquer
+temperatura; **ebulição** é ele fervendo, com bolhas, no ponto de ebulição (o
+da mistura fica entre os das substâncias); gás virando líquido é
+**condensação**. O que separa as substâncias é uma evaporar mais fácil que a
+outra (é isso que o ponto de ebulição resume; o de fusão, sólido ↔ líquido,
+não entra); o processo é a **destilação fracionada** do ar líquido.
 
 Dá para ver quantas vezes quiser (cada E recomeça do zero) e o ESC fecha no
 meio. A primeira vez fica anotada (`Destilador.ja_explicou()`), para quando a
@@ -781,8 +1244,9 @@ fase quiser cobrar isso.
 
 **As falas.** Estão em `timelines/cientista_destilador.dtl`, no editor do
 Dialogic. Antes de cada fala há um `[signal arg="..."]`: é ele que faz o
-desenho andar — `raio_x`, `ar`, `ebulicao`, `ferver`, `esfriar`,
-`separar`, `fim`, nessa ordem (os sete passos da lista acima). Reescreva,
+desenho andar — `raio_x`, `ar`, `ebulicao`, `evaporar`, `varal`, `ferver`,
+`vapor`, `esfriar`, `separar`, `pureza`, `fim`, nessa ordem (os onze passos da
+lista acima). Reescreva,
 junte ou tire falas à vontade; cada marca só precisa continuar antes da fala
 que a comenta (marca que faltar é feita junto com a seguinte). Se o jogador
 passar as falas depressa, o desenho corre para alcançar.
@@ -794,33 +1258,47 @@ passar as falas depressa, o desenho corre para alcançar.
   dela vão a régua e as plaquinhas de temperatura: deixe uns 170 px livres;
 - `Raiz/Fichas/*` — as três fichas da legenda
   (`scripts/ui/ficha_substancia.gd`): posição, `nome` e `parte_do_ar` no
-  Inspector. O ponto de ebulição não se escreve ali: sai do mesmo número que
-  decide o andar. Elas não se mexem;
+  Inspector. O ponto de ebulição não se escreve ali: sai de
+  `ColunaDestilacao.SUBSTANCIAS`. Elas não se mexem;
 - `Raiz/Veu` — a cor e a força do escuro por cima do jogo;
 - `timeline` e `deslocamento_da_fala` (quanto a caixa de fala anda para a
   direita, para não cobrir o pé da coluna) — no Inspector do nó raiz. Com a
   `timeline` vazia a tela passa só o desenho, sem fala;
-- `SomPop` e `SomRadio` — o estalo de cada substância que ferve ou que chega
-  no andar dela, e o chiado do rádio; o volume é no nó.
+- `SomPop` e `SomRadio` — o estalo de cada substância que começa a evaporar
+  ou que vira líquido de novo, e o chiado do rádio; o volume é no nó.
 
-**A química** (`scripts/ui/coluna_destilacao.gd`). Nada ali é encenado. Os
-números estão no topo do script:
+**A química** (`scripts/ui/coluna_destilacao.gd`). Nada ali é encenado: por
+baixo do desenho roda, escondida, a mesma coluna do simulador do Laboratório e
+do puzzle (`ColunaDoSimulador`, o "motor"), com o mesmo ar
+(`MisturasDoDestilador`, "ar": 22 N₂, 7 O₂ e 2 Ar — o argônio aumentado para
+aparecer; a ficha é que diz os 78/21/1% do ar de verdade). A explicação só diz
+até onde o calor do ambiente leva o fundo em cada etapa; qual molécula
+evapora, condensa ou escorre, quem decide é a conta
+(`scripts/laboratorio/equilibrio_liquido_vapor.gd`). Os números estão no topo
+do script:
 
-- `SUBSTANCIAS` — o ponto de ebulição de cada uma, quantas moléculas entram (a
-  proporção é só para se ver; a ficha é que diz os 78/21/1%) e as cores do
-  líquido;
-- `TEMPERATURA_DO_FUNDO` (-183, onde o fundo estaciona) e
-  `TEMPERATURA_DO_TOPO` (-196, onde o resfriador segura o topo) — os andares
-  do meio ficam repartidos por igual entre as duas;
+- `MISTURA` — a chave da mistura em `MisturasDoDestilador` (quantas moléculas
+  de cada substância, e a pressão de vapor de cada uma);
+- `SUBSTANCIAS` — o ponto de ebulição que as fichas mostram, a linha de cada
+  uma na folha das moléculas e as cores do líquido;
+- `TEMPERATURA_AO_FERVER` (-190, até onde o fundo vai em `ferver`),
+  `TEMPERATURA_DO_FUNDO` (-188, onde ele estaciona no fim, abaixo dos -183 °C
+  do oxigênio) e `TEMPERATURA_DO_TOPO` (-196, onde o resfriador segura o
+  topo) — os andares do meio ficam repartidos por igual entre o fundo e o
+  topo;
 - `TEMPERATURA_DO_AR_LIQUIDO` (-200) e `GRAUS_POR_SEGUNDO` (a pressa com que
-  o fundo ganha calor do ambiente).
+  o fundo ganha calor do ambiente enquanto não ferve; fervendo, quem manda é o
+  ponto de ebulição da mistura);
+- `RITMO_DOS_PULOS_AO_EVAPORAR` — quantas vezes mais frequente fica o
+  vai-e-volta da superfície em `evaporar`, só para dar tempo de ver (não muda
+  a conta).
 
-A molécula ferve quando o fundo passa do ponto de ebulição dela, e vira líquido
-no primeiro andar que está nesse ponto ou abaixo. Mudar um número muda o que
-acontece na tela (ponha o fundo em -180 e o oxigênio também sobe; ponha o topo
-em -190 e o nitrogênio não vira líquido em lugar nenhum) — é a conta que o
-puzzle do controle de temperatura vai precisar. `RAMPA_DE_TEMPERATURA` são as
-cores da régua e do gás, do mais frio ao menos frio.
+Mudar um número muda o que acontece na tela: ponha o fundo acima dos -183 °C
+do oxigênio e ele ferve até secar, o oxigênio sobe todo e o topo fica menos
+puro. Nada é sorteado e a conta anda sempre no mesmo passo
+(`PASSO_DO_MOTOR`): a explicação termina sempre igual, passem as falas
+depressa ou devagar. `RAMPA_DE_TEMPERATURA` são as cores da régua e do gás, do
+mais frio ao menos frio.
 
 **A arte.** `assets/fase nitrogenio/coluna de destilação.png` tem os dois
 desenhos lado a lado: o de aço (o do mapa) e o de raio X. **As bandejas são
@@ -921,8 +1399,10 @@ depois uma dupla) e dois no do pátio. Para mexer:
 No Inspector de cada morcego:
 
 - **Vida** — `Vida` (2 = ida e volta; 1 = morre no primeiro toque) e
-  `Persistir` (ligado, o morcego morto não volta quando a fase recarrega;
-  desligado, que é o padrão, o bando volta ao teto a cada visita);
+  `Persistir` (ligado, o morcego morto não volta nunca mais; desligado, que é
+  o padrão, o bando volta ao teto a cada VISITA ao corredor). Nos dois casos,
+  morrer não devolve vida a ninguém: enquanto a Cacau não sai do corredor, o
+  morto continua morto e o ferido continua a um golpe de cair;
 - **Ninho** — `Dorme No Teto` (desligado, ele fica voando em volta do lugar);
 - **Vigia** — `Raio De Alerta` (de que distância ele acorda) e
   `Raio De Desistencia` (de que distância ele larga dela e volta a dormir);
@@ -1003,11 +1483,79 @@ O teste do painel, da porta e da fala (com `-- --capturas=<pasta>`, e sem
 godot --headless --path . res://tools/teste_painel_fornalha.tscn
 ```
 
+## A música
+
+Quem toca a música é o autoload `TrilhaSonora` (`scripts/trilha_sonora.gd`), e
+não a cena: por isso ela não recomeça quando a Cacau morre ou passa para outra
+cena com a mesma música. Ela só muda quando a cena nova pede outra — a que sai
+some enquanto a nova cresce, em 1 s.
+
+Cada cena diz o que toca, nesta ordem:
+
+1. **A música da raiz.** Toda fase (`FaseBase`) tem o grupo **Música** no
+   Inspector da raiz: `musica` e `volume_da_musica_db`. A introdução também.
+2. **Céu aberto: a música da hora.** Com o item 1 vazio e uma `Atmosfera` que
+   não é de interior, toca a música da hora — a mesma em todo lugar ao ar
+   livre. Ela troca junto quando a hora muda (o pôr do sol no mirante, a noite
+   caindo no pátio, a tecla Ç), em 3 s. As três ficam na `Atmosfera`, grupo
+   **Música** (ver `ILUMINACAO.md`).
+3. **Nenhum dos dois:** silêncio.
+
+Hoje:
+
+| Onde | Música |
+|---|---|
+| céu aberto, de tarde com sol (menu, world1, pátio, rua da torre, telhado) | `bossa nova estilo stardew valley.mp3` |
+| céu aberto, com o sol já posto | `bossa nova estila stardew valley2.mp3` |
+| céu aberto, de noite | `jazz noite.mp3` |
+| a oficina (fase 1) | `fase1.mp3` |
+| os corredores do pátio e da torre | `esgoto ou algo assim.mp3` |
+| a torre por dentro | `SPY JAZZ - dentro da torre.mp3` |
+| a introdução (vídeo e foto) | `intro1.mp3`, que some junto com a última imagem |
+| o laboratório e as salas do compressor e da destilação | silêncio |
+
+A cena do mirante toca a música dela por cima da trilha: o piano G junto com o
+balão de exclamação, a trilha pausada e, um respiro depois do piano,
+"vendo foguete2" até a cena acabar (`TrilhaSonora.pausar` e `continuar`). Os
+volumes e o respiro (`espera_antes_da_musica`) ficam na `ColisaoCenaFoguete`,
+grupo **Música**. No fim a trilha volta, já com a música do sol posto.
+
+Toda música toca em loop e continua com o jogo pausado (caderno, mochila,
+puzzles). O teste:
+
+```
+godot --headless --path . res://tools/teste_trilha_sonora.tscn
+```
+
+## O modo de desenvolvedor (F1)
+
+Para andar pelo jogo inteiro sem jogar tudo de novo. Só funciona no jogo rodado
+pelo editor; no jogo exportado as teclas não fazem nada. Quem cuida é o
+autoload `ModoDev` (`scripts/modo_dev.gd`).
+
+| Tecla | O que faz |
+| --- | --- |
+| **F1** | Liga/desliga o modo. Ligando, a Cacau ganha todas as ferramentas e já sai voando. Desligar não tira as ferramentas. |
+| **V** | Voar/andar (com o modo ligado). |
+| **F2** | Menu de cenas: escolhe uma e vai direto para ela, no ponto de nascimento. Vale mesmo com o modo desligado. |
+
+Com o modo ligado, nada machuca (cair no buraco faz voltar a voar), nenhuma
+porta de fase fica trancada, o elevador parado parte, a saída barrada deixa
+passar e a amostra gelada da fase 2 não esquenta.
+
+Voando: WASD/setas em 8 direções, **Shift** mais rápido, roda do mouse (ou
+**-** e **+**) para o zoom. Ela atravessa parede, chão, porta de metal e
+barreira, e a câmera se solta dos limites da cena. Como o W é subir, as portas
+abrem no **E**. O elevador também abre no E, como sempre.
+
 ## Regerar o blockout do zero
 
 `tools/gerar_cenas_fases.tscn` reconstrói **todas** as cenas de fase e
 componente. Ele **sobrescreve** o que estiver lá, então só rode se quiser
-recomeçar o blockout e perder as edições feitas no editor:
+recomeçar o blockout e perder as edições feitas no editor. Atenção: ele ainda
+monta a Torre de Gases ANTIGA em `fase2_torre.tscn` — rodá-lo apaga a rua da
+fase 2 (as salas, a torre por dentro e o telhado ficam, mas sem a rua não se
+chega nelas):
 
 ```
 godot --headless --path . res://tools/gerar_cenas_fases.tscn
@@ -1050,12 +1598,41 @@ verdade — laboratório ↔ corredor ↔ Torre e alçapão do fosso ↔ subsolo
 godot --headless --fixed-fps 60 --path . res://tools/teste_porta_modelo.tscn
 ```
 
+O portão de rolamento da sala do compressor tem o dele (os 11 quadros, os sons
+lidos do próprio .wav — o fade-in, o pico, o fim em silêncio —, o quadro da
+trava no clunk e o da porta fechada na batida, o painel acendendo verde e
+voltando ao vermelho, o prédio no lugar do antigo e o fim da rua vazio, a ida
+e a volta da sala do compressor, e a sala por dentro com a arte de fora,
+fechada e com som de concreto no chão):
+
+```
+godot --headless --fixed-fps 60 --path . res://tools/teste_porta_rolamento.tscn
+```
+
+As lajes vazadas da fase 2 têm o delas (em cada uma — a do meio da sala do
+compressor, a do meio e o telhado do prédio na rua, o telhado da casinha da
+escada —: a faixa está numa camada com colisão (o `Terreno`, ou a `Lajes` da
+rua) na versão vazada, a Cacau pisa caindo de cima, passa pulando por baixo e
+desce com S + espaço; e a faixa sólida da sala continua segurando no teto e
+nas paredes):
+
+```
+godot --headless --fixed-fps 60 --path . res://tools/teste_lajes_vazadas.tscn
+```
+
 O corredor da torre tem o dele: o cenário com os tiles do laboratório, o piso
 de metal, e a ida e a volta correndo de verdade (a cena troca sozinha no fundo,
 e na volta ela entra andando por lá):
 
 ```
 godot --headless --fixed-fps 60 --path . res://tools/teste_corredor_torre.tscn
+```
+
+O modo de desenvolvedor tem o dele (o voo atravessando parede e chão, a câmera
+solta, o dano, as travas, as portas no E e o menu de cenas):
+
+```
+godot --headless --path . res://tools/teste_modo_dev.tscn
 ```
 
 E os passos da Cacau, com o som de cada chão (grama, concreto e metal):
@@ -1065,13 +1642,30 @@ godot --headless --path . res://tools/teste_passos.tscn
 ```
 
 A coluna de destilação tem o dela (as bandejas lidas da arte, as temperaturas
-do fundo ao topo, o nitrogênio fervendo primeiro e cada substância no andar do
-seu ponto de ebulição, a conversa do Dr. Chico fazendo o desenho andar na fase
-2, o fechar sozinho e o ESC). Com `-- --capturas=<pasta>` e sem `--headless`,
-salva uma imagem de cada momento:
+do fundo ao topo, a superfície evaporando sem ferver, a mistura fervendo entre
+os pontos de ebulição com o oxigênio evaporando junto, o topo rico em
+nitrogênio e o fundo rico em oxigênio sem nenhum dos dois puro, o mesmo
+resultado em qualquer ritmo, o puzzle da amostra — frio demais, a janela certa
+e quente demais, com o aviso de cada uma —, a conversa do Dr. Chico fazendo o
+desenho andar na fase 2, o fechar sozinho e o ESC). Com `-- --capturas=<pasta>`
+e sem `--headless`, salva uma imagem de cada momento:
 
 ```
 godot --headless --path . res://tools/teste_destilador.tscn
+```
+
+A fase 2 tem três: o puzzle do compressor (a física do gás, o estouro, a
+amostra e o relógio dela), a fase inteira (as cinco cenas, os pares de portas
+e elevadores, as travas da rua, o cilindro do telhado, o primeiro degrau sem e
+com a mochila, os puzzles da torre, as janelas grandes da torre fora das
+placas e das portas, e a sala de destilação igual à do compressor, tile por
+tile e com a mesma câmera, fechada e com chão de concreto) e a subida da torre
+salto por salto:
+
+```
+godot --headless --path . res://tools/teste_compressor.tscn
+godot --headless --path . res://tools/teste_fase2.tscn
+godot --headless --path . res://tools/teste_subida_torre.tscn
 ```
 
 Os morcegos dos corredores têm o deles (acordar, o bote e o aviso, o desvio, o
@@ -1080,4 +1674,12 @@ cada corredor):
 
 ```
 godot --headless --path . res://tools/teste_morcego.tscn
+```
+
+E o que a fase 1 lembra quando a Cacau morre (espinhos, caixas elétricas,
+torretas, domos, portas, maçãs, o puzzle pela metade e os morcegos do
+corredor — ver "O que a fase lembra"):
+
+```
+godot --headless --fixed-fps 60 --path . res://tools/teste_estado_da_fase1.tscn
 ```

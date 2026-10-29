@@ -13,14 +13,19 @@ extends TelaInterativa
 #   ao lado dela o termômetro (scripts/ui/termometro.gd). O ponteiro é o que a
 #                pessoa pede para o fundo; a coluna colorida é o que o fundo já
 #                tem. Cada substância tem uma marca na altura do ponto de
-#                ebulição dela: passou da marca, ela ferve.
+#                ebulição dela PURA; e uma marca escrita, "O FUNDO FERVE",
+#                anda junto com o ponto de ebulição da mistura que está no
+#                fundo agora — é nela que o fundo começa a ferver, e ela sobe
+#                conforme as substâncias mais voláteis vão embora.
 #   à direita    uma ficha por substância: a molécula, o nome, o ponto de
 #                ebulição e onde ela está agora (líquido no fundo, gás no
-#                topo...). É a legenda da coluna, e ela se atualiza sozinha.
+#                topo, ou onde está a maior parte dela: "16 DE 18 NO TOPO").
+#                É a legenda da coluna, e ela se atualiza sozinha.
 #
 # Não há resposta para acertar: é um brinquedo. Mas há um objetivo à vista:
-# quando cada substância fica inteira num andar (ou como gás no topo) e nenhum
-# andar tem duas, a tela avisa MISTURA SEPARADA.
+# quando a coluna para e cada substância é a maioria num lugar diferente, a
+# tela avisa MISTURA SEPARADA. Pura, quase nunca fica nenhuma: o vapor leva de
+# tudo um pouco (ver EquilibrioLiquidoVapor).
 #
 # A conta que a coluna faz, e o que nela é simplificação, estão explicados no
 # topo de coluna_do_simulador.gd.
@@ -47,10 +52,14 @@ const TXT_SUBSTANCIAS := "O QUE TEM NA MISTURA"
 const TXT_RECOMECAR := "RECOMEÇAR"
 const TXT_FERVE := "ferve a %s"
 const TXT_SEPARADA := "MISTURA SEPARADA!"
-const TXT_COMECO := "SUBA O TERMÔMETRO: QUEM PASSA DO PONTO DE EBULIÇÃO FERVE E SOBE."
-const TXT_OBJETIVO := "A MISTURA ESTÁ SEPARADA QUANDO CADA SUBSTÂNCIA FICA SOZINHA NUM ANDAR."
-const TXT_MODELO := "MODELO SIMPLIFICADO: AQUI CADA SUBSTÂNCIA FERVE E CONDENSA INTEIRA, NO PONTO DE EBULIÇÃO DELA."
+const TXT_SEPARADA_MAS := "CADA SUBSTÂNCIA FICOU MAIS RICA NUM LUGAR DA COLUNA. VEJA NAS FICHAS: QUASE NENHUMA FICOU PURA."
+const TXT_COMECO := "SUBA O TERMÔMETRO. TUDO EVAPORA UM POUCO, MAS O FUNDO SÓ FERVE NA MARCA \"O FUNDO FERVE\": ENTRE OS PONTOS DE EBULIÇÃO DAS SUBSTÂNCIAS."
+const TXT_OBJETIVO := "A MISTURA ESTÁ SEPARADA QUANDO CADA SUBSTÂNCIA É A MAIORIA NUM LUGAR DIFERENTE DA COLUNA."
+const TXT_MODELO := "MODELO SIMPLIFICADO: POUCAS MOLÉCULAS, SEMPRE A 1 ATM. MAS QUANTO CADA SUBSTÂNCIA EVAPORA É A CONTA DE VERDADE (LEI DE RAOULT)."
 const TXT_TERMOMETRO := "TEMPERATURA\nDO FUNDO"
+## A marca do termômetro que anda com o ponto de ebulição da mistura do fundo.
+const TXT_MARCA_DO_FUNDO := "O FUNDO\nFERVE"
+const COR_MARCA_DO_FUNDO := Color("ffd166")
 
 # ── A lista de misturas (px da tela) ──
 const LISTA := Rect2(40, 118, 340, 0)
@@ -71,6 +80,9 @@ var chave_da_mistura: String = ""
 var _arrastando: bool = false
 var _pulo_do_aviso: float = 0.0
 var _estalos: int = 0
+## O ponto de ebulição do fundo que a marca do termômetro mostra agora (para
+## só refazer as marcas quando ele muda).
+var _marca_do_fundo: float = NAN
 
 @onready var coluna: ColunaDoSimulador = $Coluna
 @onready var termometro: Termometro = $Termometro
@@ -100,6 +112,7 @@ func _a_cada_quadro(delta: float) -> void:
 	termometro.pedida = coluna.temperatura_pedida()
 	termometro.medida = coluna.temperatura()
 	termometro.em_foco = _arrastando or alvo_em_foco() == "termometro"
+	_atualizar_as_marcas()
 	_pulo_do_aviso = move_toward(_pulo_do_aviso, 0.0, delta / 0.45)
 	painel.queue_redraw()
 
@@ -145,13 +158,29 @@ func escolher_mistura(chave: String, com_som: bool = true) -> void:
 	_arrastando = false
 	coluna.definir_mistura(dados)
 	termometro.definir_faixa(float(dados["minima"]), float(dados["maxima"]))
-	var marcas: Array[Dictionary] = []
-	for substancia in MisturasDoDestilador.em_ordem_de_ebulicao(dados):
-		marcas.append({"chave": substancia, "graus": MisturasDoDestilador.ebulicao(substancia)})
-	termometro.definir_marcas(marcas)
+	_marca_do_fundo = NAN
+	_atualizar_as_marcas()
 	if com_som:
 		tocar("botao")
 	mistura_trocada.emit(chave)
+
+
+## As marcas do termômetro: o ponto de ebulição de cada substância pura e, se
+## o fundo tem líquido que evapora, a temperatura em que ELE ferve agora (a da
+## mistura que está lá). Só refaz quando essa muda.
+func _atualizar_as_marcas() -> void:
+	var fundo := coluna.bolha_do_fundo()
+	var visivel := is_finite(fundo) and fundo <= termometro.maxima
+	var agora := roundf(fundo * 10.0) / 10.0 if visivel else INF
+	if is_equal_approx(agora, _marca_do_fundo) or (is_inf(agora) and is_inf(_marca_do_fundo)):
+		return
+	_marca_do_fundo = agora
+	var marcas: Array[Dictionary] = []
+	for substancia in MisturasDoDestilador.em_ordem_de_ebulicao(mistura()):
+		marcas.append({"chave": substancia, "graus": MisturasDoDestilador.ebulicao(substancia)})
+	if visivel:
+		marcas.append({"chave": "fundo", "graus": agora, "texto": TXT_MARCA_DO_FUNDO, "cor": COR_MARCA_DO_FUNDO})
+	termometro.definir_marcas(marcas)
 
 
 ## A mesma mistura, do começo.
@@ -279,8 +308,10 @@ func _desenhar_o_painel() -> void:
 	var meio := Vector2(FICHAS.position.x + FICHAS.size.x * 0.5,
 		retangulo_da_ficha(lista.size()).position.y + 34.0)
 	if coluna.separada():
-		PecasDoLaboratorio.plaquinha(painel, meio, TXT_SEPARADA, 22, Color("9be28a"), 1.0,
+		var placa := PecasDoLaboratorio.plaquinha(painel, meio, TXT_SEPARADA, 22, Color("9be28a"), 1.0,
 			sin(_pulo_do_aviso * PI) * 6.0)
+		_escrever_claro(Rect2(FICHAS.position.x, placa.end.y + 6.0, FICHAS.size.x, 120.0), TXT_SEPARADA_MAS,
+			EstiloHUD.CLARO)
 	else:
 		var comecou := coluna.quantas_em(ColunaDoSimulador.Estado.LIQUIDA) < coluna.total_de_moleculas() \
 			or coluna.temperatura_pedida() > float(mistura().get("minima", 0.0))
@@ -288,8 +319,8 @@ func _desenhar_o_painel() -> void:
 			TXT_OBJETIVO if comecou else TXT_COMECO, EstiloHUD.CLARO)
 
 
-## A ficha de uma substância: a molécula, o nome, o ponto de ebulição e onde
-## ela está agora.
+## A ficha de uma substância: a molécula, o nome, o ponto de ebulição (dela
+## pura) e onde ela está agora.
 func _desenhar_a_ficha(caixa: Rect2, chave: String) -> void:
 	var dados := MisturasDoDestilador.substancia(chave)
 	EstiloHUD.ficha(painel, caixa)
@@ -314,10 +345,14 @@ func _desenhar_a_ficha(caixa: Rect2, chave: String) -> void:
 	painel.draw_string(FONTE, Vector2(x, y), TXT_FERVE % MisturasDoDestilador.graus(float(dados["ebulicao"])),
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, EstiloHUD.TINTA_FRACA)
 	y += 17.0
+	# Onde ela está: em azul se é (quase toda) líquido parado, em laranja se é
+	# gás, e apagado se está a caminho.
 	var situacao := coluna.situacao_de(chave)
-	painel.draw_string(FONTE, Vector2(x, y), situacao, HORIZONTAL_ALIGNMENT_LEFT, -1, 11,
-		COR_DE_GAS if situacao.begins_with("GÁS") else COR_DE_LIQUIDO if situacao.begins_with("LÍQUIDO")
-		else EstiloHUD.TINTA_FRACA)
+	var lugar := coluna.lugar_principal(chave)
+	var cor := EstiloHUD.TINTA_FRACA
+	if lugar != ColunaDoSimulador.A_CAMINHO:
+		cor = COR_DE_GAS if lugar.y == ColunaDoSimulador.GAS else COR_DE_LIQUIDO
+	painel.draw_string(FONTE, Vector2(x, y), situacao, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, cor)
 
 
 ## Texto miúdo e claro, com contorno, quebrado na largura da caixa (escrito

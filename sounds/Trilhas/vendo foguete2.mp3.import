@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dlixigswblnkc"
+path="res://.godot/imported/vendo foguete2.mp3-184538eef28e5f9cfa8c3885c0719cb0.mp3str"
+
+[deps]
+
+source_file="res://sounds/Trilhas/vendo foguete2.mp3"
+dest_files=["res://.godot/imported/vendo foguete2.mp3-184538eef28e5f9cfa8c3885c0719cb0.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -6,30 +6,40 @@ extends Control
 #
 # É a coluna da fase do nitrogênio vista em raio X, com o ar sendo separado
 # dentro dela. Quem a põe na tela e a rege é a explicação do Dr. Chico
-# (scripts/explicacao_destilador.gd); este nó só desenha e anima.
+# (scripts/explicacao_destilador.gd); este nó desenha e anima.
+#
+# A FÍSICA NÃO É ENCENADA: por baixo do desenho roda a mesma coluna do
+# simulador do Laboratório e do puzzle (ColunaDoSimulador, escondida — o
+# "motor"), com o mesmo ar (MisturasDoDestilador, "ar": 22 N₂, 7 O₂ e 2 Ar, o
+# argônio aumentado para aparecer). A explicação só diz até onde o calor do
+# ambiente leva o fundo em cada etapa; quem decide qual molécula evapora,
+# condensa ou escorre é a conta (ver EquilibrioLiquidoVapor). Este nó lê o
+# motor e desenha tudo com a arte da história (as moléculas de "moleculas do
+# ar.png", as plaquinhas, a geada do resfriador).
 #
 # COMO UMA COLUNA DESSAS FUNCIONA (é isto que o desenho mostra):
 #
-#   * Cada substância ferve numa temperatura, o PONTO DE EBULIÇÃO: o
-#     nitrogênio a -196 °C, o argônio a -186 °C, o oxigênio a -183 °C. Mais
-#     quente que isso ela é gás; mais fria, líquido.
+#   * Cada substância tem um PONTO DE EBULIÇÃO: o nitrogênio -196 °C, o argônio
+#     -186 °C, o oxigênio -183 °C. Mas EVAPORAR elas evaporam abaixo dele: as
+#     moléculas mais agitadas da superfície escapam em qualquer temperatura
+#     (a roupa no varal seca a 25 °C). Num lugar fechado, tanto escapa quanto
+#     volta: é o vai-e-volta da superfície do líquido.
+#   * A MISTURA ferve numa temperatura entre os pontos de ebulição dela: o ar
+#     líquido, a uns -194 °C. E o vapor tem de tudo: uns 90% de nitrogênio (o
+#     que evapora mais fácil) e o resto de oxigênio e argônio, que evaporam ali
+#     uns 10 °C abaixo do ponto de ebulição deles.
 #   * O calor não vem de máquina nenhuma: a -200 °C o ar líquido é muito mais
-#     frio que tudo em volta, e o CALOR DO AMBIENTE vai entrando nele sozinho.
-#     Quem tira calor é o RESFRIADOR, a serpentina dentro da cúpula. Por isso
-#     o fundo, onde está o líquido, é o lugar menos frio (-183 °C) e o topo o
-#     mais frio (-196 °C), e cada andar do meio fica entre um e outro. É a
-#     régua colorida à esquerda.
-#   * O fundo não passa de -183 °C enquanto houver oxigênio líquido lá: um
-#     líquido fervendo não fica mais quente que o ponto de ebulição dele (a
-#     água na panela não passa de 100 °C).
-#   * O gás sobe porque é gás, e esfria no caminho porque vai passando por
-#     andares cada vez mais frios. Quando chega no andar que está no ponto de
-#     ebulição dele, vira líquido de novo e fica ali. É a tampa da panela: o
-#     vapor sobe, encosta na tampa fria e vira gota.
-#   * Resultado: o nitrogênio (o que ferve mais fácil) só vira líquido lá no
-#     topo; o argônio para um andar acima do fundo; o oxigênio (o mais difícil
-#     de ferver) nem sai do fundo. Numa coluna de verdade é assim: oxigênio
-#     líquido embaixo, nitrogênio em cima, argônio no meio.
+#     frio que tudo em volta, e o CALOR DO AMBIENTE vai entrando sozinho. Quem
+#     tira calor é o RESFRIADOR, a serpentina da cúpula: por isso o fundo é o
+#     lugar menos frio e o topo, o mais frio. Fervendo, o fundo não esquenta: o
+#     calor vai todo para virar vapor. Mas, como sai mais nitrogênio, o líquido
+#     que fica é cada vez mais rico em oxigênio e ferve cada vez mais quente.
+#   * O vapor sobe e esfria. Nas bandejas e no topo, perto do resfriador, ele
+#     condensa; numa bandeja quente demais para aquele líquido, ele ferve de
+#     novo. A cada vez fica mais rico em nitrogênio: é a destilação
+#     FRACIONADA.
+#   * No fim: topo rico em nitrogênio, fundo rico em oxigênio, e o argônio (que
+#     ferve quase junto com o oxigênio) misturado no meio. Nada sai 100% puro.
 #
 # O QUE SE VÊ, NA ORDEM (cada parte é uma Etapa, pedida com ir_para):
 #
@@ -37,37 +47,32 @@ extends Control
 #   RAIO_X       uma faixa de luz desce por ela e o aço vira o desenho preto,
 #                com as bandejas à mostra.
 #   AR_LIQUIDO   o ar entra no fundo já LÍQUIDO, a -200 °C: as moléculas dos
-#                três tipos (N₂, O₂ e Ar) misturadas e encostadas.
-#   FERVER       o resfriador liga e o líquido vai ganhando calor do ambiente:
-#                o fundo fica menos frio aos poucos e para um grau antes de o
-#                argônio ferver. Passando de -196 °C o NITROGÊNIO ferve: as
-#                moléculas dele saem do líquido, sobem
-#                como gás pelas fendas e só viram líquido no topo, onde o
-#                resfriador segura os -196 °C. O que não cabe na bandeja de
-#                cima continua gás: no ponto de ebulição, os dois convivem.
-#   SEPARAR      o fundo segue ganhando calor, até -183 °C. A -186 °C ferve o
-#                ARGÔNIO, que sobe um andar só (lá já está no ponto de ebulição
-#                dele). O OXIGÊNIO fica: o fundo não passa do ponto dele.
+#                três tipos misturadas e encostadas.
+#   EVAPORAR     ainda a -200 °C, nada ferve, mas moléculas da superfície pulam
+#                para fora e voltam — mais de nitrogênio, às vezes uma de
+#                oxigênio ou argônio. O vai-e-volta fica mais frequente aqui
+#                (RITMO_DOS_PULOS_AO_EVAPORAR), para dar tempo de ver.
+#   FERVER       o resfriador liga e o calor do ambiente leva o fundo até
+#                TEMPERATURA_AO_FERVER: a uns -194 °C a mistura começa a ferver
+#                e o fundo vai esquentando conforme o nitrogênio sai.
+#   SEPARAR      o fundo segue até TEMPERATURA_DO_FUNDO e a coluna assenta.
 #
-# A separação NÃO é encenada. O fundo e o topo têm uma temperatura, os andares
-# do meio ficam repartidos por igual entre as duas, cada substância tem um
-# ponto de ebulição, e a molécula decide sozinha: ferve quando o fundo passa do
-# ponto dela e vira líquido no primeiro andar que está nesse ponto ou abaixo.
-# Mudar um número muda o que acontece na tela — é a mesma conta que o puzzle
-# do controle de temperatura vai precisar.
+# Além das etapas, mostrar_pureza() faz aparecer, no topo e no fundo, quanto do
+# líquido de lá é da substância que mais tem ali ("95% NITROGÊNIO").
 #
 # A ARTE É LIDA SOZINHA. "coluna de destilação.png" tem dois desenhos lado a
 # lado, o de aço e o de raio X. Do de raio X saem as bandejas: toda barra clara
 # presa em uma parede só é uma bandeja, o vão que sobra do outro lado é a fenda
 # por onde o gás sobe, e o dente na ponta dela é a borda que segura o líquido.
 # Pode redesenhar, mudar de tamanho e pôr mais bandejas: o desenho animado
-# acompanha (ver _ler_arte).
+# acompanha (ver _ler_arte) — e o motor lê a mesma arte (ArteDaColuna).
 #
 # ONDE MEXER:
-#   SUBSTANCIAS    quantas moléculas de cada, o ponto de ebulição e as cores do
-#                  líquido de cada uma.
-#   TEMPERATURA_DO_FUNDO / TEMPERATURA_DO_TOPO
-#                  onde o fundo estaciona e onde o resfriador segura o topo.
+#   MISTURA        a chave da mistura em MisturasDoDestilador (quantas moléculas
+#                  de cada, os pontos de ebulição e as pressões de vapor).
+#   SUBSTANCIAS    a linha de cada uma na folha das moléculas e as cores.
+#   TEMPERATURA_AO_FERVER / TEMPERATURA_DO_FUNDO
+#                  até onde o calor do ambiente leva o fundo em FERVER e no fim.
 #   RAMPA_DE_TEMPERATURA   as cores da régua (e do gás), do mais frio ao menos.
 #   os tempos      logo abaixo.
 #   assets/fase nitrogenio/moleculas do ar.png
@@ -75,15 +80,17 @@ extends Control
 #                  quadros de 12×12 px — a molécula girando. O 1º quadro
 #                  (deitada) é o que aparece dentro do líquido e nas plaquinhas.
 
-## O fundo passou do ponto de ebulição desta substância: ela começou a ferver.
+## Uma substância começou a evaporar de verdade: a primeira molécula dela saiu
+## do líquido como vapor (todas evaporam, cada uma no seu ritmo).
 signal ferveu(substancia: String)
-## A substância chegou no andar dela: a primeira molécula virou líquido na
-## bandeja — ou, para a que nem sai do fundo, só sobrou ela lá.
+## A primeira molécula de vapor da substância virou líquido lá em cima (numa
+## bandeja ou no topo).
 signal assentou(substancia: String)
-## Cada substância está no andar dela e não há mais nada subindo.
+## A coluna assentou no fim (o fundo chegou na temperatura dele e nada mais se
+## mexe).
 signal separou
 
-enum Etapa { FECHADA, RAIO_X, AR_LIQUIDO, FERVER, SEPARAR }
+enum Etapa { FECHADA, RAIO_X, AR_LIQUIDO, EVAPORAR, FERVER, SEPARAR }
 
 const CAMINHO_ARTE := "res://assets/fase nitrogenio/coluna de destilação.png"
 const CAMINHO_MOLECULAS := "res://assets/fase nitrogenio/moleculas do ar.png"
@@ -92,39 +99,34 @@ const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 ## Quantos px de tela vale cada pixel da arte da coluna.
 const ESCALA := 4.0
 ## E cada pixel da arte das moléculas: a metade, para caberem deitadas na
-## poça de uma bandeja (4 px de arte de fundura).
+## poça de uma bandeja.
 const ESCALA_MOLECULA := 2.0
 const CELULA_DA_MOLECULA := 12
 const QUADROS_DA_MOLECULA := 4
 
 # ── O AR ──
+## A mistura que entra na coluna (uma chave de MisturasDoDestilador.MISTURAS).
+const MISTURA := "ar"
 ## "linha" é a linha da substância na folha das moléculas. "ebulicao" é o ponto
-## de ebulição dela, em °C, a 1 atm (os de verdade: -195,8, -185,8 e -183,0).
-## "quantas" é quantas entram na coluna: a proporção é só para se ver (no ar de
-## verdade, de cada 100 moléculas, 78 são N₂, 21 são O₂ e 1 é argônio — é a
-## ficha ao lado da coluna que diz isso).
+## de ebulição dela pura, em °C, como as fichas o mostram (os de verdade: -195,8,
+## -185,8 e -183,0; a conta usa a pressão de vapor de MisturasDoDestilador).
 const SUBSTANCIAS := {
-	"N2": {"linha": 0, "ebulicao": -196, "quantas": 16,
-		"liquido": Color("0f4a37"), "tona": Color("58d68d")},
-	"O2": {"linha": 1, "ebulicao": -183, "quantas": 7,
-		"liquido": Color("15186b"), "tona": Color("7f8cff")},
-	"Ar": {"linha": 2, "ebulicao": -186, "quantas": 3,
-		"liquido": Color("47206a"), "tona": Color("d9a6ff")},
+	"N2": {"linha": 0, "ebulicao": -196, "liquido": Color("0f4a37"), "tona": Color("58d68d")},
+	"O2": {"linha": 1, "ebulicao": -183, "liquido": Color("15186b"), "tona": Color("7f8cff")},
+	"Ar": {"linha": 2, "ebulicao": -186, "liquido": Color("47206a"), "tona": Color("d9a6ff")},
 }
-## O ar líquido do fundo, antes de separar.
-const COR_MISTURA := Color("1b3350")
-const COR_TONA_MISTURA := Color("8fc1e8")
 
 # ── AS TEMPERATURAS (°C) ──
-## O ar entra na coluna já líquido (abaixo de -196 °C ele é líquido inteiro).
+## O ar entra na coluna já líquido (abaixo de uns -194 °C ele não ferve).
 const TEMPERATURA_DO_AR_LIQUIDO := -200.0
-## Onde o fundo estaciona, ganhando calor do ambiente: o ponto de ebulição do
-## oxigênio. Enquanto houver oxigênio líquido lá ele não passa disso (um
-## líquido fervendo não fica mais quente que o ponto de ebulição dele), e é por
-## isso que o oxigênio fica no fundo.
-const TEMPERATURA_DO_FUNDO := -183.0
-## Onde o resfriador segura o topo: o ponto de ebulição do nitrogênio, que por
-## isso vira líquido lá.
+## Até onde o calor do ambiente leva o fundo na etapa FERVER. A mistura começa
+## a ferver antes, a uns -194 °C, e o fundo vai subindo conforme o nitrogênio
+## sai dele.
+const TEMPERATURA_AO_FERVER := -190.0
+## Onde o fundo estaciona no fim: um pouco abaixo do ponto de ebulição do
+## oxigênio, que por isso fica (quase todo) lá.
+const TEMPERATURA_DO_FUNDO := -188.0
+## Onde o resfriador segura o topo: o ponto de ebulição do nitrogênio.
 const TEMPERATURA_DO_TOPO := -196.0
 ## As cores da régua de temperatura, do mais frio ao menos frio. Entre duas
 ## temperaturas da lista a cor é a mistura das duas.
@@ -141,22 +143,21 @@ const DURACAO_DO_RAIO_X := 0.9
 const DURACAO_DE_FECHAR := 0.5
 ## Na etapa AR_LIQUIDO, entra uma molécula a cada tanto.
 const INTERVALO_DE_ENTRADA := 0.045
-## Quantos graus o fundo sobe por segundo, ganhando calor do ambiente.
+## Quantos graus o calor do ambiente leva o fundo a subir por segundo (quando
+## nada ferve; fervendo, quem manda é o ponto de ebulição da mistura).
 const GRAUS_POR_SEGUNDO := 2.0
-## Fervendo, sai uma molécula do líquido a cada tanto.
-const INTERVALO_DE_EMISSAO := 0.3
-## Velocidade do gás subindo e do gás solto num andar (px de tela por segundo).
-const VELOCIDADE_SUBINDO := 180.0
-const VELOCIDADE_SOLTO := 96.0
+## Na etapa EVAPORAR o vai-e-volta da superfície fica tantas vezes mais
+## frequente, para dar tempo de vê-lo (não muda nada na conta).
+const RITMO_DOS_PULOS_AO_EVAPORAR := 3.0
+## Quanto tempo, no mínimo, a etapa EVAPORAR fica na tela.
+const DURACAO_MINIMA_DE_EVAPORAR := 1.2
 ## Quando a explicação pede uma etapa com a anterior ainda no meio, a anterior
 ## corre nesta pressa até acabar.
 const PRESSA_PARA_ALCANCAR := 6.0
+## O passo da conta da coluna de verdade, sempre o mesmo (ver _passo).
+const PASSO_DO_MOTOR := 1.0 / 60.0
 
 # ── MEDIDAS (px de tela) ──
-## Meia molécula: o quanto ela se afasta de parede, teto e líquido.
-const FOLGA := 13.0
-## Quanto a molécula pode sair do meio da fenda ao passar por ela.
-const FOLGA_NA_FENDA := 9.0
 ## A régua de temperatura, colada na parede esquerda da coluna.
 const LARGURA_DA_REGUA := 12.0
 const DISTANCIA_DA_REGUA := 4.0
@@ -168,6 +169,9 @@ const LARGURA_DO_DESENHO_NA_PLAQUINHA := 26.0
 const LEGENDA_DO_RESFRIADOR := "RESFRIADOR"
 ## Em duas linhas, embaixo da plaquinha do fundo.
 const LEGENDA_DO_CALOR := "CALOR DO\nAMBIENTE"
+## A etiqueta de pureza: "93% NITROGÊNIO", acima do líquido do topo e do fundo.
+const TEXTO_DA_PUREZA := "%d%% %s"
+const LETRA_DA_PUREZA := 15
 
 ## A névoa do gás: a partir de quanta névoa aparece cada um dos dois tons (o
 ## pontilhado é a beirada da nuvem). A cor é a da temperatura do andar.
@@ -184,49 +188,7 @@ const COR_DO_CALOR_CLARA := Color("ffd166")
 const COR_SERPENTINA_PARADA := Color("3d4a5c")
 const COR_SERPENTINA := Color("8fd8ff")
 const COR_SERPENTINA_CLARA := Color("f2fbff")
-
-enum Estado { FORA, LIQUIDA, SUBINDO, MERGULHANDO, GAS_SOLTO }
-
-
-class Molecula:
-	var tipo: String = ""
-	var estado: int = 0
-	## O meio dela, em px de tela a partir do canto da coluna.
-	var pos := Vector2.ZERO
-	var vel := Vector2.ZERO
-	var caminho := PackedVector2Array()
-	var passo: int = 0
-	## Relógio só dela: o giro, o balanço dentro do líquido.
-	var relogio: float = 0.0
-	## Giros por segundo (quadros da folha) enquanto é gás.
-	var giro: float = 5.0
-	## Espera antes de entrar na coluna (etapa AR_LIQUIDO).
-	var espera: float = 0.0
-	## 0..1: o estalo de quando ela aparece.
-	var tamanho: float = 0.0
-	## A poça em que ela mora quando é líquido, e o lugar dela ali.
-	var poca: int = -1
-	var alvo_x: float = 0.0
-	## O andar em que ela quica enquanto é gás solto.
-	var camara: int = 0
-	var proxima_fumaca: float = 0.0
-
-
-class Poca:
-	## Paredes, fundo e fundura cheia, em px de tela.
-	var x0: float = 0.0
-	var x1: float = 0.0
-	var base: float = 0.0
-	var funda: float = 0.0
-	## A substância que vira líquido nesta bandeja ("" nas fileiras do fundo e
-	## nas bandejas em que nenhuma para).
-	var substancia: String = ""
-	var camara: int = 0
-	var cabem: int = 0
-	## As moléculas que moram nela, da esquerda para a direita.
-	var moleculas: Array = []
-	## 0..1: quanto do líquido já se vê.
-	var nivel: float = 0.0
+const COR_DA_BOLHA := Color("8fc1e8")
 
 
 static var _folha_das_moleculas: Texture2D
@@ -258,6 +220,8 @@ var _nevoa := PackedFloat32Array()
 var _andar_da_linha := PackedInt32Array()
 
 # ── A animação ──
+## A coluna de verdade, escondida: é ela que faz a conta.
+var _motor: ColunaDoSimulador
 var _etapa: Etapa = Etapa.FECHADA
 var _pedida: Etapa = Etapa.FECHADA
 var _relogio_da_etapa: float = 0.0
@@ -267,32 +231,27 @@ var _raio_x: float = 0.0
 ## 0..1: o que tem dentro (moléculas, líquidos, régua, plaquinhas) some ao fechar.
 var _conteudo: float = 1.0
 var _fechando: bool = false
-var _temperatura_do_fundo: float = TEMPERATURA_DO_AR_LIQUIDO
 ## 0..1: o calor do ambiente e o resfriador aparecendo.
 var _calor: float = 0.0
 var _resfriador: float = 0.0
 ## 0..1: a régua de temperatura aparecendo.
 var _regua: float = 0.0
-var _moleculas: Array[Molecula] = []
-## 0 e 1 são as duas fileiras do fundo; daí em diante, uma por bandeja.
-var _pocas: Array[Poca] = []
-var _altura_do_fundo: float = 0.0
-var _proxima_emissao: float = 0.0
-var _proxima_bolha: float = 0.0
+## 0..1: as etiquetas de pureza do topo e do fundo aparecendo.
+var _pureza_a_vista: float = 0.0
+var _mostrar_pureza: bool = false
+## Na etapa AR_LIQUIDO, quando cada molécula (na ordem do motor) aparece.
+var _entrada := PackedFloat32Array()
 var _proxima_geada: float = 0.0
-var _bolhas: Array[Vector3] = []     # x, y, velocidade
-var _fumaca: Array[Dictionary] = []
-var _respingos: Array[Dictionary] = []
 var _geada: Array[Dictionary] = []
 ## Por andar: quanto da plaquinha de temperatura já apareceu (0..1).
 var _etiquetas := PackedFloat32Array()
 ## Por andar: 1 quando alguma coisa acaba de acontecer ali; volta a 0 sozinho.
 var _pulsos := PackedFloat32Array()
-## Por andar: a substância que ficou ali ("" enquanto não ficou nenhuma).
-var _donos: Array[String] = []
 var _ja_ferveu: Dictionary = {}
 var _ja_assentou: Dictionary = {}
 var _avisou_separou: bool = false
+## O tempo da animação que ainda não virou passo do motor.
+var _tempo_do_motor: float = 0.0
 
 ## Multiplica o tempo da animação (a explicação acelera quando a pessoa passa
 ## as falas depressa).
@@ -305,6 +264,19 @@ func _ready() -> void:
 	_ler_arte()
 	custom_minimum_size = tamanho_da_coluna()
 	size = custom_minimum_size
+	if not Engine.is_editor_hint():
+		_motor = ColunaDoSimulador.new()
+		_motor.name = "Motor"
+		_motor.visible = false
+		add_child(_motor)
+		_motor.set_process(false)
+		_motor.graus_por_segundo = GRAUS_POR_SEGUNDO
+		_motor.ferveu.connect(_ao_ferver)
+		_motor.condensou.connect(_ao_condensar)
+		_motor.mudou.connect(queue_redraw)
+	var andares := numero_de_andares()
+	_etiquetas.resize(andares)
+	_pulsos.resize(andares)
 	reiniciar()
 	if Engine.is_editor_hint():
 		# No editor fica o desenho de raio X pronto (régua, calor do ambiente,
@@ -313,7 +285,6 @@ func _ready() -> void:
 		_regua = 1.0
 		_calor = 1.0
 		_resfriador = 1.0
-		_temperatura_do_fundo = TEMPERATURA_DO_FUNDO
 		_etiquetas[0] = 1.0
 		_etiquetas[_etiquetas.size() - 1] = 1.0
 		set_process(false)
@@ -328,7 +299,7 @@ func _process(delta: float) -> void:
 # API
 # ─────────────────────────────────────────────────────────────
 
-## Volta ao começo: a coluna de aço, sem nada dentro.
+## Volta ao começo: a coluna de aço, com o ar líquido pronto para entrar.
 func reiniciar() -> void:
 	_etapa = Etapa.FECHADA
 	_pedida = Etapa.FECHADA
@@ -336,30 +307,35 @@ func reiniciar() -> void:
 	_raio_x = 0.0
 	_conteudo = 1.0
 	_fechando = false
-	_temperatura_do_fundo = TEMPERATURA_DO_AR_LIQUIDO
 	_calor = 0.0
 	_resfriador = 0.0
 	_regua = 0.0
-	_altura_do_fundo = 0.0
-	_proxima_emissao = 0.0
-	_proxima_bolha = 0.0
+	_pureza_a_vista = 0.0
+	_mostrar_pureza = false
 	_proxima_geada = 0.0
-	_bolhas.clear()
-	_fumaca.clear()
-	_respingos.clear()
 	_geada.clear()
 	_ja_ferveu.clear()
 	_ja_assentou.clear()
 	_avisou_separou = false
-	var andares := numero_de_andares()
-	_etiquetas.resize(andares)
+	_tempo_do_motor = 0.0
 	_etiquetas.fill(0.0)
-	_pulsos.resize(andares)
 	_pulsos.fill(0.0)
-	_donos.resize(andares)
-	_donos.fill("")
-	_montar_pocas()
-	_criar_moleculas()
+	if _motor != null:
+		_motor.definir_mistura(MisturasDoDestilador.mistura(MISTURA))
+		_motor.ritmo_dos_pulos = 1.0
+		_entrada.resize(_motor.total_de_moleculas())
+		# Cada uma entra na sua vez: da esquerda para a direita, de baixo para
+		# cima, como se o líquido fosse enchendo o fundo.
+		var ordem := range(_motor.total_de_moleculas())
+		var particulas := _motor.particulas()
+		ordem.sort_custom(func(a: int, b: int) -> bool:
+			var pa: ColunaDoSimulador.Particula = particulas[a]
+			var pb: ColunaDoSimulador.Particula = particulas[b]
+			if absf(pa.alvo.y - pb.alvo.y) > 1.0:
+				return pa.alvo.y > pb.alvo.y
+			return pa.alvo.x < pb.alvo.x)
+		for i in ordem.size():
+			_entrada[ordem[i]] = i * INTERVALO_DE_ENTRADA
 	queue_redraw()
 
 
@@ -389,6 +365,11 @@ func soprar_frio() -> void:
 	_pulsos[_pulsos.size() - 1] = 1.0
 
 
+## As etiquetas de pureza do topo e do fundo aparecem ("93% NITROGÊNIO").
+func mostrar_pureza() -> void:
+	_mostrar_pureza = true
+
+
 func etapa_atual() -> Etapa:
 	return _etapa
 
@@ -407,24 +388,29 @@ func numero_de_andares() -> int:
 	return _bandejas.size() + 1
 
 
+## A coluna de verdade que faz a conta (para os testes olharem lá dentro).
+func motor() -> ColunaDoSimulador:
+	return _motor
+
+
 ## A temperatura do fundo agora, em °C.
 func temperatura_do_fundo() -> float:
-	return _temperatura_do_fundo
+	return _motor.temperatura() if _motor != null else TEMPERATURA_DO_FUNDO
 
 
 ## A temperatura do topo agora: ele acompanha o fundo só até o resfriador
 ## segurar.
 func temperatura_do_topo() -> float:
-	return minf(_temperatura_do_fundo, TEMPERATURA_DO_TOPO)
+	return minf(temperatura_do_fundo(), TEMPERATURA_DO_TOPO)
 
 
 ## A temperatura do andar agora (0 = o fundo): os do meio ficam repartidos por
 ## igual entre a do fundo e a do topo.
 func temperatura_do_andar(andar: int) -> float:
-	return lerpf(_temperatura_do_fundo, temperatura_do_topo(), _altura_relativa(andar))
+	return lerpf(temperatura_do_fundo(), temperatura_do_topo(), _altura_relativa(andar))
 
 
-## A mesma, com a coluna já quente no fundo e fria no topo (o fim da história).
+## A mesma, com a coluna já no fim (o fundo em TEMPERATURA_DO_FUNDO).
 func temperatura_final_do_andar(andar: int) -> float:
 	return lerpf(TEMPERATURA_DO_FUNDO, TEMPERATURA_DO_TOPO, _altura_relativa(andar))
 
@@ -441,84 +427,84 @@ func _altura_relativa(andar: int) -> float:
 	return float(clampi(andar, 0, andares - 1)) / float(andares - 1)
 
 
-## O andar em que a substância fica líquida: o primeiro, do fundo para cima,
-## que está no ponto de ebulição dela ou abaixo (0 = ela nem sai do fundo).
-## -1 se nenhum é frio o bastante.
-func andar_de(substancia: String) -> int:
-	var ebulicao := float(SUBSTANCIAS[substancia]["ebulicao"])
-	for andar in numero_de_andares():
-		if temperatura_final_do_andar(andar) <= ebulicao + 0.001:
-			return andar
-	return -1
-
-
-## O fundo já passou do ponto de ebulição dela?
+## Já saiu alguma molécula dela como vapor?
 func ja_ferveu(substancia: String) -> bool:
 	return _ja_ferveu.has(substancia)
 
 
-## Ela já está (pelo menos uma molécula) no andar dela?
+## Alguma molécula dela já condensou lá em cima?
 func ja_assentou(substancia: String) -> bool:
 	return _ja_assentou.has(substancia)
 
 
-## A substância que ficou no andar ("" se nenhuma, ou ainda nenhuma).
+## A substância que é a maioria no líquido do andar ("" se nenhuma, ou vazio).
 func dono_do_andar(andar: int) -> String:
-	return _donos[andar] if andar >= 0 and andar < _donos.size() else ""
+	if _motor == null or andar < 0 or andar >= numero_de_andares():
+		return ""
+	return _motor.dono_do_andar(andar)
 
 
-## Quantas moléculas da substância já são líquido na bandeja dela.
-func liquidas_na_bandeja(substancia: String) -> int:
-	var poca := _poca_de(substancia)
-	if poca == null:
+## Quantas moléculas estão no líquido do andar: de uma substância, ou todas ("").
+func liquidas_no_andar(andar: int, substancia: String = "") -> int:
+	if _motor == null:
 		return 0
-	var conta := 0
-	for m: Molecula in poca.moleculas:
-		if m.estado == Estado.LIQUIDA:
-			conta += 1
-	return conta
+	var contas := _motor.contas_do_andar(andar)
+	if substancia != "":
+		return int(contas.get(substancia, 0))
+	var total := 0
+	for chave: String in contas:
+		total += int(contas[chave])
+	return total
 
 
 ## Quantas moléculas estão no líquido do fundo: de uma substância, ou todas ("").
 func liquidas_no_fundo(substancia: String = "") -> int:
-	var conta := 0
-	for fileira in 2:
-		for m: Molecula in _pocas[fileira].moleculas:
-			if substancia == "" or m.tipo == substancia:
-				conta += 1
-	return conta
+	return liquidas_no_andar(0, substancia)
 
 
-## Quantas estão neste estado (Estado.*), de uma substância ou de todas ("").
-func quantas_em(estado: Estado, substancia: String = "") -> int:
-	var conta := 0
-	for m in _moleculas:
-		if m.estado == estado and (substancia == "" or m.tipo == substancia):
-			conta += 1
-	return conta
+## Que fração do líquido do andar é desta substância (0..1).
+func fracao(andar: int, substancia: String) -> float:
+	return _motor.fracao(andar, substancia) if _motor != null else 0.0
 
 
 func total_de_moleculas() -> int:
-	return _moleculas.size()
+	return _motor.total_de_moleculas() if _motor != null else 0
 
 
-## True quando o fundo chegou na temperatura dele, só sobrou lá o que não
-## ferve e não há mais nada subindo.
+## True quando a coluna chegou no fim: o fundo na temperatura dele e nada mais
+## fervendo, subindo ou escorrendo.
 func separado() -> bool:
-	if _etapa != Etapa.SEPARAR or not is_equal_approx(_temperatura_do_fundo, TEMPERATURA_DO_FUNDO):
-		return false
-	for m in _moleculas:
-		if m.estado == Estado.SUBINDO or m.estado == Estado.MERGULHANDO:
-			return false
-		if m.estado == Estado.LIQUIDA and m.poca < 2 and andar_de(m.tipo) != 0:
-			return false
-	return true
+	return _etapa == Etapa.SEPARAR and _motor != null and _motor.parada()
 
 
 ## Onde fica a plaquinha de temperatura do andar (o meio do lado direito dela).
 func lugar_da_plaquinha(andar: int) -> Vector2:
 	return Vector2(-(DISTANCIA_DA_REGUA + LARGURA_DA_REGUA + DISTANCIA_DA_PLAQUINHA),
 		roundf(_meio_do_andar(andar)))
+
+
+## O texto da etiqueta de pureza do andar ("93% NITROGÊNIO"), da substância
+## que mais tem no líquido dele (mesmo sem ser mais da metade), ou "" se o
+## andar está seco.
+func texto_da_pureza(andar: int) -> String:
+	var principal := principal_do_andar(andar)
+	if principal == "":
+		return ""
+	var nome := String(MisturasDoDestilador.substancia(principal).get("nome", principal)).to_upper()
+	return TEXTO_DA_PUREZA % [roundi(fracao(andar, principal) * 100.0), nome]
+
+
+## A substância que mais tem no líquido do andar ("" se ele está seco). Num
+## empate, a que vem primeiro na mistura.
+func principal_do_andar(andar: int) -> String:
+	if _motor == null:
+		return ""
+	var contas := _motor.contas_do_andar(andar)
+	var principal := ""
+	for chave: String in _motor.mistura().get("substancias", {}):
+		if int(contas.get(chave, 0)) > int(contas.get(principal, 0)):
+			principal = chave
+	return principal
 
 
 ## O que as bandejas da arte dizem (para os testes).
@@ -616,6 +602,7 @@ func _ler_arte() -> void:
 	var aberta := {}
 	for y in altura + 1:
 		var traco := _maior_traco_claro(raio, y) if y < altura else Vector2i(-1, -1)
+		@warning_ignore("integer_division")
 		var e_barra := traco.x >= 0 and traco.y - traco.x + 1 >= largura / 2
 		if e_barra and not aberta.is_empty() and aberta["x0"] == traco.x and aberta["x1"] == traco.y:
 			aberta["y1"] = y
@@ -680,6 +667,7 @@ func _ler_arte() -> void:
 	# A serpentina do resfriador: no alto da cúpula, logo abaixo da primeira
 	# linha em que o miolo já tem largura para ela (3 linhas de altura).
 	for y in altura - 4:
+		@warning_ignore("integer_division")
 		if _miolo_esq[y] >= 0 and _miolo_dir[y] - _miolo_esq[y] + 1 >= largura * 2 / 5:
 			_serpentina = Rect2i(_miolo_esq[y] + 2, y + 1, _miolo_dir[y] - _miolo_esq[y] - 3, 3)
 			break
@@ -752,14 +740,6 @@ func _teto_do_andar(andar: int) -> float:
 	return 0.0
 
 
-## A tona do líquido da bandeja que é o chão do andar (ou o chão, no fundo).
-func _tona_do_andar(andar: int) -> float:
-	if andar <= 0 or _bandejas.is_empty():
-		return _chao_do_andar(0)
-	var bandeja := _bandejas[mini(andar, _bandejas.size()) - 1]
-	return _chao_do_andar(andar) - float(bandeja["borda"]) * ESCALA
-
-
 ## A altura em que se lê a temperatura do andar: o meio do vão dele (no de
 ## cima, o meio da parte reta, sem contar a cúpula).
 func _meio_do_andar(andar: int) -> float:
@@ -785,89 +765,9 @@ func _trecho_da_regua(andar: int) -> Vector2:
 	return Vector2(de_cima, de_baixo)
 
 
-func _meio_da_fenda(bandeja: int) -> float:
-	var b := _bandejas[bandeja]
-	return (float(b["fenda_x0"]) + float(b["fenda_x1"]) + 1.0) * 0.5 * ESCALA
-
-
-## Até onde o gás pode ir para os lados na altura y: as paredes do miolo.
-func _paredes_em(y: float) -> Vector2:
-	var linha := clampi(int(y / ESCALA), 0, _miolo_esq.size() - 1)
-	if _miolo_esq.is_empty() or _miolo_esq[linha] < 0:
-		return Vector2(ESCALA, _largura() - ESCALA)
-	return Vector2(_miolo_esq[linha] * ESCALA, (_miolo_dir[linha] + 1) * ESCALA)
-
-
-func _montar_pocas() -> void:
-	_pocas.clear()
-	var passo := CELULA_DA_MOLECULA * ESCALA_MOLECULA - 1.0
-	var total := 0
-	for nome: String in SUBSTANCIAS:
-		total += int(SUBSTANCIAS[nome]["quantas"])
-	# O fundo: duas fileiras, uma em cima da outra.
-	for fileira in 2:
-		var poca := Poca.new()
-		poca.x0 = ESCALA
-		poca.x1 = _largura() - ESCALA
-		poca.funda = 4.0 * ESCALA
-		poca.base = _piso * ESCALA - fileira * poca.funda
-		poca.cabem = ceili(total / 2.0)
-		_pocas.append(poca)
-	# Uma por bandeja, com a substância que vira líquido no andar dela.
-	for i in _bandejas.size():
-		var bandeja := _bandejas[i]
-		var poca := Poca.new()
-		if int(bandeja["lado"]) < 0:
-			poca.x0 = (float(bandeja["x0"]) + 1.0) * ESCALA
-			poca.x1 = _largura() - ESCALA
-		else:
-			poca.x0 = ESCALA
-			poca.x1 = float(bandeja["x1"]) * ESCALA
-		poca.base = float(bandeja["y0"]) * ESCALA
-		poca.funda = float(bandeja["borda"]) * ESCALA
-		poca.camara = i + 1
-		poca.cabem = maxi(1, int((poca.x1 - poca.x0) / passo))
-		for nome: String in SUBSTANCIAS:
-			if andar_de(nome) == i + 1:
-				poca.substancia = nome
-		_pocas.append(poca)
-
-
-## A bandeja em que a substância vira líquido (null para a que fica no fundo).
-func _poca_de(substancia: String) -> Poca:
-	for i in range(2, _pocas.size()):
-		if _pocas[i].substancia == substancia:
-			return _pocas[i]
-	return null
-
-
 # ─────────────────────────────────────────────────────────────
-# AS MOLÉCULAS
+# A ANIMAÇÃO
 # ─────────────────────────────────────────────────────────────
-
-func _criar_moleculas() -> void:
-	_moleculas.clear()
-	var tipos: Array[String] = []
-	for nome: String in SUBSTANCIAS:
-		for i in int(SUBSTANCIAS[nome]["quantas"]):
-			tipos.append(nome)
-	# Sempre a mesma mistura embaralhada: a explicação é igual toda vez.
-	var sorteio := RandomNumberGenerator.new()
-	sorteio.seed = 828
-	for i in range(tipos.size() - 1, 0, -1):
-		var j := sorteio.randi_range(0, i)
-		var troca := tipos[i]
-		tipos[i] = tipos[j]
-		tipos[j] = troca
-	for i in tipos.size():
-		var m := Molecula.new()
-		m.tipo = tipos[i]
-		m.estado = Estado.FORA
-		m.espera = i * INTERVALO_DE_ENTRADA
-		m.relogio = sorteio.randf() * 10.0
-		m.giro = sorteio.randf_range(3.0, 6.0)
-		_moleculas.append(m)
-
 
 ## Um passo da animação. O _process chama sozinho; os testes chamam direto.
 func avancar(delta: float) -> void:
@@ -902,31 +802,29 @@ func _passo(delta: float) -> void:
 		Etapa.FERVER, Etapa.SEPARAR:
 			_calor = minf(_calor + delta / 0.35, 1.0)
 			_resfriador = minf(_resfriador + delta / 0.35, 1.0)
-			_ganhar_calor(delta)
-			_ferver(delta)
-			_conferir_o_fundo()
+	# A coluna de verdade anda desde que o ar todo entrou, sempre em passos de
+	# PASSO_DO_MOTOR: assim a conta dá o mesmo resultado em qualquer ritmo de
+	# fala (a pressa só faz os passos virem mais depressa).
+	if _motor != null and _etapa >= Etapa.AR_LIQUIDO and not _fechando and _todas_entraram():
+		_tempo_do_motor += delta
+		while _tempo_do_motor >= PASSO_DO_MOTOR:
+			_tempo_do_motor -= PASSO_DO_MOTOR
+			_motor.avancar(PASSO_DO_MOTOR)
 
 	# A régua e a plaquinha do fundo desde que o ar entra; a do topo quando o
-	# resfriador liga; as do meio só quando alguma substância fica ali.
+	# resfriador liga; as do meio quando alguma substância manda no líquido de lá.
 	var a_regua := 1.0 if _etapa >= Etapa.AR_LIQUIDO and not _fechando else 0.0
 	_regua = move_toward(_regua, a_regua, delta / 0.3)
 	var topo := _etiquetas.size() - 1
 	for andar in _etiquetas.size():
 		var a_vista := _etapa >= Etapa.AR_LIQUIDO if andar == 0 \
 			else _etapa >= Etapa.FERVER if andar == topo \
-			else _donos[andar] != ""
+			else dono_do_andar(andar) != ""
 		_etiquetas[andar] = move_toward(_etiquetas[andar], 1.0 if a_vista else 0.0, delta / 0.25)
 	for andar in _pulsos.size():
 		_pulsos[andar] = move_toward(_pulsos[andar], 0.0, delta / 0.5)
-
-	for i in _pocas.size():
-		_arrumar_poca(_pocas[i], delta)
-	for m in _moleculas:
-		_mover(m, delta)
-	_passo_do_fundo(delta)
-	_passo_das_bolhas(delta)
-	_passo_da_fumaca(delta)
-	_passo_dos_respingos(delta)
+	var pureza := 1.0 if _mostrar_pureza and not _fechando else 0.0
+	_pureza_a_vista = move_toward(_pureza_a_vista, pureza, delta / 0.3)
 	_passo_da_geada(delta)
 
 	if not _avisou_separou and separado():
@@ -941,27 +839,50 @@ func _etapa_pronta() -> bool:
 		Etapa.RAIO_X:
 			return _raio_x >= 1.0
 		Etapa.AR_LIQUIDO:
-			for m in _moleculas:
-				if m.estado == Estado.FORA or m.tamanho < 1.0:
-					return false
-			return true
+			return _todas_entraram() and _relogio_da_etapa >= _ultima_entrada() + 0.16
+		Etapa.EVAPORAR:
+			return _relogio_da_etapa >= DURACAO_MINIMA_DE_EVAPORAR
 		Etapa.FERVER:
-			# O fundo chegou na parada e tudo o que ferve até ali já saiu dele.
-			if not is_equal_approx(_temperatura_do_fundo, _parada_do_calor()):
-				return false
-			for fileira in 2:
-				for m: Molecula in _pocas[fileira].moleculas:
-					if _ferve(m):
-						return false
-			return true
+			# O fundo chegou onde o calor desta etapa o leva e a coluna assentou.
+			return _motor != null and _motor.parada()
 	return false
 
 
 func _entrar(nova: Etapa) -> void:
 	_etapa = nova
 	_relogio_da_etapa = 0.0
-	if nova == Etapa.FERVER:
-		_proxima_bolha = 0.2
+	if _motor == null:
+		return
+	match nova:
+		Etapa.EVAPORAR:
+			_motor.ritmo_dos_pulos = RITMO_DOS_PULOS_AO_EVAPORAR
+		Etapa.FERVER:
+			_motor.ritmo_dos_pulos = 1.0
+			_motor.pedir_temperatura(TEMPERATURA_AO_FERVER)
+		Etapa.SEPARAR:
+			_motor.ritmo_dos_pulos = 1.0
+			_motor.pedir_temperatura(TEMPERATURA_DO_FUNDO)
+
+
+func _todas_entraram() -> bool:
+	return _etapa > Etapa.AR_LIQUIDO or _relogio_da_etapa >= _ultima_entrada()
+
+
+func _ultima_entrada() -> float:
+	var ultima := 0.0
+	for t in _entrada:
+		ultima = maxf(ultima, t)
+	return ultima
+
+
+## 0..1: quanto a molécula número "i" já apareceu (o estalo de quando ela cai
+## no fundo, na etapa AR_LIQUIDO).
+func _tamanho_na_entrada(i: int) -> float:
+	if _etapa > Etapa.AR_LIQUIDO:
+		return 1.0
+	if _etapa < Etapa.AR_LIQUIDO or i >= _entrada.size():
+		return 0.0
+	return clampf((_relogio_da_etapa - _entrada[i]) / 0.16, 0.0, 1.0)
 
 
 func _passo_de_fechar(delta: float) -> void:
@@ -973,373 +894,25 @@ func _passo_de_fechar(delta: float) -> void:
 	_raio_x = maxf(_raio_x - delta / DURACAO_DE_FECHAR, 0.0)
 
 
-func _mover(m: Molecula, delta: float) -> void:
-	m.relogio += delta
-	if m.estado != Estado.FORA:
-		m.tamanho = minf(m.tamanho + delta / 0.16, 1.0)
-	match m.estado:
-		Estado.FORA:
-			if _etapa >= Etapa.AR_LIQUIDO and _relogio_da_etapa >= m.espera:
-				_entrar_no_fundo(m)
-		Estado.GAS_SOLTO:
-			_quicar(m, delta)
-		Estado.MERGULHANDO:
-			_ir_para_a_poca(m, delta)
-		Estado.LIQUIDA:
-			_boiar(m, delta)
-		Estado.SUBINDO:
-			_subir(m, delta)
+func _ao_ferver(substancia: String) -> void:
+	if _ja_ferveu.has(substancia):
+		return
+	_ja_ferveu[substancia] = true
+	_pulsos[0] = 1.0
+	ferveu.emit(substancia)
 
 
-## Etapa AR_LIQUIDO: ela cai no líquido do fundo, na fileira de baixo enquanto
-## houver lugar, e as vizinhas abrem espaço.
-func _entrar_no_fundo(m: Molecula) -> void:
-	var fileira := 0 if _pocas[0].moleculas.size() < _pocas[0].cabem else 1
-	m.pos = Vector2(randf_range(ESCALA + FOLGA, _largura() - ESCALA - FOLGA),
-		_altura_na_poca(_pocas[fileira]) - 26.0)
-	m.vel = Vector2.ZERO
-	m.tamanho = 0.0
-	m.estado = Estado.LIQUIDA
-	_por_na_poca(m, fileira)
-
-
-## Gás solto num andar: anda reto e bate nas paredes, no teto e no líquido.
-func _quicar(m: Molecula, delta: float) -> void:
-	m.pos += m.vel * delta
-	var teto := _teto_do_andar(m.camara) + FOLGA
-	var chao := _tona_do_andar(m.camara) - FOLGA
-	if m.pos.y < teto:
-		m.pos.y = teto
-		m.vel.y = absf(m.vel.y)
-	elif m.pos.y > chao:
-		m.pos.y = chao
-		m.vel.y = -absf(m.vel.y)
-	var paredes := _paredes_em(m.pos.y - FOLGA * 0.6)
-	if paredes.y - paredes.x < FOLGA * 2.5:
-		# Lá no alto da cúpula não cabe: volta para baixo.
-		m.vel.y = absf(m.vel.y)
-		paredes = _paredes_em(m.pos.y + FOLGA)
-	if m.pos.x < paredes.x + FOLGA:
-		m.pos.x = paredes.x + FOLGA
-		m.vel.x = absf(m.vel.x)
-	elif m.pos.x > paredes.y - FOLGA:
-		m.pos.x = paredes.y - FOLGA
-		m.vel.x = -absf(m.vel.x)
-
-
-## Entra na lista da poça no lugar que a posição dela pede (a lista anda da
-## esquerda para a direita): as vizinhas abrem espaço.
-func _por_na_poca(m: Molecula, indice: int) -> void:
-	var poca := _pocas[indice]
-	var lugar := 0
-	while lugar < poca.moleculas.size() and (poca.moleculas[lugar] as Molecula).pos.x < m.pos.x:
-		lugar += 1
-	poca.moleculas.insert(lugar, m)
-	m.poca = indice
-
-
-## O lugar de cada uma na poça: espalhadas por igual de parede a parede.
-func _arrumar_poca(poca: Poca, delta: float) -> void:
-	var quantas := poca.moleculas.size()
-	for i in quantas:
-		(poca.moleculas[i] as Molecula).alvo_x = poca.x0 + (i + 0.5) * (poca.x1 - poca.x0) / quantas
-	poca.nivel = move_toward(poca.nivel, 1.0 if _tem_liquida(poca) else 0.0, delta / 0.3)
-
-
-func _tem_liquida(poca: Poca) -> bool:
-	for m: Molecula in poca.moleculas:
-		if m.estado == Estado.LIQUIDA:
-			return true
-	return false
-
-
-func _altura_na_poca(poca: Poca) -> float:
-	return poca.base - poca.funda * 0.5
-
-
-## O gás chegou no andar dele e desce para o lugar dele no líquido.
-func _ir_para_a_poca(m: Molecula, delta: float) -> void:
-	var poca := _pocas[m.poca]
-	var alvo := Vector2(m.alvo_x, _altura_na_poca(poca))
-	var distancia := m.pos.distance_to(alvo)
-	m.pos = m.pos.move_toward(alvo, maxf(60.0, distancia * 4.5) * delta)
-	m.vel = Vector2.ZERO
-	if distancia < 1.5:
-		m.estado = Estado.LIQUIDA
-		# Virou líquido na bandeja: um respingo na cor dele.
-		_respingar(Vector2(m.pos.x, poca.base - poca.funda), SUBSTANCIAS[m.tipo]["tona"])
-		_assentar(m.tipo, poca.camara)
-
-
-## A substância ficou no andar: a plaquinha dele ganha a cor e o desenho dela.
-func _assentar(substancia: String, andar: int) -> void:
-	if _ja_assentou.has(substancia):
+func _ao_condensar(substancia: String, andar: int) -> void:
+	if andar <= 0 or _ja_assentou.has(substancia):
 		return
 	_ja_assentou[substancia] = true
-	_donos[andar] = substancia
 	_pulsos[andar] = 1.0
 	assentou.emit(substancia)
 
 
-## Líquida: encostada nas vizinhas, só balançando no lugar.
-func _boiar(m: Molecula, delta: float) -> void:
-	var poca := _pocas[m.poca]
-	m.pos.x = lerpf(m.pos.x, m.alvo_x, 1.0 - exp(-5.0 * delta))
-	m.pos.y = lerpf(m.pos.y, _altura_na_poca(poca) + sin(m.relogio * 2.6), 1.0 - exp(-10.0 * delta))
-
-
 # ─────────────────────────────────────────────────────────────
-# GANHAR CALOR, FERVER E SUBIR
+# A GEADA
 # ─────────────────────────────────────────────────────────────
-
-## Onde o fundo para de subir na etapa FERVER: um grau antes do segundo ponto
-## de ebulição, para só a substância que ferve primeiro sair. (Sem uma
-## segunda, vai direto até a temperatura do fundo.)
-func _parada_do_calor() -> float:
-	var pontos: Array[float] = []
-	for nome: String in SUBSTANCIAS:
-		var ebulicao := float(SUBSTANCIAS[nome]["ebulicao"])
-		if ebulicao < TEMPERATURA_DO_FUNDO and not pontos.has(ebulicao):
-			pontos.append(ebulicao)
-	pontos.sort()
-	if pontos.size() < 2:
-		return TEMPERATURA_DO_FUNDO
-	return minf(pontos[1] - 1.0, TEMPERATURA_DO_FUNDO)
-
-
-## O líquido ganha calor do ambiente e o fundo fica menos frio, até a parada
-## da etapa. Cada ponto de ebulição por que ele passa é avisado (é quando
-## aquela substância começa a ferver).
-func _ganhar_calor(delta: float) -> void:
-	var alvo := TEMPERATURA_DO_FUNDO if _etapa == Etapa.SEPARAR else _parada_do_calor()
-	var antes := _temperatura_do_fundo
-	_temperatura_do_fundo = move_toward(antes, alvo, GRAUS_POR_SEGUNDO * delta)
-	for nome: String in SUBSTANCIAS:
-		var ebulicao := float(SUBSTANCIAS[nome]["ebulicao"])
-		if antes <= ebulicao and _temperatura_do_fundo > ebulicao and not _ja_ferveu.has(nome):
-			_ja_ferveu[nome] = true
-			_pulsos[0] = 1.0
-			ferveu.emit(nome)
-
-
-## A molécula ferve quando o fundo está mais quente que o ponto de ebulição dela.
-func _ferve(m: Molecula) -> bool:
-	return m.estado == Estado.LIQUIDA and m.poca < 2 \
-		and float(SUBSTANCIAS[m.tipo]["ebulicao"]) < _temperatura_do_fundo - 0.001
-
-
-func _ferver(delta: float) -> void:
-	_proxima_emissao -= delta
-	if _proxima_emissao > 0.0:
-		return
-	# Sai uma das que estão fervendo: da fileira de cima, se houver.
-	var prontas: Array[Molecula] = []
-	for fileira: int in [1, 0]:
-		for m: Molecula in _pocas[fileira].moleculas:
-			if _ferve(m):
-				prontas.append(m)
-		if not prontas.is_empty():
-			break
-	if prontas.is_empty():
-		return
-	_proxima_emissao = INTERVALO_DE_EMISSAO
-	_soltar(prontas[randi() % prontas.size()])
-
-
-## A molécula sai do líquido do fundo e ganha o caminho dela: até debaixo de
-## cada fenda, por dentro dela, e assim até o andar em que vira líquido.
-func _soltar(m: Molecula) -> void:
-	var de_onde := m.pos.x
-	_pocas[m.poca].moleculas.erase(m)
-	m.poca = -1
-	_fechar_o_buraco(de_onde)
-	var destino := andar_de(m.tipo)
-	var ate := destino if destino >= 0 else numero_de_andares() - 1
-	var pontos := PackedVector2Array()
-	var altura := _altura_de_voo(0)
-	pontos.append(Vector2(m.pos.x, altura))
-	for bandeja in ate:
-		var fenda := _meio_da_fenda(bandeja) + randf_range(-FOLGA_NA_FENDA, FOLGA_NA_FENDA)
-		pontos.append(Vector2(fenda, altura))
-		altura = _altura_de_voo(bandeja + 1)
-		pontos.append(Vector2(fenda, altura))
-	m.caminho = pontos
-	m.passo = 0
-	m.camara = ate
-	m.vel = Vector2(0.0, -VELOCIDADE_SUBINDO * 0.6)
-	m.proxima_fumaca = 0.0
-	m.estado = Estado.SUBINDO
-	# Virou gás: um sopro de vapor no lugar de onde ela saiu.
-	for i in 3:
-		_soltar_fumaca(m.pos + Vector2(0.0, -6.0), Vector2(0.0, -30.0))
-
-
-## Saiu uma molécula da fileira de baixo: a de cima que está mais perto desce
-## para o lugar dela. O líquido não fica com buraco; ele baixa.
-func _fechar_o_buraco(x: float) -> void:
-	var baixo := _pocas[0]
-	var cima := _pocas[1]
-	if baixo.moleculas.size() >= baixo.cabem or cima.moleculas.is_empty():
-		return
-	var mais_perto: Molecula = null
-	for m: Molecula in cima.moleculas:
-		if mais_perto == null or absf(m.pos.x - x) < absf(mais_perto.pos.x - x):
-			mais_perto = m
-	cima.moleculas.erase(mais_perto)
-	_por_na_poca(mais_perto, 0)
-
-
-## Uma altura para atravessar o andar: acima do líquido, abaixo do teto.
-func _altura_de_voo(andar: int) -> float:
-	var teto := _teto_do_andar(andar) + FOLGA + 4.0
-	var tona := _tona_do_andar(andar) - FOLGA - 6.0
-	if andar == 0:
-		tona = _chao_do_andar(0) - _altura_do_fundo - FOLGA - 6.0
-	if andar >= _bandejas.size():
-		# No andar de cima, perto da bandeja: é ali que ela vai virar líquido.
-		teto = maxf(teto, tona - 70.0)
-	return randf_range(minf(teto, tona), tona)
-
-
-func _subir(m: Molecula, delta: float) -> void:
-	var alvo := m.caminho[m.passo]
-	var para_la := alvo - m.pos
-	if para_la.length() < 10.0:
-		m.passo += 1
-		if m.passo >= m.caminho.size():
-			_chegar(m)
-			return
-		alvo = m.caminho[m.passo]
-		para_la = alvo - m.pos
-	var direcao := para_la.normalized()
-	# O gás não anda em linha reta: balança de um lado para o outro do rumo.
-	var balanco := direcao.orthogonal() * sin(m.relogio * 7.0) * 26.0
-	var querida := direcao * VELOCIDADE_SUBINDO + balanco
-	m.vel = m.vel.lerp(querida, 1.0 - exp(-9.0 * delta))
-	m.pos += m.vel * delta
-
-	m.proxima_fumaca -= delta
-	if m.proxima_fumaca <= 0.0:
-		m.proxima_fumaca = 0.09
-		_soltar_fumaca(m.pos, m.vel * 0.25)
-
-
-## Chegou no andar dela. Se ainda cabe na bandeja, ela desce e vira líquido;
-## senão, continua gás ali (no ponto de ebulição, líquido e gás convivem).
-func _chegar(m: Molecula) -> void:
-	var poca := _poca_de(m.tipo)
-	if poca != null and poca.moleculas.size() < poca.cabem:
-		_por_na_poca(m, _pocas.find(poca))
-		m.estado = Estado.MERGULHANDO
-		return
-	m.vel = Vector2.from_angle(randf_range(PI * 0.75, PI * 1.25)) * VELOCIDADE_SOLTO
-	m.estado = Estado.GAS_SOLTO
-
-
-## Com o fundo já na temperatura dele e mais nada a caminho: se só sobrou lá o
-## que não ferve, essa substância ficou no fundo. (É a última a ser anunciada:
-## primeiro cada gás chega no andar dele.)
-func _conferir_o_fundo() -> void:
-	if _etapa != Etapa.SEPARAR or not is_equal_approx(_temperatura_do_fundo, TEMPERATURA_DO_FUNDO):
-		return
-	for m in _moleculas:
-		if m.estado == Estado.SUBINDO or m.estado == Estado.MERGULHANDO:
-			return
-	var contas := {}
-	for fileira in 2:
-		for m: Molecula in _pocas[fileira].moleculas:
-			if andar_de(m.tipo) != 0:
-				return
-			contas[m.tipo] = int(contas.get(m.tipo, 0)) + 1
-	# (Se mais de uma substância não ferve, a plaquinha fica com a que há mais.)
-	var nomes := contas.keys()
-	nomes.sort_custom(func(a: String, b: String) -> bool: return contas[a] > contas[b])
-	for i in range(nomes.size() - 1, -1, -1):
-		_assentar(nomes[i], 0)
-	if not nomes.is_empty():
-		_donos[0] = nomes[0]
-
-
-# ─────────────────────────────────────────────────────────────
-# O FUNDO, AS BOLHAS, A FUMAÇA E A GEADA
-# ─────────────────────────────────────────────────────────────
-
-func _passo_do_fundo(delta: float) -> void:
-	var fileira := 4.0 * ESCALA
-	var alvo := 0.0
-	if _tem_liquida(_pocas[1]):
-		alvo = fileira * 2.0 + ESCALA
-	elif _tem_liquida(_pocas[0]):
-		alvo = fileira + ESCALA
-	_altura_do_fundo = move_toward(_altura_do_fundo, alvo, delta * 40.0)
-
-
-func _passo_das_bolhas(delta: float) -> void:
-	var tona := _chao_do_andar(0) - _altura_do_fundo
-	# Fervendo de verdade, ou só com o que sobrou parado no ponto de ebulição?
-	var fervendo := false
-	for fileira in 2:
-		for m: Molecula in _pocas[fileira].moleculas:
-			if _ferve(m):
-				fervendo = true
-	for i in range(_bolhas.size() - 1, -1, -1):
-		var bolha := _bolhas[i]
-		bolha.y -= bolha.z * delta
-		if bolha.y <= tona + 3.0:
-			# Estourou na tona: se está fervendo, sobe um fiapo de vapor.
-			if fervendo:
-				_soltar_fumaca(Vector2(bolha.x, tona - 4.0), Vector2(0.0, -34.0))
-			_bolhas.remove_at(i)
-		else:
-			_bolhas[i] = bolha
-	if _etapa < Etapa.FERVER or _altura_do_fundo < 8.0 or _calor < 1.0 \
-			or _temperatura_do_fundo <= TEMPERATURA_DO_TOPO:
-		return
-	_proxima_bolha -= delta
-	if _proxima_bolha <= 0.0:
-		# Fervendo, muitas bolhas; senão, uma de vez em quando.
-		_proxima_bolha = randf_range(0.07, 0.16) if fervendo else randf_range(0.5, 0.9)
-		_bolhas.append(Vector3(randf_range(ESCALA * 2.0, _largura() - ESCALA * 3.0),
-			_chao_do_andar(0) - 4.0, randf_range(42.0, 70.0)))
-
-
-func _soltar_fumaca(pos: Vector2, vel: Vector2) -> void:
-	if _fumaca.size() > 220:
-		return
-	_fumaca.append({"pos": pos + Vector2(randf_range(-4.0, 4.0), randf_range(-4.0, 4.0)),
-		"vel": vel + Vector2(randf_range(-10.0, 10.0), randf_range(-16.0, -4.0)),
-		"idade": 0.0, "vida": randf_range(0.9, 1.4)})
-
-
-func _passo_da_fumaca(delta: float) -> void:
-	for i in range(_fumaca.size() - 1, -1, -1):
-		var f := _fumaca[i]
-		f["idade"] += delta
-		if f["idade"] >= f["vida"]:
-			_fumaca.remove_at(i)
-			continue
-		f["pos"] += f["vel"] * delta
-		f["vel"] *= exp(-1.4 * delta)
-
-
-## Três pinguinhos que pulam da tona quando uma molécula entra no líquido.
-func _respingar(pos: Vector2, cor: Color) -> void:
-	for lado: float in [-1.0, 0.0, 1.0]:
-		_respingos.append({"pos": pos + Vector2(lado * 6.0, 0.0),
-			"vel": Vector2(lado * randf_range(26.0, 44.0), randf_range(-95.0, -70.0)),
-			"idade": 0.0, "cor": cor})
-
-
-func _passo_dos_respingos(delta: float) -> void:
-	for i in range(_respingos.size() - 1, -1, -1):
-		var r := _respingos[i]
-		r["idade"] += delta
-		if r["idade"] >= 0.38:
-			_respingos.remove_at(i)
-			continue
-		r["vel"] += Vector2(0.0, 420.0) * delta
-		r["pos"] += r["vel"] * delta
-
 
 ## A geada: pontinhos brancos que caem da serpentina do resfriador e somem
 ## logo abaixo dela. É o frio, que vem de cima.
@@ -1388,7 +961,7 @@ func _draw() -> void:
 	if _raio_x >= 1.0:
 		_desenhar_calor_do_ambiente()
 		_desenhar_serpentina()
-		if _conteudo > 0.0:
+		if _conteudo > 0.0 and _motor != null and _etapa >= Etapa.AR_LIQUIDO:
 			_desenhar_liquidos()
 			_desenhar_bolhas()
 			_desenhar_geada()
@@ -1400,6 +973,7 @@ func _draw() -> void:
 			draw_texture_rect(_linhas_tex, Rect2(Vector2.ZERO, tamanho), false)
 		_desenhar_regua()
 		_desenhar_plaquinhas()
+		_desenhar_purezas()
 	elif corte > 0 and corte < altura_arte:
 		# A faixa de luz do raio X, com dois rastros atrás dela.
 		var y := corte * ESCALA
@@ -1456,26 +1030,23 @@ func _desenhar_fio(x0: int, x1: int, y: float, ligado: float, parada: Color, ace
 		draw_rect(Rect2(x * ESCALA, y + zigue[(x - x0) % 4] * ESCALA, ESCALA, ESCALA), cor)
 
 
+## O líquido de cada andar, na cor das substâncias dele misturadas na
+## proporção de cada uma (um líquido rico em nitrogênio é quase verde).
 func _desenhar_liquidos() -> void:
-	# O líquido do fundo: o ar misturado e, quando só sobra uma substância, ela.
-	if _altura_do_fundo > 0.5:
-		var altura := roundf(_altura_do_fundo)
-		var cor := COR_MISTURA
-		var tona := COR_TONA_MISTURA
-		if _donos[0] != "":
-			cor = SUBSTANCIAS[_donos[0]]["liquido"]
-			tona = SUBSTANCIAS[_donos[0]]["tona"]
-		_desenhar_liquido(Rect2(ESCALA, _chao_do_andar(0) - altura, _largura() - ESCALA * 2.0, altura),
-			cor, tona, 1.0)
-	# O de cada bandeja.
-	for i in range(2, _pocas.size()):
-		var poca := _pocas[i]
-		if poca.nivel <= 0.0 or poca.substancia == "":
+	for andar in numero_de_andares():
+		var caixa := _motor.caixa_do_liquido(andar)
+		if not caixa.has_area():
 			continue
-		var altura := roundf(poca.funda * poca.nivel)
-		var dados: Dictionary = SUBSTANCIAS[poca.substancia]
-		_desenhar_liquido(Rect2(poca.x0, poca.base - altura, poca.x1 - poca.x0, altura),
-			dados["liquido"], dados["tona"], poca.nivel)
+		_desenhar_liquido(caixa, _motor.cor_do_liquido(andar, "liquido"), _motor.cor_do_liquido(andar, "tona"),
+			_alfa_da_entrada() if andar == 0 else 1.0)
+
+
+## O líquido do fundo vai aparecendo enquanto o ar entra.
+func _alfa_da_entrada() -> float:
+	if _etapa > Etapa.AR_LIQUIDO:
+		return 1.0
+	var total := maxf(_ultima_entrada(), 0.01)
+	return clampf(_relogio_da_etapa / total, 0.0, 1.0)
 
 
 ## Um líquido: a cor chapada e, em cima, a tona em ondinhas de 2 px que andam.
@@ -1494,10 +1065,10 @@ func _desenhar_liquido(caixa: Rect2, cor: Color, tona: Color, forca: float) -> v
 		i += 1
 
 
-## Bolhas: aneizinhos de 8 px subindo pelo líquido do fundo.
+## Bolhas: aneizinhos de 8 px subindo pelo líquido do fundo (só fervendo).
 func _desenhar_bolhas() -> void:
-	var cor := Color(COR_TONA_MISTURA, 0.85 * _conteudo)
-	for bolha in _bolhas:
+	var cor := Color(COR_DA_BOLHA, 0.85 * _conteudo)
+	for bolha in _motor.bolhas():
 		var canto := Vector2(roundf(bolha.x), roundf(bolha.y))
 		draw_rect(Rect2(canto + Vector2(2, 0), Vector2(4, 2)), cor)
 		draw_rect(Rect2(canto + Vector2(2, 6), Vector2(4, 2)), cor)
@@ -1521,14 +1092,15 @@ func _desenhar_geada() -> void:
 ## a da temperatura do andar em que ela está, a mesma da régua: é o gás
 ## esfriando enquanto sobe.
 func _desenhar_fumaca() -> void:
-	if _fumaca.is_empty() or _nevoa.is_empty():
+	var fumaca := _motor.fumaca()
+	if fumaca.is_empty() or _nevoa.is_empty():
 		return
 	var largura := _recorte_raio_x.size.x
 	var altura := _recorte_raio_x.size.y
 	_nevoa.fill(0.0)
 	var topo := altura
 	var base := -1
-	for f in _fumaca:
+	for f in fumaca:
 		var t: float = f["idade"] / f["vida"]
 		var raio := lerpf(1.5, 3.3, t)
 		# Entra de uma vez e vai sumindo.
@@ -1584,7 +1156,7 @@ func _tom_da_nevoa(x: int, y: int, largura: int) -> int:
 
 
 func _desenhar_respingos() -> void:
-	for r in _respingos:
+	for r in _motor.respingos():
 		var pos: Vector2 = r["pos"]
 		draw_rect(Rect2((pos / 2.0).floor() * 2.0, Vector2(4, 4)), _com_conteudo(r["cor"]))
 
@@ -1593,22 +1165,31 @@ func _com_conteudo(cor: Color) -> Color:
 	return Color(cor, cor.a * _conteudo)
 
 
+## As moléculas, com a arte da história: deitadas no líquido, girando como gás
+## (subindo, soltas, ou no meio do vai-e-volta da superfície).
 func _desenhar_moleculas() -> void:
 	if _moleculas_tex == null:
 		return
 	var lado := CELULA_DA_MOLECULA * ESCALA_MOLECULA
-	for m in _moleculas:
-		if m.estado == Estado.FORA or m.tamanho <= 0.0:
+	var particulas := _motor.particulas()
+	for i in particulas.size():
+		var p: ColunaDoSimulador.Particula = particulas[i]
+		if not SUBSTANCIAS.has(p.tipo):
+			continue
+		var tamanho := _tamanho_na_entrada(i)
+		if tamanho <= 0.0:
 			continue
 		var quadro := 0
-		if m.estado != Estado.LIQUIDA:
-			quadro = int(m.relogio * m.giro) % QUADROS_DA_MOLECULA
-		# O estalo de entrada: passa um pouco do tamanho e volta.
-		var estalo := 1.0 + 0.35 * sin(m.tamanho * PI) if m.tamanho < 1.0 else 1.0
-		var medida := Vector2(lado, lado) * m.tamanho * estalo
+		if _motor.girando(p):
+			quadro = int(p.relogio * p.giro) % QUADROS_DA_MOLECULA
+		var onde := _motor.onde_desenhar(p)
+		# Entrando: cai um pouco de cima e dá o estalo (passa do tamanho e volta).
+		onde.y -= (1.0 - tamanho) * 26.0
+		var estalo := 1.0 + 0.35 * sin(tamanho * PI) if tamanho < 1.0 else 1.0
+		var medida := Vector2(lado, lado) * tamanho * estalo
 		draw_texture_rect_region(_moleculas_tex,
-			Rect2((m.pos - medida * 0.5).round(), medida.round()),
-			Rect2(quadro * CELULA_DA_MOLECULA, int(SUBSTANCIAS[m.tipo]["linha"]) * CELULA_DA_MOLECULA,
+			Rect2((onde - medida * 0.5).round(), medida.round()),
+			Rect2(quadro * CELULA_DA_MOLECULA, int(SUBSTANCIAS[p.tipo]["linha"]) * CELULA_DA_MOLECULA,
 				CELULA_DA_MOLECULA, CELULA_DA_MOLECULA),
 			Color(1, 1, 1, _conteudo))
 
@@ -1635,16 +1216,16 @@ func _desenhar_regua() -> void:
 
 
 ## As plaquinhas de temperatura, à esquerda da régua: a do fundo, a do topo e
-## a de cada andar em que uma substância ficou — essa na cor dela e com o
-## desenho da molécula (e dá um pulo na hora).
+## a de cada andar em que uma substância manda no líquido — essa na cor dela e
+## com o desenho da molécula (e dá um pulo quando algo acontece ali).
 func _desenhar_plaquinhas() -> void:
 	var topo := _etiquetas.size() - 1
 	for andar in _etiquetas.size():
 		var alfa := _etiquetas[andar] * _conteudo
 		if alfa <= 0.004:
 			continue
-		var dono := _donos[andar]
-		var papel: Color = SUBSTANCIAS[dono]["tona"] if dono != "" else EstiloHUD.PAPEL
+		var dono := dono_do_andar(andar) if _etapa >= Etapa.FERVER else ""
+		var papel: Color = SUBSTANCIAS[dono]["tona"] if SUBSTANCIAS.has(dono) else EstiloHUD.PAPEL
 		var texto := "%d °C" % graus_do_andar(andar)
 		var lugar := lugar_da_plaquinha(andar)
 		var caixa := plaquinha(self, lugar, texto, papel, alfa, sin(_pulsos[andar] * PI) * 5.0, dono)
@@ -1658,10 +1239,34 @@ func _desenhar_plaquinhas() -> void:
 				alfa * _calor, true)
 
 
+## As etiquetas de pureza (mostrar_pureza): em cima do líquido do topo e do
+## fundo, quanto dele é da substância que manda ali. Nenhuma diz 100%: é o
+## que a explicação quer mostrar.
+func _desenhar_purezas() -> void:
+	var alfa := _pureza_a_vista * _conteudo
+	if alfa <= 0.004 or _motor == null:
+		return
+	for andar: int in [numero_de_andares() - 1, 0]:
+		var texto := texto_da_pureza(andar)
+		var caixa_do_liquido := _motor.caixa_do_liquido(andar)
+		if texto == "" or not caixa_do_liquido.has_area():
+			continue
+		var dono := principal_do_andar(andar)
+		var largura := FONTE.get_string_size(texto, HORIZONTAL_ALIGNMENT_LEFT, -1, LETRA_DA_PUREZA).x + 16.0
+		var meio := Vector2(_largura() * 0.5, caixa_do_liquido.position.y - 30.0)
+		var caixa := Rect2(roundf(meio.x - largura * 0.5), roundf(meio.y - 13.0), largura, 26.0)
+		var papel: Color = SUBSTANCIAS[dono]["tona"] if SUBSTANCIAS.has(dono) else EstiloHUD.PAPEL
+		EstiloHUD.ficha(self, caixa.grow(roundf(sin(_pureza_a_vista * PI) * 3.0)), alfa, papel, EstiloHUD.TINTA,
+			2.0, 2.0)
+		draw_string(FONTE, Vector2(caixa.position.x + 8.0, caixa.position.y + 5.0
+			+ roundf(FONTE.get_ascent(LETRA_DA_PUREZA) * 0.9)), texto, HORIZONTAL_ALIGNMENT_LEFT, -1,
+			LETRA_DA_PUREZA, EstiloHUD.com_alfa(EstiloHUD.TINTA, alfa))
+
+
 ## A PLAQUINHA DE TEMPERATURA: uma ficha pequena (papel, moldura de tinta e a
 ## sombra dura embaixo, como as do HUD), presa pelo meio do lado direito. A
 ## ficha de cada substância usa a mesma para o ponto de ebulição: é por serem
-## iguais que se vê que o número do andar e o da substância são o mesmo.
+## iguais que se vê que o número do andar e o da substância são do mesmo tipo.
 ## "inchada" são os px a mais de cada lado, no pulo; "substancia" põe o desenho
 ## da molécula dela antes do número. Devolve o retângulo dela.
 static func plaquinha(ci: CanvasItem, direita_meio: Vector2, texto: String,

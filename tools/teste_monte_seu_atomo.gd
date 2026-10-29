@@ -3,18 +3,17 @@ extends "res://tools/teste_de_tela.gd"
 # Teste do "Monte seu átomo" do Laboratório
 # (scenes/laboratorio/monte_seu_atomo.tscn), jogado com o mouse de verdade.
 #
-#   * a tela é a do computador da fase 1, começa vazia e toda letra dela existe
+#   * o conteúdo fica direto na tela (sem monitor), começa vazia e toda letra dela existe
 #     na fonte; todo texto cabe no lugar (o nome de qualquer isótopo, a carga
 #     de três algarismos, o que o rodapé diz, a linha "na natureza" de todos os
 #     isótopos que existem);
 #   * as seis setas são alvos que não se cobrem; segurando uma, ela repete;
-#   * a cada partícula o computador responde NA HORA: o nome do átomo, a caixa
+#   * a cada partícula a tela responde NA HORA: o nome do átomo, a caixa
 #     do elemento, Z, A, a carga (neutro, cátion, ânion), a notação e quanto
 #     daquele isótopo existe na natureza;
 #   * o desenho acompanha: núcleo e camadas iguais às contas;
 #   * sem prótons não há elemento (e a tela explica por quê); isótopo que não
-#     existe na natureza é instável; a luzinha fica verde só no átomo neutro
-#     que existe;
+#     existe na natureza é instável;
 #   * os limites (118 prótons, 177 nêutrons, 118 elétrons) recusam com o aviso
 #     certo, e abaixo de zero nada acontece;
 #   * a roda do mouse em cima de um seletor põe e tira; LIMPAR esvazia;
@@ -48,15 +47,14 @@ func _testar_a_tela() -> void:
 	await _esperar(0.4)
 	_checar(tela.titulo == "MONTE SEU ÁTOMO" and tela.retangulo_do_titulo().has_area(), "o título é MONTE SEU ÁTOMO")
 	_checar(tela.cena_de_volta == TransicaoDeCena.CENA_LABORATORIO, "ESC leva ao menu do Laboratório")
-	_checar((tela.computador.texture as Texture2D).resource_path.ends_with("Computador receptor/tela_computador.png"),
-		"a tela é a do computador da fase 1")
+	_checar(tela.painel is PainelDaAtividade and not tela.painel.has_node("Display/Varredura") and not tela.painel.has_node("Led"),
+		"o conteúdo fica direto na tela do Laboratório: sem moldura de monitor, sem varredura nem luzinha")
 	_checar(tela.protons == 0 and tela.neutrons == 0 and tela.eletrons == 0, "começa sem partícula nenhuma")
 	_checar(tela.nome.text == tela.TXT_VAZIO and tela.caixa.numero_atomico == 0 and not tela.notacao.visible \
 		and tela.na_natureza.text.is_empty(), "vazia: MONTE UM ÁTOMO, a caixa em branco, sem notação")
 	_checar(tela.numero_atomico.text == "Z = 0" and tela.numero_de_massa.text == "A = 0" and tela.carga.text == "CARGA 0" \
 		and tela.legenda_da_carga.text.is_empty(), "Z = 0, A = 0, CARGA 0")
-	_checar(tela.computador.texto_do_rodape() == tela.TXT_INSTRUCAO, "o rodapé ensina a usar as setas")
-	_checar(tela.computador.led.color == ComputadorDoLaboratorio.COR_LED_PARADO, "a luzinha começa vermelha")
+	_checar(tela.painel.texto_do_rodape() == tela.TXT_INSTRUCAO, "o rodapé ensina a usar as setas")
 
 	# Letras e caixas.
 	var textos := _textos_dos_labels(tela)
@@ -65,12 +63,12 @@ func _testar_a_tela() -> void:
 		textos.append(Elementos.nome(z).to_upper())
 	_checar(_letras_que_faltam(textos).is_empty(), "toda letra da tela e dos avisos existe na fonte [%s]" \
 		% _letras_que_faltam(textos))
-	var vidro: Rect2 = tela.computador.retangulo_do_vidro()
-	var fora := _labels_fora_do_lugar(tela.computador, vidro)
+	var vidro: Rect2 = tela.painel.retangulo_do_conteudo()
+	var fora := _labels_fora_do_lugar(tela.painel, vidro)
 	_checar(fora.is_empty(), "vazia, todo texto cabe no lugar dele %s" % [fora])
 
 	# O rodapé: tudo o que o terminal pode dizer cabe numa linha dele.
-	var rodape: Label = tela.computador.rodape
+	var rodape: Label = tela.painel.rodape
 	var largos := PackedStringArray()
 	var falas: Array = [tela.TXT_INSTRUCAO + "_", tela.TXT_PROTONS_DEMAIS, tela.TXT_NEUTRONS_DEMAIS, tela.TXT_ELETRONS_DEMAIS]
 	for z in range(1, Elementos.TOTAL + 1):
@@ -159,19 +157,17 @@ func _testar_a_montagem() -> void:
 		and tela.legenda_da_carga.text == tela.TXT_CATION, "Z = 1, A = 1, CARGA +1: é um cátion")
 	_checar(tela.notacao.visible and tela.notacao.simbolo == "H" and tela.notacao.massa == 1 \
 		and tela.notacao.numero_atomico == 1 and tela.notacao.carga == 1, "a notação mostra o H com 1, 1 e +")
-	_checar(tela.computador.texto_do_rodape() == "1 PRÓTON: HIDROGÊNIO" and tela.computador.avisando(),
+	_checar(tela.painel.texto_do_rodape() == "1 PRÓTON: HIDROGÊNIO" and tela.painel.avisando(),
 		"o terminal diz: 1 PRÓTON: HIDROGÊNIO")
 	_checar(_tocou(tela, "pop"), "a partícula que entra faz o estalo")
 	_checar(tela.atomo.protons() == 1 and tela.atomo.no_nucleo(AtomoCamadas.PROTON) == 1, "o próton aparece no núcleo do desenho")
 	_checar(tela.na_natureza.text.contains("PRÓTIO") and tela.na_natureza.text.contains("99,99%"),
 		"na natureza: é o prótio, 99,99%% do hidrogênio (\"%s\")" % tela.na_natureza.text)
-	_checar(tela.computador.led.color == ComputadorDoLaboratorio.COR_LED_ATENCAO, "íon: a luzinha fica amarela")
 	_checar(tela.alvo_disponivel("limpar"), "com partícula, LIMPAR passa a valer")
 
 	await _clicar(tela, "mais_eletrons")
 	_checar(tela.eletrons == 1 and tela.carga.text == "CARGA 0" and tela.legenda_da_carga.text == tela.TXT_NEUTRO \
 		and tela.notacao.carga == 0, "um elétron: a carga zera, o átomo fica neutro")
-	_checar(tela.computador.led.color == ComputadorDoLaboratorio.COR_LED_CERTO, "neutro e existe na natureza: luzinha verde")
 	_checar(tela.atomo.eletrons_por_camada() == PackedInt32Array([1]), "o elétron vai para a camada K do desenho")
 	await _foto("monte_2_hidrogenio")
 
@@ -180,9 +176,8 @@ func _testar_a_montagem() -> void:
 		"um nêutron: continua hidrogênio, agora o HIDROGÊNIO-2")
 	_checar(tela.na_natureza.text.contains("DEUTÉRIO"), "que é o deutério (\"%s\")" % tela.na_natureza.text)
 	await _clicar(tela, "mais_neutrons")
-	_checar(tela.na_natureza.text.contains("TRÍTIO") and tela.na_natureza.text.contains(tela.TXT_INSTAVEL) \
-		and tela.computador.led.color == ComputadorDoLaboratorio.COR_LED_ATENCAO,
-		"com dois nêutrons é o trítio, instável: luzinha amarela")
+	_checar(tela.na_natureza.text.contains("TRÍTIO") and tela.na_natureza.text.contains(tela.TXT_INSTAVEL),
+		"com dois nêutrons é o trítio, instável")
 
 	# O carbono-12, clicando.
 	await _clicar(tela, "mais_protons", 5)
@@ -208,7 +203,7 @@ func _testar_a_montagem() -> void:
 	_checar(_tocou(tela, "tirar"), "tirar faz o som de tirar")
 	await _clicar(tela, "menos_protons")
 	_checar(tela.nome.text == "BORO-11" and tela.caixa.numero_atomico == 5 \
-		and tela.computador.texto_do_rodape() == "5 PRÓTONS: BORO", "tirar um próton troca o elemento na hora: BORO-11")
+		and tela.painel.texto_do_rodape() == "5 PRÓTONS: BORO", "tirar um próton troca o elemento na hora: BORO-11")
 
 	print("  . de uma vez")
 	tela.montar(11, 12, 10)
@@ -228,12 +223,11 @@ func _testar_a_montagem() -> void:
 	_checar(tela.na_natureza.text == tela.TXT_EXPLICA_SEM_PROTONS, "e o quadro explica: sem prótons não há elemento")
 	_checar(tela.numero_atomico.text == "Z = 0" and tela.numero_de_massa.text == "A = 3" and tela.carga.text == "CARGA -2",
 		"mas as contas continuam: Z = 0, A = 3, CARGA -2")
-	_checar(tela.computador.led.color == ComputadorDoLaboratorio.COR_LED_PARADO, "e a luzinha volta ao vermelho")
 	tela.montar(92, 146, 92)
 	await _esperar(0.6)
 	_checar(tela.nome.text == "URÂNIO-238" and tela.atomo.eletrons_por_camada() == Elementos.camadas(92),
 		"o urânio-238 inteiro: as 7 camadas no desenho")
-	var fora := _labels_fora_do_lugar(tela.computador, tela.computador.retangulo_do_vidro())
+	var fora := _labels_fora_do_lugar(tela.painel, tela.painel.retangulo_do_conteudo())
 	_checar(fora.is_empty(), "com o átomo grande, todo texto continua no lugar %s" % [fora])
 	await _foto("monte_5_uranio")
 	await _fechar(tela)
@@ -246,7 +240,7 @@ func _testar_os_limites() -> void:
 	await _clicar(tela, "menos_protons")
 	await _clicar(tela, "menos_neutrons")
 	await _clicar(tela, "menos_eletrons")
-	_checar(tela.protons == 0 and tela.neutrons == 0 and tela.eletrons == 0 and not tela.computador.avisando(),
+	_checar(tela.protons == 0 and tela.neutrons == 0 and tela.eletrons == 0 and not tela.painel.avisando(),
 		"a seta de baixo com a conta em zero não faz nada")
 
 	tela.montar(999, 999, 999)
@@ -257,8 +251,8 @@ func _testar_os_limites() -> void:
 	for qual: String in casos:
 		var antes: int = tela.quantas(qual)
 		await _clicar(tela, "mais_" + qual)
-		_checar(tela.quantas(qual) == antes and tela.computador.texto_do_rodape() == casos[qual] \
-			and tela.computador.avisando() and _tocou(tela, "erro"),
+		_checar(tela.quantas(qual) == antes and tela.painel.texto_do_rodape() == casos[qual] \
+			and tela.painel.avisando() and _tocou(tela, "erro"),
 			"passar do limite de %s é recusado: \"%s\"" % [qual, casos[qual]])
 	# A conta que tremeu volta para o lugar.
 	await _esperar(0.5)
@@ -321,7 +315,7 @@ func _testar_o_mouse() -> void:
 	await _clicar(tela, "limpar")
 	_checar(tela.protons == 0 and tela.neutrons == 0 and tela.eletrons == 0 and tela.nome.text == tela.TXT_VAZIO \
 		and tela.caixa.numero_atomico == 0, "LIMPAR tira tudo de uma vez")
-	_checar(tela.computador.texto_do_rodape() == tela.TXT_INSTRUCAO and not tela.alvo_disponivel("limpar"),
+	_checar(tela.painel.texto_do_rodape() == tela.TXT_INSTRUCAO and not tela.alvo_disponivel("limpar"),
 		"o rodapé volta à instrução e LIMPAR deixa de valer")
 	_checar(tela.atomo.protons() == 0 and tela.atomo.eletrons_por_camada().is_empty(), "o desenho também esvazia")
 	await _fechar(tela)

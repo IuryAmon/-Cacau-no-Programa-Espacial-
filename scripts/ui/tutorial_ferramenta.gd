@@ -11,7 +11,10 @@ extends Control
 #   a TELINHA   uma cena animada com a Cacau usando a ferramenta
 #               (a do bumerangue é scenes/ui/demo_bumerangue.tscn), colada na
 #               folha como uma foto, com moldura de tinta;
-#   a FRASE     uma só, embaixo da telinha, como a legenda da foto.
+#   a FRASE     uma só, embaixo da telinha, como a legenda da foto. Ela pode
+#               ter marcas de tecla: "{dash}" sai SHIFT no teclado e o R2
+#               desenhado no controle (BotoesControle.traduzir), e a ficha
+#               se refaz sozinha quando a pessoa troca de um para o outro.
 #
 # Nada de título, etiqueta nem rodapé escrito: quem conta a história é a
 # telinha, e a frase só diz para que serve. No canto de baixo, à direita, vai
@@ -129,6 +132,12 @@ func retangulo_da_ficha() -> Rect2:
 	return caixa
 
 
+## A pessoa trocou de teclado para controle (ou o contrário): as teclas da
+## frase mudam de desenho e a ficha se mede de novo. O FerramentasHUD avisa.
+func atualizar_teclas() -> void:
+	_invalidar()
+
+
 ## Onde a telinha fica dentro da ficha (vazio para tutorial sem telinha).
 func retangulo_da_telinha() -> Rect2:
 	if _telinha == null:
@@ -141,6 +150,13 @@ func retangulo_da_telinha() -> Rect2:
 ## A cena animada (null se a ferramenta não tem uma).
 func telinha() -> Control:
 	return _telinha
+
+
+## A frase como ela sai na ficha: as marcas de tecla já trocadas pelo que o
+## dispositivo em uso mostra (no controle, o botão vira um caractere especial
+## que só sai desenhado — ver EstiloHUD.escrever_com_icones).
+func frase() -> String:
+	return BotoesControle.traduzir(String(_ficha.get("texto", "")), BotoesControle.controle_em_uso(), true)
 
 
 ## A frase, já quebrada nas linhas em que é desenhada.
@@ -277,8 +293,7 @@ func _medidas() -> Dictionary:
 
 	var tela := _tamanho_da_telinha()
 	var largura_texto := tela.x if _telinha != null else LARGURA_SEM_TELINHA
-	var linhas := EstiloHUD.quebrar(_fonte(), String(_ficha.get("texto", "")), TAM_TEXTO,
-		largura_texto)
+	var linhas := EstiloHUD.quebrar(_fonte(), frase(), TAM_TEXTO, largura_texto)
 	var entrelinha := TAM_TEXTO * ENTRELINHA
 
 	var largura := largura_texto + MARGEM * 2.0
@@ -362,11 +377,10 @@ func _desenhar_frase(m: Dictionary, alfa: float) -> void:
 	if a_frase <= 0.004:
 		return
 	for i in linhas.size():
-		var largura := f.get_string_size(linhas[i], HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_TEXTO).x
+		var largura := EstiloHUD.largura_com_icones(f, linhas[i], TAM_TEXTO)
 		var x := roundf(caixa.get_center().x - largura * 0.5)
-		draw_string(f, Vector2(x, roundf(topo + f.get_ascent(TAM_TEXTO) + i * entrelinha)),
-			linhas[i], HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_TEXTO,
-			EstiloHUD.com_alfa(EstiloHUD.TINTA, a_frase))
+		EstiloHUD.escrever_com_icones(self, f, Vector2(x, roundf(topo + f.get_ascent(TAM_TEXTO) + i * entrelinha)),
+			linhas[i], TAM_TEXTO, EstiloHUD.com_alfa(EstiloHUD.TINTA, a_frase))
 
 
 # ─────────────────────────────────────────────────────────────

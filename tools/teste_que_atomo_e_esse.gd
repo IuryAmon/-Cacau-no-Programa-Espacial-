@@ -3,7 +3,7 @@ extends "res://tools/teste_de_tela.gd"
 # Teste do quiz "Que átomo é esse?" do Laboratório
 # (scenes/laboratorio/que_atomo_e_esse.tscn), jogado com o mouse de verdade.
 #
-#   * a tela é a do computador, as letras existem na fonte e todo texto cabe (o
+#   * o conteúdo fica direto na tela (sem monitor), as letras existem na fonte e todo texto cabe (o
 #     rodapé de qualquer resposta, certa ou errada);
 #   * as perguntas crescem: átomos pequenos e neutros primeiro; isótopos e íons
 #     só no fim (FASES);
@@ -14,8 +14,7 @@ extends "res://tools/teste_de_tela.gd"
 #     em qualquer das quatro posições; nas perguntas de íon e de isótopo, uma
 #     das erradas é a "conta trocada" (o elemento com aquele tanto de elétrons
 #     ou de nêutrons);
-#   * o desenho mostra o átomo perguntado, e Z, A e a carga só aparecem depois
-#     da resposta;
+#   * o desenho mostra o átomo perguntado, sem Z, A nem carga embaixo dele;
 #   * acertar soma ponto, pinta a caixa de verde e explica; errar não soma,
 #     pinta a escolhida de vermelho, a certa de verde e explica;
 #   * respondida, um clique (ou ENTER, ESPAÇO, E) passa adiante, e esse clique
@@ -69,14 +68,14 @@ func _testar_a_tela() -> void:
 	await _esperar(0.4)
 	_checar(tela.titulo == "QUE ÁTOMO É ESSE?" and tela.cena_de_volta == TransicaoDeCena.CENA_LABORATORIO,
 		"o título é QUE ÁTOMO É ESSE?, e ESC leva ao Laboratório")
-	_checar((tela.computador.texture as Texture2D).resource_path.ends_with("Computador receptor/tela_computador.png"),
-		"a tela é a do computador da fase 1")
+	_checar(tela.painel is PainelDaAtividade and not tela.painel.has_node("Display/Varredura") and not tela.painel.has_node("Led"),
+		"o conteúdo fica direto na tela do Laboratório: sem moldura de monitor, sem varredura nem luzinha")
 	_checar(tela.estado == tela.Estado.PERGUNTANDO and tela.numero == 1 and tela.acertos == 0,
 		"abre já perguntando: pergunta 1, nenhum acerto")
-	_checar(tela.computador.cabecalho.text == "PERGUNTA 1 DE 10" and tela.placar.text == "ACERTOS: 0",
+	_checar(tela.painel.cabecalho.text == "PERGUNTA 1 DE 10" and tela.placar.text == "ACERTOS: 0",
 		"o cabeçalho diz PERGUNTA 1 DE 10 e o placar, ACERTOS: 0")
-	_checar(tela.numero_atomico.text == "Z = ?" and tela.numero_de_massa.text == "A = ?" and tela.carga.text == "CARGA ?",
-		"Z, A e a carga ficam escondidos até a resposta")
+	_checar(tela.find_child("NumeroAtomico", true, false) == null and tela.find_child("Carga", true, false) == null,
+		"embaixo do átomo não há Z, A nem carga: só o desenho")
 	_checar(not tela.continuar.visible and tela.grupo_jogo.visible and not tela.grupo_fim.visible,
 		"sem \"clique para continuar\" e sem placar final")
 	_checar(tela.atomo.protons() == int(tela.atual["z"]) and tela.atomo.neutrons() == int(tela.atual["neutrons"]) \
@@ -87,29 +86,29 @@ func _testar_a_tela() -> void:
 	textos.append_array(["FIM DA PARTIDA", "ESCOLHA: OUTRA PARTIDA OU VOLTAR AO LABORATÓRIO", "ÁTOMO NEUTRO", "CÁTION", "ÂNION"])
 	_checar(_letras_que_faltam(textos).is_empty(), "toda letra da tela e das falas existe na fonte [%s]" \
 		% _letras_que_faltam(textos))
-	var vidro: Rect2 = tela.computador.retangulo_do_vidro()
-	var fora := _labels_fora_do_lugar(tela.computador, vidro)
+	var area: Rect2 = tela.painel.retangulo_do_conteudo()
+	var fora := _labels_fora_do_lugar(tela.painel, area)
 	_checar(fora.is_empty(), "perguntando, todo texto cabe no lugar dele %s" % [fora])
 
-	# As quatro caixas: dentro do vidro, sem se cobrir e sem cobrir o átomo.
+	# As quatro caixas: dentro do area, sem se cobrir e sem cobrir o átomo.
 	var caixas: Array[Rect2] = []
 	var no_lugar := true
 	for i in 4:
 		var nome := "opcao_%d" % (i + 1)
 		var caixa: Rect2 = tela.retangulo_do_alvo(nome)
-		if not tela.alvo_disponivel(nome) or not vidro.encloses(caixa) or caixa.intersects(tela.atomo.get_global_rect()):
+		if not tela.alvo_disponivel(nome) or not area.encloses(caixa) or caixa.intersects(tela.atomo.get_global_rect()):
 			no_lugar = false
 		caixas.append(caixa)
 	for i in 4:
 		for j in range(i + 1, 4):
 			if caixas[i].intersects(caixas[j]):
 				no_lugar = false
-	_checar(no_lugar, "as quatro caixas ficam no vidro, sem se cobrir e sem cobrir o átomo")
+	_checar(no_lugar, "as quatro caixas ficam no area, sem se cobrir e sem cobrir o átomo")
 	_checar(not tela.alvo_disponivel("continuar") and not tela.alvo_disponivel("de_novo") and not tela.alvo_disponivel("sair"),
 		"perguntando, só as caixas podem ser clicadas")
 
 	# O rodapé: a dica de cada tipo e a explicação de qualquer resposta.
-	var rodape: Label = tela.computador.rodape
+	var rodape: Label = tela.painel.rodape
 	var largos := PackedStringArray()
 	var falas: Array = [tela.TXT_DICA + "_", tela.TXT_DICA_NEUTRO + "_", tela.TXT_DICA_ION + "_",
 		"ESCOLHA: OUTRA PARTIDA OU VOLTAR AO LABORATÓRIO_"]
@@ -125,7 +124,7 @@ func _testar_a_tela() -> void:
 		mais_larga = maxf(mais_larga, largura)
 		if largura > rodape.size.x:
 			largos.append(fala)
-	_checar(largos.is_empty(), "tudo o que o terminal diz cabe no rodapé (a fala mais larga: %.0f de %.0f px) %s" \
+	_checar(largos.is_empty(), "tudo o que o rodapé diz cabe no rodapé (a fala mais larga: %.0f de %.0f px) %s" \
 		% [mais_larga, rodape.size.x, largos.slice(0, 3)])
 	largos.clear()
 	for faixa: Array in tela.TXT_FINAIS:
@@ -252,26 +251,23 @@ func _testar_as_respostas() -> void:
 	await _quadros(2)
 	_checar(tela.caixas[0].numero_atomico == 5 and tela.caixas[1].numero_atomico == 6 and tela.caixas[3].numero_atomico == 12,
 		"as caixas mostram os elementos oferecidos")
-	_checar(tela.computador.texto_do_rodape() == tela.TXT_DICA_NEUTRO, "a dica do átomo neutro: um elétron para cada próton")
+	_checar(tela.painel.texto_do_rodape() == tela.TXT_DICA_NEUTRO, "a dica do átomo neutro: um elétron para cada próton")
 	await _passar_por(tela, "opcao_3")
 	_checar(tela.caixas[2].destaque == EstiloHUD.CLARO and tela.caixas[1].destaque.a == 0.0,
 		"a caixa sob o mouse ganha o aro claro")
 	await _clicar_no_elemento(tela, 6)
 	_checar(tela.estado == tela.Estado.RESPONDIDA and tela.acertos == 1 and tela.escolhida == 1 and respostas == [true],
 		"clicar na caixa do carbono: certo, um acerto")
-	_checar(tela.computador.texto_do_rodape() == "CERTO! 6 PRÓTONS: CARBONO" and _tocou(tela, "certo") \
-		and tela.computador.led.color == ComputadorDoLaboratorio.COR_LED_CERTO,
-		"o terminal explica: CERTO! 6 PRÓTONS: CARBONO")
-	_checar(tela.numero_atomico.text == "Z = 6" and tela.numero_de_massa.text == "A = 12" and tela.carga.text == "CARGA 0" \
-		and tela.legenda_da_carga.text == "ÁTOMO NEUTRO", "e os números aparecem: Z = 6, A = 12, CARGA 0")
-	_checar(tela.caixas[1].destaque == ComputadorDoLaboratorio.COR_CERTO and tela.caixas[0].apagada \
+	_checar(tela.painel.texto_do_rodape() == "CERTO! 6 PRÓTONS: CARBONO" and _tocou(tela, "certo"),
+		"o rodapé explica: CERTO! 6 PRÓTONS: CARBONO")
+	_checar(tela.caixas[1].destaque == PainelDaAtividade.COR_CERTO and tela.caixas[0].apagada \
 		and tela.caixas[2].apagada and tela.caixas[3].apagada and not tela.caixas[1].apagada,
 		"a caixa certa fica verde e as outras se apagam")
 	_checar(tela.placar.text == "ACERTOS: 1" and tela.continuar.visible and tela.continuar.text == tela.TXT_CONTINUAR,
 		"o placar sobe e aparece CLIQUE PARA CONTINUAR")
 	_checar(not tela.alvo_disponivel("opcao_1") and tela.alvo_disponivel("continuar"),
 		"respondida, as caixas deixam de valer: o clique agora continua")
-	var fora := _labels_fora_do_lugar(tela.computador, tela.computador.retangulo_do_vidro())
+	var fora := _labels_fora_do_lugar(tela.painel, tela.painel.retangulo_do_conteudo())
 	_checar(fora.is_empty(), "respondida, todo texto cabe no lugar dele %s" % [fora])
 	await _esperar(0.5)
 	await _foto("quiz_2_certo")
@@ -281,24 +277,22 @@ func _testar_as_respostas() -> void:
 	await _clicar_em(tela.caixas[0].get_global_rect().get_center())
 	_checar(tela.numero == antes + 1 and tela.estado == tela.Estado.PERGUNTANDO and tela.escolhida == -1 \
 		and respostas.size() == 1, "um clique continua: vem a pergunta seguinte, ainda sem resposta")
-	_checar(not tela.continuar.visible and tela.numero_atomico.text == "Z = ?", "e os números somem de novo")
+	_checar(not tela.continuar.visible, "e o CLIQUE PARA CONTINUAR some")
 
 	# Errada: o íon do sódio, respondido como neônio (que tem os mesmos 10 elétrons).
 	opcoes = [10, 11, 12, 23]
 	tela.perguntar({"z": 11, "neutrons": 12, "eletrons": 10, "tipo": "ion"}, opcoes)
 	await _quadros(2)
-	_checar(tela.computador.texto_do_rodape() == tela.TXT_DICA_ION, "a dica do íon: os elétrons não batem com os prótons")
+	_checar(tela.painel.texto_do_rodape() == tela.TXT_DICA_ION, "a dica do íon: os elétrons não batem com os prótons")
 	_checar(tela.atomo.eletrons_por_camada() == PackedInt32Array([2, 8]) and tela.atomo.protons() == 11,
 		"o desenho do Na+: 11 prótons e só 10 elétrons")
 	await _clicar_no_elemento(tela, 10)
 	_checar(tela.estado == tela.Estado.RESPONDIDA and tela.acertos == 1 and respostas == [true, false],
 		"responder neônio: errado, o placar não sobe")
-	_checar(tela.computador.texto_do_rodape() == "NÃO É NEÔNIO. O NÚCLEO TEM 11 PRÓTONS: É SÓDIO" and _tocou(tela, "erro"),
-		"o terminal explica: NÃO É NEÔNIO. O NÚCLEO TEM 11 PRÓTONS: É SÓDIO")
-	_checar(tela.caixas[0].destaque == ComputadorDoLaboratorio.COR_ERRO and tela.caixas[1].destaque == ComputadorDoLaboratorio.COR_CERTO \
+	_checar(tela.painel.texto_do_rodape() == "NÃO É NEÔNIO. O NÚCLEO TEM 11 PRÓTONS: É SÓDIO" and _tocou(tela, "erro"),
+		"o rodapé explica: NÃO É NEÔNIO. O NÚCLEO TEM 11 PRÓTONS: É SÓDIO")
+	_checar(tela.caixas[0].destaque == PainelDaAtividade.COR_ERRO and tela.caixas[1].destaque == PainelDaAtividade.COR_CERTO \
 		and tela.caixas[2].apagada, "a escolhida fica vermelha e a certa, verde")
-	_checar(tela.numero_atomico.text == "Z = 11" and tela.numero_de_massa.text == "A = 23" and tela.carga.text == "CARGA +1" \
-		and tela.legenda_da_carga.text == "CÁTION", "os números explicam: Z = 11, A = 23, CARGA +1, cátion")
 	await _esperar(0.5)
 	_checar(tela.caixas[0].position.is_equal_approx(tela.caixas[0].get_meta("pos_base")), "a caixa treme e volta para o lugar")
 	await _foto("quiz_3_errado")
@@ -318,10 +312,9 @@ func _testar_as_respostas() -> void:
 	opcoes = [8, 10, 18, 9]
 	tela.perguntar({"z": 8, "neutrons": 10, "eletrons": 8, "tipo": "isotopo"}, opcoes)
 	await _quadros(2)
-	_checar(tela.computador.texto_do_rodape() == tela.TXT_DICA, "a dica do isótopo: conte os prótons do núcleo")
+	_checar(tela.painel.texto_do_rodape() == tela.TXT_DICA, "a dica do isótopo: conte os prótons do núcleo")
 	await _clicar_no_elemento(tela, 8)
-	_checar(tela.numero_de_massa.text == "A = 18" and tela.carga.text == "CARGA 0" and respostas[-1] == true,
-		"oxigênio-18: A = 18, e continua sendo oxigênio")
+	_checar(respostas[-1] == true, "oxigênio-18 continua sendo oxigênio")
 	tela.responder(2)
 	_checar(tela.acertos == 2 + 1 and respostas.size() == 4, "uma pergunta já respondida não aceita outra resposta")
 	await _fechar(tela)
@@ -340,7 +333,7 @@ func _testar_a_partida() -> void:
 		if vistos.has(z) or not z in tela.opcoes:
 			tudo_certo = false
 		vistos[z] = true
-		if tela.computador.cabecalho.text != "PERGUNTA %d DE %d" % [pergunta, tela.PERGUNTAS]:
+		if tela.painel.cabecalho.text != "PERGUNTA %d DE %d" % [pergunta, tela.PERGUNTAS]:
 			tudo_certo = false
 		await _clicar_no_elemento(tela, z)
 		if tela.acertos != pergunta:
@@ -354,15 +347,14 @@ func _testar_a_partida() -> void:
 		"um clique mostra o fim da partida")
 	_checar(tela.placar_final.text == "10 DE 10" and tela.mensagem_final.text == "PERFEITO! NENHUM ÁTOMO ESCAPOU",
 		"10 DE 10: PERFEITO! NENHUM ÁTOMO ESCAPOU")
-	_checar(tela.computador.cabecalho.text == "FIM DA PARTIDA" and _tocou(tela, "sucesso") \
-		and tela.computador.led.color == ComputadorDoLaboratorio.COR_LED_AZUL, "o cabeçalho diz FIM DA PARTIDA")
+	_checar(tela.painel.cabecalho.text == "FIM DA PARTIDA" and _tocou(tela, "sucesso"), "o cabeçalho diz FIM DA PARTIDA")
 	_checar(tela.alvo_disponivel("de_novo") and tela.alvo_disponivel("sair") and not tela.alvo_disponivel("opcao_1") \
 		and not tela.alvo_disponivel("continuar"), "no fim, só os botões JOGAR DE NOVO e VOLTAR valem")
-	var vidro: Rect2 = tela.computador.retangulo_do_vidro()
-	_checar(vidro.encloses(tela.retangulo_do_alvo("de_novo")) and vidro.encloses(tela.retangulo_do_alvo("sair")) \
+	var area: Rect2 = tela.painel.retangulo_do_conteudo()
+	_checar(area.encloses(tela.retangulo_do_alvo("de_novo")) and area.encloses(tela.retangulo_do_alvo("sair")) \
 		and not tela.retangulo_do_alvo("de_novo").intersects(tela.retangulo_do_alvo("sair")),
-		"os dois botões ficam no vidro, lado a lado")
-	var fora := _labels_fora_do_lugar(tela.computador, vidro)
+		"os dois botões ficam no area, lado a lado")
+	var fora := _labels_fora_do_lugar(tela.painel, area)
 	_checar(fora.is_empty(), "no fim, todo texto cabe no lugar dele %s" % [fora])
 	await _foto("quiz_4_fim")
 

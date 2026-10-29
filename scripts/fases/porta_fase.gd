@@ -136,13 +136,17 @@ func _process(_delta: float) -> void:
 	if _pedido_pendente and _jogador_na_area and _jogador != null and _jogador.is_on_floor():
 		_pedido_pendente = false
 		_tentar_entrar()
+	# Voando no modo dev o W é subir: a porta abre no E (ver modo_dev.gd).
+	if ModoDev.voando and _jogador_na_area and not _entrando and Interacao.pediu():
+		_tentar_entrar()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if Engine.is_editor_hint() or not _jogador_na_area or _jogador == null or _entrando:
 		return
 	# Diálogo, popup ou puzzle na tela: o mundo não recebe comando nenhum.
-	if Interacao.ocupada():
+	# Voando no modo dev, o W é subir (a porta abre no E, em _process).
+	if Interacao.ocupada() or ModoDev.voando:
 		return
 	# O mesmo gesto das portas do simulador (ver porta_simulador.gd).
 	var para_cima: bool = event.is_action_pressed("ui_up") \
@@ -160,6 +164,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _pode_entrar() -> bool:
+	# Modo dev: nenhuma porta fica trancada.
+	if ModoDev.ativo:
+		return cena_destino != ""
 	if requer_habilidade != "" and not Progresso.tem_habilidade(requer_habilidade):
 		return false
 	if requer_todas_celulas and not Progresso.todas_as_celulas():

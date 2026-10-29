@@ -5,7 +5,7 @@ extends TelaInterativa
 # O puzzle do bumerangue pede o carbono; aqui a pessoa monta o átomo que
 # quiser. São três seletores, com as mesmas setas do puzzle
 # (scenes/ui/seletor_particula.tscn): prótons, nêutrons e elétrons. A cada
-# partícula que entra ou sai, o computador responde NA HORA:
+# partícula que entra ou sai, a tela responde NA HORA:
 #
 #   QUE ÁTOMO É    quem diz é o número de prótons. A caixa do elemento (a da
 #                  tabela periódica) e o nome trocam no mesmo instante:
@@ -26,15 +26,15 @@ extends TelaInterativa
 # inclusive nos íons (ver Elementos.camadas_com).
 #
 # Não há resposta certa nem errada: é um brinquedo. Os limites são os da
-# natureza conhecida (118 prótons, 177 nêutrons, 118 elétrons), e o terminal
+# natureza conhecida (118 prótons, 177 nêutrons, 118 elétrons), e o rodapé
 # explica cada um quando a pessoa bate nele.
 #
 # ONDE MEXER:
-#   as constantes logo abaixo            os limites e o que o terminal diz.
+#   as constantes logo abaixo            os limites e o que o rodapé diz.
 #   scenes/laboratorio/monte_seu_atomo.tscn
 #                                        a tela: posições, letras e cores. As
 #                                        peças ficam dentro de
-#                                        Computador/Display/Conteudo.
+#                                        Painel/Display/Conteudo.
 #
 # CONTROLES: mouse nas setas (segurando, a seta repete cada vez mais rápido);
 # a roda do mouse em cima de um seletor também põe e tira; ESC volta.
@@ -74,22 +74,22 @@ var protons: int = 0
 var neutrons: int = 0
 var eletrons: int = 0
 
-@onready var computador: ComputadorDoLaboratorio = $Computador
-@onready var atomo: AtomoCamadas = $Computador/Display/Conteudo/Atomo
-@onready var caixa: CaixaElemento = $Computador/Display/Conteudo/Caixa
-@onready var nome: Label = $Computador/Display/Conteudo/Nome
-@onready var notacao: NotacaoDoAtomo = $Computador/Display/Conteudo/Notacao
-@onready var na_natureza: Label = $Computador/Display/Conteudo/NaNatureza
-@onready var numero_atomico: Label = $Computador/Display/Conteudo/Propriedades/NumeroAtomico
-@onready var numero_de_massa: Label = $Computador/Display/Conteudo/Propriedades/NumeroDeMassa
-@onready var carga: Label = $Computador/Display/Conteudo/Propriedades/Carga
-@onready var legenda_da_carga: Label = $Computador/Display/Conteudo/Propriedades/LegendaCarga
-@onready var botao_limpar: Panel = $Computador/Display/Conteudo/BotaoLimpar
+@onready var painel: PainelDaAtividade = $Painel
+@onready var atomo: AtomoCamadas = $Painel/Display/Conteudo/Atomo
+@onready var caixa: CaixaElemento = $Painel/Display/Conteudo/Caixa
+@onready var nome: Label = $Painel/Display/Conteudo/Nome
+@onready var notacao: NotacaoDoAtomo = $Painel/Display/Conteudo/Notacao
+@onready var na_natureza: Label = $Painel/Display/Conteudo/NaNatureza
+@onready var numero_atomico: Label = $Painel/Display/Conteudo/Propriedades/NumeroAtomico
+@onready var numero_de_massa: Label = $Painel/Display/Conteudo/Propriedades/NumeroDeMassa
+@onready var carga: Label = $Painel/Display/Conteudo/Propriedades/Carga
+@onready var legenda_da_carga: Label = $Painel/Display/Conteudo/Propriedades/LegendaCarga
+@onready var botao_limpar: Panel = $Painel/Display/Conteudo/BotaoLimpar
 ## Os seletores da tela, com os nomes dos SELETORES.
 @onready var seletores := {
-	"protons": $Computador/Display/Conteudo/Seletores/SeletorProtons as SeletorParticula,
-	"neutrons": $Computador/Display/Conteudo/Seletores/SeletorNeutrons as SeletorParticula,
-	"eletrons": $Computador/Display/Conteudo/Seletores/SeletorEletrons as SeletorParticula,
+	"protons": $Painel/Display/Conteudo/Seletores/SeletorProtons as SeletorParticula,
+	"neutrons": $Painel/Display/Conteudo/Seletores/SeletorNeutrons as SeletorParticula,
+	"eletrons": $Painel/Display/Conteudo/Seletores/SeletorEletrons as SeletorParticula,
 }
 
 
@@ -104,8 +104,8 @@ func _ao_abrir() -> void:
 		# deixá-la fora do lugar.
 		seletor.quantos.set_meta("pos_base", seletor.quantos.position)
 	registrar_alvo("limpar", botao_limpar.get_global_rect, limpar, _tem_particula)
-	computador.definir_rodape(TXT_INSTRUCAO)
-	computador.ligar()
+	painel.definir_rodape(TXT_INSTRUCAO)
+	painel.aparecer()
 	_atualizar(false)
 
 
@@ -193,20 +193,20 @@ func limpar() -> void:
 		return
 	tocar("tirar")
 	montar(0, 0, 0)
-	computador.voltar_rodape()
+	painel.voltar_rodape()
 
 
 func _tem_particula() -> bool:
 	return protons + neutrons + eletrons > 0
 
 
-## Bateu num limite: a conta treme e o terminal diz por quê. Com a seta
+## Bateu num limite: a conta treme e o rodapé diz por quê. Com a seta
 ## segurada o aviso é o mesmo, então ele não se repete (nem o som).
 func _recusar(texto: String, conta: Label) -> void:
-	if computador.avisando() and computador.texto_do_rodape() == texto:
+	if painel.avisando() and painel.texto_do_rodape() == texto:
 		return
 	tocar("erro")
-	computador.avisar(texto, ComputadorDoLaboratorio.COR_ERRO)
+	painel.avisar(texto, PainelDaAtividade.COR_ERRO)
 	var origem: Vector2 = conta.get_meta("pos_base", conta.position)
 	var tween := novo_tween()
 	tween.set_trans(Tween.TRANS_SINE)
@@ -276,23 +276,14 @@ func _atualizar(mudou_o_elemento: bool) -> void:
 		notacao.definir(Elementos.simbolo(protons), massa(), protons, carga_do_atomo())
 	na_natureza.text = texto_da_natureza()
 
-	# A luzinha: vermelha sem elemento, verde no átomo neutro que existe na
-	# natureza, amarela no resto (íon ou isótopo instável).
-	if protons <= 0:
-		computador.definir_led(ComputadorDoLaboratorio.COR_LED_PARADO, true)
-	elif carga_do_atomo() == 0 and Elementos.abundancia(protons, massa()) >= 0.0:
-		computador.definir_led(ComputadorDoLaboratorio.COR_LED_CERTO)
-	else:
-		computador.definir_led(ComputadorDoLaboratorio.COR_LED_ATENCAO)
-
 	if mudou_o_elemento:
 		_pulsar(caixa)
 		if protons > 0:
-			# O terminal fala que átomo é, na hora.
-			computador.avisar(TXT_ELEMENTO % [protons, "PRÓTON" if protons == 1 else "PRÓTONS",
-				Elementos.nome(protons).to_upper()], ComputadorDoLaboratorio.COR_CERTO, 2.4)
+			# O rodapé diz que átomo é, na hora.
+			painel.avisar(TXT_ELEMENTO % [protons, "PRÓTON" if protons == 1 else "PRÓTONS",
+				Elementos.nome(protons).to_upper()], PainelDaAtividade.COR_CERTO, 2.4)
 		else:
-			computador.voltar_rodape()
+			painel.voltar_rodape()
 
 
 ## A caixa do elemento dá um pulo quando o elemento troca.

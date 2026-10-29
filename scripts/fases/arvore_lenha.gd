@@ -67,17 +67,20 @@ const PREFIXO_TORA := "ToraDaArvore"
 # assenta. Pancadas seguidas SOMAM, como num galho de verdade, em vez de uma
 # cortar a outra no meio (o que faria o desenho pular).
 
-## Deslocamento do topo por pixel de altura no pico do balanço (0.035 num
-## salgueiro de ~380 px de altura na tela são ~13 px de copa andando).
-const VERGA := 0.035
+## Deslocamento do topo por pixel de altura no pico do balanço. A árvore é
+## GRANDE, e árvore grande quase não se mexe com uma bumerangada: 0.014 num
+## salgueiro de ~500 px de altura são ~5 px de copa andando no pico.
+const VERGA := 0.014
 ## A pancada que não derruba nada (árvore vazia, ou a segunda passada do
 ## mesmo arremesso) balança menos: é leitura de "acertou, mas acabou".
-const VERGA_FRACA := 0.018
-## Ritmo do balanço (vaivéns por segundo) e o quão rápido ele morre (1/s).
-const VERGA_RITMO := 2.6
-const VERGA_AMORTECIMENTO := 3.4
+const VERGA_FRACA := 0.007
+## Ritmo do balanço (vaivéns por segundo) e o quão rápido ele morre (1/s). O
+## vaivém é lento, de coisa pesada; um ritmo rápido faria a árvore parecer
+## pequena, um arbusto tremendo.
+const VERGA_RITMO := 1.5
+const VERGA_AMORTECIMENTO := 2.4
 ## Daqui para frente o balanço já é invisível e a pancada sai da conta.
-const VERGA_DURACAO := 1.5
+const VERGA_DURACAO := 1.8
 
 ## O clarão da pancada: o desenho da árvore acende e volta.
 const CLARAO := Color(1.3, 1.24, 1.14)
