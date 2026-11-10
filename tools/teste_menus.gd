@@ -653,12 +653,22 @@ func _testar_o_modo_historia() -> void:
 	_checar(get_tree().get_nodes_in_group(CursorVirtual.GRUPO).filter(func(no: Node) -> bool: return no is TelaInterativa).is_empty(),
 		"nenhuma tela do menu ficou para trás")
 	_checar(not get_tree().paused, "o jogo está andando")
-	_checar(Caderno.visible and Objetivos.visible and FerramentasHUD.visible, "os HUDs da história estão ligados (a cortina não os apaga)")
 	_checar(Interacao.toque_preso(&"jump") and not Interacao.livre_para(&"jump"),
 		"com o ESPAÇO ainda apertado na chegada, a Cacau não pula")
 	_tecla(KEY_SPACE, false)
 	await _quadros(3)
 	_checar(not Interacao.toque_preso(&"jump"), "soltando o ESPAÇO, o pulo volta a valer")
+	# A abertura da história (o nome no céu e a câmera descendo) esconde o HUD
+	# de propósito; quando a Cacau para, ele volta.
+	var abertura := cena.get_node_or_null("AberturaDaHistoria")
+	_checar(abertura != null and abertura.em_andamento() and not Caderno.visible,
+		"o world1 abre com a abertura da história, sem HUD")
+	Engine.time_scale = 6.0
+	await _esperar_ate(func() -> bool: return abertura == null or not abertura.em_andamento(), 20.0)
+	Engine.time_scale = 1.0
+	await _quadros(3)
+	_checar(Caderno.visible and Objetivos.visible and FerramentasHUD.visible,
+		"no fim da abertura, os HUDs da história estão ligados (a cortina não os apaga)")
 	_checar(Atmosfera.da_cena(cena) != null and Atmosfera.da_cena(cena).segue_a_partida, "e a fase está na hora da partida")
 	await _foto("menu_5_historia")
 	# Arruma a casa: a fase vai embora antes de o teste fechar.

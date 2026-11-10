@@ -935,7 +935,8 @@ func _debug_avancar_a_hora() -> void:
 # aceso no painel, como se tivesse coletado nas fases. Aí é só ir ao baú e
 # apertar E uma vez por amostra. Fora de build de debug não faz nada.
 ## Atalho de debug (tecla P, em qualquer mapa): entrega de uma vez todas as
-## ferramentas — maçarico, bumerangue, mochila, sinalizador, botas e lanterna.
+## ferramentas do Progresso.HABILIDADES — maçarico, bumerangue, mochila,
+## sinalizador e botas (a lanterna saiu do jogo por enquanto).
 ## Vão direto para os equipamentos, sem ficha de coleta nem tutorial.
 func _debug_pegar_todas_ferramentas() -> void:
 	if not OS.is_debug_build():

@@ -9,13 +9,31 @@ extends Control
 # imagem do momento (o vídeo da câmera de segurança, depois a foto da base
 # destruída) e, embaixo, na parte preta, o texto vai sendo escrito em branco,
 # letra a letra, na letra dos tutoriais (a ari-w9500, no tamanho da ficha de
-# tutorial). No fim, a tela fica preta e em silêncio, e a cortina
-# (TransicaoDeCena) leva ao world1.
+# tutorial). Depois, em silêncio: "Mas o sonho não morreu com eles", décadas
+# depois, a Lua, o quarto da Cacau e o plantão do jornal procurando uma
+# criança para o módulo lunar. No fim, a tela fica preta e em silêncio, e a
+# cortina (TransicaoDeCena) leva ao world1 — onde o nome do jogo aparece no
+# céu, com a bossa nova, antes de a câmera descer até a Cacau
+# (abertura_da_historia.gd).
 #
 # O ROTEIRO é a lista logo abaixo, um QUADRO por imagem:
-#   "imagem"    o que aparece na telinha: um vídeo (.ogv) ou uma imagem;
+#   "imagem"    o que aparece na telinha: um vídeo (.ogv), uma imagem, uma
+#               cena montada (.tscn, como o céu com a lua — se ela tiver
+#               pagina_aberta(indice), é avisada a cada página) ou,
+#               enquanto o desenho não fica pronto, um TEXTO: a telinha fica
+#               preta, com a descrição da imagem escrita dentro dela. Sem
+#               "imagem", não há telinha: a tela toda fica preta e o texto
+#               vem no meio dela;
 #   "legenda"   (opcional) o letreiro no alto da tela, acima da telinha;
-#   "paginas"   o texto de baixo, uma página por vez ("\n" quebra a linha ali).
+#   "paginas"   o texto de baixo, uma página por vez ("\n" quebra a linha ali);
+#   "corte"     (opcional) true: o quadro entra num corte seco — o anterior
+#               some de uma vez e este aparece de uma vez, sem apagar e
+#               acender;
+#   "segura"    (opcional) segundos a mais que a imagem fica, depois do texto
+#               (num quadro sem texto, o tempo dele; sem isto, SEGURA_SEM_TEXTO);
+#   "escuro_antes"  (opcional) segundos de tela preta antes do quadro;
+#   "para_a_musica" (opcional) true: a música some junto com este quadro, e o
+#               resto da introdução segue em silêncio.
 # Mudar o texto, trocar uma imagem ou pôr mais um quadro é só mexer nela.
 # Cada página cabe em LINHAS_POR_PAGINA linhas: o teste
 # (tools/teste_introducao.tscn) avisa se alguma passar.
@@ -30,9 +48,11 @@ extends Control
 # medida para terminar junto com o quadro: numa câmera dessas, uma imagem a
 # cada meio segundo e pouco continua parecendo a gravação.
 #
-# A MÚSICA (intro1) toca do começo ao fim — quem toca é a TrilhaSonora, que a
-# pega em "musica", aqui embaixo — e some junto com a última imagem: o
-# silêncio do fim é silêncio.
+# A MÚSICA (intro1) toca do começo até o quadro com "para_a_musica" (a foto da
+# base destruída) — quem toca é a TrilhaSonora, que a pega em "musica", aqui
+# embaixo — e some junto com a imagem dele: dali em diante (o sonho, a Lua, o
+# quarto da Cacau, o jornal) e no fim, silêncio. A próxima música é a bossa
+# nova do world1, que entra com o nome do jogo, lá.
 #
 # ONDE MEXER:
 #   ROTEIRO                        o texto e as imagens;
@@ -67,8 +87,52 @@ const ROTEIRO := [
 			"Nesse dia, 21 técnicos e engenheiros não voltaram para casa.",
 			"Com eles, o Brasil viu seu avanço espacial, e tudo que viria com ele, parar no meio do caminho.",
 		],
+		"para_a_musica": true,
 	},
+	# Tela preta, silêncio.
+	{
+		"escuro_antes": 2.5,
+		"paginas": ["Mas o sonho não morreu com eles."],
+	},
+	{
+		"imagem": preload("res://scenes/ceu_com_lua.tscn"),
+		"paginas": [
+			"Décadas depois, o Brasil partiria para sua maior missão…",
+			"...a Lua!",
+		],
+	},
+	# Os quadros com texto no lugar da imagem esperam o desenho: trocar o texto
+	# pelo preload da imagem quando ela existir.
+	{
+		"imagem": "O quarto da Cacau, à noite.\nA luz do abajur e a da TV ligada.",
+		"segura": 3.0,
+	},
+	{
+		"imagem": "Close na TV: o plantão do jornal, a jornalista na bancada.",
+		"corte": true,
+		"paginas": [
+			"Jornalista:\n“...a missão lunar brasileira enfrenta um imprevisto de última hora. Um erro no projeto deixou o módulo pequeno demais para qualquer adulto.”",
+			"Jornalista:\n“O alinhamento orbital não espera. Por isso, o Programa Espacial Brasileiro faz um chamado inédito a todo o país.”",
+			"Jornalista:\n“Procura-se uma criança. Pequena o bastante para caber no módulo lunar.”",
+		],
+	},
+	{
+		"imagem": "Close no rosto da Cacau, com os olhos brilhando, iluminados pela TV.",
+		"corte": true,
+		"paginas": ["Jornalista:\n“E corajosa o bastante para entrar nele.”"],
+	},
+	{
+		"imagem": "A Cacau calça o tênis, apaga o abajur e sai do quarto. A porta fica aberta. A TV continua ligada, iluminando o quarto vazio.",
+		"corte": true,
+		"segura": 5.0,
+	},
+	# O nome do jogo vem depois, já no world1: no céu, antes de a câmera descer
+	# até a Cacau (abertura_da_historia.gd).
 ]
+
+## A descrição no lugar da imagem que ainda não existe: letra menor e apagada.
+const TAM_DESCRICAO := 22
+const COR_DA_DESCRICAO := Color(0.96, 1.0, 0.91, 0.6)
 
 const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 
@@ -108,8 +172,10 @@ const LEITURA_POR_LETRA := 0.012
 ## A página sumindo, e o vão até a próxima.
 const APAGAR_PAGINA := 0.3
 const ENTRE_PAGINAS := 0.3
+## O tempo de um quadro sem texto e sem "segura".
+const SEGURA_SEM_TEXTO := 3.0
 ## O fim: a última imagem, o texto e a moldura apagam juntos, e a tela fica
-## preta e em silêncio antes do jogo.
+## preta antes do jogo.
 const APAGAR_TUDO := 1.5
 const SILENCIO_FINAL := 3.0
 ## O vídeo anda mais devagar para durar o quadro inteiro (ver o topo). Com
@@ -147,7 +213,13 @@ class Escrita:
 
 var _legenda := Escrita.new()
 var _pagina := Escrita.new()
-var _alfa_da_moldura := 0.0
+## O quadro do ROTEIRO na tela.
+var _quadro := {}
+## A moldura e a descrição provisória acendendo e apagando.
+var _alfa_do_quadro := 0.0
+var _musica_parou := false
+## A cena montada na telinha (o "imagem" .tscn do quadro), enquanto ele dura.
+var _montagem: Node
 ## Um toque de adiantar esperando ser usado.
 var _adiantar := false
 var _pulou := false
@@ -209,10 +281,15 @@ func _rodar_o_roteiro() -> void:
 func _mostrar_o_quadro(indice: int) -> bool:
 	var quadro: Dictionary = ROTEIRO[indice]
 	var ultimo := indice == ROTEIRO.size() - 1
+	var corta_para_o_proximo := not ultimo and bool(ROTEIRO[indice + 1].get("corte", false))
 	var paginas: Array = quadro.get("paginas", [])
+	if quadro.has("escuro_antes"):
+		if not await _esperar(float(quadro["escuro_antes"]), false):
+			return false
+	_quadro = quadro
 	_legenda = _montar(String(quadro.get("legenda", "")))
 	_pagina = Escrita.new()
-	_por_a_imagem(quadro["imagem"])
+	_por_a_imagem(quadro.get("imagem"))
 	if video.visible:
 		video.play()
 		video.speed_scale = _velocidade_do_video(quadro, ultimo)
@@ -220,8 +297,10 @@ func _mostrar_o_quadro(indice: int) -> bool:
 
 	var acender := func(t: float) -> void:
 		tela.modulate.a = t
-		_alfa_da_moldura = t
-	if not await _animar(ACENDER, acender):
+		_alfa_do_quadro = t
+	if quadro.get("corte", false):
+		acender.call(1.0)
+	elif not await _animar(ACENDER, acender):
 		return false
 
 	if _legenda.total() > 0:
@@ -239,6 +318,9 @@ func _mostrar_o_quadro(indice: int) -> bool:
 		_pagina = _montar(String(paginas[p]))
 		_pagina.alfa = 1.0
 		pagina_aberta.emit(String(paginas[p]))
+		# Uma cena montada pode mudar com a página (a lua aparecendo no "...a Lua!").
+		if _montagem != null and _montagem.has_method("pagina_aberta"):
+			_montagem.pagina_aberta(p)
 		if not await _digitar(_pagina):
 			return false
 		if not await _esperar(_tempo_de_leitura(_pagina)):
@@ -250,32 +332,70 @@ func _mostrar_o_quadro(indice: int) -> bool:
 			if not await _esperar(ENTRE_PAGINAS):
 				return false
 
+	var segura := _segura(quadro)
+	if segura > 0.0 and not await _esperar(segura):
+		return false
+
 	# A imagem, a moldura, a legenda e a última página apagam juntas — e, no
-	# último quadro, a música também.
-	if ultimo:
-		TrilhaSonora.parar(APAGAR_TUDO)
+	# quadro que para a música (ou no último), a música também. Antes de um
+	# corte seco, tudo some de uma vez.
+	var para_a_musica := _para_a_musica(quadro, ultimo) and not _musica_parou
+	if para_a_musica:
+		_musica_parou = true
+		TrilhaSonora.parar(0.0 if corta_para_o_proximo else APAGAR_TUDO)
 	var apagar := func(t: float) -> void:
 		tela.modulate.a = 1.0 - t
-		_alfa_da_moldura = 1.0 - t
+		_alfa_do_quadro = 1.0 - t
 		_legenda.alfa = minf(_legenda.alfa, 1.0 - t)
 		_pagina.alfa = minf(_pagina.alfa, 1.0 - t)
-	if not await _animar(APAGAR_TUDO if ultimo else APAGAR, apagar):
+	if corta_para_o_proximo:
+		apagar.call(1.0)
+	elif not await _animar(_tempo_de_apagar(quadro, ultimo), apagar):
 		return false
-	video.stop()
-	video.visible = false
-	foto.visible = false
-	if ultimo:
+	_tirar_a_imagem()
+	if ultimo or corta_para_o_proximo:
 		return true
 	return await _esperar(ENTRE_QUADROS, false)
 
 
-func _por_a_imagem(imagem: Resource) -> void:
+## O tempo que a imagem fica depois do texto (ver "segura" no topo).
+func _segura(quadro: Dictionary) -> float:
+	if quadro.has("segura"):
+		return float(quadro["segura"])
+	return SEGURA_SEM_TEXTO if (quadro.get("paginas", []) as Array).is_empty() else 0.0
+
+
+func _para_a_musica(quadro: Dictionary, ultimo: bool) -> bool:
+	return ultimo or bool(quadro.get("para_a_musica", false))
+
+
+## O quadro que leva a música (ou a introdução) embora apaga mais devagar.
+func _tempo_de_apagar(quadro: Dictionary, ultimo: bool) -> float:
+	return APAGAR_TUDO if _para_a_musica(quadro, ultimo) else APAGAR
+
+
+## A imagem do quadro na telinha: um vídeo ou uma foto. A descrição de uma
+## imagem que ainda não existe (um texto) é desenhada no _draw.
+func _por_a_imagem(imagem: Variant) -> void:
 	video.visible = imagem is VideoStream
 	foto.visible = imagem is Texture2D
 	if imagem is VideoStream:
 		video.stream = imagem
 	elif imagem is Texture2D:
 		foto.texture = imagem
+	elif imagem is PackedScene:
+		_montagem = (imagem as PackedScene).instantiate()
+		tela.add_child(_montagem)
+
+
+## Tira a imagem da telinha, depois que o quadro apagou.
+func _tirar_a_imagem() -> void:
+	video.stop()
+	video.visible = false
+	foto.visible = false
+	if _montagem != null:
+		_montagem.queue_free()
+		_montagem = null
 
 
 ## A velocidade que faz o vídeo durar o quadro inteiro, até a imagem apagar
@@ -291,7 +411,7 @@ func _velocidade_do_video(quadro: Dictionary, ultimo: bool) -> float:
 ## Quanto o quadro dura sem ninguém adiantar nada: da imagem acendendo até ela
 ## apagar.
 func _duracao_do_quadro(quadro: Dictionary, ultimo: bool) -> float:
-	var total := ACENDER
+	var total := 0.0 if quadro.get("corte", false) else ACENDER
 	var legenda := String(quadro.get("legenda", ""))
 	if not legenda.is_empty():
 		total += ANTES_DA_LEGENDA + _montar(legenda).duracao()
@@ -302,7 +422,7 @@ func _duracao_do_quadro(quadro: Dictionary, ultimo: bool) -> float:
 		total += escrita.duracao() + _tempo_de_leitura(escrita)
 		if p < paginas.size() - 1:
 			total += APAGAR_PAGINA + ENTRE_PAGINAS
-	return total + (APAGAR_TUDO if ultimo else APAGAR)
+	return total + _segura(quadro) + _tempo_de_apagar(quadro, ultimo)
 
 
 func _tempo_de_leitura(escrita: Escrita) -> float:
@@ -422,7 +542,12 @@ func _topo_da_legenda() -> float:
 	return tela.position.y - MOLDURA - ESPACO_DA_LEGENDA - FONTE.get_height(TAM_LETRA)
 
 
-func _topo_do_texto() -> float:
+## Onde começa o texto de baixo: na parte preta, abaixo da telinha — ou, num
+## quadro sem imagem, no meio da tela.
+func _topo_do_texto(escrita: Escrita = null) -> float:
+	if escrita != null and not _quadro.is_empty() and _quadro.get("imagem") == null:
+		var altura := FONTE.get_height(TAM_LETRA) + (escrita.linhas.size() - 1) * TAM_LETRA * ENTRELINHA
+		return roundf((size.y - altura) * 0.5)
 	return tela.get_rect().end.y + MOLDURA + ESPACO_DO_TEXTO
 
 
@@ -434,11 +559,31 @@ func _topo_do_texto() -> float:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color.BLACK)
-	if _alfa_da_moldura > 0.0:
-		EstiloHUD.aro(self, tela.get_rect().grow(MOLDURA), EstiloHUD.com_alfa(EstiloHUD.CLARO, _alfa_da_moldura),
-			MOLDURA)
+	if _alfa_do_quadro > 0.0:
+		var imagem: Variant = _quadro.get("imagem")
+		if imagem != null:
+			EstiloHUD.aro(self, tela.get_rect().grow(MOLDURA), EstiloHUD.com_alfa(EstiloHUD.CLARO, _alfa_do_quadro),
+				MOLDURA)
+		if imagem is String:
+			_descrever(String(imagem), _alfa_do_quadro)
 	_escrever(_legenda, _topo_da_legenda())
-	_escrever(_pagina, _topo_do_texto())
+	_escrever(_pagina, _topo_do_texto(_pagina))
+
+
+## A imagem que ainda não existe: a telinha preta, com a descrição no meio.
+func _descrever(descricao: String, alfa: float) -> void:
+	var rect := tela.get_rect()
+	var cor := EstiloHUD.com_alfa(COR_DA_DESCRICAO, alfa)
+	var linhas := PackedStringArray()
+	for paragrafo in descricao.split("\n"):
+		linhas.append_array(EstiloHUD.quebrar(FONTE, paragrafo, TAM_DESCRICAO, rect.size.x - 120.0))
+	var entrelinha := TAM_DESCRICAO * ENTRELINHA
+	var topo := rect.get_center().y - (FONTE.get_height(TAM_DESCRICAO) + (linhas.size() - 1) * entrelinha) * 0.5
+	for i in linhas.size():
+		var largura := FONTE.get_string_size(linhas[i], HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_DESCRICAO).x
+		draw_string(FONTE, Vector2(roundf(rect.get_center().x - largura * 0.5),
+			roundf(topo + FONTE.get_ascent(TAM_DESCRICAO) + i * entrelinha)), linhas[i],
+			HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_DESCRICAO, cor)
 
 
 ## As letras que já apareceram, cada linha centrada embaixo da telinha (o

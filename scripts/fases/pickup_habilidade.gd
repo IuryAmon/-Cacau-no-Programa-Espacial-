@@ -20,7 +20,7 @@ extends Area2D
 
 const CENA := "res://scenes/fases/componentes/pickup_habilidade.tscn"
 
-@export_enum("macarico", "bumerangue", "mochila", "sinalizador", "botas", "lanterna")
+@export_enum("macarico", "bumerangue", "mochila", "sinalizador", "botas")
 var habilidade: String = "bumerangue"
 @export var rotulo: String = "FERRAMENTA":
 	set(valor):

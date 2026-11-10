@@ -49,6 +49,10 @@ const OPCOES := [
 	{"chave": "sair", "nome": "SAIR", "descricao": ""},
 ]
 
+## O menu, por enquanto, fica sem música (a TrilhaSonora olha isto): sem isto,
+## o céu aberto dele tocaria a música da hora. Com false, ela volta.
+var sem_musica := true
+
 ## O nome do jogo: os elementos das três caixas (Ca, Ca, U) e a linha de baixo.
 const ELEMENTOS_DO_NOME := [20, 20, 92]
 const SUBTITULO := "NO PROGRAMA ESPACIAL"

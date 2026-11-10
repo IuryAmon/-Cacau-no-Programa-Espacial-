@@ -1,0 +1,52 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/ceu_com_lua.gd" id="1_script"]
+[ext_resource type="Shader" path="res://shaders/ceu_pixel.gdshader" id="2_ceu"]
+[ext_resource type="Texture2D" path="res://assets/Area Aberta/Lua/2.png" id="3_lua"]
+[ext_resource type="Script" path="res://scripts/luz/astro_pixel.gd" id="4_astro"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ceu"]
+shader = ExtResource("2_ceu")
+shader_parameter/pixel = 2.0
+shader_parameter/degraus = 16.0
+shader_parameter/pontilhado = 0.6
+shader_parameter/densidade = 0.004
+shader_parameter/pixel_das_estrelas = 1.0
+shader_parameter/raio_do_clarao = Vector2(300, 150)
+
+[node name="CeuComLua" type="Control"]
+clip_contents = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="Ceu" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_ceu")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Lua" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(500, 170)
+texture = ExtResource("3_lua")
+region_enabled = true
+region_rect = Rect2(229, 64, 139, 139)
+script = ExtResource("4_astro")
+tipo = 1
+alcance = 124.0
+aneis = 4
+cor_interna = Color(0.7, 0.76, 1, 1)
+cor_externa = Color(0.3, 0.4, 0.95, 1)
+intensidade = 0.32
+cobertura = 0.0
+queda = 1.8

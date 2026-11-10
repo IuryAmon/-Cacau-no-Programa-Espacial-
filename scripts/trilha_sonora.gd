@@ -19,6 +19,15 @@ extends Node
 #                                               Música da Atmosfera)
 #   3. nenhum dos dois                          silêncio
 #
+# Uma raiz com "sem_musica" true (o menu principal, por enquanto) fica em
+# silêncio, mesmo com céu aberto.
+#
+# A MÚSICA ESPERANDO A DEIXA: uma cena pode pedir, logo que abre, que a música
+# dela espere (esperar_a_deixa) e soltá-la na hora certa (dar_a_deixa). É a
+# abertura da história no world1: a tela clareia no céu em silêncio, e a
+# bossa nova entra de uma vez junto com o nome do jogo
+# (abertura_da_historia.gd).
+#
 # A HORA MUDOU com a cena aberta (o pôr do sol no mirante, a noite caindo no
 # pátio, a tecla Ç): a música troca junto, devagar (FADE_DA_HORA).
 #
@@ -47,6 +56,8 @@ var _volume_db := VOLUME_PADRAO_DB
 var _tocador: AudioStreamPlayer
 var _musica_do_tocador: AudioStream
 var _pausada := false
+## A cena cuja música espera a deixa (ver o topo), ou null.
+var _cena_esperando: Node
 
 
 func _ready() -> void:
@@ -106,9 +117,33 @@ func esta_pausada() -> bool:
 
 # ───────────────────────────────────────────────────────────── a cena
 
+## A música da [param cena], que está abrindo, só começa no [method dar_a_deixa]
+## — até lá, silêncio. Chamado no _ready de um nó da cena.
+func esperar_a_deixa(cena: Node) -> void:
+	_cena_esperando = cena
+	tocar(null, _volume_db, 0.0)
+
+
+## A música que esperava a deixa entra, crescendo em [param fade] segundos (0:
+## de uma vez, já no volume dela).
+func dar_a_deixa(fade: float = 0.0) -> void:
+	if _cena_esperando == null:
+		return
+	_cena_esperando = null
+	_seguir_a_cena(fade)
+
+
+func esperando_a_deixa() -> bool:
+	return _cena_esperando != null
+
+
 func _ao_trocar_de_cena() -> void:
 	# Quem tinha pausado a trilha era da cena que saiu.
 	_pausada = false
+	# Quem esperava a deixa também, se já não é a cena aberta.
+	if _cena_esperando != null and (not is_instance_valid(_cena_esperando) \
+			or _cena_esperando != get_tree().current_scene):
+		_cena_esperando = null
 	var atmosfera := Atmosfera.da_cena(get_tree().current_scene)
 	if atmosfera != null and not atmosfera.momento_mudou.is_connected(_ao_mudar_a_hora):
 		atmosfera.momento_mudou.connect(_ao_mudar_a_hora)
@@ -120,6 +155,8 @@ func _ao_mudar_a_hora(_momento: Atmosfera.Momento) -> void:
 
 
 func _seguir_a_cena(fade: float) -> void:
+	if _cena_esperando != null:
+		return
 	var pedido := _pedido_da_cena()
 	tocar(pedido[0], pedido[1], fade)
 
@@ -128,7 +165,7 @@ func _seguir_a_cena(fade: float) -> void:
 ## silêncio.
 func _pedido_da_cena() -> Array:
 	var cena := get_tree().current_scene
-	if cena == null:
+	if cena == null or cena.get(&"sem_musica") == true:
 		return [null, VOLUME_PADRAO_DB]
 	var musica = cena.get(&"musica")
 	if musica is AudioStream:
@@ -185,6 +222,8 @@ func _levar(tocador: AudioStreamPlayer, volume_db: float, fade: float) -> Tween:
 		var anterior := tocador.get_meta(&"fade") as Tween
 		if anterior != null and anterior.is_valid():
 			anterior.kill()
+	if fade <= 0.0:
+		tocador.volume_db = volume_db
 	var tween := tocador.create_tween()
 	tween.tween_property(tocador, "volume_db", volume_db, maxf(fade, 0.0))
 	tocador.set_meta(&"fade", tween)

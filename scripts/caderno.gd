@@ -4,23 +4,34 @@ extends CanvasLayer
 #
 # O caderno de anotações da Cacau. Ela o tem desde o começo do jogo: o ícone
 # fica no canto inferior esquerdo e M (△ no controle) abre e fecha.
-# Três peças, como a lista de objetivos:
 #
-#   PaginasCaderno (scripts/paginas_caderno.gd)   O QUE está escrito
+# Aberto, ele tem duas ABAS, no alto da tela: CADERNO (as anotações) e MAPA (a
+# planta do Centro de Lançamento, com a Cacau onde ela está e o objetivo da
+# vez). Ele abre na aba em que ficou da última vez — menos quando chegou nota
+# nova: aí abre no CADERNO, na página dela.
+#
+#   PaginasCaderno (scripts/paginas_caderno.gd)    O QUE está escrito
+#   PlantaDoMapa (scripts/planta_do_mapa.gd)       O QUE está no mapa
 #   este autoload                                  QUANDO: o ícone aparece, o
-#                                                  caderno abre, pausa e fecha
+#                                                  caderno abre, pausa, troca de
+#                                                  aba e fecha
 #   CadernoLivro (scripts/ui/caderno_livro.gd)     COMO: a arte e as folhas
 #                                                  virando
+#   FolhaDoMapa (scripts/ui/folha_do_mapa.gd)      COMO: o desenho do mapa
+#   AbasDoCaderno (scripts/ui/abas_do_caderno.gd)  COMO: as abas
 #
 # Aberto, o mundo pausa (como na ficha de coleta) e o caderno segura as teclas
 # (Interacao.marcar_tela_aberta): o espaço ou o ○ apertados em cima dele não
 # viram pulo nem dash quando ele fecha. Ele abre saindo do ícone e fecha
-# voltando para dentro dele, e lembra a página em que ficou.
+# voltando para dentro dele, e lembra a página e a aba em que ficou.
 #
 # COM O CADERNO ABERTO
-#   A/D, ←/→, direcional, analógico   folheia (segurando, continua folheando)
+#   Q/E, L1/R1, clique na aba         troca de aba (as pontas se emendam)
+#   A/D, ←/→, direcional, analógico   folheia, na aba CADERNO (segurando,
+#                                     continua folheando)
 #   clique na face direita/esquerda   folheia; a roda do mouse também
-#   M, ESC, △, ○                      fecha; clicar fora do caderno também
+#   M, ESC, △, ○                      fecha; clicar fora do caderno (ou do
+#                                     mapa) também
 #
 # O ícone some junto com a lista de objetivos (fala, ficha de coleta, puzzle,
 # pausa, cenas sem a Cacau), e o caderno só abre com o ícone na tela.
@@ -36,6 +47,11 @@ extends CanvasLayer
 signal aberto_mudou(aberto: bool)
 ## Uma nota entrou no caderno (o nome dela nas PaginasCaderno.NOTAS).
 signal nota_guardada(nota: String)
+## Trocou de aba (Aba.CADERNO ou Aba.MAPA).
+signal aba_mudou(aba: int)
+
+## As abas, na ordem em que aparecem (a mesma das AbasDoCaderno.NOMES).
+enum Aba {CADERNO, MAPA}
 
 const ACAO := &"caderno"
 const SOM_ABRIR := preload("res://sounds/caderno_abrir.wav")
@@ -62,6 +78,22 @@ const DURACAO_ICONE := 0.2
 const EXAGERO_ABRIR := 1.4
 const VEU := Color(0.035, 0.025, 0.03, 0.66)
 
+# --- As abas ---
+## As teclas e os botões que trocam de aba: um vai para a aba da esquerda, o
+## outro para a da direita.
+const TECLA_ABA_ANTERIOR := KEY_Q
+const TECLA_ABA_SEGUINTE := KEY_E
+const BOTAO_ABA_ANTERIOR := JOY_BUTTON_LEFT_SHOULDER
+const BOTAO_ABA_SEGUINTE := JOY_BUTTON_RIGHT_SHOULDER
+## A troca de aba: quanto leva e quanto as folhas deslizam (a que sai vai para
+## um lado, a que entra vem do outro).
+const DURACAO_TROCA := 0.28
+const DESLIZE_TROCA := 56.0
+## O alto da tela é das abas: o caderno (ou o mapa) fica no meio do que sobra
+## entre elas e o rodapé.
+const ALTURA_ABAS := 80.0
+const TOPO_ABAS := 18.0
+
 # --- Rodapé (os comandos, no pé da tela) ---
 const ALTURA_RODAPE := 64.0
 const ALTURA_BARRA := 46.0
@@ -77,8 +109,11 @@ var _camada: CanvasLayer = null
 var _tela: Control = null
 var _veu: ColorRect = null
 var _livro: CadernoLivro = null
+var _mapa: FolhaDoMapa = null
+var _abas: AbasDoCaderno = null
 var _rodape: Control = null
 var _som: AudioStreamPlayer = null
+var _som_aba: AudioStreamPlayer = null
 
 var _aberto: bool = false
 ## 0 = fechado dentro do ícone, 1 = aberto no meio da tela.
@@ -86,6 +121,13 @@ var _abertura: float = 0.0
 var _alfa_icone: float = 0.0
 ## Foi o caderno que pausou o jogo (e é ele quem despausa).
 var _pausou: bool = false
+
+var _aba: int = Aba.CADERNO
+## Na troca de aba: a que está saindo (-1 = nenhuma troca), de que lado a nova
+## entra (1 = da direita) e o andamento (0 a 1).
+var _aba_saindo: int = -1
+var _sentido_troca: int = 1
+var _troca: float = 1.0
 
 
 func _ready() -> void:
@@ -139,6 +181,17 @@ func _ready() -> void:
 	_livro.fora_clicado.connect(fechar)
 	_tela.add_child(_livro)
 
+	_mapa = FolhaDoMapa.new()
+	_mapa.name = "Mapa"
+	_mapa.pivot_offset = FolhaDoMapa.TAMANHO * 0.5
+	_mapa.visible = false
+	_tela.add_child(_mapa)
+
+	_abas = AbasDoCaderno.new()
+	_abas.name = "Abas"
+	_abas.aba_clicada.connect(mostrar_aba)
+	_tela.add_child(_abas)
+
 	_rodape = Control.new()
 	_rodape.name = "Rodape"
 	_rodape.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -150,6 +203,12 @@ func _ready() -> void:
 	_som = AudioStreamPlayer.new()
 	_som.name = "Som"
 	add_child(_som)
+
+	_som_aba = AudioStreamPlayer.new()
+	_som_aba.name = "SomAba"
+	_som_aba.stream = SOM_NOTA_NO_CADERNO
+	_som_aba.volume_db = -6.0
+	add_child(_som_aba)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -164,6 +223,19 @@ func livro() -> CadernoLivro:
 	return _livro
 
 
+func mapa() -> FolhaDoMapa:
+	return _mapa
+
+
+func abas() -> AbasDoCaderno:
+	return _abas
+
+
+## A aba da vez (Aba.CADERNO ou Aba.MAPA).
+func aba() -> int:
+	return _aba
+
+
 ## Dá para abrir agora? Só com o ícone na tela e a camada do autoload visível
 ## (a cortina das portas a apaga no meio da troca de cena).
 func pode_abrir() -> bool:
@@ -175,6 +247,13 @@ func abrir() -> void:
 		return
 	_aberto = true
 	_tela.visible = true
+	# Nota nova esperando: abre no caderno, na página dela.
+	if _icone.novidade:
+		_aba = Aba.CADERNO
+	_aba_saindo = -1
+	_troca = 1.0
+	_abas.mostrar_na_hora(_aba)
+	_mapa.ler_o_jogo()
 	# Abriu: a nota nova está sendo lida.
 	_icone.novidade = false
 	_aviso.dispensar()
@@ -193,6 +272,29 @@ func fechar() -> void:
 	_aberto = false
 	_tocar(SOM_FECHAR)
 	aberto_mudou.emit(false)
+
+
+## Troca para a aba (Aba.CADERNO ou Aba.MAPA). Fechado, só escolhe em qual o
+## caderno vai abrir. "sentido" é de que lado a aba nova entra (1 = da
+## direita); 0 = pela ordem das abas.
+func mostrar_aba(nova: int, sentido: int = 0) -> void:
+	nova = clampi(nova, 0, Aba.size() - 1)
+	if nova == _aba:
+		return
+	if nova == Aba.MAPA:
+		_mapa.ler_o_jogo()
+	if _aberto:
+		_aba_saindo = _aba
+		_troca = 0.0
+		_sentido_troca = sentido if sentido != 0 else signi(nova - _aba)
+		_som_aba.pitch_scale = randf_range(1.18, 1.3)
+		_som_aba.play()
+		_aba = nova
+		_abas.atual = _aba
+	else:
+		_aba = nova
+		_abas.mostrar_na_hora(_aba)
+	aba_mudou.emit(_aba)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -217,6 +319,7 @@ func guardar_nota(nota: String, de: Vector2 = Vector2.INF, tamanho: float = 72.0
 		return false
 	# O caderno já fica na página da nota, para o próximo M cair nela.
 	_livro.ir_para_na_hora(PaginasCaderno.lugar_da_nota(nota))
+	mostrar_aba(Aba.CADERNO)
 	nota_guardada.emit(nota)
 	if not de.is_finite():
 		_ao_chegar_a_nota(nota)
@@ -248,7 +351,7 @@ func _process(delta: float) -> void:
 			or not _pode_aparecer()):
 		fechar()
 
-	if _aberto and _abertura >= 0.5:
+	if _aberto and _abertura >= 0.5 and _aba == Aba.CADERNO:
 		var passo := Controle.passo_navegacao()
 		if passo.x > 0:
 			_livro.proxima()
@@ -257,6 +360,10 @@ func _process(delta: float) -> void:
 
 	var duracao := DURACAO_ABRIR if _aberto else DURACAO_FECHAR
 	_abertura = move_toward(_abertura, 1.0 if _aberto else 0.0, delta / duracao)
+	if _aba_saindo >= 0:
+		_troca = move_toward(_troca, 1.0, delta / DURACAO_TROCA)
+		if _troca >= 1.0:
+			_aba_saindo = -1
 	if _tela.visible:
 		_posicionar()
 		_rodape.queue_redraw()
@@ -272,6 +379,8 @@ func _process(delta: float) -> void:
 
 func _terminar_de_fechar() -> void:
 	_tela.visible = false
+	_aba_saindo = -1
+	_troca = 1.0
 	Interacao.marcar_tela_aberta(_tela, false)
 	if _pausou and not Inventario.popup_aberto:
 		get_tree().paused = false
@@ -294,25 +403,82 @@ func _pode_aparecer() -> bool:
 	return true
 
 
-## O caderno sai do ícone crescendo e vai para o meio da tela (acima do
-## rodapé); fechando, faz o caminho de volta. A curva é a mesma nos dois
-## sentidos — rápida perto do ícone, mansa perto do meio —, e só a abertura
-## passa um pouco do tamanho antes de assentar.
+## A folha da aba da vez sai do ícone crescendo e vai para o meio da tela
+## (entre as abas e o rodapé); fechando, faz o caminho de volta. A curva é a
+## mesma nos dois sentidos — rápida perto do ícone, mansa perto do meio —, e só
+## a abertura passa um pouco do tamanho antes de assentar. As abas descem do
+## alto junto. Na troca de aba, a folha que sai desliza e apaga, e a que entra
+## vem do outro lado acendendo.
 func _posicionar() -> void:
 	var t := _abertura
 	var caminho := 1.0 - pow(1.0 - t, 3.0)
 	var crescimento := _passar_e_voltar(t) if _aberto else caminho
-	var tela := _tela.size
-	var destino := Vector2(tela.x * 0.5, (tela.y - ALTURA_RODAPE) * 0.5).round()
 	var origem := _icone.centro_do_caderno()
-	var escala_minima := _icone.size.y / CadernoLivro.CAIXA_DESENHO.size.y
-	var escala := lerpf(escala_minima, 1.0, crescimento)
-	_livro.scale = Vector2(escala, escala)
-	_livro.position = origem.lerp(destino, caminho) - _livro.pivot_offset
-	if t >= 1.0:
-		_livro.position = _livro.position.round()
-	_livro.modulate.a = clampf(t * 4.0, 0.0, 1.0)
+	var meio := origem.lerp(_centro_do_conteudo(), caminho)
+	var parado := t >= 1.0 and _aba_saindo < 0
+	for i in Aba.size():
+		var folha := _folha(i)
+		var presenca := _presenca(i)
+		folha.visible = presenca > 0.0
+		if not folha.visible:
+			continue
+		var escala := lerpf(_icone.size.y / _altura_da_folha(i), 1.0, crescimento)
+		folha.scale = Vector2(escala, escala)
+		folha.position = meio - folha.pivot_offset + Vector2(_deslize(i), 0.0)
+		if parado:
+			folha.position = folha.position.round()
+		folha.modulate.a = clampf(t * 4.0, 0.0, 1.0) * presenca
+		# Só a folha da vez ouve o mouse (a outra ainda pode estar saindo).
+		folha.mouse_filter = Control.MOUSE_FILTER_STOP if i == _aba else Control.MOUSE_FILTER_IGNORE
+	_abas.position = Vector2(roundf((_tela.size.x - _abas.size.x) * 0.5),
+		roundf(lerpf(-_abas.size.y, TOPO_ABAS, caminho)))
+	_abas.modulate.a = clampf(t * 2.0 - 0.6, 0.0, 1.0)
 	_veu.color = Color(VEU.r, VEU.g, VEU.b, VEU.a * t)
+
+
+## O meio do espaço entre as abas e o rodapé.
+func _centro_do_conteudo() -> Vector2:
+	var tela := _tela.size
+	return Vector2(tela.x * 0.5, ALTURA_ABAS + (tela.y - ALTURA_RODAPE - ALTURA_ABAS) * 0.5).round()
+
+
+func _folha(i: int) -> Control:
+	return _mapa if i == Aba.MAPA else _livro
+
+
+## A altura do que se vê da folha (a arte do caderno tem borda transparente).
+func _altura_da_folha(i: int) -> float:
+	return FolhaDoMapa.TAMANHO.y if i == Aba.MAPA else CadernoLivro.CAIXA_DESENHO.size.y
+
+
+## Quanto da folha da aba está na tela (0 a 1). Na troca, a que sai apaga na
+## primeira metade, e a que entra acende logo depois de ela começar a sair.
+func _presenca(i: int) -> float:
+	if i == _aba:
+		return 1.0 if _aba_saindo < 0 else _entrada()
+	if i == _aba_saindo:
+		return 1.0 - _saida()
+	return 0.0
+
+
+func _deslize(i: int) -> float:
+	if _aba_saindo < 0:
+		return 0.0
+	if i == _aba:
+		return roundf(DESLIZE_TROCA * _sentido_troca * (1.0 - _entrada()))
+	return roundf(-DESLIZE_TROCA * _sentido_troca * _saida())
+
+
+## O andamento da folha que entra e da que sai, já com a curva (a que entra
+## freia chegando; a que sai acelera saindo).
+func _entrada() -> float:
+	var p := clampf((_troca - 0.25) / 0.75, 0.0, 1.0)
+	return 1.0 - pow(1.0 - p, 3.0)
+
+
+func _saida() -> float:
+	var p := clampf(_troca / 0.5, 0.0, 1.0)
+	return p * p
 
 
 ## Curva que passa de 1 e volta (o "back" das animações).
@@ -332,8 +498,9 @@ func _input(evento: InputEvent) -> void:
 			abrir()
 		return
 
-	# O mouse segue para a interface: é do CadernoLivro e da tela (_gui_input),
-	# que cobrem a tela inteira e não o deixam passar para o jogo.
+	# O mouse segue para a interface: é do CadernoLivro, da FolhaDoMapa, das
+	# abas e da tela (_gui_input), que cobrem a tela inteira e não o deixam
+	# passar para o jogo.
 	if evento is InputEventMouse:
 		return
 	# Aberto, nenhuma tecla passa para o jogo parado atrás dele.
@@ -341,6 +508,13 @@ func _input(evento: InputEvent) -> void:
 	if evento.is_action_pressed(ACAO) or evento.is_action_pressed(&"fechar") \
 			or evento.is_action_pressed(&"ui_cancel"):
 		fechar()
+		return
+	var passo := _passo_de_aba(evento)
+	if passo != 0:
+		mostrar_aba(posmod(_aba + passo, Aba.size()), passo)
+		return
+	# O resto é folhear, e só o caderno folheia.
+	if _aba != Aba.CADERNO:
 		return
 	# Direcional e analógico são lidos no _process, com a repetição do Controle.
 	if evento is InputEventJoypadButton or evento is InputEventJoypadMotion:
@@ -350,6 +524,24 @@ func _input(evento: InputEvent) -> void:
 		_livro.proxima()
 	elif evento.is_action_pressed(&"ui_left", true):
 		_livro.anterior()
+
+
+## -1 (a aba da esquerda), 1 (a da direita) ou 0 (o evento não troca de aba).
+## Pela tecla física, como o resto do mapa de entrada do jogo.
+func _passo_de_aba(evento: InputEvent) -> int:
+	if evento is InputEventKey and evento.pressed and not evento.echo:
+		var tecla: Key = evento.physical_keycode if evento.physical_keycode != KEY_NONE \
+			else evento.keycode
+		if tecla == TECLA_ABA_ANTERIOR:
+			return -1
+		if tecla == TECLA_ABA_SEGUINTE:
+			return 1
+	elif evento is InputEventJoypadButton and evento.pressed:
+		if evento.button_index == BOTAO_ABA_ANTERIOR:
+			return -1
+		if evento.button_index == BOTAO_ABA_SEGUINTE:
+			return 1
+	return 0
 
 
 func _ao_clicar_fora(evento: InputEvent) -> void:
@@ -368,13 +560,18 @@ func _tocar(som: AudioStream) -> void:
 # ─────────────────────────────────────────────────────────────
 
 ## [botões, texto]. No teclado, as teclas desenhadas; no controle, os botões.
-## Sem contador de página: o número já está no canto de cada página.
+## Sem contador de página: o número já está no canto de cada página. No mapa
+## não há o que folhear. As teclas de trocar de aba ficam nas pontas das abas.
 func _dicas() -> Array:
+	var folhear := [["tecla_a", "tecla_d"], "FOLHEAR"]
+	var fechar_dica := [["tecla_m"], "FECHAR"]
 	if BotoesControle.controle_em_uso():
 		var fechar_com := BotoesControle.nome_da_acao(ACAO)
-		return [[["direcional_horizontal"], "FOLHEAR"],
-			[[fechar_com if fechar_com != "" else "triangulo"], "FECHAR"]]
-	return [[["tecla_a", "tecla_d"], "FOLHEAR"], [["tecla_m"], "FECHAR"]]
+		folhear = [["direcional_horizontal"], "FOLHEAR"]
+		fechar_dica = [[fechar_com if fechar_com != "" else "triangulo"], "FECHAR"]
+	if _aba == Aba.MAPA:
+		return [fechar_dica]
+	return [folhear, fechar_dica]
 
 
 ## A barra de comandos dos puzzles (a do CursorVirtual), com as dicas do caderno.

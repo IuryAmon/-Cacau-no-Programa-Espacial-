@@ -74,7 +74,7 @@ ferramenta dos **equipamentos**, o E de continuar da **ficha de coleta** e a tec
 do **tutorial** (o F que afunda quando a Cacau arremessa). De controle na mão,
 todas viram o botão do controle.
 
-Já estão ligadas: ESC, E, W, A, S, D, M e F. Para ligar mais uma (o SHIFT da
+Já estão ligadas: ESC, E, W, A, S, D, M, F e Q. Para ligar mais uma (o SHIFT da
 mochila, por exemplo), abra `scripts/ui/botoes_controle.gd`, escreva o canto
 dela na folha em `TECLAS` (cada tecla ocupa 16×16 px no primeiro bloco) e
 acrescente o nome no **fim** de `NOMES`. Tecla que ainda não está ligada
@@ -745,6 +745,64 @@ objeto do cenário sabe que objetivo existe.
 - As perguntas usam o **caminho do nó** na cena (`/root/Fase1Oficina/Patio/
   PortaMetal`). Renomeou ou moveu um nó que o roteiro consulta? Rode
   `tools/teste_objetivos.gd` (abaixo) — ele confere todos os caminhos.
+
+## O mapa (a aba MAPA do caderno)
+
+O **M** (△ no controle) abre o caderno, e o caderno tem duas abas no alto da
+tela: **CADERNO** e **MAPA**. **Q** e **E** trocam de aba (**L1** e **R1** no
+controle; clicar na aba também). O caderno abre na aba em que ficou — menos
+quando chega nota nova: aí abre no CADERNO, na página dela.
+
+O mapa é a planta do Centro de Lançamento no esquema das fases, numa folha de
+papel quadriculado:
+
+- **sala explorada**: cheia, na cor da fase (ciano a chegada, vermelho o
+  laboratório, cinza o carbono, verde o nitrogênio, roxo o subsolo);
+- **sala a explorar**: tracejada, com o nome escrito — já está no mapa para
+  guiar, mas a Cacau nunca pisou lá;
+- **você está aqui**: a sala ganha um aro, e o rosto da Cacau fica no ponto da
+  sala que corresponde a onde ela está na cena (andando na cena, ela anda no
+  mapa);
+- **objetivo**: o losango na cor da trilha, na sala em que ele se cumpre;
+- **cadeado**: a passagem que pede uma habilidade (o fosso do subsolo, sem a
+  mochila);
+- **fichinhas** em cima das salas: os elementos de cada fase, vazias até a Cacau
+  pegá-los.
+
+Do lado, o quadro diz onde ela está, o objetivo da vez (o mesmo da lista do
+canto, com "→ sala" embaixo), os seis elementos, quanto do mapa ela já
+explorou e a legenda.
+
+Tudo o que está no mapa mora em **`scripts/planta_do_mapa.gd`** (o desenho é o
+`scripts/ui/folha_do_mapa.gd`):
+
+- **`AREAS`**: uma linha por sala — o nome, a cor e a `caixa`
+  (`Rect2i(coluna, linha, largura, altura)` na grade, a coluna 0 à esquerda e a
+  linha 0 em cima). Para mover uma sala, mude a caixa; o teste avisa se ela
+  cair em cima de outra ou se o nome não couber.
+- **`CENAS`**: cada cena e a sala em que ela fica, com o `trilho` (por onde o
+  rosto anda no mapa enquanto a Cacau anda na cena). Cena nova sem trilho já
+  ganha um, embaixo do nome da sala. Uma cena que atravessa mais de uma sala
+  usa `trechos`: o subsolo é a ala oeste (FASE FÓSFORO) até x = 2000, o átrio
+  (SUBSOLO) até x = 3400, e a ala leste (FASE ENXOFRE) daí em diante. Cada ala
+  fica explorada quando a Cacau pisa nela.
+- **`PASSAGENS`**: os corredores entre as salas, com `requer` para o cadeado.
+- **`ONDE_FICA`**: em que cena cada objetivo do roteiro se cumpre
+  (`[cena, sala]` nas cenas com trechos). Objetivo novo em
+  `roteiro_objetivos.gd` precisa de uma linha aqui — o teste avisa.
+
+Fase nova: ponha a cena em `CENAS` (sala nova: uma linha em `AREAS` e as
+passagens dela) e os objetivos dela em `ONDE_FICA`. A Torre de Lançamento ainda
+não tem sala: lá o mapa abre com "TORRE DE LANÇAMENTO — fora do mapa".
+
+O mapa também existe em PNG de fundo transparente, só a planta (sem o papel, a
+Cacau e o resto): **`docs/mapa.png`**, com os nomes das salas, e
+**`docs/mapa_sem_nomes.png`**. Depois de mexer na planta, refaça os dois
+(precisa abrir a janela — em `--headless` o PNG sai vazio):
+
+```
+godot --path . --windowed --resolution 800x450 res://tools/gerar_png_do_mapa.tscn
+```
 
 ## O que a fase lembra
 
@@ -1505,13 +1563,15 @@ Hoje:
 
 | Onde | Música |
 |---|---|
-| céu aberto, de tarde com sol (menu, world1, pátio, rua da torre, telhado) | `bossa nova estilo stardew valley.mp3` |
+| céu aberto, de tarde com sol (world1, pátio, rua da torre, telhado) | `bossa nova estilo stardew valley.mp3` |
+| o menu principal | silêncio, por enquanto (`sem_musica` em `menu_principal.gd`) |
 | céu aberto, com o sol já posto | `bossa nova estila stardew valley2.mp3` |
 | céu aberto, de noite | `jazz noite.mp3` |
 | a oficina (fase 1) | `fase1.mp3` |
 | os corredores do pátio e da torre | `esgoto ou algo assim.mp3` |
 | a torre por dentro | `SPY JAZZ - dentro da torre.mp3` |
-| a introdução (vídeo e foto) | `intro1.mp3`, que some junto com a última imagem |
+| a introdução | `intro1.mp3` no vídeo e na foto da base; some com a foto, e o resto (o sonho, a Lua, o quarto, o jornal) é em silêncio |
+| o world1 chegando da introdução | silêncio com a câmera no céu; a bossa nova entra de uma vez junto com o nome do jogo (`abertura_da_historia.gd`) |
 | o laboratório e as salas do compressor e da destilação | silêncio |
 
 A cena do mirante toca a música dela por cima da trilha: o piano G junto com o
@@ -1588,6 +1648,16 @@ queima da fornalha dá errado, e as duas setas da Oficina):
 
 ```
 godot --headless --fixed-fps 60 --path . -s res://tools/teste_objetivos.gd
+```
+
+O mapa do caderno tem o dele (as salas sem se encostar, as portas de todas as
+cenas batendo com as passagens da planta, todo objetivo do roteiro com lugar no
+mapa, os nomes e o quadro do lado cabendo no papel, e as abas: M, Q/E, L1/R1 e
+o clique). Com `-- --capturas=<pasta>` e sem `--headless`, salva o mapa em
+alguns momentos do jogo:
+
+```
+godot --headless --path . res://tools/teste_mapa.tscn
 ```
 
 As portas entre as fases têm o delas: a porta modelo, os pares de tags de todas

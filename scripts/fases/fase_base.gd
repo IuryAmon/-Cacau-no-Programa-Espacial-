@@ -50,7 +50,7 @@ func _preparar_fase() -> void:
 		return
 
 	FerramentasPlayer.instalar(player)
-	Lanterna.instalar(player)
+	# A lanterna saiu do jogo por enquanto (ver Progresso.HABILIDADES).
 
 	# Os limites da fase vêm ANTES de mexer na personagem: o encaixe da câmera
 	# (CameraJogador.encaixar) guarda estes limites como os "da fase" para

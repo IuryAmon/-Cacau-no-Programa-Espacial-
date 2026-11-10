@@ -23,7 +23,7 @@ extends RefCounted
 #   {controle:...}       trecho que só aparece no controle
 #
 # TECLAS DESENHADAS: num Label com IconesNoTexto (o "rotular" já põe um), a
-# tecla do teclado também sai desenhada — ESC, E, W, A, S, D, M e F, da folha
+# tecla do teclado também sai desenhada — ESC, E, W, A, S, D, M, F e Q, da folha
 # gdb-keyboard-2.png, a mesma do WASD e do E do world1. Tecla sem desenho
 # (ESPAÇO, ENTER, CLIQUE) continua escrita. Os equipamentos, a ficha de coleta e o
 # tutorial das ferramentas usam as mesmas (ver EstiloHUD.tecla_da_acao).
@@ -49,6 +49,7 @@ const TECLAS := {
 	"tecla_d": Rect2(96, 64, 16, 16),
 	"tecla_m": Rect2(160, 80, 16, 16),
 	"tecla_f": Rect2(112, 64, 16, 16),
+	"tecla_q": Rect2(64, 48, 16, 16),
 }
 
 ## Onde cada botão está na folha (a versão "flat": aro escuro e símbolo
@@ -106,7 +107,7 @@ const NOMES := ["cruz", "bolinha", "quadrado", "triangulo", "l1", "r1", "l2", "r
 	"direcional_cima", "direcional_baixo", "direcional_esquerda", "direcional_direita",
 	"direcional_horizontal", "direcional_vertical",
 	"tecla_esc", "tecla_e", "tecla_w", "tecla_a", "tecla_s", "tecla_d", "tecla_m",
-	"tecla_f"]
+	"tecla_f", "tecla_q"]
 const PRIMEIRO_CODIGO := 0xE000
 
 static var _texturas := {}

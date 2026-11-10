@@ -39,6 +39,9 @@ var _roteiro: RoteiroObjetivos
 var _hud: ObjetivosHUD
 ## Cenas em que a Cacau já esteve (caminho -> true). Vale o jogo inteiro.
 var _visitadas: Dictionary = {}
+## Salas do mapa em que ela já pisou nas cenas que atravessam mais de uma (o
+## subsolo; ver "trechos" na PlantaDoMapa): id da sala -> true.
+var _areas_visitadas: Dictionary = {}
 var _cena_atual: String = ""
 var _espera_consulta: float = 0.0
 ## id do objetivo -> [índice da trilha, índice da etapa, dados do objetivo].
@@ -69,6 +72,12 @@ func visitou(cena: String) -> bool:
 	return _visitadas.has(cena)
 
 
+## A Cacau já pisou nesta sala do mapa, numa cena que atravessa mais de uma?
+## (Nas outras, entrar na cena já conta: ver visitou.)
+func visitou_area(id: String) -> bool:
+	return _areas_visitadas.has(id)
+
+
 func _process(delta: float) -> void:
 	_registrar_cena()
 	_hud.definir_visivel(_pode_aparecer())
@@ -78,6 +87,7 @@ func _process(delta: float) -> void:
 	if _espera_consulta > 0.0:
 		return
 	_espera_consulta = 1.0 / CONSULTAS_POR_SEGUNDO
+	_registrar_area()
 	_atualizar_lista()
 
 
@@ -91,23 +101,41 @@ func _registrar_cena() -> void:
 	_espera_consulta = 0.0
 
 
+## Na cena que atravessa mais de uma sala do mapa, anota a sala em que a
+## Cacau está.
+func _registrar_area() -> void:
+	if not PlantaDoMapa.tem_trechos(_cena_atual):
+		return
+	var cacau := get_tree().get_first_node_in_group("player") as Node2D
+	if cacau == null:
+		return
+	var area := String(PlantaDoMapa.trecho(_cena_atual, cacau.global_position.x).get("area", ""))
+	if not area.is_empty():
+		_areas_visitadas[area] = true
+
+
 # ─────────────────────────────────────────────
 #  O que mostrar
 # ─────────────────────────────────────────────
 
+## Os objetivos que a lista mostra agora (os da etapa da vez que ainda faltam),
+## na ordem do roteiro: {"id", "texto", "pai", e "titulo" e "cor" da trilha}.
+## É o que o mapa do caderno aponta (FolhaDoMapa).
+func atuais() -> Array[Dictionary]:
+	var ultimas := _ultimas_etapas()
+	var t := _trilha_da_vez(ultimas)
+	var lista: Array[Dictionary] = []
+	for objetivo in _desejados(t, ultimas):
+		lista.append({"id": objetivo["id"], "texto": objetivo["texto"], "pai": objetivo["pai"],
+			"titulo": _roteiro.trilhas[t]["titulo"], "cor": _roteiro.trilhas[t]["cor"]})
+	return lista
+
+
 func _atualizar_lista() -> void:
 	var trilhas := _roteiro.trilhas
-	var ultimas: Array[int] = []
-	for trilha in trilhas:
-		ultimas.append(_ultima_etapa_cumprida(trilha))
-
+	var ultimas := _ultimas_etapas()
 	var t := _trilha_da_vez(ultimas)
-	var desejados: Array[Dictionary] = []
-	if t >= 0:
-		var atual: int = ultimas[t] + 1
-		for objetivo in trilhas[t]["etapas"][atual]["objetivos"]:
-			if not objetivo["feito"].call() and _aparece(objetivo):
-				desejados.append(objetivo)
+	var desejados := _desejados(t, ultimas)
 
 	var ids_desejados := {}
 	for objetivo in desejados:
@@ -134,6 +162,27 @@ func _atualizar_lista() -> void:
 		if not _hud.tem(objetivo["id"]):
 			_hud.adicionar(objetivo["id"], objetivo["texto"], _contagem(objetivo),
 				trilhas[t]["titulo"], trilhas[t]["cor"], objetivo["pai"], t)
+
+
+## A última etapa cumprida de cada trilha, na ordem do roteiro.
+func _ultimas_etapas() -> Array[int]:
+	var ultimas: Array[int] = []
+	for trilha in _roteiro.trilhas:
+		ultimas.append(_ultima_etapa_cumprida(trilha))
+	return ultimas
+
+
+## Os objetivos da etapa da vez da trilha "t" que ainda faltam e já podem
+## aparecer (nenhum, com t = -1).
+func _desejados(t: int, ultimas: Array[int]) -> Array[Dictionary]:
+	var desejados: Array[Dictionary] = []
+	if t < 0:
+		return desejados
+	var atual: int = ultimas[t] + 1
+	for objetivo in _roteiro.trilhas[t]["etapas"][atual]["objetivos"]:
+		if not objetivo["feito"].call() and _aparece(objetivo):
+			desejados.append(objetivo)
+	return desejados
 
 
 ## Índice da última etapa cumprida da trilha (-1 = nenhuma). Olha de trás para

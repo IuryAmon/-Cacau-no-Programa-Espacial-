@@ -269,11 +269,12 @@ func _testar_fase3() -> void:
 	_checar(f.get_node_or_null("AlaOeste/Setores") == null, "interruptores de setor sairam da fase")
 	_checar(f.get_node_or_null("AlaLeste/Disjuntores") == null, "disjuntores gerais sairam da fase")
 
-	# A luz da fase e a lanterna do armario do fosso; as sentinelas andam.
+	# A lanterna saiu do jogo por enquanto: nem no player, nem no armario do
+	# fosso. As sentinelas andam.
 	var player := f.get_node("Player")
-	_checar(player.get_node_or_null("Lanterna") != null, "lanterna instalada no player")
-	_checar(f.get_node_or_null("FossoVentilacao/PickupLanterna") != null,
-		"lanterna espera no armario do fosso")
+	_checar(player.get_node_or_null("Lanterna") == null, "lanterna fora do player (saiu do jogo)")
+	_checar(f.get_node_or_null("FossoVentilacao/PickupLanterna") == null,
+		"o armario do fosso nao entrega mais a lanterna")
 	_checar(get_tree().get_nodes_in_group("sentinela").size() >= 6,
 		"sentinelas espalhadas pelo subsolo")
 

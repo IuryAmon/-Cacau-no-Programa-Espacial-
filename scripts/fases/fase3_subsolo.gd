@@ -13,7 +13,8 @@ extends FaseBase
 # de perseguição. O feixe da lanterna congela quem ele alcançar — e SÓ o
 # feixe: nenhuma luz ambiente conta.
 #
-#   FOSSO (chegada)  armário de manutenção com a lanterna + placa
+#   FOSSO (chegada)  armário de manutenção + placa (a lanterna, que ficava
+#                    no armário, saiu do jogo por enquanto)
 #   ① ÁTRIO          o vão central entre as duas alas
 #   ② ALA OESTE (P)  galpões escuros; gerador -> puzzle do ATP -> célula P
 #   ③ ALA LESTE (S)  linha de borracha: masseira -> botas; o corredor
@@ -93,15 +94,16 @@ func _montar_fosso_de_ventilacao() -> void:
 	luz_armario.position = Vector2(2270, chao - 130)
 	fosso.add_child(luz_armario)
 
-	PickupHabilidade.criar(fosso, "PickupLanterna", Vector2(2270, chao - 80), {
-		"habilidade": "lanterna",
-		"rotulo": "LANTERNA DE FOCO",
-		"mensagem": "Lanterna de foco na mão!\nR ou botão direito liga; o feixe aponta para o lado\nque você está olhando (L alterna para mira livre no\nmouse). CONGELA as sentinelas. Acesa drena a bateria;\napagada, a bateria se recupera.",
-		"cor": Color(1.0, 0.9, 0.55),
-	})
+	# A lanterna saiu do jogo por enquanto (ver Progresso.HABILIDADES): o
+	# armário fica, vazio. Para ela voltar, era assim:
+	#   PickupHabilidade.criar(fosso, "PickupLanterna", Vector2(2270, chao - 80), {
+	#       "habilidade": "lanterna", "rotulo": "LANTERNA DE FOCO",
+	#       "mensagem": "Lanterna de foco na mão!\nR ou botão direito liga; ...",
+	#       "cor": Color(1.0, 0.9, 0.55)})
+	# e a placa voltava a dizer que o feixe da lanterna paralisa as sentinelas.
 
 	Blockout.placa(fosso, "PlacaSentinelas", Vector2(2270, chao - 300),
-		"SENTINELAS À SOLTA — só se movem no escuro, e só\nperseguem quem chega perto. O feixe da lanterna paralisa\nquem ele alcançar; quem ficou FORA do cone continua vindo.", 12)
+		"SENTINELAS À SOLTA — só se movem no escuro, e só\nperseguem quem chega perto.", 12)
 
 	for i in POSICOES_SENTINELAS.size():
 		# 30 px acima do chão: o corpo assenta sozinho no primeiro passo.

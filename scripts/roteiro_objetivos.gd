@@ -168,7 +168,6 @@ func _init(visitou: Callable) -> void:
 
 		_trilha("subsolo", "ENXOFRE E FÓSFORO", AmostraChonps.CORES["S"], [FASE3], [
 			[_obj("entrar_subsolo", "Entre no subsolo pelo fosso de ventilação", _visitou.bind(FASE3))],
-			[_obj("lanterna", "Pegue a lanterna no armário de manutenção", _tem.bind("lanterna"))],
 			[
 				_obj("pegar_p", "Ala oeste: pegue a amostra de fósforo (P) no gerador", _pegou.bind("P")),
 				_obj("botas", "Ala leste: vulcanize as botas na masseira", _tem.bind("botas")),

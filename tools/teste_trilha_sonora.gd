@@ -5,10 +5,11 @@ extends Node
 #   godot --headless --path . res://tools/teste_trilha_sonora.tscn
 #
 # Casos:
-#   * cada lugar com a sua música: o céu aberto (menu, world1, pátio, rua da
+#   * cada lugar com a sua música: o céu aberto (world1, pátio, rua da
 #     torre, telhado) com a música da hora; a oficina com a da fase 1; os dois
 #     corredores com a do esgoto; a torre por dentro com o SPY JAZZ; a
-#     introdução com a intro1; o laboratório e as salas da rua em silêncio;
+#     introdução com a intro1; o menu, o laboratório e as salas da rua em
+#     silêncio;
 #   * a mesma música não recomeça: morrer (a fase recarrega) e passar para
 #     outra cena com a mesma música deixam ela seguir de onde estava; uma
 #     música diferente entra e a que saiu some;
@@ -81,7 +82,7 @@ func _testar_cada_lugar() -> void:
 	print("\n--- CADA LUGAR COM A SUA MÚSICA (DE TARDE) ---")
 	_zerar_a_partida()
 	var lugares := [
-		[MENU, DA_TARDE, "o menu (céu aberto, à tarde)"],
+		[MENU, "", "o menu (por enquanto sem música, mesmo de céu aberto)"],
 		[INTRODUCAO, DA_INTRODUCAO, "a introdução"],
 		[MUNDO, DA_TARDE, "o world1"],
 		[LAB, "", "o laboratório"],

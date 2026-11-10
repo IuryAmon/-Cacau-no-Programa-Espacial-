@@ -1,62 +1,35 @@
-[gd_scene format=4]
+[gd_scene format=4 uid="uid://dap7mdk2nkdto"]
 
-[ext_resource type="Script" path="res://scripts/fases/fase2_torre_interior.gd" id="1_yxow2"]
-[ext_resource type="TileSet" path="res://assets/tilesets/tileset_cidade.tres" id="2_k3arl"]
-[ext_resource type="TileSet" path="res://assets/tilesets/tileset_fases.tres" id="3_183on"]
+[ext_resource type="Script" uid="uid://h8td4j1kfyhd" path="res://scripts/fases/fase2_torre_interior.gd" id="1_yxow2"]
+[ext_resource type="TileSet" uid="uid://b5lrdpi3srlcn" path="res://assets/tilesets/tileset_cidade.tres" id="2_k3arl"]
+[ext_resource type="TileSet" uid="uid://b1re83kqucchr" path="res://assets/tilesets/tileset_fases.tres" id="3_183on"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/porta_predio.tscn" id="4_m0mc4"]
-[ext_resource type="Script" path="res://scripts/porta_simulador.gd" id="5_i1bdb"]
-[ext_resource type="FontFile" path="res://assets/fonts/ari-w9500-display.ttf" id="6_etqc1"]
-[ext_resource type="PackedScene" path="res://scenes/fases/componentes/espinhos_laser.tscn" id="7_u7tyg"]
-[ext_resource type="Script" path="res://scripts/fases/espinhos_laser.gd" id="8_o1muy"]
-[ext_resource type="Texture2D" path="res://assets/Lab/Traps/laser_spikes_idle.png" id="9_5xs8y"]
-[ext_resource type="Texture2D" path="res://assets/Lab/Traps/laser_spikes_activate.png" id="10_068vm"]
-[ext_resource type="Texture2D" path="res://assets/Lab/Traps/laser_spikes_deactivate.png" id="11_splfb"]
-[ext_resource type="AudioStream" path="res://sounds/laserpulsando.mp3" id="12_k7lh0"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="6_etqc1"]
+[ext_resource type="PackedScene" uid="uid://b7fxykihme0tf" path="res://scenes/fases/componentes/espinhos_laser.tscn" id="7_u7tyg"]
+[ext_resource type="Texture2D" uid="uid://c21l211vqo2qo" path="res://assets/Lab/Traps/laser_spikes_idle.png" id="9_5xs8y"]
+[ext_resource type="Texture2D" uid="uid://bwro3d7j34bor" path="res://assets/Lab/Traps/laser_spikes_activate.png" id="10_068vm"]
+[ext_resource type="Texture2D" uid="uid://c1sw1kdrqumu0" path="res://assets/Lab/Traps/laser_spikes_deactivate.png" id="11_splfb"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/checkpoint.tscn" id="13_4scd1"]
-[ext_resource type="Script" path="res://scripts/fases/checkpoint.gd" id="14_4us4h"]
-[ext_resource type="PackedScene" path="res://scenes/fases/componentes/caixa_eletrica.tscn" id="15_4pjyk"]
-[ext_resource type="Script" path="res://scripts/fases/caixa_eletrica.gd" id="16_1hbxw"]
-[ext_resource type="PackedScene" path="res://scenes/fases/componentes/serra_eletrica.tscn" id="17_232og"]
-[ext_resource type="Script" path="res://scripts/fases/serra_eletrica.gd" id="18_im52n"]
+[ext_resource type="PackedScene" uid="uid://b2un5uc6giuc2" path="res://scenes/fases/componentes/caixa_eletrica.tscn" id="15_4pjyk"]
+[ext_resource type="PackedScene" uid="uid://cvmtnwx22kdwl" path="res://scenes/fases/componentes/serra_eletrica.tscn" id="17_232og"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/valvula_purga.tscn" id="19_1co8s"]
-[ext_resource type="Script" path="res://scripts/fases/valvula_purga.gd" id="20_uvexs"]
-[ext_resource type="Texture2D" path="res://assets/fase nitrogenio/valvula de purga.png" id="21_indwg"]
+[ext_resource type="Texture2D" uid="uid://drxn5d8s36tf5" path="res://assets/fase nitrogenio/valvula de purga.png" id="21_indwg"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/cesta_macas.tscn" id="22_wkkxh"]
-[ext_resource type="Script" path="res://scripts/fases/cesta_macas.gd" id="23_qk83e"]
-[ext_resource type="PackedScene" path="res://scenes/fases/componentes/morcego.tscn" id="24_py0lm"]
-[ext_resource type="Script" path="res://scripts/fases/morcego.gd" id="25_7dnn8"]
-[ext_resource type="AudioStream" path="res://sounds/morcego/morcego_guincho.wav" id="26_4sfic"]
-[ext_resource type="AudioStream" path="res://sounds/morcego/morcego_ameaca.wav" id="27_pwx6f"]
-[ext_resource type="AudioStream" path="res://sounds/morcego/morcego_mergulho.wav" id="28_rpahl"]
-[ext_resource type="AudioStream" path="res://sounds/morcego/morcego_asa.wav" id="29_esniu"]
-[ext_resource type="AudioStream" path="res://sounds/morcego/morcego_golpe.wav" id="30_ji6wq"]
-[ext_resource type="AudioStream" path="res://sounds/morcego/morcego_morte.wav" id="31_vwj7o"]
-[ext_resource type="AudioStream" path="res://sounds/morcego/morcego_queda.wav" id="32_rhuek"]
-[ext_resource type="AudioStream" path="res://sounds/morcego/morcego_pof.wav" id="33_lu4lj"]
+[ext_resource type="PackedScene" uid="uid://hh5m5ow4cwea" path="res://scenes/fases/componentes/morcego.tscn" id="24_py0lm"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/torreta_laser.tscn" id="34_laeju"]
-[ext_resource type="Script" path="res://scripts/fases/torreta_laser.gd" id="35_hmj8t"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/chama.tscn" id="36_ny1qv"]
-[ext_resource type="Script" path="res://scripts/fases/chama.gd" id="37_5sc3u"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/corrente_vapor.tscn" id="38_fb7en"]
-[ext_resource type="Script" path="res://scripts/fases/corrente_vapor.gd" id="39_jbqjr"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/alvo_bumerangue.tscn" id="40_ehhxb"]
-[ext_resource type="Script" path="res://scripts/fases/alvo_bumerangue.gd" id="41_xwph4"]
-[ext_resource type="Texture2D" path="res://assets/fase nitrogenio/alvo.png" id="42_opnov"]
-[ext_resource type="Texture2D" path="res://assets/fase nitrogenio/alvo aceso.png" id="43_vdbsi"]
+[ext_resource type="Texture2D" uid="uid://deg4yid2yopk0" path="res://assets/fase nitrogenio/alvo.png" id="42_opnov"]
+[ext_resource type="Texture2D" uid="uid://dcyf6gmmlpye8" path="res://assets/fase nitrogenio/alvo aceso.png" id="43_vdbsi"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/laser_continuo.tscn" id="44_m2ab5"]
-[ext_resource type="Script" path="res://scripts/fases/laser_continuo.gd" id="45_aaa2n"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/plataforma_movel.tscn" id="46_ara5u"]
-[ext_resource type="Script" path="res://scripts/fases/plataforma_movel.gd" id="47_dl8us"]
-[ext_resource type="Script" path="res://scripts/fases/plataformas_que_caem.gd" id="55_4l7a7"]
-[ext_resource type="Script" path="res://scripts/fases/zona_camera.gd" id="56_8oluh"]
-[ext_resource type="Script" path="res://scripts/luz/atmosfera.gd" id="57_typhb"]
+[ext_resource type="Script" uid="uid://cv08ofkvt5t62" path="res://scripts/fases/plataformas_que_caem.gd" id="55_4l7a7"]
+[ext_resource type="Script" uid="uid://dxoj1hsrqngxh" path="res://scripts/fases/zona_camera.gd" id="56_8oluh"]
+[ext_resource type="Script" uid="uid://dfboij7njb15c" path="res://scripts/luz/atmosfera.gd" id="57_typhb"]
 [ext_resource type="Resource" path="res://assets/luz/torre.tres" id="58_j4kmv"]
-[ext_resource type="Script" path="res://scripts/luz/postes_de_luz.gd" id="59_mfibm"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="60_rhbo4"]
-[ext_resource type="Script" path="res://scripts/player.gd" id="61_yctm0"]
-[ext_resource type="AudioStream" path="res://sounds/SomPulo2.mp3" id="62_hnd84"]
-[ext_resource type="AudioStream" path="res://sounds/Dano.mp3" id="63_dvvxv"]
-[ext_resource type="AudioStream" path="res://sounds/maçarico_sound.mp3" id="64_d7b73"]
+[ext_resource type="Script" uid="uid://c2bbsa80lmr8h" path="res://scripts/luz/postes_de_luz.gd" id="59_mfibm"]
+[ext_resource type="PackedScene" uid="uid://bmgkds67hbool" path="res://scenes/player.tscn" id="60_rhbo4"]
 [ext_resource type="AudioStream" uid="uid://bwgjp1gsfh007" path="res://sounds/Trilhas/SPY JAZZ - dentro da torre.mp3" id="65_musica"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ttgi0"]
@@ -285,7 +258,7 @@ animations = [{
 "speed": 8.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_7p3e2"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sa7mu"]
 resource_local_to_scene = true
 size = Vector2(498, 26)
 
@@ -313,7 +286,7 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.32, 0.38, 0.5, 1)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_6iun8"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_b4ax7"]
 resource_local_to_scene = true
 size = Vector2(562, 26)
 
@@ -371,7 +344,7 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.32, 0.38, 0.5, 1)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_4dcu2"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kdft8"]
 resource_local_to_scene = true
 size = Vector2(242, 26)
 
@@ -424,9 +397,8 @@ tile_set = ExtResource("3_183on")
 
 [node name="Andar0_Terreo" type="Node2D" parent="Andares" unique_id=355097974]
 
-[node name="PortaRua" type="Area2D" parent="Andares/Andar0_Terreo" unique_id=1157172110 instance=ExtResource("4_m0mc4")]
+[node name="PortaRua" parent="Andares/Andar0_Terreo" unique_id=1157172110 instance=ExtResource("4_m0mc4")]
 position = Vector2(200, 396)
-script = ExtResource("5_i1bdb")
 cena_destino = "res://scenes/fases/fase2_torre.tscn"
 tag_destino = "porta_torre"
 recebe_chegada = true
@@ -439,12 +411,12 @@ offset_left = 373.36
 offset_top = 292.0
 offset_right = 618.64
 offset_bottom = 348.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_ttgi0")
-theme_override_fonts/font = ExtResource("6_etqc1")
-theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.95, 0.85, 0.6, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.1, 0.9)
 theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("6_etqc1")
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_ttgi0")
 text = "TORRE DE GASES
 8 ANDARES ATÉ O TELHADO"
 horizontal_alignment = 1
@@ -461,35 +433,19 @@ border_width = 2.0
 
 [node name="Andar1_Espinhos" type="Node2D" parent="Andares" unique_id=537237181]
 
-[node name="EspinhosDoPiso" parent="Andares/Andar1_Espinhos" unique_id=1132577889 groups=["espinhos_laser"] instance=ExtResource("7_u7tyg")]
+[node name="EspinhosDoPiso" parent="Andares/Andar1_Espinhos" unique_id=1132577889 instance=ExtResource("7_u7tyg")]
 position = Vector2(384, -123)
-script = ExtResource("8_o1muy")
 segmentos = 8
 
 [node name="Visual" parent="Andares/Andar1_Espinhos/EspinhosDoPiso" index="0" unique_id=983438214]
-position = Vector2(-64, -32)
-scale = Vector2(2, 2)
+position = Vector2(-224, -32)
 sprite_frames = SubResource("SpriteFrames_espinhos")
-animation = &"desativando"
-autoplay = "armado"
 
 [node name="Colisao" parent="Andares/Andar1_Espinhos/EspinhosDoPiso" index="2" unique_id=848629312]
-position = Vector2(0, -15)
-shape = SubResource("RectangleShape2D_7p3e2")
-debug_color = Color(1, 0.25, 0.28, 0.32)
+shape = SubResource("RectangleShape2D_sa7mu")
 
-[node name="SomLaser" parent="Andares/Andar1_Espinhos/EspinhosDoPiso" index="3" unique_id=1471209663]
-position = Vector2(0, -16)
-stream = ExtResource("12_k7lh0")
-volume_db = 2.0
-max_distance = 1400.0
-
-[node name="AtrasoDesligar" parent="Andares/Andar1_Espinhos/EspinhosDoPiso" index="4" unique_id=1902336541]
-one_shot = true
-
-[node name="Bandeira" type="Area2D" parent="Andares/Andar1_Espinhos" unique_id=336959834 groups=["checkpoint"] instance=ExtResource("13_4scd1")]
+[node name="Bandeira" parent="Andares/Andar1_Espinhos" unique_id=336959834 instance=ExtResource("13_4scd1")]
 position = Vector2(672, -128)
-script = ExtResource("14_4us4h")
 
 [node name="Placa" type="Label" parent="Andares/Andar1_Espinhos" unique_id=1322988893]
 z_index = -7
@@ -497,12 +453,12 @@ offset_left = 745.32
 offset_top = -455.0
 offset_right = 982.68
 offset_bottom = -401.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_6jhw7")
-theme_override_fonts/font = ExtResource("6_etqc1")
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.95, 0.85, 0.6, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.1, 0.9)
 theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("6_etqc1")
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_6jhw7")
 text = "ANDAR 1
 piso de laser: não caia!"
 horizontal_alignment = 1
@@ -510,50 +466,36 @@ vertical_alignment = 1
 
 [node name="Andar2_Serras" type="Node2D" parent="Andares" unique_id=1395000747]
 
-[node name="Bandeira" type="Area2D" parent="Andares/Andar2_Serras" unique_id=973668431 groups=["checkpoint"] instance=ExtResource("13_4scd1")]
+[node name="Bandeira" parent="Andares/Andar2_Serras" unique_id=973668431 instance=ExtResource("13_4scd1")]
 position = Vector2(352, -768)
-script = ExtResource("14_4us4h")
 
-[node name="CaixaDasSerras" type="Area2D" parent="Andares/Andar2_Serras" unique_id=930382930 instance=ExtResource("15_4pjyk")]
+[node name="CaixaDasSerras" parent="Andares/Andar2_Serras" unique_id=930382930 instance=ExtResource("15_4pjyk")]
 position = Vector2(86, -1024)
-script = ExtResource("16_1hbxw")
 
-[node name="SerraDoPiso1" type="Area2D" parent="Andares/Andar2_Serras" unique_id=1044318725 groups=["serra_eletrica"] instance=ExtResource("17_232og")]
+[node name="SerraDoPiso1" parent="Andares/Andar2_Serras" unique_id=1044318725 instance=ExtResource("17_232og")]
 position = Vector2(480, -763)
-script = ExtResource("18_im52n")
-segmentos = 1
 
-[node name="SerraDoPiso2" type="Area2D" parent="Andares/Andar2_Serras" unique_id=613116573 groups=["serra_eletrica"] instance=ExtResource("17_232og")]
+[node name="SerraDoPiso2" parent="Andares/Andar2_Serras" unique_id=613116573 instance=ExtResource("17_232og")]
 position = Vector2(640, -763)
-script = ExtResource("18_im52n")
-segmentos = 1
 
-[node name="SerraParede1" type="Area2D" parent="Andares/Andar2_Serras" unique_id=1505342653 groups=["serra_eletrica"] instance=ExtResource("17_232og")]
+[node name="SerraParede1" parent="Andares/Andar2_Serras" unique_id=1505342653 instance=ExtResource("17_232og")]
 position = Vector2(1029, -944)
 rotation = -1.5707964
-script = ExtResource("18_im52n")
-segmentos = 1
 caixa_eletrica = NodePath("../CaixaDasSerras")
 
-[node name="SerraPilar1" type="Area2D" parent="Andares/Andar2_Serras" unique_id=1749185427 groups=["serra_eletrica"] instance=ExtResource("17_232og")]
+[node name="SerraPilar1" parent="Andares/Andar2_Serras" unique_id=1749185427 instance=ExtResource("17_232og")]
 position = Vector2(827, -1072)
 rotation = 1.5707964
-script = ExtResource("18_im52n")
-segmentos = 1
 caixa_eletrica = NodePath("../CaixaDasSerras")
 
-[node name="SerraPilar2" type="Area2D" parent="Andares/Andar2_Serras" unique_id=1788508289 groups=["serra_eletrica"] instance=ExtResource("17_232og")]
+[node name="SerraPilar2" parent="Andares/Andar2_Serras" unique_id=1788508289 instance=ExtResource("17_232og")]
 position = Vector2(827, -1152)
 rotation = 1.5707964
-script = ExtResource("18_im52n")
-segmentos = 1
 caixa_eletrica = NodePath("../CaixaDasSerras")
 
-[node name="SerraParede2" type="Area2D" parent="Andares/Andar2_Serras" unique_id=1337412190 groups=["serra_eletrica"] instance=ExtResource("17_232og")]
+[node name="SerraParede2" parent="Andares/Andar2_Serras" unique_id=1337412190 instance=ExtResource("17_232og")]
 position = Vector2(1029, -1168)
 rotation = -1.5707964
-script = ExtResource("18_im52n")
-segmentos = 1
 caixa_eletrica = NodePath("../CaixaDasSerras")
 
 [node name="Placa" type="Label" parent="Andares/Andar2_Serras" unique_id=1799760585]
@@ -562,12 +504,12 @@ offset_left = 395.08002
 offset_top = -1095.0
 offset_right = 692.92004
 offset_bottom = -1041.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_wywcf")
-theme_override_fonts/font = ExtResource("6_etqc1")
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.95, 0.85, 0.6, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.1, 0.9)
 theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("6_etqc1")
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_wywcf")
 text = "ANDAR 2
 a caixa elétrica liga as serras"
 horizontal_alignment = 1
@@ -575,40 +517,23 @@ vertical_alignment = 1
 
 [node name="Andar3_Quedas" type="Node2D" parent="Andares" unique_id=951829344]
 
-[node name="EspinhosDoPiso" parent="Andares/Andar3_Quedas" unique_id=846598932 groups=["espinhos_laser"] instance=ExtResource("7_u7tyg")]
+[node name="EspinhosDoPiso" parent="Andares/Andar3_Quedas" unique_id=846598932 instance=ExtResource("7_u7tyg")]
 position = Vector2(352, -1403)
-script = ExtResource("8_o1muy")
 segmentos = 9
 
 [node name="Visual" parent="Andares/Andar3_Quedas/EspinhosDoPiso" index="0" unique_id=983438214]
-position = Vector2(-64, -32)
-scale = Vector2(2, 2)
+position = Vector2(-256, -32)
 sprite_frames = SubResource("SpriteFrames_espinhos")
-animation = &"desativando"
-autoplay = "armado"
 
 [node name="Colisao" parent="Andares/Andar3_Quedas/EspinhosDoPiso" index="2" unique_id=848629312]
-position = Vector2(0, -15)
-shape = SubResource("RectangleShape2D_6iun8")
-debug_color = Color(1, 0.25, 0.28, 0.32)
+shape = SubResource("RectangleShape2D_b4ax7")
 
-[node name="SomLaser" parent="Andares/Andar3_Quedas/EspinhosDoPiso" index="3" unique_id=1471209663]
-position = Vector2(0, -16)
-stream = ExtResource("12_k7lh0")
-volume_db = 2.0
-max_distance = 1400.0
-
-[node name="AtrasoDesligar" parent="Andares/Andar3_Quedas/EspinhosDoPiso" index="4" unique_id=1902336541]
-one_shot = true
-
-[node name="Bandeira" type="Area2D" parent="Andares/Andar3_Quedas" unique_id=410897318 groups=["checkpoint"] instance=ExtResource("13_4scd1")]
+[node name="Bandeira" parent="Andares/Andar3_Quedas" unique_id=410897318 instance=ExtResource("13_4scd1")]
 position = Vector2(736, -1408)
-script = ExtResource("14_4us4h")
 flip_h = true
 
 [node name="Valvula1" parent="Andares/Andar3_Quedas" unique_id=861978758 instance=ExtResource("19_1co8s")]
 position = Vector2(640, -1792)
-script = ExtResource("20_uvexs")
 
 [node name="Sprite" parent="Andares/Andar3_Quedas/Valvula1" index="0" unique_id=2046071069]
 scale = Vector2(2, 2)
@@ -616,57 +541,15 @@ texture = ExtResource("21_indwg")
 
 [node name="Placeholder" parent="Andares/Andar3_Quedas/Valvula1" index="1" unique_id=2085017986]
 visible = false
-offset_left = -13.0
-offset_top = -13.0
-offset_right = 13.0
-offset_bottom = 13.0
-mouse_filter = 2
-color = Color(0.3, 0.5, 0.85, 1)
-
-[node name="Miolo" parent="Andares/Andar3_Quedas/Valvula1/Placeholder" index="0" unique_id=1699675419]
-layout_mode = 0
-offset_left = 6.0
-offset_top = 6.0
-offset_right = 20.0
-offset_bottom = 20.0
-mouse_filter = 2
-color = Color(0.65, 0.8, 1, 1)
 
 [node name="Colisao" parent="Andares/Andar3_Quedas/Valvula1" index="2" unique_id=1799321321]
 shape = SubResource("RectangleShape2D_oc2mx")
 
 [node name="Rotulo" parent="Andares/Andar3_Quedas/Valvula1" index="3" unique_id=1417622889]
 visible = false
-offset_left = -40.0
-offset_top = -57.0
-offset_right = 40.0
-offset_bottom = -11.0
-theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
-theme_override_constants/outline_size = 5
-text = "N₂"
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 3
-
-[node name="Puff" parent="Andares/Andar3_Quedas/Valvula1" index="4" unique_id=258282060]
-emitting = false
-amount = 14
-lifetime = 0.4
-one_shot = true
-explosiveness = 1.0
-spread = 180.0
-gravity = Vector2(0, 0)
-initial_velocity_min = 60.0
-initial_velocity_max = 160.0
-scale_amount_min = 2.0
-scale_amount_max = 5.0
-color = Color(0.7, 0.85, 1, 0.8)
 
 [node name="Valvula2" parent="Andares/Andar3_Quedas" unique_id=556816738 instance=ExtResource("19_1co8s")]
 position = Vector2(384, -1824)
-script = ExtResource("20_uvexs")
 
 [node name="Sprite" parent="Andares/Andar3_Quedas/Valvula2" index="0" unique_id=2046071069]
 scale = Vector2(2, 2)
@@ -674,53 +557,12 @@ texture = ExtResource("21_indwg")
 
 [node name="Placeholder" parent="Andares/Andar3_Quedas/Valvula2" index="1" unique_id=2085017986]
 visible = false
-offset_left = -13.0
-offset_top = -13.0
-offset_right = 13.0
-offset_bottom = 13.0
-mouse_filter = 2
-color = Color(0.3, 0.5, 0.85, 1)
-
-[node name="Miolo" parent="Andares/Andar3_Quedas/Valvula2/Placeholder" index="0" unique_id=1699675419]
-layout_mode = 0
-offset_left = 6.0
-offset_top = 6.0
-offset_right = 20.0
-offset_bottom = 20.0
-mouse_filter = 2
-color = Color(0.65, 0.8, 1, 1)
 
 [node name="Colisao" parent="Andares/Andar3_Quedas/Valvula2" index="2" unique_id=1799321321]
 shape = SubResource("RectangleShape2D_oc2mx")
 
 [node name="Rotulo" parent="Andares/Andar3_Quedas/Valvula2" index="3" unique_id=1417622889]
 visible = false
-offset_left = -40.0
-offset_top = -57.0
-offset_right = 40.0
-offset_bottom = -11.0
-theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
-theme_override_constants/outline_size = 5
-text = "N₂"
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 3
-
-[node name="Puff" parent="Andares/Andar3_Quedas/Valvula2" index="4" unique_id=258282060]
-emitting = false
-amount = 14
-lifetime = 0.4
-one_shot = true
-explosiveness = 1.0
-spread = 180.0
-gravity = Vector2(0, 0)
-initial_velocity_min = 60.0
-initial_velocity_max = 160.0
-scale_amount_min = 2.0
-scale_amount_max = 5.0
-color = Color(0.7, 0.85, 1, 0.8)
 
 [node name="Placa" type="Label" parent="Andares/Andar3_Quedas" unique_id=327302603]
 z_index = -7
@@ -728,12 +570,12 @@ offset_left = 111.399994
 offset_top = -1719.0
 offset_right = 400.6
 offset_bottom = -1665.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_mvlg8")
-theme_override_fonts/font = ExtResource("6_etqc1")
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.95, 0.85, 0.6, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.1, 0.9)
 theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("6_etqc1")
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_mvlg8")
 text = "ANDAR 3
 válvula de N₂ recarrega o jato"
 horizontal_alignment = 1
@@ -741,90 +583,28 @@ vertical_alignment = 1
 
 [node name="Andar4_Morcegos" type="Node2D" parent="Andares" unique_id=1931579447]
 
-[node name="Bandeira" type="Area2D" parent="Andares/Andar4_Morcegos" unique_id=1446895589 groups=["checkpoint"] instance=ExtResource("13_4scd1")]
+[node name="Bandeira" parent="Andares/Andar4_Morcegos" unique_id=1446895589 instance=ExtResource("13_4scd1")]
 position = Vector2(352, -2048)
-script = ExtResource("14_4us4h")
 
-[node name="Macas" type="Area2D" parent="Andares/Andar4_Morcegos" unique_id=945642845 instance=ExtResource("22_wkkxh")]
+[node name="Macas" parent="Andares/Andar4_Morcegos" unique_id=945642845 instance=ExtResource("22_wkkxh")]
 position = Vector2(896, -2170)
-script = ExtResource("23_qk83e")
 
 [node name="Morcegos" type="Node2D" parent="Andares/Andar4_Morcegos" unique_id=1064423364]
 
-[node name="Morcego1" type="CharacterBody2D" parent="Andares/Andar4_Morcegos/Morcegos" unique_id=1927592566 groups=["morcego"] instance=ExtResource("24_py0lm")]
-z_index = 3
+[node name="Morcego1" parent="Andares/Andar4_Morcegos/Morcegos" unique_id=1927592566 instance=ExtResource("24_py0lm")]
 position = Vector2(128, -2346)
-collision_layer = 0
-motion_mode = 1
-script = ExtResource("25_7dnn8")
-som_guincho = ExtResource("26_4sfic")
-som_ameaca = ExtResource("27_pwx6f")
-som_mergulho = ExtResource("28_rpahl")
-som_asa = ExtResource("29_esniu")
-som_golpe = ExtResource("30_ji6wq")
-som_morte = ExtResource("31_vwj7o")
-som_queda = ExtResource("32_rhuek")
-som_pof = ExtResource("33_lu4lj")
 
-[node name="Morcego2" type="CharacterBody2D" parent="Andares/Andar4_Morcegos/Morcegos" unique_id=1929799813 groups=["morcego"] instance=ExtResource("24_py0lm")]
-z_index = 3
+[node name="Morcego2" parent="Andares/Andar4_Morcegos/Morcegos" unique_id=1929799813 instance=ExtResource("24_py0lm")]
 position = Vector2(224, -2346)
-collision_layer = 0
-motion_mode = 1
-script = ExtResource("25_7dnn8")
-som_guincho = ExtResource("26_4sfic")
-som_ameaca = ExtResource("27_pwx6f")
-som_mergulho = ExtResource("28_rpahl")
-som_asa = ExtResource("29_esniu")
-som_golpe = ExtResource("30_ji6wq")
-som_morte = ExtResource("31_vwj7o")
-som_queda = ExtResource("32_rhuek")
-som_pof = ExtResource("33_lu4lj")
 
-[node name="Morcego3" type="CharacterBody2D" parent="Andares/Andar4_Morcegos/Morcegos" unique_id=1735780552 groups=["morcego"] instance=ExtResource("24_py0lm")]
-z_index = 3
+[node name="Morcego3" parent="Andares/Andar4_Morcegos/Morcegos" unique_id=1735780552 instance=ExtResource("24_py0lm")]
 position = Vector2(736, -2602)
-collision_layer = 0
-motion_mode = 1
-script = ExtResource("25_7dnn8")
-som_guincho = ExtResource("26_4sfic")
-som_ameaca = ExtResource("27_pwx6f")
-som_mergulho = ExtResource("28_rpahl")
-som_asa = ExtResource("29_esniu")
-som_golpe = ExtResource("30_ji6wq")
-som_morte = ExtResource("31_vwj7o")
-som_queda = ExtResource("32_rhuek")
-som_pof = ExtResource("33_lu4lj")
 
-[node name="Morcego4" type="CharacterBody2D" parent="Andares/Andar4_Morcegos/Morcegos" unique_id=1358629559 groups=["morcego"] instance=ExtResource("24_py0lm")]
-z_index = 3
+[node name="Morcego4" parent="Andares/Andar4_Morcegos/Morcegos" unique_id=1358629559 instance=ExtResource("24_py0lm")]
 position = Vector2(864, -2602)
-collision_layer = 0
-motion_mode = 1
-script = ExtResource("25_7dnn8")
-som_guincho = ExtResource("26_4sfic")
-som_ameaca = ExtResource("27_pwx6f")
-som_mergulho = ExtResource("28_rpahl")
-som_asa = ExtResource("29_esniu")
-som_golpe = ExtResource("30_ji6wq")
-som_morte = ExtResource("31_vwj7o")
-som_queda = ExtResource("32_rhuek")
-som_pof = ExtResource("33_lu4lj")
 
-[node name="Morcego5" type="CharacterBody2D" parent="Andares/Andar4_Morcegos/Morcegos" unique_id=542810100 groups=["morcego"] instance=ExtResource("24_py0lm")]
-z_index = 3
+[node name="Morcego5" parent="Andares/Andar4_Morcegos/Morcegos" unique_id=542810100 instance=ExtResource("24_py0lm")]
 position = Vector2(960, -2602)
-collision_layer = 0
-motion_mode = 1
-script = ExtResource("25_7dnn8")
-som_guincho = ExtResource("26_4sfic")
-som_ameaca = ExtResource("27_pwx6f")
-som_mergulho = ExtResource("28_rpahl")
-som_asa = ExtResource("29_esniu")
-som_golpe = ExtResource("30_ji6wq")
-som_morte = ExtResource("31_vwj7o")
-som_queda = ExtResource("32_rhuek")
-som_pof = ExtResource("33_lu4lj")
 
 [node name="Placa" type="Label" parent="Andares/Andar4_Morcegos" unique_id=652627570]
 z_index = -7
@@ -832,12 +612,12 @@ offset_left = 749.64
 offset_top = -2375.0
 offset_right = 978.36
 offset_bottom = -2321.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_scd1t")
-theme_override_fonts/font = ExtResource("6_etqc1")
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.95, 0.85, 0.6, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.1, 0.9)
 theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("6_etqc1")
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_scd1t")
 text = "ANDAR 4
 cuidado com os morcegos"
 horizontal_alignment = 1
@@ -845,28 +625,24 @@ vertical_alignment = 1
 
 [node name="Andar5_Torretas" type="Node2D" parent="Andares" unique_id=859323794]
 
-[node name="Bandeira" type="Area2D" parent="Andares/Andar5_Torretas" unique_id=48452760 groups=["checkpoint"] instance=ExtResource("13_4scd1")]
+[node name="Bandeira" parent="Andares/Andar5_Torretas" unique_id=48452760 instance=ExtResource("13_4scd1")]
 position = Vector2(704, -2688)
-script = ExtResource("14_4us4h")
 flip_h = true
 
 [node name="Torretas" type="Node2D" parent="Andares/Andar5_Torretas" unique_id=1844286984]
 
-[node name="TorretaDireita" type="Node2D" parent="Andares/Andar5_Torretas/Torretas" unique_id=892486828 groups=["torreta"] instance=ExtResource("34_laeju")]
+[node name="TorretaDireita" parent="Andares/Andar5_Torretas/Torretas" unique_id=892486828 instance=ExtResource("34_laeju")]
 position = Vector2(1024, -2912)
-script = ExtResource("35_hmj8t")
 angulo_repouso_graus = 180.0
 quebravel = true
 
-[node name="TorretaTeto" type="Node2D" parent="Andares/Andar5_Torretas/Torretas" unique_id=604586673 groups=["torreta"] instance=ExtResource("34_laeju")]
+[node name="TorretaTeto" parent="Andares/Andar5_Torretas/Torretas" unique_id=604586673 instance=ExtResource("34_laeju")]
 position = Vector2(704, -3264)
-script = ExtResource("35_hmj8t")
 angulo_repouso_graus = 90.0
 quebravel = true
 
-[node name="TorretaEsquerda" type="Node2D" parent="Andares/Andar5_Torretas/Torretas" unique_id=769744532 groups=["torreta"] instance=ExtResource("34_laeju")]
+[node name="TorretaEsquerda" parent="Andares/Andar5_Torretas/Torretas" unique_id=769744532 instance=ExtResource("34_laeju")]
 position = Vector2(64, -3040)
-script = ExtResource("35_hmj8t")
 quebravel = true
 
 [node name="Placa" type="Label" parent="Andares/Andar5_Torretas" unique_id=792871560]
@@ -875,12 +651,12 @@ offset_left = 527.4
 offset_top = -2965.0
 offset_right = 816.60004
 offset_bottom = -2911.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_dv067")
-theme_override_fonts/font = ExtResource("6_etqc1")
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.95, 0.85, 0.6, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.1, 0.9)
 theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("6_etqc1")
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_dv067")
 text = "ANDAR 5
 bumerangue desarma as torretas"
 horizontal_alignment = 1
@@ -888,78 +664,46 @@ vertical_alignment = 1
 
 [node name="Andar6_FogoEVapor" type="Node2D" parent="Andares" unique_id=469720495]
 
-[node name="Bandeira" type="Area2D" parent="Andares/Andar6_FogoEVapor" unique_id=459669561 groups=["checkpoint"] instance=ExtResource("13_4scd1")]
+[node name="Bandeira" parent="Andares/Andar6_FogoEVapor" unique_id=459669561 instance=ExtResource("13_4scd1")]
 position = Vector2(640, -3328)
-script = ExtResource("14_4us4h")
 
 [node name="Chamas" type="Node2D" parent="Andares/Andar6_FogoEVapor" unique_id=1154628760]
 
-[node name="Chama1" type="Area2D" parent="Andares/Andar6_FogoEVapor/Chamas" unique_id=1275601538 instance=ExtResource("36_ny1qv")]
+[node name="Chama1" parent="Andares/Andar6_FogoEVapor/Chamas" unique_id=1275601538 instance=ExtResource("36_ny1qv")]
 position = Vector2(512, -3392)
-script = ExtResource("37_5sc3u")
 
-[node name="Chama2" type="Area2D" parent="Andares/Andar6_FogoEVapor/Chamas" unique_id=1267648450 instance=ExtResource("36_ny1qv")]
+[node name="Chama2" parent="Andares/Andar6_FogoEVapor/Chamas" unique_id=1267648450 instance=ExtResource("36_ny1qv")]
 position = Vector2(704, -3520)
-script = ExtResource("37_5sc3u")
 
-[node name="Chama3" type="Area2D" parent="Andares/Andar6_FogoEVapor/Chamas" unique_id=2024332102 instance=ExtResource("36_ny1qv")]
+[node name="Chama3" parent="Andares/Andar6_FogoEVapor/Chamas" unique_id=2024332102 instance=ExtResource("36_ny1qv")]
 position = Vector2(608, -3744)
-script = ExtResource("37_5sc3u")
 
 [node name="PuzzleDoVapor" type="Node2D" parent="Andares/Andar6_FogoEVapor" unique_id=746766849]
 
-[node name="Vapor" type="Area2D" parent="Andares/Andar6_FogoEVapor/PuzzleDoVapor" unique_id=1936255777 instance=ExtResource("38_fb7en")]
+[node name="Vapor" parent="Andares/Andar6_FogoEVapor/PuzzleDoVapor" unique_id=1936255777 instance=ExtResource("38_fb7en")]
 position = Vector2(720, -3672)
-script = ExtResource("39_jbqjr")
 tamanho = Vector2(288, 128)
 empuxo = 330.0
 
 [node name="Ventilador" parent="Andares/Andar6_FogoEVapor/PuzzleDoVapor" unique_id=1927613453 instance=ExtResource("40_ehhxb")]
 position = Vector2(988, -3744)
-script = ExtResource("41_xwph4")
 
 [node name="Sprite" parent="Andares/Andar6_FogoEVapor/PuzzleDoVapor/Ventilador" index="0" unique_id=252473225]
 scale = Vector2(2, 2)
 texture = ExtResource("42_opnov")
 
 [node name="SpriteAtivo" parent="Andares/Andar6_FogoEVapor/PuzzleDoVapor/Ventilador" index="1" unique_id=1806103009]
-visible = false
 scale = Vector2(2, 2)
 texture = ExtResource("43_vdbsi")
 
 [node name="Placeholder" parent="Andares/Andar6_FogoEVapor/PuzzleDoVapor/Ventilador" index="2" unique_id=1994024366]
 visible = false
-offset_left = -17.0
-offset_top = -17.0
-offset_right = 17.0
-offset_bottom = 17.0
-mouse_filter = 2
-color = Color(0.12, 0.12, 0.15, 1)
-
-[node name="Miolo" parent="Andares/Andar6_FogoEVapor/PuzzleDoVapor/Ventilador/Placeholder" index="0" unique_id=1301631882]
-layout_mode = 0
-offset_left = 5.0
-offset_top = 5.0
-offset_right = 29.0
-offset_bottom = 29.0
-mouse_filter = 2
-color = Color(0.85, 0.3, 0.3, 1)
 
 [node name="Colisao" parent="Andares/Andar6_FogoEVapor/PuzzleDoVapor/Ventilador" index="3" unique_id=506380081]
 shape = SubResource("RectangleShape2D_aylu8")
 
 [node name="Rotulo" parent="Andares/Andar6_FogoEVapor/PuzzleDoVapor/Ventilador" index="4" unique_id=1532510587]
-offset_left = -110.0
-offset_top = -69.0
-offset_right = 110.0
-offset_bottom = -23.0
-theme_override_font_sizes/font_size = 11
-theme_override_colors/font_color = Color(0.88, 0.9, 0.94, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
-theme_override_constants/outline_size = 5
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 3
+visible = false
 
 [node name="Placa" type="Label" parent="Andares/Andar6_FogoEVapor" unique_id=958405336]
 z_index = -7
@@ -967,12 +711,12 @@ offset_left = 141.64
 offset_top = -3564.0
 offset_right = 370.36
 offset_bottom = -3489.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_066i1")
-theme_override_fonts/font = ExtResource("6_etqc1")
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.95, 0.85, 0.6, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.1, 0.9)
 theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("6_etqc1")
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_066i1")
 text = "ANDAR 6
 N₂ não alimenta o fogo:
 o jato apaga as chamas"
@@ -981,60 +725,38 @@ vertical_alignment = 1
 
 [node name="Andar7_Topo" type="Node2D" parent="Andares" unique_id=1824753994]
 
-[node name="Bandeira" type="Area2D" parent="Andares/Andar7_Topo" unique_id=1885443268 groups=["checkpoint"] instance=ExtResource("13_4scd1")]
+[node name="Bandeira" parent="Andares/Andar7_Topo" unique_id=1885443268 instance=ExtResource("13_4scd1")]
 position = Vector2(672, -3968)
-script = ExtResource("14_4us4h")
 
-[node name="Macas" type="Area2D" parent="Andares/Andar7_Topo" unique_id=783560473 instance=ExtResource("22_wkkxh")]
+[node name="Macas" parent="Andares/Andar7_Topo" unique_id=783560473 instance=ExtResource("22_wkkxh")]
 position = Vector2(928, -4154)
-script = ExtResource("23_qk83e")
 
-[node name="Laser" type="Node2D" parent="Andares/Andar7_Topo" unique_id=1434409432 instance=ExtResource("44_m2ab5")]
-z_index = 3
+[node name="Laser" parent="Andares/Andar7_Topo" unique_id=1434409432 instance=ExtResource("44_m2ab5")]
 position = Vector2(64, -4160)
-script = ExtResource("45_aaa2n")
 comprimento = 704.0
 
-[node name="PlataformaMovel" type="AnimatableBody2D" parent="Andares/Andar7_Topo" unique_id=27183282 instance=ExtResource("46_ara5u")]
+[node name="PlataformaMovel" parent="Andares/Andar7_Topo" unique_id=27183282 instance=ExtResource("46_ara5u")]
 position = Vector2(736, -4208)
-script = ExtResource("47_dl8us")
 detectar_paredes = false
 limite_esquerdo = 432.0
 limite_direito = 736.0
 comecar_para_direita = false
-metadata/superficie = "metal"
 
-[node name="EspinhosDoTeto" parent="Andares/Andar7_Topo" unique_id=868062778 groups=["espinhos_laser"] instance=ExtResource("7_u7tyg")]
+[node name="EspinhosDoTeto" parent="Andares/Andar7_Topo" unique_id=868062778 instance=ExtResource("7_u7tyg")]
 position = Vector2(576, -4389)
 scale = Vector2(1, -1)
-script = ExtResource("8_o1muy")
 segmentos = 4
 
 [node name="Visual" parent="Andares/Andar7_Topo/EspinhosDoTeto" index="0" unique_id=983438214]
-position = Vector2(-64, -32)
-scale = Vector2(2, 2)
+position = Vector2(-96, -32)
 sprite_frames = SubResource("SpriteFrames_espinhos")
-animation = &"desativando"
-autoplay = "armado"
 
 [node name="Colisao" parent="Andares/Andar7_Topo/EspinhosDoTeto" index="2" unique_id=848629312]
-position = Vector2(0, -15)
-shape = SubResource("RectangleShape2D_4dcu2")
-debug_color = Color(1, 0.25, 0.28, 0.32)
-
-[node name="SomLaser" parent="Andares/Andar7_Topo/EspinhosDoTeto" index="3" unique_id=1471209663]
-position = Vector2(0, -16)
-stream = ExtResource("12_k7lh0")
-volume_db = 2.0
-max_distance = 1400.0
-
-[node name="AtrasoDesligar" parent="Andares/Andar7_Topo/EspinhosDoTeto" index="4" unique_id=1902336541]
-one_shot = true
+shape = SubResource("RectangleShape2D_kdft8")
 
 [node name="PortaTelhado" parent="Andares/Andar7_Topo" unique_id=99056187 instance=ExtResource("4_m0mc4")]
 position = Vector2(176, -4375)
 scale = Vector2(0.75, 0.75)
-script = ExtResource("5_i1bdb")
 cena_destino = "res://scenes/fases/fase2_telhado.tscn"
 tag_destino = "telhado_escada"
 recebe_chegada = true
@@ -1050,12 +772,12 @@ offset_left = 753.96
 offset_top = -4309.0
 offset_right = 974.04004
 offset_bottom = -4255.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_nle2p")
-theme_override_fonts/font = ExtResource("6_etqc1")
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.95, 0.85, 0.6, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.1, 0.9)
 theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("6_etqc1")
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_nle2p")
 text = "ANDAR 7
 o telhado é logo acima"
 horizontal_alignment = 1
@@ -1105,16 +827,9 @@ mouse_filter = 2
 border_color = Color(1, 0.6, 0.2, 0.55)
 border_width = 2.0
 
-[node name="Player" type="CharacterBody2D" parent="." unique_id=512037344 instance=ExtResource("60_rhbo4")]
+[node name="Player" parent="." unique_id=512037344 instance=ExtResource("60_rhbo4")]
 z_index = 2
 position = Vector2(420, 476)
-floor_constant_speed = true
-floor_snap_length = 10.0
-script = ExtResource("61_yctm0")
-knockback_forca_x = 320.0
-som_pulo_arquivo = ExtResource("62_hnd84")
-som_dano_arquivo = ExtResource("63_dvvxv")
-som_macarico_arquivo = ExtResource("64_d7b73")
 
 [editable path="Andares/Andar1_Espinhos/EspinhosDoPiso"]
 [editable path="Andares/Andar3_Quedas/EspinhosDoPiso"]

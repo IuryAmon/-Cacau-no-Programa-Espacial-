@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/gerar_png_do_mapa.gd" id="1_gerador"]
+
+[node name="GerarPngDoMapa" type="Node"]
+script = ExtResource("1_gerador")

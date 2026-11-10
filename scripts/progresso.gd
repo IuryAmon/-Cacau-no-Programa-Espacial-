@@ -27,9 +27,12 @@ signal habilidade_conquistada(nome: String)
 const CELULAS := ["C", "H", "O", "N", "P", "S"]
 
 ## Nomes válidos de habilidade, na ordem em que são conquistadas no jogo.
-## ("lanterna" é a ferramenta do blecaute profundo — o feixe que congela as
-## Sentinelas; ver scripts/ferramentas/lanterna.gd.)
-const HABILIDADES := ["macarico", "bumerangue", "mochila", "sinalizador", "botas", "lanterna"]
+## A LANTERNA saiu do jogo por enquanto: o código dela continua em
+## scripts/ferramentas/lanterna.gd, mas ninguém a entrega nem a instala. Para
+## voltar: "lanterna" aqui no fim, o PickupLanterna no fosso do subsolo
+## (fase3_subsolo.gd), o Lanterna.instalar na FaseBase e o objetivo dela no
+## roteiro_objetivos.gd (e na PlantaDoMapa.ONDE_FICA).
+const HABILIDADES := ["macarico", "bumerangue", "mochila", "sinalizador", "botas"]
 
 ## Letras já acesas no painel.
 var _celulas: Dictionary = {}

@@ -127,9 +127,9 @@ func _testar_teclas() -> void:
 			"%s esta na folha do teclado, com os 4 quadros de apertar" % nome)
 	_checar(not _mesmos_pixels(imagem, Rect2i(96, 48, 16, 16), Rect2i(112, 64, 16, 16)),
 		"e o desenho do F nao e o do E")
-	_checar(BotoesControle.NOMES[-1] == "tecla_f"
-		and BotoesControle.caractere("tecla_m").unicode_at(0) == BotoesControle.PRIMEIRO_CODIGO + 26,
-		"o F entrou no FIM da lista: os botoes dos textos ja montados nao mudaram de codigo")
+	_checar(BotoesControle.caractere("tecla_m").unicode_at(0) == BotoesControle.PRIMEIRO_CODIGO + 26
+		and BotoesControle.caractere("tecla_f").unicode_at(0) == BotoesControle.PRIMEIRO_CODIGO + 27,
+		"o F entrou no FIM da lista, depois do M: os botoes dos textos ja montados nao mudaram de codigo")
 
 	_checar(EstiloHUD.desenho_da_tecla("F", &"arremessar") == "tecla_f",
 		"no teclado, a tecla do bumerangue no HUD e o F desenhado")

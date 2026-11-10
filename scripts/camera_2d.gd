@@ -363,6 +363,32 @@ func enquadrar(ponto_global: Vector2, zoom_alvo: float = 2.2, duracao: float = 0
 	tween_foco.tween_property(self, "position", posicao_padrao + deslocamento_local, duracao).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
+# --- PLANO DE GRUA (a abertura da história) ---
+# A câmera começa "altura" px do mundo acima do enquadramento normal, já parada
+# lá, e depois desce até ele, devagar no começo e no fim. Mexe só na "position"
+# (como o aproximar/enquadrar): os limites da fase continuam valendo, e no fim
+# da descida a câmera está exatamente onde estaria sem a grua.
+
+## Põe a câmera "altura" px acima do enquadramento normal, sem deslizar.
+func comecar_acima(altura: float) -> void:
+	if tween_foco and tween_foco.is_valid():
+		tween_foco.kill()
+	position = posicao_padrao - Vector2(0.0, altura)
+	reset_smoothing()
+	force_update_scroll()
+
+
+## Desce do alto (ver comecar_acima) ao enquadramento normal em "duracao"
+## segundos. Devolve o tween, para quem quiser esperar o fim.
+func descer_ao_lugar(duracao: float) -> Tween:
+	if tween_foco and tween_foco.is_valid():
+		tween_foco.kill()
+	tween_foco = create_tween()
+	tween_foco.tween_property(self, "position", posicao_padrao, duracao) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	return tween_foco
+
+
 # Volta a câmera ao zoom/posição normais (ex: quando o diálogo termina).
 func restaurar(duracao: float = 0.6) -> void:
 	if tween_foco and tween_foco.is_valid():
