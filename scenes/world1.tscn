@@ -7696,12 +7696,14 @@ metadata/_edit_vertical_guides_ = [5817.0]
 [node name="BG" type="ParallaxBackground" parent="." unique_id=181837681]
 
 [node name="Ceu" type="ParallaxLayer" parent="BG" unique_id=92000001]
-motion_scale = Vector2(0, 0.2)
+motion_scale = Vector2(0, 0.1)
+motion_offset = Vector2(0, 7.6)
 script = ExtResource("61_ceu")
 densidade = 0.004
 
 [node name="CamadaDoSol" type="ParallaxLayer" parent="BG" unique_id=92000002]
-motion_scale = Vector2(0, 0.2)
+motion_scale = Vector2(0, 0.1)
+motion_offset = Vector2(0, 7.6)
 
 [node name="Sol" type="Sprite2D" parent="BG/CamadaDoSol" unique_id=92000003]
 position = Vector2(231, 171)
@@ -7718,7 +7720,8 @@ aneis = 4
 pontilhado = 0.4
 
 [node name="NuvensDoFundo" type="ParallaxLayer" parent="BG" unique_id=92000005]
-motion_scale = Vector2(0.02, 0.2)
+motion_scale = Vector2(0.02, 0.1)
+motion_offset = Vector2(0, 7.6)
 script = ExtResource("63_nuvens")
 quantidade = 7
 maior = 3
@@ -7728,7 +7731,8 @@ vento = 3.0
 distancia = 0.45
 
 [node name="Nuvens" type="ParallaxLayer" parent="BG" unique_id=92000006]
-motion_scale = Vector2(0.05, 0.2)
+motion_scale = Vector2(0.05, 0.1)
+motion_offset = Vector2(0, 7.6)
 script = ExtResource("63_nuvens")
 quantidade = 5
 menor = 3

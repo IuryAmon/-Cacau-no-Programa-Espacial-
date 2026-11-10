@@ -172,11 +172,18 @@ func _testar_entardecer() -> void:
 		return is_equal_approx(l.intensidade, atm.entardecer.postes))
 	_checar(fracos and atm.entardecer.postes < 0.6, "os postes estão acesos, mas fracos (%.2f)" % atm.entardecer.postes)
 
-	# O céu e o sol sobem e descem com a serra do fundo; a lua fica presa na tela.
+	# O céu, o sol e as nuvens sobem e descem juntos, e menos que a serra do
+	# fundo (ela está mais perto); a lua fica presa na tela.
 	var serra := cena.get_node("BG/4") as ParallaxLayer
-	_checar((cena.get_node("BG/Ceu") as ParallaxLayer).motion_scale == Vector2(0, serra.motion_scale.y)
-		and (cena.get_node("BG/CamadaDoSol") as ParallaxLayer).motion_scale == Vector2(0, serra.motion_scale.y),
-		"o céu e o sol acompanham a altura da serra")
+	var ceu := cena.get_node("BG/Ceu") as ParallaxLayer
+	var juntos := ["BG/CamadaDoSol", "BG/NuvensDoFundo", "BG/Nuvens"].all(func(caminho: String) -> bool:
+		var camada := cena.get_node(caminho) as ParallaxLayer
+		return is_equal_approx(camada.motion_scale.y, ceu.motion_scale.y) and camada.motion_offset.is_equal_approx(ceu.motion_offset))
+	_checar(juntos and is_zero_approx(ceu.motion_scale.x)
+		and is_zero_approx((cena.get_node("BG/CamadaDoSol") as ParallaxLayer).motion_scale.x),
+		"o céu, o sol e as nuvens sobem e descem juntos (%.2f)" % ceu.motion_scale.y)
+	_checar(ceu.motion_scale.y > 0.0 and ceu.motion_scale.y < serra.motion_scale.y,
+		"   e menos que a serra (%.2f)" % serra.motion_scale.y)
 	_checar(cena.get_node("BG").get_child(0) is CeuPixel, "o céu é a camada mais do fundo")
 	var nuvens := 0
 	for filho in cena.get_node("BG").get_children():

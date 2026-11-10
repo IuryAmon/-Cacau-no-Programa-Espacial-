@@ -285,11 +285,19 @@ direto no servidor de render; as luzes dos postes e das janelas são filhas inte
 material do fundo vai por baixo do `material` (vazio) do nó. No `.tscn` fica só
 o que está no Inspector. Dá para olhar a noite no editor e salvar sem medo.
 
-**O sol desce com a serra; a lua não.** O céu e o sol estão em camadas com o
-mesmo `motion_scale.y` da serra do fundo: quando a Cacau sobe no mirante, o
-horizonte do céu e o sol acompanham a serra, e "sol quase se pondo" continua
-verdade em qualquer altura. A lua está numa camada presa na tela — ela é
-grande, e presa ao horizonte sairia do quadro lá embaixo.
+**O céu anda menos que a serra; a lua não anda.** O céu, o sol e as nuvens
+estão em camadas com o mesmo `motion_scale.y` (e o mesmo `motion_offset`),
+menor que o da serra do fundo — no `world1`, 0,1 contra 0,2. Os quatro andam
+juntos para o clarão do céu e as nuvens não se soltarem do sol; a serra, mais
+perto, anda mais que eles, e quando a câmera sobe (a grua da abertura, o
+mirante) ela desce mais que o sol, em vez de tudo descer grudado como um quadro
+só. Com a câmera no chão está tudo onde sempre esteve: o `motion_offset.y` de
+7,6 dessas camadas compensa a troca de 0,2 para 0,1 (a conta está no
+`ceu_pixel.gd`). No mirante o sol começa o pôr do sol um pouco mais alto e
+ainda termina atrás da serra. A serra não pode andar mais que a `BG/BASE`
+(0,25), que fica na frente dela: no mirante ela afundaria atrás do horizonte da
+base. A lua está numa camada presa na tela — ela é grande, e presa ao
+horizonte sairia do quadro lá embaixo.
 
 **O mundo.** A luz ambiente é um `CanvasModulate` interno da `Atmosfera`. As
 luzes dos postes, das janelas e as pontuais são `PointLight2D` com a textura pintada por

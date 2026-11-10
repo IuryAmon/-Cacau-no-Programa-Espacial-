@@ -13,9 +13,14 @@ extends ParallaxLayer
 ## estiver usando (entardecer, noite...). Aqui fica só o desenho: onde o degradê
 ## começa e termina, quantas faixas, o tamanho do pixel, as estrelas.
 ##
-## [b]Paralaxe:[/b] dê a esta camada o mesmo `motion_scale.y` da serra do fundo.
-## Assim o horizonte do degradê sobe e desce junto com a serra quando a câmera
-## muda de altura, em vez de ficar pregado na tela.
+## [b]Paralaxe:[/b] dê a esta camada o mesmo `motion_scale.y` (e o mesmo
+## `motion_offset`) do sol e das nuvens, para o clarão e as nuvens não se
+## soltarem do astro, e um pouco MENOS que o da serra do fundo: o céu sobe e
+## desce quando a câmera muda de altura, em vez de ficar pregado na tela, e a
+## serra, mais perto, anda mais que ele (no world1: céu 0,1 e serra 0,2).
+## Mudou o `motion_scale.y`? Para o céu não sair do lugar com a câmera no chão,
+## some ao `motion_offset.y` (novo - velho) × o y do alto da tela nessa hora
+## (no world1, -76: de 0,2 para 0,1 deu 7,6).
 
 const SHADER := preload("res://shaders/ceu_pixel.gdshader")
 
