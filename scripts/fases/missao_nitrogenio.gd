@@ -62,10 +62,10 @@ static var explicou_o_compressor: bool = false
 static var explicou_a_destilacao: bool = false
 ## A Cacau já chegou ao telhado (só a primeira chegada tem a fala dela).
 static var subiu_a_torre: bool = false
-## Onde está a cabine do elevador de carga da torre. Ela começa PARADA lá no
-## telhado e fica no andar em que a Cacau a deixou: a rua só a mostra depois
-## que ela desce nela (ver posicionar_cabine).
-static var elevador_no_telhado: bool = true
+## A Cacau desceu do telhado pelo elevador de carga: a rua abre com ela em
+## cima da plataforma, descendo até o chão (ver fase2_telhado.gd e
+## fase2_torre.gd). Só vale para a próxima vez que a rua abrir.
+static var chegando_de_elevador: bool = false
 
 static var _maquina: MaquinaDeCompressao = null
 
@@ -142,17 +142,6 @@ static func recomecar_depois_da_explosao() -> void:
 	maquina().reiniciar()
 
 
-## A rua e o telhado chamam isto ao abrir, com o elevador de carga deles: a
-## cabine só aparece no andar em que está. Quem chegou NELA a trouxe junto;
-## quem chegou a pé encontra o poço como a Cacau o deixou.
-static func posicionar_cabine(elevador: ElevadorFase, no_telhado: bool) -> void:
-	if elevador == null:
-		return
-	if elevador.chegou_com_passageira:
-		elevador_no_telhado = no_telhado
-	elevador.cabine_aqui = elevador_no_telhado == no_telhado
-
-
 ## Toda fase chama isto ao abrir (FaseBase): carregando a amostra, a cena
 ## ganha o relógio (e a Cacau, o cilindro nas costas).
 static func instalar_na_fase(cena: Node) -> void:
@@ -177,5 +166,5 @@ static func esquecer() -> void:
 	explicou_o_compressor = false
 	explicou_a_destilacao = false
 	subiu_a_torre = false
-	elevador_no_telhado = true
+	chegando_de_elevador = false
 	_maquina = null

@@ -32,6 +32,19 @@ const FASE_FINAL := "res://scenes/fases/fase_final.tscn"
 const ORBITA := "res://scenes/fases/final_orbita.tscn"
 const SIMULADOR := "res://scenes/simulador_(world_3).tscn"
 
+## Toda cena de porta do jogo (porta_simulador.gd).
+const CENAS_DE_PORTA := [
+	"res://scenes/porta_simulador.tscn",
+	"res://scenes/fases/componentes/porta_ala_eletrolise.tscn",
+	"res://scenes/fases/componentes/porta_compressor.tscn",
+	"res://scenes/fases/componentes/porta_destilacao.tscn",
+	"res://scenes/fases/componentes/porta_modelo.tscn",
+	"res://scenes/fases/componentes/porta_predio.tscn",
+	"res://scenes/fases/componentes/porta_rolamento.tscn",
+	"res://scenes/fases/componentes/porta_telhado.tscn",
+	"res://scenes/fases/componentes/porta_torre.tscn",
+]
+
 const MODELO := "res://scenes/fases/componentes/porta_modelo.tscn"
 const FOLHA := "res://assets/porta/porta modelo.png"
 const SCRIPT_PORTA := "res://scripts/porta_simulador.gd"
@@ -60,6 +73,8 @@ func _ready() -> void:
 func _rodar() -> void:
 	EstadoMundo.revelou_dr_chico = true
 	_testar_cena_modelo()
+	_testar_botao_nas_cenas()
+	await _testar_botao_e()
 	await _testar_portas_nas_cenas()
 	await _testar_torre_ida_e_volta()
 	await _testar_fosso_ida_e_volta()
@@ -91,6 +106,66 @@ func _testar_cena_modelo() -> void:
 	_checar(_mesma_estrutura(porta, ala), "o resto é igual à porta da ala de eletrólise")
 	porta.free()
 	ala.free()
+
+
+## Toda cena de porta pede o E (□ no controle): o IconeInteragir no lugar dos
+## desenhos antigos do W e do direcional.
+func _testar_botao_nas_cenas() -> void:
+	print("\n--- O BOTÃO DE TODA PORTA ---")
+	for caminho: String in CENAS_DE_PORTA:
+		var porta := (load(caminho) as PackedScene).instantiate()
+		var icone := porta.get_node_or_null("IconeInteragir")
+		_checar(icone is IconeInteragir and not porta.has_node("IconeTeclaW")
+				and not porta.has_node("DirecionalControle"),
+			"%s: o botão é o E/□ (IconeInteragir), sem o W" % caminho.get_file())
+		porta.free()
+	var alcapao := (load("res://scenes/fases/componentes/porta_fase.tscn") as PackedScene).instantiate()
+	_checar(alcapao.get_node_or_null("IndicadorEntrada/IconeInteragir") is IconeInteragir,
+		"porta_fase.tscn (o alçapão): o botão também é o E/□")
+	alcapao.free()
+
+
+## Na cena de verdade, com o input de verdade: W não entra, E entra.
+func _testar_botao_e() -> void:
+	print("\n--- ENTRAR É NO E ---")
+	await _abrir(LAB)
+	await _segundos(1.0)  # o laboratório termina de clarear
+	var lab := get_tree().current_scene
+	_checar(lab.get_node_or_null("PortaSimulador/IconeInteragir") is IconeInteragir
+			and not lab.has_node("PortaSimulador/IconeTeclaW"),
+		"a porta do simulador (montada direto no laboratório) também é E/□")
+	var porta := lab.get_node("PortaTorre")
+	var icone := porta.get_node("IconeInteragir") as IconeInteragir
+	var sprite := porta.get_node("SpritePorta") as AnimatedSprite2D
+	_checar(not icone.visible, "longe da porta, nenhum botão")
+	_checar(is_equal_approx(icone.position.x, sprite.position.x), "o botão fica no meio da porta")
+	var player := _player()
+	player.global_position = (porta.get_node("PontoDeSaida") as Marker2D).global_position + Vector2(60, -2)
+	player.velocity = Vector2.ZERO
+	for i in 4:
+		await get_tree().physics_frame
+	await _quadros(2)
+	_checar(porta._player_dentro and icone.visible, "na frente da porta, o botão E aparece")
+	await _toque("ui_up")
+	await _quadros(3)
+	_checar(not porta._ocupada and get_tree().current_scene == lab, "o W não abre a porta")
+	await _toque("interact")
+	await _quadros(2)
+	_checar(porta._ocupada, "o E abre a porta")
+	_checar(not icone.visible, "   e o botão some enquanto ela entra")
+	await _esperar_cena(CORREDOR)
+	# Espera a chegada acabar: trocar de cena com a tela ainda clareando deixa
+	# o FadeTela da cena velha acordando sem ela (e o Godot cai).
+	await _conferir_saida(get_tree().current_scene.get_node("PortaLab"), "   e ela sai no corredor")
+	await _segundos(0.5)
+
+
+func _toque(acao: String) -> void:
+	Input.action_press(acao)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await _quadros(1)
+	Input.action_release(acao)
 
 
 ## Os mesmos nós, nas mesmas posições.
@@ -194,7 +269,20 @@ func _testar_fosso_ida_e_volta() -> void:
 	await _abrir(LAB)
 	var alcapao := get_tree().current_scene.get_node("FossoVentilacao") as PortaFase
 	alcapao.requer_habilidade = ""  # a mochila não é o assunto aqui
-	alcapao._tentar_entrar()
+	await _segundos(1.0)
+	var em_cima := _player()
+	em_cima.global_position = alcapao.global_position + Vector2(0, -40)
+	em_cima.velocity = Vector2.ZERO
+	for i in 20:
+		await get_tree().physics_frame
+	_checar(alcapao._jogador_na_area and alcapao._indicador.mostrando(),
+		"em cima do alçapão, o botão E aparece")
+	await _toque("ui_up")
+	await _quadros(3)
+	_checar(not alcapao._entrando, "o W não abre o alçapão")
+	await _toque("interact")
+	await _quadros(2)
+	_checar(alcapao._entrando, "o E abre")
 	await _esperar_cena(FASE3)
 	await _conferir_saida(get_tree().current_scene.get_node("Atrio/PortaFosso"),
 		"desceu pelo alçapão e saiu pela porta do átrio (PortaFase -> porta modelo)")

@@ -7,7 +7,7 @@ extends Node
 #   * a Cacau entra na fase e, com ela livre, o rádio CHAMA: pisca o LED, treme,
 #     solta ondas e toca os bipes — e ela ainda pode andar;
 #   * o canal abre: a timeline radio_fase1 com o retrato "cientistaradio" e o
-#     "Testando 1 2 3"; a Cacau para e se vira para o rádio;
+#     "chegou na Ala de Pirólise?"; a Cacau para e se vira para o rádio;
 #   * enquanto a fala é escrita o alto-falante trabalha (quadros 1→3, LED,
 #     ondas); escrita a frase, ele volta ao quadro 1;
 #   * acabou a conversa: rádio parado, Cacau livre, e ele não chama de novo
@@ -103,7 +103,7 @@ func _testar_transmissao() -> void:
 	# O primeiro evento é o "join" do retrato; a fala vem logo depois.
 	await _esperar(func() -> bool: return _fala_atual() != null, 2.0)
 	var fala := _fala_atual()
-	_checar(fala != null and fala.text.contains("Testando 1 2 3"), "o Dr. Chico diz \"Testando 1 2 3\"")
+	_checar(fala != null and fala.text.contains("Ala de Pirólise"), "o Dr. Chico chama da Ala de Pirólise")
 	_checar(fala != null and fala.portrait == "cientistaradio", "com o retrato cientistaradio")
 
 	quadros.clear()
@@ -113,7 +113,8 @@ func _testar_transmissao() -> void:
 	var capturou := false
 	var tempo_falando := 0.0
 	t = 0.0
-	while t < 4.0:
+	# A primeira frase tem ~75 letras: ~4,7 s falando (LETRAS_POR_SEGUNDO = 16).
+	while t < 8.0:
 		if radio.falando:
 			falou = true
 			tempo_falando += get_process_delta_time()

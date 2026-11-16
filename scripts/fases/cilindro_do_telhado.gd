@@ -53,6 +53,12 @@ static func ja_foi_pego(no: Node) -> bool:
 		or MissaoNitrogenio.cilindro_acoplado or MissaoNitrogenio.compressor_concluido()
 
 
+## Ainda de pé no suporte — o telhado não deixa a Cacau descer sem ele (ver
+## fase2_telhado.gd). Vira false no instante do E, antes mesmo de a ficha abrir.
+func ainda_no_lugar() -> bool:
+	return not _pegou and not is_queued_for_deletion()
+
+
 func _process(delta: float) -> void:
 	if _pegou:
 		return

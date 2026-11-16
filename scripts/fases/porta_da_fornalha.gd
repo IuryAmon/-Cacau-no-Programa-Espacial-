@@ -24,8 +24,9 @@ extends Area2D
 #                    escala 3) e cobre a boca inteira, com o brilho em volta.
 #                    A inclinação de "encostada" é a rotação DESTE nó Sprite
 #
-# Sem texto no mapa: quem avisa que dá para apanhar é o balão de exclamação
-# (ExclamacaoAnimada), o mesmo das toras.
+# Sem texto no mapa: quem avisa que é a vez de apanhá-la é o balão de exclamação
+# (ExclamacaoAnimada), o mesmo das toras — aceso de longe, enquanto ela estiver
+# disponível (ver _atualizar_aviso).
 
 ## Id no inventário. Só existe uma porta, então o id é fixo.
 const ID := "porta_da_fornalha"
@@ -139,10 +140,13 @@ func _pode_apanhar() -> bool:
 	return disponivel and visible and _jogador_perto and not _no_ar
 
 
+## O "!" em cima da porta: aceso enquanto apanhá-la é o passo da vez (a
+## fornalha esperando, de boca aberta), de longe — o pátio é uma tela só e é ele
+## que mostra para onde ir. O E, esse sim, só pega com ela encostada na porta.
 func _atualizar_aviso() -> void:
 	if _exclamacao == null:
 		return
-	var mostrar := _pode_apanhar()
+	var mostrar := disponivel and visible and not _no_ar
 	if mostrar == _aviso_visivel:
 		return
 	_aviso_visivel = mostrar

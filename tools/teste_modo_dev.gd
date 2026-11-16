@@ -10,7 +10,7 @@ extends Node
 #     solta dos limites; pousar devolve a colisão, a gravidade e o zoom;
 #   * NADA MACHUCA: dano não entra; cair no buraco volta a voar;
 #   * AS TRAVAS: porta de fase sem a ferramenta, saída barrada e porta da torre
-#     com a amostra (que não esquenta), elevador parado;
+#     com a amostra (que não esquenta);
 #   * AS PORTAS VOANDO: o W não entra (é subir), o E entra;
 #   * O MENU DE CENAS: pausa, despausa e leva à cena escolhida;
 #   * DESLIGAR: tudo volta, as ferramentas ficam.
@@ -135,7 +135,6 @@ func _testar_travas() -> void:
 	porta.free()
 
 	var rua := get_tree().current_scene
-	var player := _player()
 	MissaoNitrogenio.amostra = GasFechado.new(1.0, 3.0, 80.0)
 	MissaoNitrogenio.instalar_na_fase(rua)
 	await _quadros(3)
@@ -148,19 +147,6 @@ func _testar_travas() -> void:
 	_checar(is_equal_approx(MissaoNitrogenio.amostra.pressao(), pressao), "   e a amostra não esquenta")
 	MissaoNitrogenio.amostra = null
 	await _quadros(3)
-
-	# A cabine do elevador da rua começa lá em cima, no telhado.
-	var elevador := rua.get_node("ElevadorDeCarga") as ElevadorFase
-	_checar(not elevador.cabine_aqui, "a cabine do elevador de carga está lá no telhado (poço vazio)")
-	ModoDev.voar(false)
-	_pousar(player, Vector2(elevador.global_position.x, 470))
-	await _segundos(0.6)
-	elevador._partir()
-	await _esperar(func() -> bool: return get_tree().current_scene != null \
-		and get_tree().current_scene.scene_file_path == MissaoNitrogenio.CENA_TELHADO, 12.0)
-	_checar(get_tree().current_scene.scene_file_path == MissaoNitrogenio.CENA_TELHADO,
-		"   e mesmo assim leva ao telhado")
-	await _encerrar_fala()
 
 
 func _testar_portas_voando() -> void:

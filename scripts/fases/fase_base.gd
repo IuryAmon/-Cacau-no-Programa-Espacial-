@@ -11,6 +11,8 @@ extends Node2D
 # COMO EDITAR NO EDITOR: os limites da câmera saem do nó LimitesDaCamera
 # (um ReferenceRect) — arraste/redimensione ele para mudar até onde a câmera
 # acompanha. O ponto de nascimento padrão é o Marker2D "SpawnPadrao".
+# Uma fase com o ReferenceRect "FaixaDoChao" vira de andar para a frente e para
+# trás (como Final Fight): os pés da Cacau andam dentro dele.
 #
 # TESTANDO A FASE: ligue "Testar A Partir Daqui" no Inspector, arraste o nó
 # Player para onde quiser dentro da cena e dê o Play — a personagem nasce
@@ -73,6 +75,13 @@ func _preparar_fase() -> void:
 	# sido registrado por último). Fica fora do "if" acima para valer também
 	# testando com "Testar A Partir Daqui".
 	PontoDeRetorno.aplicar(player)
+
+	# Fase "de frente e de trás" (o telhado da torre): o retângulo FaixaDoChao
+	# diz por onde os pés da Cacau andam (ver "ANDAR NA FAIXA" em player.gd).
+	# Depois de posicionada, para a linha do chão nascer onde ela está.
+	var faixa: ReferenceRect = get_node_or_null("FaixaDoChao")
+	if faixa and player.has_method("andar_na_faixa"):
+		player.andar_na_faixa(faixa.get_global_rect())
 
 	# Seja qual for o lugar em que ela ficou, a câmera já começa enquadrada nele.
 	CameraJogador.encaixar(player)

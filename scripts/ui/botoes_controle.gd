@@ -34,7 +34,7 @@ extends RefCounted
 #
 # APERTANDO: as teclas e os botões ✕ ○ □ △ têm os 4 quadros da animação de
 # apertar nas folhas; desenhados num texto, eles afundam em loop como o E da
-# samambaia e o W das portas (ver "quadro_atual").
+# samambaia e o das portas (ver "quadro_atual").
 
 const FOLHA := preload("res://assets/UI/gdb-playstation-2.png")
 const FOLHA_TECLADO := preload("res://assets/UI/gdb-keyboard-2.png")

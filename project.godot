@@ -48,6 +48,8 @@ directories/dtl_directory={
 "cacau_elevador_la_embaixo": "res://timelines/cacau_elevador_la_embaixo.dtl",
 "cacau_elevador_parado": "res://timelines/cacau_elevador_parado.dtl",
 "cacau_metal_bloqueado": "res://timelines/cacau_metal_bloqueado.dtl",
+"cacau_pegar_carvao": "res://timelines/cacau_pegar_carvao.dtl",
+"cacau_pegar_cilindro_antes": "res://timelines/cacau_pegar_cilindro_antes.dtl",
 "cacau_tampar_forno": "res://timelines/cacau_tampar_forno.dtl",
 "cacau_tem_nitrogenio": "res://timelines/cacau_tem_nitrogenio.dtl",
 "cacau_terminar_carvao": "res://timelines/cacau_terminar_carvao.dtl",

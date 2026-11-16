@@ -69,7 +69,7 @@ catálogo.
 
 Toda tecla que o jogo mostra sai da mesma folha, `assets/UI/gdb-keyboard-2.png`
 (o teclado inteiro, com os quatro quadros de apertar de cada tecla): o E do
-cenário, o W das portas, o M do caderno — e também a tecla embaixo de cada
+cenário (portas inclusive), o M do caderno — e também a tecla embaixo de cada
 ferramenta dos **equipamentos**, o E de continuar da **ficha de coleta** e a tecla
 do **tutorial** (o F que afunda quando a Cacau arremessa). De controle na mão,
 todas viram o botão do controle.
@@ -169,7 +169,8 @@ Selecione o nó e use o Inspetor. As propriedades mais usadas:
   a Ala de Pirólise com a arte dela (`porta_ala_eletrolise.tscn`) e as que ainda
   não têm arte própria (Torre de Gases, Torre de Lançamento, as voltas ao
   laboratório e a cápsula) com o `porta modelo.png` (`porta_modelo.tscn`).
-  Mesma animação, mesmo W / direcional para cima. No Inspetor:
+  Mesma animação, mesmo botão: **E** (□ no controle), o `IconeInteragir` da
+  porta — só a altura dele conta, o x vai sozinho para o meio. No Inspetor:
   **`cena_destino`** e o par **`tag_destino` / `tag_aqui`** — ao chegar, quem
   recebe a Cacau (e toca a saída pela porta) é a porta com **`recebe_chegada`**
   ligado cujo `tag_aqui` bate com o `tag_destino` de quem ela usou. Para trocar a
@@ -456,7 +457,7 @@ No Inspetor:
 | `recebe_chegada` | Desligue no elevador que só leva e nunca recebe |
 | Tempos | Duração da porta, do percurso, das pausas e dos fades |
 | `requer_habilidade` | Deixa o elevador travado até a habilidade existir |
-| `cabine_aqui` | Desligado, o poço fica vazio: a cabine está parada no outro andar (some o desenho e o estrado) e o E dá a `fala_trancada`. Quem chega de elevador chega com a cabine, então a chegada liga isto sozinha; o resto é com o script da fase (a fase 2 guarda em que andar a cabine da torre ficou) |
+| `cabine_aqui` | Desligado, o poço fica vazio: a cabine está parada no outro andar (some o desenho e o estrado) e o E dá a `fala_trancada`. Quem chega de elevador chega com a cabine, então a chegada liga isto sozinha; o resto é com o script da fase |
 
 As duas pontas montadas hoje são `Entrada/ElevadorPatio` (na Oficina, sobe,
 tag `oficina` → `patio`) e `Elevador` (no corredor do pátio,
@@ -898,15 +899,15 @@ Da esquerda para a direita:
 
 | Cena | O que é |
 |---|---|
-| `fase2_torre.tscn` | A **rua**: o prédio escuro do compressor (com o portão de rolamento), a torre de tijolo (com o elevador de carga subindo pela fachada) e o prédio verde da destilação |
+| `fase2_torre.tscn` | A **rua**: o prédio escuro do compressor (com o portão de rolamento), a torre de tijolo e o prédio verde da destilação |
 | `fase2_sala_compressor.tscn` | A **sala do compressor**: o mesmo prédio escuro por dentro, com o compressor de ar e o puzzle do gás |
 | `fase2_torre_interior.tscn` | A **torre por dentro**: oito andares de subida até a porta do telhado |
-| `fase2_telhado.tscn` | O **telhado**: o cilindro de amostra e o elevador de carga que desce para a rua |
+| `fase2_telhado.tscn` | O **telhado**: o cilindro de amostra, num chão de andar para a frente e para trás (como Final Fight) |
 | `fase2_sala_destilacao.tscn` | A **sala de destilação**: montada igual à sala do compressor, com a mochila de N₂, a coluna e o cilindro verde de nitrogênio |
 
 **O caminho**, em ordem: pegar a **mochila de N₂** na sala de destilação (ela
 é que alcança o primeiro degrau da torre) → subir a **torre** até o telhado e
-pegar o **cilindro de amostra vazio** → descer de **elevador** → no
+pegar o **cilindro de amostra vazio** → descer pela **escada** → no
 **compressor**, apertar e gelar o ar até virar líquido dentro do cilindro →
 **correr** com a amostra gelada até a coluna antes que ela esquente e estoure →
 **destilar** o ar → pegar o **cilindro verde de N₂** → levar ao painel CHONPS,
@@ -917,7 +918,7 @@ Quem guarda o que já foi feito entre as salas é a
 `scripts/fases/missao_nitrogenio.gd` (cilindro preso no compressor, a amostra
 na mão, a amostra na coluna, a subida da torre...): o mesmo truque do
 `EstadoMundo`, com `static var`, então sair de uma sala e voltar encontra tudo
-como estava. Fechar o jogo esquece. As portas e os elevadores se acham pelas
+como estava. Fechar o jogo esquece. As portas se acham pelas
 tags (`tag_aqui`/`tag_destino`), como no resto do jogo — o
 `tools/teste_fase2.tscn` confere todos os pares.
 
@@ -935,14 +936,20 @@ tags (`tag_aqui`/`tag_destino`), como no resto do jogo — o
   Na volta da sala a Cacau sai andando para a direita, o lado da destilação.
   Arraste pelo meio: o pé do portão fica 116 px abaixo do nó, e o painel de
   luzes vai junto;
-- `ElevadorDeCarga` — o elevador que sobe pela fachada da torre até o telhado
-  (um `ElevadorFase`, como o da oficina). A cabine começa **parada lá em
-  cima**: aqui embaixo o poço fica vazio (sem cabine e sem estrado) e o E nele
-  só dá a fala `cacau_elevador_parado`. Quando a Cacau sobe a torre pela escada
-  e desce nela, a cabine vem junto — e daí em diante fica no andar em que ela a
-  deixou (`MissaoNitrogenio.elevador_no_telhado`): é o atalho de ida e volta.
-  Na cena ele está com `cabine_aqui` desligado, então no editor só aparece o
-  contorno de onde a cabine para;
+- o **elevador de carga** (do telhado para a rua), visto de lado. Ele é
+  **pintado** no `Cenario 2`: a plataforma com a grade dentro da
+  `Area Do Elevador` (Inspector do nó raiz, `Fase2Torre`; hoje x 1792 a 1888,
+  y 128 a 192, pintada no meio do caminho só para dar para ver) e, embaixo
+  dela até o chão, o **tubo** que a empurra (colunas 56 e 58). No jogo, a
+  plataforma e o tubo saem do `Cenario 2` e viram os nós `ElevadorDeCarga` e
+  `TuboDoElevador` (`scripts/fases/bloco_de_tiles.gd`). Parada, a plataforma
+  fica com a base no `Chao Do Elevador` (y = 512) e dá para pisar nela (o piso
+  fica `Altura Do Piso`, 32 px, abaixo do topo dela). Quem desce do telhado
+  chega em cima dela lá no alto (`Topo Do Percurso`, y = −96, acima do que a
+  câmera mostra) e desce até o chão em `Duracao Da Descida` (3 s). O tubo vai
+  até a base da plataforma — o pintado é repetido para cima — e some por cima
+  conforme ela desce, como se recolhesse. Por enquanto ele só desce: pela rua
+  não se sobe;
 - `Postes` — os seis postes da rua (um de cada lado do prédio do compressor,
   um antes da torre, um antes da destilação e dois no terreno vazio do fim da
   rua). Cada um é a cena
@@ -953,10 +960,14 @@ tags (`tag_aqui`/`tag_destino`), como no resto do jogo — o
   (`Buildings.png`): o prédio escuro do compressor (colunas 6 a 26, com o cano
   na 27 e a caçamba até a 29), no lugar do antigo prédio de concreto (colunas
   9 a 27), que saiu da rua; a torre de
-  tijolo (48 a 69, subindo até a fileira -70, bem acima do que a câmera
-  alcança) com o poço do elevador (os trilhos nas colunas 63 e 67), o prédio
-  verde da destilação (88 a 108). Depois da destilação vem a garagem (colunas
-  110 a 121) e um terreno vazio (colunas 122 a 169). O portão e o painel do
+  tijolo (40 a 61, subindo até a fileira -70, bem acima do que a câmera
+  alcança) com o poço do elevador (os trilhos nas colunas 55 e 59), o prédio
+  verde da destilação (75 a 95). Os três ficam perto: uns 320 px de rua entre
+  a caçamba e a torre, e uns 400 px entre a torre e a destilação, com o
+  pilarete e o banco (colunas 63 a 67) no meio. Depois da destilação vem a
+  garagem (colunas 97 a 108) e um terreno vazio (colunas 109 a 169). Para
+  mudar a distância, mova juntos os tiles do prédio (`Cenario` e `Cenario 2`),
+  a porta dele e o poste do vão. O portão e o painel do
   prédio do compressor não são pintados: são a `PortaCompressor`, animada, no
   vão da fachada (colunas 12 a 19). A rua vai até x = 5504 (`LimitesDaCamera` e `ParedeDireita`);
   o que está pintado depois disso (a casa marrom, o banco e a placa, da coluna
@@ -971,7 +982,7 @@ tags (`tag_aqui`/`tag_destino`), como no resto do jogo — o
   `PassagemCorredor`) é o palco de antes: ver "O corredor da torre", abaixo.
 
 **Com a amostra gelada na mão** a rua só deixa ir para a destilação (ou voltar
-ao compressor): a saída para o corredor, a porta da torre e o elevador barram,
+ao compressor): a saída para o corredor e a porta da torre barram,
 e a Cacau diz que não dá tempo (`cacau_amostra_pressa`). Quem barra é o
 próprio `fase2_torre.gd`.
 
@@ -1056,7 +1067,7 @@ A sala é o prédio escuro da rua **por dentro**, com a mesma arte de fora (o
 - `PortaRua` — o mesmo portão de rolamento, com o painel, par da
   `PortaCompressor`, em escala 1,25 (maior que isso encosta na luminária). Os
   filhos dele estão editáveis na cena: o `PontoDeSaida` foi acertado para ela
-  sair no chão, e os ícones do W e do direcional, para o tamanho de sempre,
+  sair no chão, e o `IconeInteragir` (o botão E/□), para o tamanho de sempre,
   na frente do topo do portão; a `PlacaPV` fica embaixo da faixa do meio.
 
 A sala de destilação é esta mesma montagem, tile por tile (ver "A sala de
@@ -1146,13 +1157,21 @@ lado — cair do fim de um andar não devolve ao andar de baixo.
 | 6 | **Chamas** (o jato de N₂ apaga: nitrogênio não alimenta o fogo) e o **vapor** que empurra para a direita. O `Ventilador` é um alvo: acertou, o vapor para |
 | 7 | O **laser** a meia altura, a **plataforma móvel** por baixo de uma fileira de espinhos (de pé ela passa; pulando, não) e a portinha do telhado |
 
-Cada andar tem uma bandeira de checkpoint perto de onde se chega e uma placa
-com o nome dele.
+Cada andar tem uma bandeira de checkpoint perto de onde se chega. A torre não
+tem placas escritas.
 
 **Para mexer na geometria** (camada `Terreno`, `tileset_fases`):
 
+- as **paredes** da esquerda (colunas -6 a 1) e da direita (32 a 39) são as
+  quinas da torre vista de fora, na `fase2_torre`: o tijolo do `Buildings.png`
+  (fonte 15). Na face de dentro (colunas 1 e 32) fica a faixa escura girada
+  (o tile `(1, 0)` transposto e espelhado), que é a única com colisão; do lado
+  de fora dela, só tijolo (`(1..3, 1..3)`), espelhado na vertical como na
+  fachada. O tijolo sombreado, como na rua, fica DENTRO do prédio, colado na
+  faixa: é a primeira coluna da camada `Fundo` de cada lado (colunas 2 e 31,
+  o tile `(0, 1..3)`; a da direita espelhada). As lajes encostam na faixa;
 - a pedra do laboratório (a moldura de 8 × 8 do `level_tileset`) é o chão, o
-  teto, as paredes e os patamares; as **vigas** de mão única são os tiles
+  teto e os patamares; as **vigas** de mão única são os tiles
   `(10..15, 0)` (a fileira de baixo, `(10..15, 1)`, é só o corpo, sem
   colisão); o **bloquinho** de 2 × 2 é `(10..11, 2..3)`;
 - as **plataformas que caem** são os tiles laranja da fonte 0
@@ -1184,42 +1203,90 @@ são as pontas do poste do `Props-01` pintadas embaixo de cada laje — o
 tamanho das das salas do compressor e da destilação: 96 × 144 px, em células
 de 48 px. Um andar tem 640 px, que não é múltiplo de 48, então as janelas não
 ficam exatamente na mesma altura em todos os andares (variam até 32 px). Três
-por andar, logo abaixo das luminárias; embaixo delas ficam as placas dos
-andares. Pintando uma janela, deixe-a fora das placas e das portas: o
-`teste_fase2` confere.
+por andar, logo abaixo das luminárias. Pintando uma janela, deixe-a fora das
+portas: o `teste_fase2` confere.
 
 ### O telhado
 
+**Aqui se anda para a frente e para trás**, como em Final Fight e Tartarugas
+Ninja: ←/→ andam para os lados e ↑/↓ andam para o fundo e para a frente da
+laje. Quem liga isso é o nó `FaixaDoChao` (ver abaixo); qualquer fase que
+ganhar um nó com esse nome passa a andar assim (`fase_base.gd` e "ANDAR NA
+FAIXA" no `player.gd`).
+
+- `FaixaDoChao` — um `ReferenceRect` (o retângulo azul-claro, que só aparece
+  no editor): é por onde os **pés** da Cacau andam (a base da cápsula de
+  colisão). Hoje vai de y = 521 (logo abaixo da grade do fundo) a y = 570 (a
+  base da grade da frente), de ponta a ponta da laje (x = 0 a 1408). Arraste e
+  estique ele para mudar a faixa. As bordas seguram a Cacau dos quatro lados —
+  os tiles e as `Paredes` não a seguram mais aqui. O pulo sobe e cai de volta
+  na mesma linha;
+- `Player` — aqui com `scale` 0,7 (a Cacau menor) e `Zoom Da Camera` 2 (a
+  câmera mais perto; o padrão é 1,5). As velocidades na faixa ficam no
+  Inspector dele: `Velocidade Na Faixa` (para os lados, 250) e
+  `Velocidade De Profundidade` (para o fundo e para a frente, 90 — bem mais
+  devagar, para o chão parecer mais fundo);
+- **o muro na frente dela** — de y = 564 para baixo (a guia horizontal do
+  editor) é a parede da frente: ali NADA do sprite da Cacau é desenhado. A
+  faixa vai até 570, então na beirada os pés passam por trás do muro, sem
+  vazar por cima da grade nem dos tijolos. O valor é o `Topo Do Muro Da
+  Frente`, no Inspector do nó raiz (`Fase2Telhado`); quem esconde é o shader
+  `shaders/corte_abaixo.gdshader`, posto no sprite dela
+  (`esconder_abaixo_de`, no `player.gd`). Ele fica no script, e não num nó da
+  cena, de propósito: com a cena aberta no editor, um nó novo gravado de fora
+  some quando o editor salva a versão dele;
+- as camadas, de trás para a frente: `Cenario` (a casinha, a grade do fundo, o
+  poço, tileset da cidade), `Terreno` (o chão da laje e o telhado da casinha,
+  tileset das fases), a Cacau, e as duas camadas da frente, ambas com
+  `z_index` 10 (ela está no 2) e sem colisão:
+  - `Frente` — a grade da frente da laje (tileset da cidade). O que for
+    pintado nela tampa a personagem. Para pintar com outro tileset, troque o
+    `Tile Set` dela no Inspector;
+  - `MuroDaFrente` — o muro de tijolos embaixo da grade da frente (tileset das
+    fases, na mesma grade do `Terreno`, de onde os tijolos saíram);
 - `PortaEscada` — a portinha da casinha da escada (a `porta_predio` em 75%),
-  o par da `PortaTelhado` do último andar. O telhado da casinha (a faixa de
-  cornija na fileira 9) fica no `Terreno`, na versão vazada: dá para subir em
-  cima dela;
+  o par da `PortaTelhado` do último andar. A Cacau sai dela já dentro da faixa
+  (o `PontoDeSaida` fica com os pés em y = 530) e só alcança o E dela andando
+  para o fundo, perto da casinha. O telhado da casinha (a faixa de cornija na
+  fileira 9) continua no `Terreno`, mas andando na faixa não dá para subir nele;
 - `CilindroDeAr` — o cilindro de amostra vazio
   (`componentes/cilindro_do_telhado.tscn`): o E pega, a ficha sobe e a Cacau
   diz para onde ele vai. Não volta mais;
-- `ElevadorDeCarga` — desce para a rua (`direcao` = DESCE). A cabine começa
-  aqui e fica no andar em que a Cacau a deixou: se ela desceu nele e voltou
-  pela escada, o poço está vazio e o E dá a fala `cacau_elevador_la_embaixo`.
-  Embaixo da laje fica o **mesmo poço da fachada da rua** — os trilhos e a
-  faixa escura do `Buildings.png`, no `Cenario` (colunas 31 a 35, fileiras 17
-  a 19), com um vão nos tijolos do `Terreno` ali — e a cabine fica no meio
-  dele (x = 1072). Como na rua, ela desce pela frente do poço, à vista. Mudando
-  o elevador de lugar, leve o poço junto (o trilho é o tile 1,0 girado: veja
-  como está pintado);
+- o **elevador de carga** (do telhado para a rua). A cabine é **pintada**:
+  tudo, de qualquer camada de tile, dentro da `Area Do Elevador` (Inspector do
+  nó raiz, `Fase2Telhado`; hoje x 1024 a 1120, y 480 a 608). Vale o **centro**
+  de cada tile, então a grade da `Frente`, que está 3 px para a direita, entra
+  certinha. No jogo, esses tiles saem das camadas e viram o nó
+  `ElevadorDeCarga` (`scripts/fases/bloco_de_tiles.gd`), cada camada com o
+  z_index dela (a grade continua na frente da Cacau). Com a Cacau em cima da
+  cabine, aparece o E: ela anda até o meio e a cabine afunda levando ela, com
+  a câmera parada. As duas somem na borda de baixo da área (y = 608, o fundo
+  do poço), e o corte do sprite dela desce junto com a cabine. O lugar fica
+  **vazio**: o que for pintado ali, numa camada, mas fora da área (um fundo),
+  aparece. No fim a tela apaga e a rua abre com ela descendo na plataforma.
+  `Duracao Da Descida` (1,8 s) é o tempo da cabine afundando;
 - `Paredes` — duas paredes invisíveis (`ParedeEsquerda` em x = 0,
-  `ParedeDireita` em x = 1408, nas bordas da câmera, bem altas): a Cacau
-  não consegue pular a mureta e cair do telhado;
+  `ParedeDireita` em x = 1408, nas bordas da câmera, bem altas). Andando na
+  faixa quem segura é a `FaixaDoChao`; elas ficam para o modo dev voando;
 - `BG` — o mesmo céu da rua, com a serra e a mata bem mais baixas no
   horizonte (lá de cima sobra céu).
 
 Chegar ao telhado marca a subida e, na primeira vez, a Cacau comenta
 (`cacau_torre_telhado`).
 
+**Sem o cilindro, não se desce.** Enquanto ele estiver no suporte, a
+`PortaEscada` fica travada: o E na porta dá a fala `cacau_pegar_cilindro_antes`
+("Eu preciso pegar o cilindro antes!"). O E no elevador dá a mesma fala, e a
+cabine não sai do lugar. Pegou, ela volta a descer. Quem trava é o
+`fase2_telhado.gd` (o export `fala_sem_cilindro` escolhe a fala); no modo dev
+a porta e o elevador ficam livres.
+
 **As falas novas** (todas em `timelines/`):
 `cacau_compressor_sem_cilindro`, `cientista_compressor`,
 `cacau_compressor_concluido`, `cacau_amostra_pressa`, `cacau_degrau_alto`,
 `cacau_torre_telhado`, `cacau_cilindro_pego`, `cacau_elevador_parado`,
-`cacau_elevador_la_embaixo`, `cientista_destilacao` e `cacau_tem_nitrogenio`.
+`cacau_elevador_la_embaixo`, `cacau_pegar_cilindro_antes`,
+`cientista_destilacao` e `cacau_tem_nitrogenio`.
 
 **Atalhos de teste.** A tecla **L** deixa pronta na hora a amostra do
 compressor e a separação da destilação; a **N** equipa a mochila.
@@ -1504,13 +1571,28 @@ com o passo a passo no cabeçalho). O carvão sai em duas partes:
 Se ela demorar, a Cacau fala sozinha: *"Talvez eu deva tampar o forno, evita a
 entrada de oxigênio..."*.
 
-**Com o forno aceso ninguém sai do pátio.** Do instante em que o fogo pega até
-a brasa apagar e o carvão sair, a passagem da ponta esquerda não deixa a Cacau
-ir embora: ela para na beirada da tela e diz *"Preciso terminar de fazer o
-carvão primeiro..."*. A fala sai uma vez por tentativa (para ouvir de novo é
-preciso se afastar e voltar). Com o fogo apagado a saída é livre — antes de
-acender, depois de desistir no painel (ESC) ou de a carga virar cinza, e com o
-carvão já pronto.
+**Quem guia a jogadora.** No pátio, a lista de objetivos (canto superior
+esquerdo) mostra *"Faça carvão a partir das madeiras"* com o subitem *"Acerte a
+árvore com o bumerangue e recolha a lenha"* e a contagem das toras (as da
+mochila mais as que já estão no forno). Daí em diante quem aponta é o balão de
+exclamação, **aceso de longe** (o pátio é uma tela só): na fornalha, quando é a
+vez de pôr a lenha e de acender; na porta encostada, quando é a vez de
+apanhá-la; na fornalha de novo, quando é a vez de tampar e, no fim, de retirar
+o carvão — com o subitem *"Retire o carvão da fornalha"* na lista. Depois disso
+a lista pede para levar o carvão ao baú do painel CHONPS, no laboratório. A
+lógica do "!" fica em `_atualizar_exclamacao` (`retorta.gd`) e
+`_atualizar_aviso` (`porta_da_fornalha.gd`); os textos da lista, em
+`scripts/roteiro_objetivos.gd`.
+
+**Com o forno aceso ninguém sai do pátio — nem com o carvão esquecido nele.**
+Do instante em que o fogo pega até a Cacau retirar o carvão, a passagem da
+ponta esquerda não deixa ela ir embora: ela para na beirada da tela e diz
+*"Preciso terminar de fazer o carvão primeiro..."* (forno aceso) ou *"Eu
+preciso pegar o carvão antes!"* (carvão pronto no forno). A fala sai uma vez
+por tentativa (para ouvir de novo é preciso se afastar e voltar). Com o fogo
+apagado e o forno sem carvão a saída é livre — antes de acender, depois de
+desistir no painel (ESC) ou de a carga virar cinza, e com o carvão já na
+mochila.
 
 O que dá para mexer, tudo dentro de `retorta.tscn`:
 
@@ -1524,8 +1606,10 @@ O que dá para mexer, tudo dentro de `retorta.tscn`:
   até a fala; 12 por padrão, 0 desliga) e `Fala Da Porta` (a timeline);
 - o texto da fala: `timelines/cacau_tampar_forno.dtl`;
 - no grupo **Saída**: `Fala Ao Sair`, a timeline de quando ela tenta sair com
-  o forno aceso (vazio = é barrada do mesmo jeito, calada). O texto está em
-  `timelines/cacau_terminar_carvao.dtl`. Quem barra é a própria passagem
+  o forno aceso, e `Fala Sem Carvao`, a de quando tenta sair com o carvão
+  pronto ainda no forno (vazio = é barrada do mesmo jeito, calada). Os textos
+  estão em `timelines/cacau_terminar_carvao.dtl` e
+  `timelines/cacau_pegar_carvao.dtl`. Quem barra é a própria passagem
   (`PassagemCorredor`): ela pergunta a quem estiver no grupo `segura_a_saida`
   — o cabeçalho de `scripts/fases/passagem_de_cena.gd` explica o contrato;
 - a região do termômetro: em `scripts/ui/painel_fornalha.gd`, `LINHA_DA_REGIAO`
@@ -1605,8 +1689,8 @@ passar e a amostra gelada da fase 2 não esquenta.
 
 Voando: WASD/setas em 8 direções, **Shift** mais rápido, roda do mouse (ou
 **-** e **+**) para o zoom. Ela atravessa parede, chão, porta de metal e
-barreira, e a câmera se solta dos limites da cena. Como o W é subir, as portas
-abrem no **E**. O elevador também abre no E, como sempre.
+barreira, e a câmera se solta dos limites da cena. As portas abrem no **E**,
+como fora do modo dev (o W é subir). O elevador também.
 
 ## Regerar o blockout do zero
 
@@ -1726,9 +1810,10 @@ godot --headless --path . res://tools/teste_destilador.tscn
 
 A fase 2 tem três: o puzzle do compressor (a física do gás, o estouro, a
 amostra e o relógio dela), a fase inteira (as cinco cenas, os pares de portas
-e elevadores, as travas da rua, o cilindro do telhado, o primeiro degrau sem e
+e passagens, as travas da rua, o cilindro do telhado e o andar para a frente e
+para trás de lá, o primeiro degrau sem e
 com a mochila, os puzzles da torre, as janelas grandes da torre fora das
-placas e das portas, e a sala de destilação igual à do compressor, tile por
+portas, e a sala de destilação igual à do compressor, tile por
 tile e com a mesma câmera, fechada e com chão de concreto) e a subida da torre
 salto por salto:
 

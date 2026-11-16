@@ -81,12 +81,15 @@ const CAIXA_WORLD1 := "/root/World/Caixa"
 const ESPINHOS_TREINO := "/root/Fase1Oficina/Treino/EspinhosCaixa"
 const PORTA_METAL := "/root/Fase1Oficina/Patio/PortaMetal"
 const PORTA_METAL_ELEVADOR := "/root/Fase1Oficina/Patio/PortaMetal2"
+## A fornalha do pátio (RetortaCarbonizacao): a carga dela e o carvão pronto.
+const RETORTA_PATIO := "/root/Fase1_2Exterior/Patio/Retorta"
 const MESA_PURIFICADOR := "/root/FaseFinal/Plataforma/MesaPurificador"
 
 ## Todos os caminhos acima, para o teste conferir se ainda existem nas cenas.
 const CAMINHOS_POR_CENA := {
 	WORLD1: [CIENTISTA_WORLD1, ITEM_H2, ITEM_O2, CAIXA_WORLD1],
 	FASE1: [ESPINHOS_TREINO, PORTA_METAL, PORTA_METAL_ELEVADOR],
+	FASE1_2: [RETORTA_PATIO],
 	FASE_FINAL: [MESA_PURIFICADOR],
 }
 
@@ -142,8 +145,18 @@ func _init(visitou: Callable) -> void:
 			[_obj("porta_elevador", "Volte ao início da oficina e derreta a porta de metal",
 				_feito.bind(PORTA_METAL_ELEVADOR))],
 			[_obj("patio", "Suba até o pátio", _visitou.bind(FASE1_2))],
-			[_obj("carvao", "Faça carvão a partir das madeiras", _pegou.bind("C"))],
-			[_obj("entregar_c", "Leve o carvão ao receptor do painel CHONPS, no laboratório",
+			[
+				_obj("carvao", "Faça carvão a partir das madeiras", _pegou.bind("C")),
+				# O primeiro passo vem escrito; o resto (pôr a lenha, apanhar a
+				# porta, tampar o forno, retirar o carvão) é o "!" que aponta
+				# (ver _atualizar_exclamacao em retorta.gd).
+				_sub("carvao", _obj("lenha", "Acerte a árvore com o bumerangue e recolha a lenha",
+					_tem_a_lenha, _contar_lenha)),
+				# Só quando o carvão já está esperando no forno.
+				_sub("carvao", _obj("retirar_carvao", "Retire o carvão da fornalha", _pegou.bind("C"),
+					Callable(), _carvao_pronto)),
+			],
+			[_obj("entregar_c", "Leve o carvão ao baú do painel CHONPS, no laboratório",
 				_entregou.bind("C"))],
 		]),
 
@@ -162,7 +175,7 @@ func _init(visitou: Callable) -> void:
 				_amostra_chegou_a_coluna)],
 			[_obj("destilar", "Separe o nitrogênio do ar na coluna de destilação", _destilou)],
 			[_obj("pegar_n", "Pegue o cilindro de nitrogênio (N)", _pegou.bind("N"))],
-			[_obj("entregar_n", "Leve o nitrogênio ao receptor do painel CHONPS, no laboratório",
+			[_obj("entregar_n", "Leve o nitrogênio ao baú do painel CHONPS, no laboratório",
 				_entregou.bind("N"))],
 		]),
 
@@ -174,7 +187,7 @@ func _init(visitou: Callable) -> void:
 			],
 			[_obj("pegar_s", "Atravesse o corredor eletrificado e pegue a amostra de enxofre (S)",
 				_pegou.bind("S"))],
-			[_obj("entregar_ps", "Leve o fósforo e o enxofre ao receptor do painel CHONPS",
+			[_obj("entregar_ps", "Leve o fósforo e o enxofre ao baú do painel CHONPS",
 				_entregou_p_e_s, _contar_p_e_s)],
 		]),
 
@@ -283,6 +296,35 @@ func _entregou(letra: String) -> bool:
 func _tentou_porta_de_metal() -> bool:
 	return EstadoMundo.ja_feito_caminho(PORTA_METAL, PortaMetalMacarico.MARCA_TENTOU) \
 		or EstadoMundo.ja_feito_caminho(PORTA_METAL_ELEVADOR, PortaMetalMacarico.MARCA_TENTOU)
+
+
+## Quantas toras a fornalha do pátio leva (o madeiras_necessarias dela).
+const TORAS_DA_FORNALHA := 3
+
+## A lenha que ela já juntou: as toras na mochila mais as que já estão no
+## forno. Passada a queima (o forno à espera da porta, o carvão pronto ou já
+## retirado), a conta está cheia — a lenha virou carvão. Se a carga virar
+## cinza, as toras voltam para a árvore e a conta cai: o subitem volta.
+func _contar_lenha() -> Vector2i:
+	if _lenha_ja_queimou():
+		return Vector2i(TORAS_DA_FORNALHA, TORAS_DA_FORNALHA)
+	var juntas := Madeira.quantidade_no_inventario() \
+		+ int(EstadoMundo.ler_caminho(RETORTA_PATIO, "madeiras_no_forno", 0))
+	return Vector2i(mini(juntas, TORAS_DA_FORNALHA), TORAS_DA_FORNALHA)
+
+
+func _tem_a_lenha() -> bool:
+	return _contar_lenha().x >= TORAS_DA_FORNALHA
+
+
+func _lenha_ja_queimou() -> bool:
+	return _carvao_pronto() or _pegou("C") or EstadoMundo.ja_feito_caminho(RETORTA_PATIO) \
+		or bool(EstadoMundo.ler_caminho(RETORTA_PATIO, "esperando_porta", false))
+
+
+## O carvão saiu do fogo e espera no forno (some quando ela o retira).
+func _carvao_pronto() -> bool:
+	return bool(EstadoMundo.ler_caminho(RETORTA_PATIO, "carbono_pronto", false))
 
 
 # ─────────────────────────────────────────────

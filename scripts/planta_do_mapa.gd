@@ -181,6 +181,7 @@ const ONDE_FICA := {
 	# Carbono
 	"entrar_oficina": OFICINA, "bumerangue": OFICINA, "macarico": OFICINA, "espinhos": OFICINA,
 	"porta_metal": OFICINA, "porta_elevador": OFICINA, "patio": PATIO, "carvao": PATIO,
+	"lenha": PATIO, "retirar_carvao": PATIO,
 	"entregar_c": LAB,
 	# Nitrogênio
 	"entrar_torre": RUA, "mochila": DESTILACAO, "cilindro": TELHADO, "comprimir": COMPRESSOR,

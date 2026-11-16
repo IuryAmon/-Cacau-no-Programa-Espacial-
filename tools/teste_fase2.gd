@@ -10,20 +10,24 @@ extends Node
 #   * AS CENAS: as cinco abrem; todas são fases (FaseBase), com a Cacau de um
 #     pulo só (max_jumps 1), câmera limitada e ponto de nascimento;
 #   * OS PARES: toda porta, passagem e elevador da fase leva a uma cena que tem
-#     quem receba a tag dela — e o elevador da rua e o do telhado se respondem;
-#   * A RUA: a cabine do elevador de carga começa lá no telhado (o poço da rua
-#     fica vazio, sem estrado, e o E nele só dá a fala); descendo nela, a cabine
-#     chega junto e fica onde a Cacau a deixou; com a amostra gelada na mão, a
-#     saída para o corredor, a porta da torre e o elevador barram;
-#   * O TELHADO: chegar marca a subida e a Cacau comenta; a cabine está lá, no
-#     meio de um poço igual ao da fachada da rua; o cilindro de amostra vai
-#     para a mochila e não volta mais; com a cabine lá na rua, o poço do
-#     telhado fica vazio;
+#     quem receba a tag dela;
+#   * A RUA: com a amostra gelada na mão, a saída para o corredor e a porta da
+#     torre barram; a plataforma do elevador de carga fica parada no chão, com
+#     o tubo recolhido;
+#   * O TELHADO: chegar marca a subida e a Cacau comenta; o cilindro de amostra
+#     vai para a mochila e não volta mais — antes disso, a escada não desce (a
+#     Cacau diz que precisa pegá-lo); anda-se para a frente e para trás: a
+#     Cacau, menor e com a câmera mais perto, pisa só dentro da FaixaDoChao
+#     (←/→ e ↑/↓ param nas bordas, o pulo cai na mesma linha), e a grade e o
+#     muro da frente ficam na frente dela; O ELEVADOR: a cabine pintada sai
+#     das camadas de tile; sem o cilindro, o E nela é a fala da escada; com
+#     ele, a cabine afunda levando a Cacau e a rua abre com ela descendo na
+#     plataforma, do alto até o chão, com o tubo sumindo por cima;
 #   * A TORRE: sem a mochila, a Cacau comenta o degrau alto — e o pulo duplo
 #     não chega nele; com a mochila, pulo + jato chega; o ventilador desliga o
 #     vapor; a caixa elétrica recolhe as serras da chaminé; as plataformas
 #     laranja viram plataformas que caem; as janelas são do tamanho das da
-#     sala do compressor e nenhuma fica atrás de uma placa ou de uma porta;
+#     sala do compressor e nenhuma fica atrás de uma porta;
 #   * AS SALAS: o compressor na sala dele; a mochila, a coluna e o cilindro de
 #     nitrogênio (ligado à coluna) na sala de destilação — que é a sala do
 #     compressor tile por tile: as quatro camadas (Terreno, Fundo, Cenario e
@@ -128,8 +132,6 @@ func _testar_pares() -> void:
 		var tipo: String = recebe[s.para].get(s.tag, "")
 		_checar(tipo == s.tipo, "%s/%s -> %s: recebe \"%s\" (%s)" % [s.de.get_file(), s.no, s.para.get_file(),
 			s.tag, tipo if tipo != "" else "ninguém"])
-	_checar(recebe[RUA].get("rua", "") == "elevador" and recebe[MissaoNitrogenio.CENA_TELHADO].get("telhado", "") == "elevador",
-		"os elevadores da rua e do telhado recebem um do outro")
 
 
 func _testar_rua() -> void:
@@ -137,49 +139,25 @@ func _testar_rua() -> void:
 	await _abrir(RUA)
 	await _segundos(1.0)
 	var rua := get_tree().current_scene
-	var elevador := rua.get_node("ElevadorDeCarga") as ElevadorFase
 	var porta_torre := rua.get_node("PortaTorre")
-	_checar(not elevador.cabine_aqui and not elevador.get_node("Cabine").visible
-		and elevador.get_node("Cabine/Piso").process_mode == Node.PROCESS_MODE_DISABLED,
-		"a cabine do elevador de carga começa lá no telhado: o poço da rua fica vazio")
-	var player := _player()
-	_pousar(player, elevador.global_position + Vector2(0.0, -60.0))
-	await _segundos(0.6)
-	var pes: float = player.global_position.y + elevador._altura_dos_pes(player)
-	_checar(player.is_on_floor() and absf(pes - elevador.global_position.y) < 3.0,
-		"   no poço vazio a Cacau pisa no chão da rua (o estrado sumiu junto)")
-	elevador._partir()
-	await _quadros(3)
-	_checar(get_tree().current_scene == rua and Dialogic.current_timeline != null
-		and elevador.fala_trancada == "cacau_elevador_parado",
-		"   e o E nele só dá a fala de que ele está parado lá em cima")
-	await _encerrar_fala()
 	_checar(not rua.segura_a_saida() and porta_torre.interativa, "sem a amostra, a rua deixa ir para todo lado")
-
-	# Descendo do telhado nele: a cabine chega com a Cacau e fica na rua.
-	ElevadorFase.chegando_de_elevador = true
-	ElevadorFase.tag_chegada = "rua"
-	await _abrir(RUA)
-	elevador = get_tree().current_scene.get_node("ElevadorDeCarga") as ElevadorFase
-	_checar(elevador.cabine_aqui and elevador.get_node("Cabine").visible
-		and not MissaoNitrogenio.elevador_no_telhado,
-		"descendo nele, a cabine chega junto com a Cacau")
-	await _esperar(func() -> bool: return elevador._estado == ElevadorFase.Estado.PARADO, 8.0)
-	_checar(elevador.liberado, "   e daí em diante é o atalho de volta para cima")
-	await _abrir(RUA)
-	rua = get_tree().current_scene
-	elevador = rua.get_node("ElevadorDeCarga") as ElevadorFase
-	porta_torre = rua.get_node("PortaTorre")
-	_checar(elevador.cabine_aqui, "   voltando à rua a pé, a cabine continua onde ela a deixou")
 
 	MissaoNitrogenio.amostra = GasFechado.new(1.0, 3.0, 80.0)
 	await _quadros(2)
 	_checar(rua.segura_a_saida(), "com a amostra gelada na mão, a saída para o corredor barra")
-	_checar(not porta_torre.interativa, "   a porta da torre não abre")
-	_checar(not elevador.liberado and elevador.fala_trancada == "cacau_amostra_pressa",
-		"   e o elevador também não (a Cacau diz que não dá tempo)")
+	_checar(not porta_torre.interativa, "   e a porta da torre não abre")
 	MissaoNitrogenio.amostra = null
-	MissaoNitrogenio.elevador_no_telhado = true
+
+	var plataforma: BlocoDeTiles = rua.plataforma_do_elevador()
+	var tubo: BlocoDeTiles = rua.tubo_do_elevador()
+	_checar(plataforma != null and plataforma.celulas() > 0 and tubo != null and tubo.celulas() > 0,
+		"o elevador de carga da rua: a plataforma e o tubo saem do Cenario 2")
+	if plataforma:
+		var area_agora := plataforma.area_agora(rua.area_do_elevador)
+		_checar(is_equal_approx(area_agora.end.y, rua.chao_do_elevador)
+				and is_equal_approx(tubo.corte_acima(), rua.chao_do_elevador),
+			"   parada, a base dela fica no chão (y = %.0f) e o tubo, recolhido" % area_agora.end.y)
+		_checar(plataforma.get_node_or_null("Piso") is StaticBody2D, "   e dá para pisar nela")
 
 
 func _testar_telhado() -> void:
@@ -188,11 +166,6 @@ func _testar_telhado() -> void:
 	await _abrir(MissaoNitrogenio.CENA_TELHADO)
 	var telhado := get_tree().current_scene
 	_checar(MissaoNitrogenio.subiu_a_torre, "chegar ao telhado marca a subida da torre")
-	var elevador := telhado.get_node("ElevadorDeCarga") as ElevadorFase
-	_checar(elevador.cabine_aqui and elevador.get_node("Cabine").visible,
-		"a cabine do elevador de carga está parada lá em cima")
-	_checar(_poco_embaixo_da_cabine(telhado, elevador),
-		"   no meio do poço, igual ao da fachada da rua: trilhos e faixa escura embaixo da laje")
 	var cilindro := telhado.get_node_or_null("CilindroDeAr") as CilindroDoTelhado
 	_checar(cilindro != null, "o cilindro de amostra está lá")
 	await _esperar(func() -> bool: return Dialogic.current_timeline != null, 4.0)
@@ -200,6 +173,36 @@ func _testar_telhado() -> void:
 	await _encerrar_fala()
 	if cilindro == null:
 		return
+
+	# Sem o cilindro, a escada não desce.
+	var porta_escada := telhado.get_node("PortaEscada") as Area2D
+	_checar(not porta_escada.interativa, "com o cilindro no suporte, a porta da escada não abre")
+	var player := _player()
+	_pousar(player, porta_escada.get_node("PontoDeSaida").global_position)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await _quadros(2)
+	Input.action_press("interact")
+	await _esperar(func() -> bool: return Dialogic.current_timeline != null, 1.0)
+	Input.action_release("interact")
+	_checar(Dialogic.current_timeline != null
+			and Dialogic.current_timeline.resource_path.contains("cacau_pegar_cilindro_antes"),
+		"   o E na porta da escada vira a fala do cilindro")
+	await _encerrar_fala()
+	_checar(get_tree().current_scene == telhado, "   e ela continua no telhado")
+	# Nem pelo elevador.
+	player.global_position.x = telhado.area_do_elevador.get_center().x - 20.0
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await _quadros(2)
+	Input.action_press("interact")
+	await _esperar(func() -> bool: return Dialogic.current_timeline != null, 1.0)
+	Input.action_release("interact")
+	_checar(Dialogic.current_timeline != null
+			and Dialogic.current_timeline.resource_path.contains("cacau_pegar_cilindro_antes")
+			and telhado.cabine_do_elevador().deslocamento == 0.0,
+		"   e o E no elevador também (a cabine não sai do lugar)")
+	await _encerrar_fala()
 	cilindro._pegar()
 	await _esperar(func() -> bool: return Inventario.popup_aberto, 3.0)
 	_checar(Inventario.popup_aberto, "pegar abre a ficha do cilindro")
@@ -208,19 +211,140 @@ func _testar_telhado() -> void:
 	await _esperar(func() -> bool: return MissaoNitrogenio.tem_cilindro_vazio(), 3.0)
 	_checar(MissaoNitrogenio.tem_cilindro_vazio(), "e ele vai para a mochila")
 	await _encerrar_fala()
+	_checar(porta_escada.interativa, "com o cilindro na mochila, a escada volta a descer")
 	await _abrir(MissaoNitrogenio.CENA_TELHADO)
 	await _quadros(3)
 	_checar(get_tree().current_scene.get_node_or_null("CilindroDeAr") == null, "voltando ao telhado, ele não está mais lá")
 	await _encerrar_fala()
+	await _testar_faixa_do_telhado()
+	await _testar_elevador_do_telhado()
 
-	# Desceu nele e subiu de novo pela escada: a cabine ficou lá na rua.
-	MissaoNitrogenio.elevador_no_telhado = false
-	await _abrir(MissaoNitrogenio.CENA_TELHADO)
-	elevador = get_tree().current_scene.get_node("ElevadorDeCarga") as ElevadorFase
-	_checar(not elevador.cabine_aqui and elevador.fala_trancada == "cacau_elevador_la_embaixo",
-		"com a cabine lá na rua, o poço do telhado fica vazio (e a Cacau diz por quê)")
-	await _encerrar_fala()
-	MissaoNitrogenio.elevador_no_telhado = true
+
+## O elevador de carga: a cabine pintada afunda levando a Cacau e a rua abre
+## com ela descendo na plataforma, do alto até o chão.
+func _testar_elevador_do_telhado() -> void:
+	var telhado := get_tree().current_scene
+	var player := _player()
+	var cabine: BlocoDeTiles = telhado.cabine_do_elevador()
+	var area: Rect2 = telhado.area_do_elevador
+	var nomes := cabine.copias().map(func(c: TileMapLayer) -> String: return str(c.name))
+	_checar(cabine.celulas() > 0 and nomes.has("Cenario") and nomes.has("Terreno") and nomes.has("Frente"),
+		"o elevador do telhado: a cabine sai das camadas de tile (%d tiles: %s)" % [cabine.celulas(), ", ".join(nomes)])
+	var sobrou := 0
+	for camada in telhado.find_children("*", "TileMapLayer", true, false):
+		if camada.owner != telhado:
+			continue
+		for celula in camada.get_used_cells():
+			if area.has_point(camada.to_global(camada.map_to_local(celula))):
+				sobrou += 1
+	_checar(sobrou == 0, "   e nenhum tile dela fica para trás nas camadas")
+	for copia in cabine.copias():
+		if copia.name == "Frente":
+			_checar(copia.z_index > player.z_index, "   a grade da frente da cabine continua na frente da Cacau")
+
+	player.global_position.x = area.get_center().x + 25.0
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await _quadros(2)
+	_checar(telhado.esta_na_cabine(), "   em cima da cabine, o E vale")
+	Input.action_press("interact")
+	await _esperar(func() -> bool: return cabine.deslocamento > 10.0, 3.0)
+	Input.action_release("interact")
+	_checar(not player.pode_se_mover and cabine.deslocamento > 0.0
+			and absf(player.global_position.x - area.get_center().x) < 1.0,
+		"   com o cilindro na mochila, ela vai para o meio e a cabine afunda com ela")
+	_checar(player.altura_do_corte() > telhado.topo_do_muro_da_frente,
+		"   o corte do sprite dela desce junto com a cabine (y = %.0f)" % player.altura_do_corte())
+	await _esperar(func() -> bool:
+		var cena := get_tree().current_scene
+		return cena != null and cena.scene_file_path == RUA and cena.is_node_ready(), 8.0)
+	var rua := get_tree().current_scene
+	_checar(rua.scene_file_path == RUA, "   sumidas as duas no fundo do poço, a rua abre")
+	if rua.scene_file_path != RUA:
+		return
+	await _quadros(2)
+	var plataforma: BlocoDeTiles = rua.plataforma_do_elevador()
+	var tubo: BlocoDeTiles = rua.tubo_do_elevador()
+	var cacau := _player()
+	var no_alto := plataforma.area_agora(rua.area_do_elevador)
+	_checar(not cacau.pode_se_mover and no_alto.position.y < rua.area_do_elevador.position.y,
+		"   ela chega em cima da plataforma, lá no alto (topo em y = %.0f)" % no_alto.position.y)
+	_checar(is_equal_approx(tubo.corte_acima(), no_alto.end.y),
+		"   com o tubo esticado até a base dela (y = %.0f)" % tubo.corte_acima())
+	await _esperar(func() -> bool: return cacau.pode_se_mover, 8.0)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var piso: float = rua.chao_do_elevador - rua.area_do_elevador.size.y + rua.altura_do_piso
+	_checar(cacau.pode_se_mover and absf(cacau.altura_dos_pes() - piso) < 1.5 and cacau.is_on_floor(),
+		"   a plataforma desce até o chão e ela fica de pé nela, livre (pés em y = %.1f; o piso, %.0f)"
+		% [cacau.altura_dos_pes(), piso])
+	_checar(is_equal_approx(tubo.corte_acima(), rua.chao_do_elevador), "   e o tubo some inteiro, recolhido")
+	await _segundos(0.5)
+
+
+## Anda-se para a frente e para trás: os pés da Cacau só pisam dentro da
+## FaixaDoChao, e a grade e o muro da frente passam na frente dela.
+func _testar_faixa_do_telhado() -> void:
+	var telhado := get_tree().current_scene
+	var player := _player()
+	var no_da_faixa := telhado.get_node_or_null("FaixaDoChao") as ReferenceRect
+	_checar(no_da_faixa != null and player.esta_na_faixa(), "no telhado anda-se para a frente e para trás (FaixaDoChao)")
+	if no_da_faixa == null:
+		return
+	var faixa := no_da_faixa.get_global_rect()
+	_checar(player.scale.x < 1.0 and player.zoom_da_camera > 1.5,
+		"   a Cacau menor (escala %.2f) e a câmera mais perto (zoom %.1f)" % [player.scale.x, player.zoom_da_camera])
+	_checar(player.velocidade_de_profundidade < player.velocidade_na_faixa * 0.5,
+		"   para o fundo e para a frente ela anda bem mais devagar que para os lados (%.0f e %.0f)"
+		% [player.velocidade_de_profundidade, player.velocidade_na_faixa])
+	var corte: float = player.altura_do_corte()
+	_checar(is_equal_approx(corte, telhado.topo_do_muro_da_frente) and corte > faixa.position.y
+			and corte < faixa.end.y,
+		"   o sprite some abaixo do topo do muro da frente (y = %.0f), dentro da faixa: os pés passam por trás dele" % corte)
+	await _esperar(func() -> bool: return player.pode_se_mover, 3.0)
+	await _segurar("ui_down", 0.8)
+	var pes: float = player._altura_dos_pes()
+	_checar(player.is_on_floor() and absf(pes - faixa.end.y) < 1.0,
+		"   ↓ leva os pés até a borda da frente da faixa (%.1f; a borda, %.0f)" % [pes, faixa.end.y])
+	await _segurar("ui_up", 0.8)
+	pes = player._altura_dos_pes()
+	_checar(player.is_on_floor() and absf(pes - faixa.position.y) < 1.0,
+		"   ↑ leva até a borda do fundo (%.1f; a borda, %.0f)" % [pes, faixa.position.y])
+	await _segurar("ui_down", 0.15)
+	var linha: float = player._altura_dos_pes()
+	await _toque("jump")
+	await _esperar(func() -> bool: return player._altura_dos_pes() < linha - 20.0, 0.6)
+	var subiu: bool = player._altura_dos_pes() < linha - 20.0
+	await _esperar(func() -> bool: return player.is_on_floor(), 2.0)
+	_checar(subiu and player.is_on_floor() and absf(player._altura_dos_pes() - linha) < 1.0,
+		"   o pulo sobe e cai de volta na mesma linha (%.1f)" % linha)
+	var ponta: float = faixa.position.x + player._meia_largura()
+	Input.action_press("ui_left")
+	await _esperar(func() -> bool: return player.global_position.x <= ponta + 0.5, 6.0)
+	await _segundos(0.2)
+	Input.action_release("ui_left")
+	_checar(absf(player.global_position.x - ponta) < 0.5,
+		"   e a ponta da faixa segura para os lados (x = %.1f)" % player.global_position.x)
+
+	# A grade e o muro da frente: na frente da Cacau, sem colisão, e o muro
+	# nas células que eram do Terreno (sem tile repetido), logo abaixo da faixa.
+	var terreno := telhado.get_node("Terreno") as TileMapLayer
+	var frente := telhado.get_node_or_null("Frente") as TileMapLayer
+	var muro := telhado.get_node_or_null("MuroDaFrente") as TileMapLayer
+	_checar(frente != null and muro != null and not muro.get_used_cells().is_empty()
+			and frente.z_index > player.z_index and muro.z_index > player.z_index
+			and not frente.collision_enabled and not muro.collision_enabled,
+		"a grade (Frente) e o muro (MuroDaFrente) ficam na frente da Cacau, sem colisão")
+	if muro == null:
+		return
+	var repetidos := muro.get_used_cells().filter(func(celula: Vector2i) -> bool:
+		return terreno.get_cell_source_id(celula) != -1)
+	var topo := INF
+	for celula in muro.get_used_cells():
+		topo = minf(topo, muro.to_global(muro.map_to_local(celula) - Vector2(muro.tile_set.tile_size) * 0.5).y)
+	_checar(repetidos.is_empty() and muro.transform == terreno.transform and topo >= faixa.end.y,
+		"   o muro na grade do Terreno, sem tile repetido, começando logo abaixo da faixa (y = %.0f)" % topo)
 
 
 func _testar_torre() -> void:
@@ -275,20 +399,18 @@ func _testar_torre() -> void:
 	_checar(quedas.size() == 5, "   e viraram as cinco plataformas que caem (%d)" % quedas.size())
 
 	# As janelas: do tamanho das da sala do compressor, e nenhuma atrás de uma
-	# placa de andar ou de uma porta.
+	# porta.
 	var janelas := torre.get_node("Janelas") as TileMapLayer
 	var escala := _escala_das_janelas_do_compressor()
 	var retangulos := _janelas(janelas)
 	_checar(janelas.scale == escala and retangulos.size() == 24,
 		"as 24 janelas da torre na escala das do compressor (%s, a do compressor %s)" % [janelas.scale, escala])
 	var na_frente: Array[Rect2] = []
-	for placa: Label in torre.find_children("Placa", "Label", true, false):
-		na_frente.append(placa.get_global_rect())
 	for porta in ["Andares/Andar0_Terreo/PortaRua", "Andares/Andar7_Topo/PortaTelhado"]:
 		na_frente.append(_retangulo_do_desenho(torre.get_node(porta + "/SpritePorta") as AnimatedSprite2D))
 	var atras := retangulos.filter(func(janela: Rect2) -> bool:
 		return na_frente.any(func(coisa: Rect2) -> bool: return janela.intersects(coisa)))
-	_checar(atras.is_empty(), "   nenhuma atrás das %d placas e portas %s" % [na_frente.size(), atras])
+	_checar(atras.is_empty(), "   nenhuma atrás das %d portas %s" % [na_frente.size(), atras])
 
 
 func _testar_salas() -> void:
@@ -428,29 +550,6 @@ func _pular_para_o_degrau(player: CharacterBody2D, com_jato: bool) -> void:
 	await _segundos(0.2)
 
 
-## O poço do telhado é o da fachada da rua: no Cenario, os trilhos nas pontas e
-## a faixa escura (7/8/7 do Buildings.png) no meio, nas cinco colunas centradas
-## na cabine e nas fileiras logo abaixo da laje; no Terreno, o vão sem tijolo
-## ali — e a laje inteira por cima, para o chão não ter buraco.
-func _poco_embaixo_da_cabine(cena: Node, elevador: ElevadorFase) -> bool:
-	var cenario := cena.get_node("Cenario") as TileMapLayer
-	var terreno := cena.get_node("Terreno") as TileMapLayer
-	var meio := cenario.local_to_map(cenario.to_local(elevador.global_position))
-	if not is_equal_approx(cenario.to_global(cenario.map_to_local(meio)).x, elevador.global_position.x):
-		return false
-	for dx in range(-2, 3):
-		if terreno.get_cell_source_id(Vector2i(meio.x + dx, meio.y)) == -1:
-			return false
-		for y in range(meio.y + 1, meio.y + 4):
-			var celula := Vector2i(meio.x + dx, y)
-			var atlas := cenario.get_cell_atlas_coords(celula)
-			var esperado := 1 if absi(dx) == 2 else (8 if dx == 0 else 7)
-			if cenario.get_cell_source_id(celula) != 0 or atlas.x != esperado \
-					or terreno.get_cell_source_id(celula) != -1:
-				return false
-	return true
-
-
 func _pousar(player: CharacterBody2D, onde: Vector2) -> void:
 	player.global_position = onde
 	player.velocity = Vector2.ZERO
@@ -461,6 +560,14 @@ func _toque(acao: String) -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	Input.action_release(acao)
+
+
+func _segurar(acao: String, segundos: float) -> void:
+	Input.action_press(acao)
+	await _segundos(segundos)
+	Input.action_release(acao)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
 
 
 # ─────────────────────────────────────────────────────────────

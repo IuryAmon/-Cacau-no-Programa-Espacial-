@@ -187,11 +187,38 @@ func _testar_oficina() -> void:
 
 	await _abrir(FASE1_2)
 	await _segundos(2.5)
-	_checar(_pendentes() == PackedStringArray(["carvao"]), "no pátio: um objetivo só para o carvão (%s)" % [_pendentes()])
+	_checar(_pendentes() == PackedStringArray(["carvao", "lenha"]),
+		"no pátio: o carvão, com a lenha da árvore por baixo (%s)" % [_pendentes()])
 	_checar(_linha("carvao").texto == "Faça carvão a partir das madeiras", "com esse texto (sem 'babaçu')")
+	_checar(_linha("lenha").texto == "Acerte a árvore com o bumerangue e recolha a lenha"
+		and _linha("lenha").pai == "carvao", "a lenha é subitem: acertar a árvore com o bumerangue")
+	_checar(_linha("lenha").contagem == Vector2i(0, 3), "e conta as toras (%s)" % [_linha("lenha").contagem])
+
+	# Uma tora na mochila e duas já no forno: 3 de 3, a lenha ganha check.
+	var inventario := root.get_node("Inventario")
+	inventario.adicionar_item("madeira_teste", "Madeira", null)
+	await _segundos(1.0)
+	_checar(_linha("lenha").contagem == Vector2i(1, 3), "uma tora na mochila: 1/3 (%s)" % [_linha("lenha").contagem])
+	EstadoMundo._valores[R.RETORTA_PATIO + ":madeiras_no_forno"] = 2
+	await _segundos(1.0)
+	_checar(_pendentes() == PackedStringArray(["carvao"]), "com as três (mochila + forno), a lenha sai com check (%s)" % [_pendentes()])
+	# A carga virou cinza: as toras voltaram para a árvore e a lenha volta.
+	inventario.remover_item("madeira_teste")
+	EstadoMundo._valores[R.RETORTA_PATIO + ":madeiras_no_forno"] = 0
+	await _segundos(2.0)
+	_checar(_pendentes() == PackedStringArray(["carvao", "lenha"]), "a carga virou cinza: a lenha volta (%s)" % [_pendentes()])
+
+	# O carvão saiu do fogo e espera no forno: "Retire o carvão da fornalha".
+	EstadoMundo._valores[R.RETORTA_PATIO + ":carbono_pronto"] = true
+	await _segundos(2.0)
+	_checar(_pendentes() == PackedStringArray(["carvao", "retirar_carvao"]),
+		"carvão pronto: a lenha sai e entra 'retirar o carvão' (%s)" % [_pendentes()])
+	EstadoMundo._valores[R.RETORTA_PATIO + ":carbono_pronto"] = false
 	progresso._amostras["C"] = true
 	await _segundos(2.0)
-	_checar(_hud().tem("entregar_c"), "carvão na mão: levar ao receptor")
+	_checar(_hud().tem("entregar_c"), "carvão na mão: levar ao baú")
+	_checar(_linha("entregar_c").texto == "Leve o carvão ao baú do painel CHONPS, no laboratório",
+		"é o baú do painel CHONPS (%s)" % [_linha("entregar_c").texto])
 
 
 func _testar_quebra_de_sequencia() -> void:

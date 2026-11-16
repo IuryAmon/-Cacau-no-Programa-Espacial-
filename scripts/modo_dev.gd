@@ -26,8 +26,7 @@ extends CanvasLayer
 #     (portas, elevadores, gatilhos) continuam vendo ela;
 #   * a câmera se solta dos limites da cena e vai aonde ela for; a roda do
 #     mouse (ou - e +) afasta e aproxima (camera_2d.gd);
-#   * porta: E na frente dela, porque o W é subir (porta_fase.gd e
-#     porta_simulador.gd). Elevador: E, como sempre;
+#   * porta e elevador: E, como fora do modo dev (o W é subir);
 #   * V de novo: ela volta a cair e a andar de onde estiver.
 
 ## As cenas do menu (F2), na ordem do jogo.

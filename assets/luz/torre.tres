@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_perfil")
 sol = 0.0
-ambiente = Color(0.56, 0.6, 0.76, 1)
+ambiente = Color(0.76, 0.79, 0.9, 1)
 postes = 1.0

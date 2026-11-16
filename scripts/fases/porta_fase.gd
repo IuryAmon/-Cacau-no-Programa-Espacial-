@@ -9,15 +9,15 @@ extends Area2D
 # fechadura visível.
 #
 # ENTRAR é igual em toda entrada de fase (e igual às portas da oficina e do
-# simulador, porta_simulador.gd): de pé na frente dela, para CIMA — W no
-# teclado, direcional ou analógico para cima no controle. O desenho do botão
+# simulador, porta_simulador.gd): de pé na frente dela, a ação "interact" — E no
+# teclado, □ no controle, como o elevador e a porta de metal. O desenho do botão
 # (IndicadorEntrada) só aparece com a Cacau perto, e só o do dispositivo em
 # uso. Porta trancada não mostra botão nenhum.
 #
 # COMO EDITAR NO EDITOR:
 #   Sprite            -> PNG da porta (o placeholder some sozinho)
 #   rotulo            -> nome mostrado acima
-#   IndicadorEntrada  -> o W / direcional (a posição é ajustada pelo formato)
+#   IndicadorEntrada  -> o botão E / □ (a posição é ajustada pelo formato)
 #   cena_destino      -> arquivo .tscn para onde ela leva
 #   tag_aqui/destino  -> o par que liga duas portas: ao chegar numa cena, o
 #                        player nasce na porta cuja tag_aqui bate com a
@@ -55,7 +55,7 @@ const GRUPO := "porta_fase"
 
 var _jogador_na_area: bool = false
 var _jogador: CharacterBody2D = null
-## Apertou para cima no ar: entra assim que pisar no chão (ainda na área).
+## Apertou E no ar: entra assim que pisar no chão (ainda na área).
 var _pedido_pendente: bool = false
 ## Já apertou e a tela está apagando: o aviso some e um segundo toque não
 ## pede a troca de cena de novo.
@@ -133,31 +133,20 @@ func _process(_delta: float) -> void:
 		return
 	# A habilidade pode chegar com ela parada aqui (e a porta destrancar).
 	_indicador.mostrar(_jogador_na_area and _pode_entrar() and not _entrando)
-	if _pedido_pendente and _jogador_na_area and _jogador != null and _jogador.is_on_floor():
-		_pedido_pendente = false
-		_tentar_entrar()
-	# Voando no modo dev o W é subir: a porta abre no E (ver modo_dev.gd).
-	if ModoDev.voando and _jogador_na_area and not _entrando and Interacao.pediu():
-		_tentar_entrar()
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if Engine.is_editor_hint() or not _jogador_na_area or _jogador == null or _entrando:
+	if not _jogador_na_area or _jogador == null or _entrando:
 		return
-	# Diálogo, popup ou puzzle na tela: o mundo não recebe comando nenhum.
-	# Voando no modo dev, o W é subir (a porta abre no E, em _process).
-	if Interacao.ocupada() or ModoDev.voando:
+	if _pedido_pendente:
+		if _jogador.is_on_floor():
+			_pedido_pendente = false
+			_tentar_entrar()
 		return
-	# O mesmo gesto das portas do simulador (ver porta_simulador.gd).
-	var para_cima: bool = event.is_action_pressed("ui_up") \
-		or (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_W)
-	if not para_cima:
+	# O mesmo gesto das portas do simulador (ver porta_simulador.gd): E no
+	# teclado, □ no controle. Diálogo, popup ou puzzle na tela: pediu() diz não.
+	# Porta trancada não gasta o toque — ele fica para o resto do cenário.
+	if not _pode_entrar() or not Interacao.pediu():
 		return
-	# No analógico só vale "para cima" de verdade: andar na diagonal perto da
-	# porta não entra nela sem querer.
-	if event is InputEventJoypadMotion and not Controle.aponta_para_cima():
-		return
-	if _jogador.is_on_floor():
+	# Voando no modo dev não há chão: entra na hora.
+	if _jogador.is_on_floor() or ModoDev.voando:
 		_tentar_entrar()
 	else:
 		_pedido_pendente = true

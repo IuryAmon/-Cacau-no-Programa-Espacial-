@@ -11,6 +11,8 @@
 [ext_resource type="Script" path="res://scripts/fases/painel_do_portao.gd" id="9_painel"]
 [ext_resource type="Texture2D" uid="uid://bk47qolx0m6ul" path="res://assets/fase nitrogenio/Sidescroller Shooter - Central City/Assets/Buildings.png" id="10_predios"]
 
+[ext_resource type="PackedScene" path="res://scenes/fases/componentes/icone_interagir.tscn" id="90_icone_interagir"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_porta"]
 size = Vector2(300, 222)
 
@@ -284,32 +286,6 @@ stream = ExtResource("3_som_abrindo")
 [node name="SomFechando" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("4_som_fechando")
 
-[node name="IconeTeclaW" type="AnimatedSprite2D" parent="."]
+[node name="IconeInteragir" parent="." instance=ExtResource("90_icone_interagir")]
 position = Vector2(0, -98)
-scale = Vector2(3.2499936, 3.2499936)
-sprite_frames = SubResource("SpriteFrames_tecla_w")
-autoplay = "default"
-script = ExtResource("5_icone_tecla")
 
-[node name="Label" type="Label" parent="IconeTeclaW"]
-offset_left = 13.846172
-offset_top = -3.692312
-offset_right = 29.846172
-offset_bottom = 20.307688
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_constants/line_spacing = 8
-theme_override_fonts/font = ExtResource("8_fonte")
-theme_override_font_sizes/font_size = 11
-text = "ou"
-horizontal_alignment = 1
-
-[node name="DirecionalControle" type="AnimatedSprite2D" parent="."]
-position = Vector2(-10.866665, -106)
-scale = Vector2(2.7166662, 2.7166665)
-sprite_frames = SubResource("SpriteFrames_direcional_bg")
-
-[node name="cima" type="AnimatedSprite2D" parent="DirecionalControle"]
-position = Vector2(4.0000243, -5.199997)
-sprite_frames = SubResource("SpriteFrames_seta_cima")
-autoplay = "default"
-script = ExtResource("5_icone_tecla")

@@ -215,7 +215,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if ferramenta_controla_movimento:
-		move_and_slide()
+		_mover()
 		return
 
 	if position.y > limite_queda:
@@ -232,6 +232,11 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_atualizar_luz_macarico()
+
+	# Numa fase de faixa (ver "ANDAR NA FAIXA" lá embaixo), o ↑/↓ leva a
+	# Cacau para o fundo e para a frente — e o chão dela vai junto.
+	if _na_faixa:
+		_passo_na_faixa(delta)
 
 	# --- APLICAÇÃO DA GRAVIDADE ---
 	if is_on_floor():
@@ -273,8 +278,8 @@ func _physics_process(delta: float) -> void:
 			velocity.x = move_toward(velocity.x, 0, speed * delta * 2.0)
 		else:
 			velocity.x = 0
-			
-		move_and_slide()
+
+		_mover()
 		_verificar_colisoes_estaticas()
 		
 		if _animated_sprite and not esta_no_knockback \
@@ -299,8 +304,9 @@ func _physics_process(delta: float) -> void:
 	if parada_pelo_arremesso():
 		_lado_de_andar = 0.0
 
-	# PULO PARA BAIXO: S + ESPAÇO (analógico apontado para baixo + ✕)
-	if Controle.aponta_para_baixo() and apertou_pulo:
+	# PULO PARA BAIXO: S + ESPAÇO (analógico apontado para baixo + ✕). Na faixa
+	# não há plataforma para atravessar: o ↓ é só andar para a frente.
+	if not _na_faixa and Controle.aponta_para_baixo() and apertou_pulo:
 		position.y += 5.0 # Empurra o personagem levemente para baixo da plataforma
 		return # Interrompe para não disparar o pulo normal
 
@@ -329,27 +335,32 @@ func _physics_process(delta: float) -> void:
 				_animated_sprite.play("jump")
 
 	var direction := _lado_de_andar
+	var rapidez := _velocidade_para_os_lados()
 	if direction:
 		_animated_sprite.flip_h = direction < 0
 		# Acima da velocidade normal (só dá pra chegar lá saindo de um dash)
 		# o excesso escoa aos poucos em vez de sumir num frame — é essa
 		# derrapada que faz o dash "escoar" em vez de bater num muro.
-		if absf(velocity.x) > speed and signf(velocity.x) == signf(direction):
-			velocity.x = move_toward(velocity.x, direction * speed, atrito_excesso * delta)
+		if absf(velocity.x) > rapidez and signf(velocity.x) == signf(direction):
+			velocity.x = move_toward(velocity.x, direction * rapidez, atrito_excesso * delta)
 		else:
-			velocity.x = direction * speed
-	elif absf(velocity.x) > speed:
+			velocity.x = direction * rapidez
+	elif absf(velocity.x) > rapidez:
 		velocity.x = move_toward(velocity.x, 0.0, atrito_excesso * delta)
 	else:
-		velocity.x = move_toward(velocity.x, 0, speed)
+		velocity.x = move_toward(velocity.x, 0, rapidez)
 
 	# --- EXECUÇÃO DO MOVIMENTO HORIZONTAL PADRÃO ---
 	if current_health > 0:
-		move_and_slide()
+		_mover()
 		_verificar_colisoes_estaticas()
 		_empurrar_caixas()
-		
-		_atualizar_animacoes(_lado_de_andar)
+
+		# Indo só para o fundo ou para a frente ela também está andando.
+		var andando := _lado_de_andar
+		if andando == 0.0 and _andou_na_profundidade:
+			andando = -1.0 if _animated_sprite.flip_h else 1.0
+		_atualizar_animacoes(andando)
 
 	if Input.is_key_pressed(KEY_K) and Input.is_action_just_pressed("jump"):
 		take_damage(1, Vector2.ZERO)
@@ -977,6 +988,189 @@ func _debug_pegar_todas_amostras() -> void:
 			AmostraChonps.descricao(letra))
 		pegas.append(letra)
 	print("DEBUG [Player]: amostras pegas via tecla O -> ", pegas if not pegas.is_empty() else "nenhuma (já estavam na mão ou no painel)")
+
+
+# --- ANDAR NA FAIXA (o chão "de frente e de trás", como em Final Fight) ---
+#
+# Numa fase com o nó FaixaDoChao (um ReferenceRect, ver fase_base.gd), o chão
+# deixa de ser uma linha e vira uma faixa: ←/→ andam para os lados e ↑/↓ andam
+# para o fundo e para a frente do cenário. Os PÉS da Cacau (a base da cápsula
+# de colisão) ficam sempre dentro do retângulo.
+#
+# Por dentro, o resto da física continua a mesma (gravidade, pulo, dano,
+# animações e o is_on_floor() que portas e ferramentas perguntam): a Cacau só
+# passa a pisar num chão invisível, só dela — uma linha na altura dos pés, que
+# vai junto quando ela anda para o fundo ou para a frente. O pulo sobe e cai de
+# volta na mesma linha. Os tiles e as paredes da fase deixam de segurá-la (a
+# máscara de colisão fica só com esse chão); nas pontas, quem segura é o
+# próprio retângulo.
+
+## Velocidade para os lados andando numa faixa (px/s). 0 = a "speed" de sempre.
+@export var velocidade_na_faixa: float = 250.0
+## Velocidade para o fundo e para a frente, numa faixa (px/s). Bem menor que a
+## dos lados: o chão parece mais fundo do que é.
+@export var velocidade_de_profundidade: float = 90.0
+
+## Camada 32 da física 2D: a do chão invisível da faixa, que só a Cacau enxerga.
+const CAMADA_DO_CHAO_DA_FAIXA := 1 << 31
+## Do analógico (ou das setas na diagonal), quanto precisa apontar para cima ou
+## para baixo para ela andar na profundidade: 0,38 é o seno de 22,5° — as
+## mesmas fatias de 45° do lado_de_andar.
+const LIMIAR_DA_PROFUNDIDADE := 0.38
+## Pés mais longe que isto da linha: ela foi posta em outro lugar (ou está no ar).
+## Perto, é só a folga do move_and_slide, que pousa um fio acima do chão.
+const FOLGA_DA_LINHA := 2.0
+
+var _na_faixa: bool = false
+## A faixa, no mundo: o retângulo em que os pés andam.
+var _faixa: Rect2 = Rect2()
+var _chao_da_faixa: StaticBody2D = null
+## A altura do chão invisível (onde os pés pisam).
+var _linha_da_faixa: float = 0.0
+## Saiu do chão (pulo ou empurrão do dano): a linha fica onde estava até ela
+## voltar a pisar nela.
+var _no_ar_na_faixa: bool = false
+var _andou_na_profundidade: bool = false
+
+const SHADER_DO_CORTE := preload("res://shaders/corte_abaixo.gdshader")
+var _material_do_corte: ShaderMaterial = null
+
+
+## Liga o andar na faixa (o FaseBase chama com o FaixaDoChao da cena).
+func andar_na_faixa(faixa: Rect2) -> void:
+	_faixa = faixa.abs()
+	if _chao_da_faixa == null:
+		_chao_da_faixa = StaticBody2D.new()
+		_chao_da_faixa.name = "ChaoDaFaixa"
+		# Fora da transformação da Cacau: a linha só se mexe quando ela anda na
+		# profundidade (e não sobe junto no pulo).
+		_chao_da_faixa.top_level = true
+		_chao_da_faixa.collision_layer = CAMADA_DO_CHAO_DA_FAIXA
+		_chao_da_faixa.collision_mask = 0
+		var forma := CollisionShape2D.new()
+		# Uma reta sem fim, sólida para baixo: não há beirada para cair.
+		forma.shape = WorldBoundaryShape2D.new()
+		_chao_da_faixa.add_child(forma)
+		add_child(_chao_da_faixa)
+	if not _na_faixa:
+		_na_faixa = true
+		# Voando no modo dev, a máscara de agora é a zerada do voo: quem
+		# guarda a de verdade é ele, e é ela que vira a da faixa.
+		if _mascara_antes_do_voo >= 0:
+			_mascara_antes_do_voo = CAMADA_DO_CHAO_DA_FAIXA
+		else:
+			collision_mask = CAMADA_DO_CHAO_DA_FAIXA
+	_no_ar_na_faixa = false
+	_pisar_na_linha(clampf(_altura_dos_pes(), _faixa.position.y, _faixa.end.y))
+
+
+func esta_na_faixa() -> bool:
+	return _na_faixa
+
+
+## Onde estão os pés dela (a base da forma de colisão), em y do mundo.
+func altura_dos_pes() -> float:
+	return _altura_dos_pes()
+
+
+## O muro da frente: nada do sprite da Cacau é desenhado abaixo da altura "y"
+## do mundo (o telhado da torre chama com o "Topo Do Muro Da Frente" dele; o
+## elevador de lá vai descendo o corte junto com a cabine). INF desliga.
+func esconder_abaixo_de(y: float) -> void:
+	if _animated_sprite == null:
+		return
+	if is_inf(y):
+		if _animated_sprite.material == _material_do_corte:
+			_animated_sprite.material = null
+		return
+	if _material_do_corte == null:
+		_material_do_corte = ShaderMaterial.new()
+		_material_do_corte.shader = SHADER_DO_CORTE
+	_material_do_corte.set_shader_parameter(&"corte_y", y)
+	_animated_sprite.material = _material_do_corte
+
+
+## Até onde o sprite aparece (INF = sem corte).
+func altura_do_corte() -> float:
+	if _material_do_corte == null or _animated_sprite == null \
+			or _animated_sprite.material != _material_do_corte:
+		return INF
+	return float(_material_do_corte.get_shader_parameter(&"corte_y"))
+
+
+func _pisar_na_linha(y: float) -> void:
+	_linha_da_faixa = y
+	if _chao_da_faixa:
+		_chao_da_faixa.global_position = Vector2(0.0, y)
+		# O nó só repassa a posição nova para a física no quadro seguinte: o
+		# move_and_slide deste quadro ainda veria o chão no lugar antigo (indo
+		# para o fundo, ela flutuava um quadro; para a frente, afundava).
+		PhysicsServer2D.body_set_state(_chao_da_faixa.get_rid(),
+			PhysicsServer2D.BODY_STATE_TRANSFORM, _chao_da_faixa.global_transform)
+
+
+## Um quadro na faixa, antes da gravidade: o ↑/↓ leva a Cacau e a linha em que
+## ela pisa, juntas, para o fundo ou para a frente. No ar (pulo, empurrão do
+## dano, ou posta acima da linha) a altura dela sobre a linha se mantém e ela
+## cai de volta nela. Posta ABAIXO da linha (a saída de uma porta, um
+## teleporte), a linha desce até os pés — sempre dentro da faixa.
+func _passo_na_faixa(delta: float) -> void:
+	var pes := _altura_dos_pes()
+	if velocity.y < 0.0 or pes < _linha_da_faixa - FOLGA_DA_LINHA:
+		_no_ar_na_faixa = true
+	elif _no_ar_na_faixa and is_on_floor():
+		_no_ar_na_faixa = false
+	# "de" é a linha de onde ela parte; "base", o ponto do corpo que vai junto.
+	var de := _linha_da_faixa
+	var base := _linha_da_faixa
+	if not _no_ar_na_faixa and pes > _linha_da_faixa + FOLGA_DA_LINHA:
+		de = pes
+		base = pes
+	var eixo := 0.0
+	if pode_se_mover and not parada_pelo_arremesso():
+		eixo = _eixo_da_profundidade()
+	var ate := clampf(de + eixo * velocidade_de_profundidade * delta,
+		_faixa.position.y, _faixa.end.y)
+	_andou_na_profundidade = eixo != 0.0 and not is_equal_approx(ate, de)
+	global_position.y += ate - base
+	_pisar_na_linha(ate)
+
+
+## -1 (para o fundo), 0 ou 1 (para a frente).
+func _eixo_da_profundidade() -> float:
+	var vetor := Controle.vetor_direcional()
+	return signf(vetor.y) if absf(vetor.y) >= LIMIAR_DA_PROFUNDIDADE else 0.0
+
+
+func _velocidade_para_os_lados() -> float:
+	return velocidade_na_faixa if _na_faixa and velocidade_na_faixa > 0.0 else speed
+
+
+## O move_and_slide de sempre; na faixa, as pontas do retângulo seguram.
+func _mover() -> void:
+	move_and_slide()
+	if not _na_faixa:
+		return
+	var meia := _meia_largura()
+	var x := clampf(global_position.x, _faixa.position.x + meia, _faixa.end.x - meia)
+	if x != global_position.x:
+		global_position.x = x
+		velocity.x = 0.0
+
+
+## Onde estão os pés (a base da forma de colisão), no mundo.
+func _altura_dos_pes() -> float:
+	var forma := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if forma == null or forma.shape == null:
+		return global_position.y
+	return (forma.global_transform * Vector2(0.0, forma.shape.get_rect().end.y)).y
+
+
+func _meia_largura() -> float:
+	var forma := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if forma == null or forma.shape == null:
+		return 0.0
+	return forma.shape.get_rect().size.x * 0.5 * absf(forma.global_scale.x)
 
 
 # --- MODO DEV: VOO LIVRE (ver scripts/modo_dev.gd) ---

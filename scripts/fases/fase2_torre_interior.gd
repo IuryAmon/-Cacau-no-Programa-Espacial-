@@ -35,8 +35,11 @@ extends FaseBase
 # o bloco voltar. Para um puzzle novo, é só montar outro grupo "Puzzle...".
 #
 # COMO EDITAR NO EDITOR: Terreno (lajes, paredes e vigas, tileset das fases —
-# a fonte 0, laranja, é a das plataformas que caem), Fundo (o tijolo de dentro
-# da fachada), Janelas (as janelas da fachada em escala 3, como nas salas do
+# a fonte 0, laranja, é a das plataformas que caem; as paredes laterais são o
+# tijolo da fachada, fonte 15, com a faixa escura das quinas da torre na face
+# de dentro, a única coluna com colisão), Fundo (o tijolo de dentro
+# da fachada; a coluna colada em cada faixa é a do tijolo sombreado, como na
+# rua), Janelas (as janelas da fachada em escala 3, como nas salas do
 # compressor e da destilação: células de 48 px) e Cenario (luminárias e
 # enfeites, tileset da cidade). Os componentes de cada andar ficam no grupo
 # dele, em Andares/.

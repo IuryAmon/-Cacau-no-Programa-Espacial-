@@ -22,7 +22,11 @@ extends Node
 #     o carvão sai;
 #   * com o forno aceso ela não sai do pátio: a passagem da ponta esquerda a
 #     segura na beirada e ela diz que precisa terminar o carvão primeiro; com o
-#     fogo apagado (desistiu, queimou, ou o carvão já saiu) a saída é livre;
+#     carvão pronto no forno também não (ela diz que precisa pegá-lo); com o
+#     fogo apagado (desistiu, queimou) ou o carvão na mochila, a saída é livre;
+#   * o "!" da fornalha guia de longe: chama com lenha na mochila, com o forno
+#     cheio e frio, com a porta na mochila e com o carvão pronto; à espera da
+#     porta, quem chama é a porta;
 #   * se a fase recarregar com o forno à espera (e a porta na mochila), acha
 #     tudo como ficou;
 #   * demorando para tampar, a Cacau comenta (no Dialogic) que devia tampar o
@@ -37,6 +41,7 @@ const FASE := "res://scenes/fases/fase1_2_exterior.tscn"
 const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 const FALA_DA_PORTA := "Talvez eu deva tampar o forno, evita a entrada de oxigênio"
 const FALA_AO_SAIR := "Preciso terminar de fazer o carvão primeiro"
+const FALA_SEM_CARVAO := "Eu preciso pegar o carvão antes!"
 
 var _falhas := 0
 var _pasta_capturas := ""
@@ -276,6 +281,7 @@ func _testar_na_fase() -> void:
 	# A fala da espera tem um teste só dela (mais abaixo).
 	retorta.espera_antes_da_dica = 0.0
 
+	_checar(not retorta._exclamacao_visivel, "sem lenha na mochila, a fornalha não chama (quem guia é a lista)")
 	_checar(porta != null and porta_na_boca != null, "a fornalha tem a porta encostada ao lado e a porta da boca do forno")
 	if porta == null or porta_na_boca == null:
 		fase.queue_free()
@@ -360,8 +366,8 @@ func _testar_na_fase() -> void:
 
 		# Sem a porta, o E na fornalha não faz nada — nem reabre o painel.
 		await _ficar_em(player, retorta.global_position.x - 90.0)
-		_checar(retorta._jogador_perto and not retorta._exclamacao.visible,
-			"sem a porta na mochila, a fornalha não chama")
+		_checar(retorta._jogador_perto and not retorta._exclamacao.visible and porta._aviso_visivel,
+			"sem a porta na mochila, a fornalha não chama: quem chama é a porta, já de longe")
 		await _apertar_e()
 		var reabriu := await _esperar_painel(0.4)
 		_checar(reabriu == null and retorta._esperando_porta, "e o E nela não faz nada")
@@ -411,6 +417,8 @@ func _testar_na_fase() -> void:
 			limite -= get_process_delta_time()
 		_checar(atmosfera.momento == Atmosfera.Momento.NOITE, "a brasa apaga já de noite")
 		_checar(retorta._carbono_pronto, "e o carvão fica pronto para retirar")
+		await _quadros(2)
+		_checar(retorta._exclamacao_visivel, "e o \"!\" da fornalha chama para retirá-lo")
 		_checar(player.pode_se_mover, "a Cacau volta a andar")
 		_checar(retorta._sprite.speed_scale == 1.0, "apagada, as chamas voltam ao ritmo normal")
 		_checar(not porta_na_boca.visible and porta.visible, "a porta saiu da boca do forno")
@@ -426,9 +434,9 @@ func _testar_na_fase() -> void:
 
 
 ## Com o forno aceso ninguém sai do pátio: a passagem da ponta esquerda segura
-## a Cacau na beirada da tela e ela diz por quê. Com o fogo apagado (antes de
-## acender, depois de desistir ou queimar a carga, com o carvão pronto) a saída
-## é livre.
+## a Cacau na beirada da tela e ela diz por quê — e o carvão pronto também, até
+## ela retirá-lo. Com o fogo apagado (antes de acender, depois de desistir ou
+## queimar a carga) ou o carvão na mochila, a saída é livre.
 func _testar_a_saida() -> void:
 	print("\n--- COM O FORNO ACESO NINGUÉM SAI DO PÁTIO ---")
 	_zerar_a_partida()
@@ -505,8 +513,20 @@ func _testar_a_saida() -> void:
 	while limite > 0.0 and not retorta._carbono_pronto:
 		await get_tree().process_frame
 		limite -= get_process_delta_time()
-	_checar(retorta._carbono_pronto and not retorta.segura_a_saida() and passagem._quem_segura() == null,
-		"a brasa apagou e o carvão saiu: a saída está livre de novo")
+	_checar(retorta._carbono_pronto and retorta.segura_a_saida() and passagem._quem_segura() == retorta,
+		"a brasa apagou e o carvão saiu, mas está no forno: sem ele, ainda não sai")
+	await _ficar_em(player, linha + 200.0)
+	fala = await _andar_ate_falar(player, 4.0)
+	_checar(str(fala["texto"]).begins_with(FALA_SEM_CARVAO) and not passagem._saindo,
+		"e ela diz que precisa pegar o carvão: \"%s\"" % fala["texto"])
+	await _passar_as_falas()
+	# A ficha do carvão (a que pausa esperando um E) fica de fora.
+	var hud_do_inventario := Inventario.tela_hud_referencia
+	Inventario.tela_hud_referencia = null
+	retorta._retirar_carbono()
+	Inventario.tela_hud_referencia = hud_do_inventario
+	_checar(not retorta.segura_a_saida() and passagem._quem_segura() == null,
+		"com o carvão na mochila, a saída está livre de novo")
 	await _fechar_fase(fase)
 
 	# Desistir no painel ou queimar a carga apaga o fogo: a saída volta.
@@ -685,10 +705,14 @@ func _abastecer_com_a_arvore(arvore: ArvoreLenha, retorta: RetortaCarbonizacao) 
 	await _esperar(1.0)
 	for tora in get_tree().get_nodes_in_group(Madeira.GRUPO):
 		tora.coletar()
+	await _quadros(2)
+	_checar(retorta._exclamacao_visivel, "com lenha na mochila, o \"!\" da fornalha chama para pôr a lenha")
 	for i in retorta.madeiras_necessarias:
 		retorta._abastecer()
 	_checar(retorta._cheia() and arvore.toras_na_copa() == 0,
 		"a fornalha enche com a lenha que caiu da árvore")
+	await _quadros(2)
+	_checar(retorta._exclamacao_visivel, "cheia e fria, o \"!\" segue lá: agora é acender")
 
 
 ## A partida do zero: nada na mochila, nada lembrado, antes de anoitecer.
@@ -702,6 +726,9 @@ func _zerar_a_partida() -> void:
 	# Direto no dicionário: o dar_habilidade abre a ficha de coleta, que pausa
 	# o jogo esperando um E.
 	Progresso._habilidades["macarico"] = true
+	# O carvão de uma rodada anterior (ver _testar_a_saida) não fica na mochila.
+	Progresso._amostras.erase("C")
+	Progresso._celulas.erase("C")
 
 
 func _abrir_fase() -> Node:

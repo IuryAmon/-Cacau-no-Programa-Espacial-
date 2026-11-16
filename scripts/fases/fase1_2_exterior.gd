@@ -19,11 +19,12 @@ extends FaseBase
 #                * NA VOLTA basta andar para a esquerda: cruzou a linha (x = 24,
 #                  logo depois da beirada da tela), a tela apaga com ela ainda
 #                  correndo e a cena troca para o fundo do corredor;
-#                * COM A FORNALHA ACESA ela não sai: a mesma linha vira parede,
-#                  a Cacau para na beirada e diz que precisa terminar o carvão
-#                  primeiro. Quem segura a saída é a própria fornalha (ver
-#                  segura_a_saida em retorta.gd); a brasa apagou, a linha volta
-#                  a ser passagem.
+#                * COM A FORNALHA ACESA, OU COM O CARVÃO PRONTO ESPERANDO NELA,
+#                  ela não sai: a mesma linha vira parede, a Cacau para na
+#                  beirada e diz por quê (terminar o carvão primeiro / pegar o
+#                  carvão antes). Quem segura a saída é a própria fornalha (ver
+#                  segura_a_saida em retorta.gd); com o carvão na mochila, a
+#                  linha volta a ser passagem.
 #   Terreno    o chão: GRAMA de ponta a ponta. Ela começa antes da beirada
 #              esquerda da tela, em x = -448 — é nesse trecho de fora do quadro
 #              que a Cacau nasce e some. (Era aqui que ficava o prédio do

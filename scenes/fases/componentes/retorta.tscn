@@ -5,7 +5,6 @@
 [ext_resource type="Texture2D" uid="uid://b1s4syltyx83t" path="res://assets/Lab/fornalha/FornalhaLigada.png" id="7_flig"]
 [ext_resource type="Texture2D" uid="uid://b0qq0sb12ekpa" path="res://assets/Lab/fornalha/fornalhaComMadeira.png" id="8_fmad"]
 [ext_resource type="Texture2D" uid="uid://buqko3wmshd30" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes001.png" id="9_exclam"]
-[ext_resource type="Texture2D" uid="uid://c5w4hjng2b3eh" path="res://assets/UI/Pipoya Popup  Emotes Pack/pipo-popupemotes Split images/pipo-popupemotes039.png" id="10_fogo"]
 [ext_resource type="AudioStream" uid="uid://bwnlfw8eax788" path="res://sounds/ColocandoMadeira.mp3" id="11_summadeira"]
 [ext_resource type="Texture2D" uid="uid://72n4rv8s0yc4" path="res://assets/itens/Carvão.png" id="12_carvao"]
 [ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="13_pop"]
@@ -146,35 +145,6 @@ animations = [{
 "speed": 3.0
 }]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_fogo0"]
-atlas = ExtResource("10_fogo")
-region = Rect2(0, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_fogo1"]
-atlas = ExtResource("10_fogo")
-region = Rect2(32, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_fogo2"]
-atlas = ExtResource("10_fogo")
-region = Rect2(64, 0, 32, 32)
-
-[sub_resource type="SpriteFrames" id="SpriteFrames_fogo"]
-animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_fogo0")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_fogo1")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_fogo2")
-}],
-"loop": true,
-"name": &"default",
-"speed": 5.0
-}]
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_porta"]
 size = Vector2(84, 84)
 
@@ -240,13 +210,6 @@ z_index = 1
 position = Vector2(0, -260)
 scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_exclamacao")
-
-[node name="PopupMadeira" type="AnimatedSprite2D" parent="." unique_id=-474026138]
-visible = false
-z_index = 1
-position = Vector2(0, -260)
-scale = Vector2(2, 2)
-sprite_frames = SubResource("SpriteFrames_fogo")
 
 [node name="SomColocarMadeira" type="AudioStreamPlayer2D" parent="." unique_id=-474026137]
 stream = ExtResource("11_summadeira")

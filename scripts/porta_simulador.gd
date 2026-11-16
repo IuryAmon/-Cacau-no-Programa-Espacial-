@@ -1,7 +1,8 @@
 extends Area2D
 
 # --- PORTA DO SIMULADOR (estilo Guacamelee) ---
-# O player entra na Area2D, aperta W: a porta abre, ele entra (ficando ATRÁS
+# O player entra na Area2D, aperta E (□ no controle — a mesma ação "interact"
+# do elevador, da cesta e da porta de metal): a porta abre, ele entra (ficando ATRÁS
 # dela enquanto fecha) e, com a porta já fechada, ou:
 #   - vai para outra cena, se "cena_destino" estiver preenchido; ou
 #   - é teleportado para o ponto onde nasce na cena — o mesmo lugar em que ele
@@ -35,9 +36,12 @@ extends Area2D
 #
 # Estrutura na cena:
 #   PortaSimulador (Area2D, este script)
-#   ├── CollisionShape2D   <- zona onde o W funciona
+#   ├── CollisionShape2D   <- zona onde o E funciona
 #   ├── SpritePorta        <- AnimatedSprite2D com "fechada"/"abrindo"/"fechando"
-#   └── PontoDeSaida       <- Marker2D: onde fica a ORIGEM do player parado no vão
+#   ├── PontoDeSaida       <- Marker2D: onde fica a ORIGEM do player parado no vão
+#   └── IconeInteragir     <- o botão E/□ (componentes/icone_interagir.tscn).
+#                             Só a ALTURA vale: o x vai sozinho para o meio da
+#                             porta. Porta sem ele ganha um na hora, acima dela.
 
 ## Marcado por quem trocou de cena por uma porta. A porta da cena nova que
 ## estiver com "recebe_chegada" consome isso e faz a sequência de saída.
@@ -118,21 +122,18 @@ var _player_dentro: bool = false
 var _ocupada: bool = false
 var _spawn_global: Vector2 = Vector2.ZERO
 var _spawn_registrado: bool = false
-# True quando apertou W no ar: assim que o player tocar o chão, usa a porta
+# True quando apertou E no ar: assim que o player tocar o chão, usa a porta
 var _pedido_pendente: bool = false
-# O "aperte W" foi pedido (qual dos dois desenhos aparece depende do
-# dispositivo em uso — ver _mostrar_indicadores)
+# O "aperte E" está à mostra (o desenho, E ou □, o próprio ícone escolhe)
 var _indicadores_ligados: bool = false
 
-## Quanto (px do quadro, antes da escala) o desenho do direcional fica à
-## direita do centro do quadro dele na folha.
-const DESLOCAMENTO_DIRECIONAL := 4.0
+## Altura do botão em portas que não trazem o IconeInteragir na cena.
+const ALTURA_PADRAO_DO_ICONE := -150.0
 
 @onready var _sprite: AnimatedSprite2D = $SpritePorta
 @onready var _som_abrindo: AudioStreamPlayer2D = $SomAbrindo
 @onready var _som_fechando: AudioStreamPlayer2D = $SomFechando
-@onready var _icone_w: AnimatedSprite2D = $IconeTeclaW
-@onready var _direcional_controle: AnimatedSprite2D = $DirecionalControle
+@onready var _icone: IconeInteragir = get_node_or_null("IconeInteragir")
 # Portas antigas montadas direto na cena podem não ter o marcador; ele só é
 # obrigatório em quem recebe o player vindo de outra cena.
 @onready var _ponto_saida: Marker2D = get_node_or_null("PontoDeSaida")
@@ -140,13 +141,10 @@ const DESLOCAMENTO_DIRECIONAL := 4.0
 func _ready() -> void:
 	z_index = z_index_porta_normal
 	_sprite.play("fechada")
-	_centralizar_indicadores()
-	# Garante que os indicadores começam escondidos, mesmo se alguém deixou
+	_preparar_icone()
+	# Garante que o botão começa escondido, mesmo se alguém deixou
 	# "visible = true" marcado sem querer no editor
 	_mostrar_indicadores(false)
-	var controle := get_node_or_null(^"/root/Controle")
-	if controle:
-		controle.mudou.connect(_ao_trocar_dispositivo)
 
 	if not body_entered.is_connected(_on_body_entered):
 		body_entered.connect(_on_body_entered)
@@ -200,7 +198,7 @@ func _on_body_entered(body: Node2D) -> void:
 		_player = body
 		_player_dentro = true
 		_registrar_spawn()
-		# Na chegada o player nasce dentro da área, ainda no vão: o "aperte W" só
+		# Na chegada o player nasce dentro da área, ainda no vão: o "aperte E" só
 		# pode aparecer quando ele já estiver com o controle de volta.
 		if not _ocupada:
 			_mostrar_indicadores(true)
@@ -212,68 +210,52 @@ func _on_body_exited(body: Node2D) -> void:
 		_mostrar_indicadores(false)
 
 func _mostrar_indicadores(mostrar: bool) -> void:
-	# Porta não-interativa (a que só recebe o player) nunca pisca o "aperte W".
+	# Porta não-interativa (a que só recebe o player) nunca pisca o "aperte E".
 	if not interativa:
 		mostrar = false
-	if mostrar and not _indicadores_ligados:
-		_icone_w.reiniciar()
-		for filho in _direcional_controle.get_children():
-			if filho.has_method("reiniciar"):
-				filho.reiniciar()
+	if _icone:
+		# Ao aparecer, a pulsação recomeça do primeiro quadro. Teclado ou
+		# controle (E ou □), o próprio ícone escolhe — e troca sozinho.
+		if mostrar and not _indicadores_ligados:
+			_icone.reiniciar()
+		_icone.visible = mostrar
 	_indicadores_ligados = mostrar
-	# Só o desenho de quem está jogando: W no teclado, direcional no controle.
-	IndicadorEntrada.escolher(_icone_w, _direcional_controle, mostrar)
 
 
-func _ao_trocar_dispositivo(_em_uso: bool) -> void:
-	IndicadorEntrada.escolher(_icone_w, _direcional_controle, _indicadores_ligados)
+## Acha o botão E/□ da porta — ou, numa porta que não trouxe um na cena, cria um
+## acima dela. Os desenhos antigos do "aperte W" (IconeTeclaW e
+## DirecionalControle), se ainda existirem em alguma cena, emprestam a altura
+## e somem. O x vai sempre para o meio do desenho da porta.
+func _preparar_icone() -> void:
+	var antigo := get_node_or_null(^"IconeTeclaW") as Node2D
+	if _icone == null:
+		_icone = (load(IconeInteragir.CENA) as PackedScene).instantiate()
+		_icone.name = "IconeInteragir"
+		_icone.position.y = antigo.position.y if antigo else ALTURA_PADRAO_DO_ICONE
+		add_child(_icone)
+	for nome in [^"IconeTeclaW", ^"DirecionalControle"]:
+		var velho := get_node_or_null(nome)
+		if velho:
+			velho.queue_free()
+	_icone.position.x = _sprite.position.x
 
-
-# Os dois desenhos moravam lado a lado ("W ou ↑"); como agora aparece um só,
-# os dois vão para o meio da porta, na altura em que já estavam. O "ou" some.
-# O direcional da folha fica um pouco à direita do centro do quadro dele: o
-# desconto é para o DESENHO ficar no meio, não o quadro.
-func _centralizar_indicadores() -> void:
-	var meio := _sprite.position.x
-	_icone_w.position.x = meio
-	_direcional_controle.position.x = meio - DESLOCAMENTO_DIRECIONAL * _direcional_controle.scale.x
-	var ou := _icone_w.get_node_or_null(^"Label")
-	if ou:
-		ou.visible = false
-
-func _unhandled_input(event: InputEvent) -> void:
-	if not interativa or _ocupada or not _player_dentro or _player == null:
-		return
-	# Diálogo, popup ou puzzle na tela: o mundo não recebe comando nenhum.
-	# Voando no modo dev, o W é subir (a porta abre no E, em _process).
-	if Interacao.ocupada() or ModoDev.voando:
-		return
-	# W já está mapeado em "ui_up"; KEY_W fica como reserva
-	var apertou_w = event.is_action_pressed("ui_up") \
-		or (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_W)
-	if not apertou_w:
-		return
-	# No analógico só vale "para cima" de verdade: andar na diagonal perto da
-	# porta (agora em velocidade cheia) não pode entrar nela sem querer.
-	if event is InputEventJoypadMotion and not Controle.aponta_para_cima():
-		return
-
-	# No chão, usa a porta na hora. No ar, guarda o pedido e usa assim que
-	# o player pisar no chão (_process fica de olho nisso).
-	if _player.has_method("is_on_floor") and not _player.is_on_floor():
-		_pedido_pendente = true
-	else:
-		_usar_porta()
 
 func _process(_delta: float) -> void:
-	# Voando no modo dev o W é subir: a porta abre no E (ver modo_dev.gd).
-	if ModoDev.voando and interativa and not _ocupada and _player_dentro and _player != null \
-			and Interacao.pediu():
-		_usar_porta()
+	if not interativa or _ocupada or not _player_dentro or _player == null:
+		_pedido_pendente = false
 		return
-	if not interativa or not _pedido_pendente or _ocupada or not _player_dentro or _player == null:
-		return
-	if not _player.has_method("is_on_floor") or _player.is_on_floor():
+	# Interacao.pediu() queima o toque de E, então só pergunta quem pode usar.
+	# Diálogo, popup ou puzzle na tela: ele mesmo responde "não".
+	if not _pedido_pendente and Interacao.pediu():
+		# Voando no modo dev não há chão: entra na hora.
+		var no_chao: bool = ModoDev.voando or not _player.has_method("is_on_floor") \
+			or _player.is_on_floor()
+		if no_chao:
+			_usar_porta()
+			return
+		# No ar, guarda o pedido e usa assim que o player pisar no chão.
+		_pedido_pendente = true
+	if _pedido_pendente and _player.is_on_floor():
 		_pedido_pendente = false
 		_usar_porta()
 
