@@ -1,0 +1,4 @@
+join cientista (cientista_mto_feliz) leftmost [mirrored="true"]
+cientista (cientista_mto_feliz): Isso! 2 na K e 6 na L: 8 elétrons, um para cada próton.
+cientista (cientista_feliz): Anota no caderno: a camada K enche primeiro, com até 2. Depois vem a L, com até 8.
+do Caderno.anotar("eletrosfera")

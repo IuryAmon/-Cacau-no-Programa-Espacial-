@@ -55,7 +55,7 @@ const DESCRICOES := {
 	"C": "A base de toda molécula orgânica: cadeias de carbono formam açúcares, gorduras e o próprio DNA.",
 	"H": "O elemento mais abundante do universo, e metade de cada molécula de água.",
 	"O": "O que as células usam para tirar energia do alimento, na respiração.",
-	"N": "Quase 80% do ar que você respira, e peça de toda proteína e do DNA.",
+	"N": "Peça de toda proteína e do DNA.",
 	"P": "Guarda a energia das células (ATP) e forma a espinha do DNA.",
 	"S": "Faz as pontes que dão forma às proteínas.",
 }

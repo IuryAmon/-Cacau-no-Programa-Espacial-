@@ -23,7 +23,7 @@
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/torreta_laser.tscn" id="22_torreta"]
 [ext_resource type="PackedScene" uid="uid://klp2385eswm4" path="res://scenes/plataforma.tscn" id="23_plataforma"]
 [ext_resource type="PackedScene" path="res://scenes/fases/componentes/computador_puzzle.tscn" id="24_terminal"]
-[ext_resource type="PackedScene" path="res://scenes/puzzle_guincho.tscn" id="25_puzguincho"]
+[ext_resource type="PackedScene" path="res://scenes/puzzle_carbono14.tscn" id="25_puzc14"]
 [ext_resource type="Script" uid="uid://d18p4of8wj2ow" path="res://scripts/fases/trilho_camera.gd" id="26_trilhocam"]
 [ext_resource type="Script" uid="uid://dxoj1hsrqngxh" path="res://scripts/fases/zona_camera.gd" id="27_zonacam"]
 [ext_resource type="Script" uid="uid://cv08ofkvt5t62" path="res://scripts/fases/plataformas_que_caem.gd" id="28_platqueda"]
@@ -1894,7 +1894,7 @@ polygon = PackedVector2Array(-6.650757, 39, -3.143982, 53, -17.775635, 53.5, -13
 
 [node name="Player" parent="." unique_id=512037344 instance=ExtResource("13_etf7r")]
 z_index = 2
-position = Vector2(6460, -1098)
+position = Vector2(871, 429)
 
 [node name="Checkpoint" parent="." unique_id=305036439 instance=ExtResource("32_checkpoint")]
 position = Vector2(6617, -927)
@@ -1964,7 +1964,7 @@ comecar_no_fim = true
 
 [node name="TerminalGuincho" parent="ElevadorCarga" unique_id=127159597 instance=ExtResource("24_terminal")]
 position = Vector2(7389, -928)
-puzzle_cena = ExtResource("25_puzguincho")
+puzzle_cena = ExtResource("25_puzc14")
 flip_h = true
 alvo = NodePath("../PlataformaCarga")
 
@@ -2068,6 +2068,26 @@ one_shot = true
 
 [node name="GuiasDeCaminho" type="Node2D" parent="." unique_id=1843209771]
 
+[node name="SetaPrimeiraCaixa" type="Node2D" parent="GuiasDeCaminho" unique_id=1843209776]
+position = Vector2(1952, 154)
+script = ExtResource("41_setaguia")
+direcao = 2
+texto = ""
+requer_habilidade = "bumerangue"
+ate = NodePath("../../Treino/AlvoFixo1")
+espera = 0.3
+so_no_chao = false
+margens_da_tela = Vector4(34, 120, 34, 90)
+
+[node name="Gatilho" type="ReferenceRect" parent="GuiasDeCaminho/SetaPrimeiraCaixa" unique_id=1843209777]
+offset_left = -520.0
+offset_top = -400.0
+offset_right = 520.0
+offset_bottom = 420.0
+mouse_filter = 2
+border_color = Color(1, 0.85, 0.2, 0.85)
+border_width = 2.0
+
 [node name="SetaDescer" type="Node2D" parent="GuiasDeCaminho" unique_id=1843209772]
 position = Vector2(2686, 4)
 script = ExtResource("41_setaguia")
@@ -2096,6 +2116,7 @@ ate = NodePath("../../Patio/PortaMetal2")
 espera = 0.35
 manter_fora_do_gatilho = true
 raio_de_chegada = 150.0
+esconder_em = NodePath("../../AreaBolasRampa")
 
 [node name="Gatilho" type="ReferenceRect" parent="GuiasDeCaminho/SetaVoltarAoInicio" unique_id=1843209775]
 offset_left = 378.0

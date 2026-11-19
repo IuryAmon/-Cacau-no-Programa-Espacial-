@@ -4,8 +4,8 @@ extends TelaInterativa
 #
 # O Laboratório é o modo de jogo fora da história: os puzzles e as simulações
 # dela, soltos, para brincar quantas vezes quiser. Este é o balcão dele: um
-# CARTÃO para cada atividade, com um desenho feito da própria arte do jogo, o
-# nome e uma linha dizendo o que se faz lá.
+# CARTÃO para cada atividade, com um desenho feito da própria arte do jogo e o
+# nome dela, que já diz o que se faz lá.
 #
 #   MONTE SEU ÁTOMO     o puzzle do bumerangue, com qualquer átomo
 #   QUE ÁTOMO É ESSE?   o computador desenha o átomo, a pessoa diz o elemento
@@ -16,7 +16,7 @@ extends TelaInterativa
 #   TABELA PERIÓDICA    os 118 elementos, na caixa do caderno da Cacau
 #
 # PARA PÔR UMA ATIVIDADE NOVA: acrescente uma linha em ATIVIDADES (a chave, o
-# nome, a descrição e a cena dela) e escreva o desenho do cartão em
+# nome e a cena dela) e escreva o desenho do cartão em
 # _desenhar_a_figura. Os cartões se arrumam sozinhos, em fileiras de até
 # POR_FILEIRA, com a última centrada.
 #
@@ -26,36 +26,28 @@ extends TelaInterativa
 
 const ATIVIDADES := [
 	{"chave": "monte", "nome": "MONTE SEU ÁTOMO",
-		"descricao": "Junte prótons, nêutrons e elétrons e veja que átomo sai.",
 		"cena": "res://scenes/laboratorio/monte_seu_atomo.tscn"},
 	{"chave": "quiz", "nome": "QUE ÁTOMO É ESSE?",
-		"descricao": "Olhe o desenho e descubra de que elemento é o átomo.",
 		"cena": "res://scenes/laboratorio/que_atomo_e_esse.tscn"},
 	{"chave": "balanceamento", "nome": "BALANCEAMENTO",
-		"descricao": "Acerte os coeficientes das reações, em três níveis.",
 		"cena": "res://scenes/laboratorio/balanceamento.tscn"},
 	{"chave": "compressor", "nome": "COMPRESSOR DE AR",
-		"descricao": "Aperte, esquente e encha a caixa de ar até estourar.",
 		"cena": "res://scenes/laboratorio/compressor.tscn"},
 	{"chave": "destilador", "nome": "DESTILADOR",
-		"descricao": "Mude a temperatura e separe as misturas.",
 		"cena": "res://scenes/laboratorio/destilador.tscn"},
 	{"chave": "tabela", "nome": "TABELA PERIÓDICA",
-		"descricao": "Os 118 elementos e o átomo de cada um.",
 		"cena": "res://scenes/laboratorio/tabela_periodica.tscn"},
 ]
 
 # ── Os cartões (px da tela) ──
-const TAMANHO_DO_CARTAO := Vector2(440, 336)
+const TAMANHO_DO_CARTAO := Vector2(440, 276)
 const POR_FILEIRA := 3
 const ENTRE_CARTOES := Vector2(36, 28)
 ## A altura em que a primeira fileira começa.
-const ALTO := 84.0
+const ALTO := 136.0
 ## A parte de cima do cartão, onde vai o desenho.
 const ALTURA_DA_FIGURA := 196.0
 const TAM_NOME := 33
-const TAM_DESCRICAO := 22
-const ENTRELINHA := 26.0
 
 const TINTA := Color8(0x3d, 0x2a, 0x22)
 const TINTA_TITULO := Color8(0x8e, 0x3b, 0x2c)
@@ -187,12 +179,11 @@ func _desenhar() -> void:
 		# Um fio de tinta separa a figura do nome.
 		painel.draw_rect(Rect2(cartao.position.x + 24.0, cartao.position.y + ALTURA_DA_FIGURA + 6.0,
 			cartao.size.x - 48.0, 2.0), TINTA_FRACA)
+		# Só o nome, no meio da faixa de baixo: ele e o desenho já dizem o que se
+		# faz lá.
 		PecasDoLaboratorio.escrever_no_meio(painel,
-			Vector2(cartao.get_center().x, cartao.position.y + ALTURA_DA_FIGURA + 36.0), String(dados["nome"]),
-			TAM_NOME, TINTA_TITULO)
-		PecasDoLaboratorio.escrever_em_linhas(painel,
-			Rect2(cartao.position.x + 24.0, cartao.position.y + ALTURA_DA_FIGURA + 62.0, cartao.size.x - 48.0, 60.0),
-			String(dados["descricao"]), TAM_DESCRICAO, TINTA, ENTRELINHA)
+			Vector2(cartao.get_center().x, cartao.position.y + (ALTURA_DA_FIGURA + 8.0 + cartao.size.y) * 0.5),
+			String(dados["nome"]), TAM_NOME, TINTA_TITULO)
 	PecasDoLaboratorio.dicas_de_teclado(painel, Vector2(size.x * 0.5, size.y - 40.0),
 		[[["tecla_w", "tecla_a", "tecla_s", "tecla_d"], "ESCOLHER"], [["tecla_e"], "ENTRAR"]])
 

@@ -10,10 +10,11 @@ extends Node2D
 # É o par das portas (porta_simulador.gd) para quando não existe porta: as tags
 # são as mesmas ("tag_destino" de quem manda = "tag_aqui" de quem recebe), então
 # uma porta pode mandar para uma passagem e uma passagem para uma porta. É assim
-# que o corredor da torre funciona: a porta de dentro dele leva ao laboratório e
-# a ponta do fundo, esta passagem, leva à fase do nitrogênio — onde a ponta
-# esquerda é outra passagem (com "sentido" = -1): ela sai andando de uma cena e
-# entra andando na outra, sem porta nenhuma no meio.
+# que se chega à fase do nitrogênio: a ponta direita do laboratório
+# (SaidaCorredor) dá na ponta esquerda do corredor da torre (EntradaLab, com
+# "sentido" = -1), e a ponta do fundo do corredor (SaidaTorre) dá na ponta
+# esquerda da fase 2 (PassagemCorredor): ela sai andando de uma cena e entra
+# andando na outra, sem porta nenhuma no meio.
 #
 # COMO USAR NO EDITOR
 #   * ponha o nó EM CIMA da linha de saída, em qualquer altura acima do piso (a
@@ -70,6 +71,11 @@ const DISTANCIA_PARA_AVISAR_DE_NOVO := 48.0
 const ATE_A_SOLA_PADRAO := 36.0
 ## Até onde o raio procura o piso abaixo do nó.
 const ALCANCE_DO_PISO := 600.0
+## Na caminhada (saída e chegada) a física dela fica parada, então é a própria
+## caminhada que a põe de pé no chão a cada passo: ela sobe até este tanto de
+## degrau — a sucata da porta de metal derretida, na ponta direita do
+## laboratório, tem 22 px — e desce o que for preciso.
+const DEGRAU_DA_CAMINHADA := 32.0
 
 var _saindo: bool = false
 var _chegando: bool = false
@@ -183,7 +189,8 @@ func _entrar(player: Node2D) -> void:
 		return
 	var chao := _altura_de_pe(player)
 	var destino_x := global_position.x - sentido * distancia_entrada
-	player.global_position = Vector2(global_position.x + sentido * recuo_fora_da_tela, chao)
+	var nasce_x := global_position.x + sentido * recuo_fora_da_tela
+	player.global_position = Vector2(nasce_x, _de_pe_em(player, nasce_x, chao))
 	if "velocity" in player:
 		player.velocity = Vector2.ZERO
 	# A câmera é filha dela e tem amortecimento: sem o encaixe, o mundo clareia
@@ -191,7 +198,7 @@ func _entrar(player: Node2D) -> void:
 	CameraJogador.encaixar(player)
 
 	# Primeiro ponto de retorno da visita: é onde ela para depois de entrar.
-	PontoDeRetorno.registrar(self, Vector2(destino_x, chao))
+	PontoDeRetorno.registrar(self, Vector2(destino_x, _de_pe_em(player, destino_x, chao)))
 
 	var distancia := absf(destino_x - player.global_position.x)
 	await _andar(player, destino_x, distancia / _velocidade_de(player))
@@ -204,19 +211,35 @@ func _entrar(player: Node2D) -> void:
 ## A altura da origem da Cacau quando ela está de pé no piso que fica embaixo
 ## deste nó. Sem piso nenhum (ou antes de a física existir), vale a altura do nó.
 func _altura_de_pe(player: Node2D) -> float:
-	var ate_a_sola := ATE_A_SOLA_PADRAO
-	var forma := player.get_node_or_null("CollisionShape2D") as CollisionShape2D
-	if forma and forma.shape:
-		ate_a_sola = forma.position.y + forma.shape.get_rect().end.y
+	return _de_pe_em(player, global_position.x, global_position.y)
 
+
+## O mesmo, no piso embaixo de outro x (o raio sai da altura deste nó). Ali
+## pode haver um degrau que embaixo da linha não há — a sucata da porta de
+## metal, no laboratório, fica em cima da linha. Sem piso nenhum, "senao".
+func _de_pe_em(player: Node2D, x: float, senao: float) -> float:
+	var y := _de_pe_abaixo_de(player, Vector2(x, global_position.y), ALCANCE_DO_PISO)
+	return senao if is_nan(y) else y
+
+
+## A altura da origem da Cacau de pé no primeiro piso que um raio acha descendo
+## "alcance" px a partir de "ponto". NAN se não achar nenhum.
+func _de_pe_abaixo_de(player: Node2D, ponto: Vector2, alcance: float) -> float:
 	var corpo := player as CollisionObject2D
-	var raio := PhysicsRayQueryParameters2D.create(global_position,
-		global_position + Vector2(0.0, ALCANCE_DO_PISO),
+	var raio := PhysicsRayQueryParameters2D.create(ponto, ponto + Vector2(0.0, alcance),
 		corpo.collision_mask if corpo else 1, [corpo.get_rid()] if corpo else [])
 	var achou := get_world_2d().direct_space_state.intersect_ray(raio)
 	if achou.is_empty():
-		return global_position.y
-	return (achou.position as Vector2).y - ate_a_sola
+		return NAN
+	return (achou.position as Vector2).y - _ate_a_sola(player)
+
+
+## Do centro (a origem) da Cacau até a sola dela.
+func _ate_a_sola(player: Node2D) -> float:
+	var forma := player.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if forma and forma.shape:
+		return forma.position.y + forma.shape.get_rect().end.y
+	return ATE_A_SOLA_PADRAO
 
 
 func _velocidade_de(player: Node2D) -> float:
@@ -247,8 +270,8 @@ func _soltar(player: Node2D) -> void:
 		player.pode_se_mover = true
 
 
-## Anda a Cacau até "destino_x" tocando a corrida. Só o x: a gravidade dela
-## continua valendo, então ela segue pisando no chão.
+## Anda a Cacau até "destino_x" tocando a corrida. A física dela fica parada
+## (ver _travar), então cada passo a põe de pé no chão que houver embaixo.
 func _andar(player: Node2D, destino_x: float, duracao: float) -> void:
 	var sprite := player.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	if sprite:
@@ -256,8 +279,21 @@ func _andar(player: Node2D, destino_x: float, duracao: float) -> void:
 		if sprite.sprite_frames and sprite.sprite_frames.has_animation("run"):
 			sprite.play("run")
 	var tween := create_tween()
-	tween.tween_property(player, "global_position:x", destino_x, maxf(duracao, 0.01))
+	tween.tween_method(_passo.bind(player), player.global_position.x, destino_x, maxf(duracao, 0.01))
 	await tween.finished
+
+
+## Um passo da caminhada: o x do tween e, como a física dela está parada, o pé
+## no chão que houver ali — até DEGRAU_DA_CAMINHADA acima da sola, ou abaixo.
+## Sem chão nenhum (a física ainda nem existe), ela segue na mesma altura.
+func _passo(x: float, player: Node2D) -> void:
+	if not is_instance_valid(player):
+		return
+	player.global_position.x = x
+	var sola := player.global_position.y + _ate_a_sola(player)
+	var y := _de_pe_abaixo_de(player, Vector2(x, sola - DEGRAU_DA_CAMINHADA), ALCANCE_DO_PISO)
+	if not is_nan(y):
+		player.global_position.y = y
 
 
 func _achar_player() -> Node2D:

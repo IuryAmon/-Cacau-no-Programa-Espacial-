@@ -18,7 +18,9 @@ extends Node2D
 #     Cacau precisa estar para a seta acordar. Sem Gatilho, vale o mapa todo.
 #
 # QUANDO APARECE (Inspetor)
-#   requer_habilidade        ferramenta que ela já precisa ter (vazio = tanto faz)
+#   requer_habilidade        ferramenta que ela já precisa ter (vazio = tanto faz).
+#                            Recém-ganha, a seta espera a ficha de coleta e o
+#                            tutorial dela fecharem
 #   depois_de                nó que já precisa ter sido feito (EstadoMundo) —
 #                            uma porta derretida, um painel resolvido
 #   ate                      nó que, feito, aposenta a seta de vez — a porta que
@@ -30,10 +32,25 @@ extends Node2D
 #   manter_fora_do_gatilho   depois de acender, continua valendo fora do Gatilho
 #                            (até ela chegar ou o "ate" acontecer)
 #   raio_de_chegada          chegou a essa distância do alvo, a seta some
+#   esconder_em              um retângulo (ReferenceRect) da fase em que ela não
+#                            aparece, mesmo armada — a rampa das bolas, onde a
+#                            seta de voltar só atrapalha
 #
-# Na Oficina do Carbono há duas: SetaDescer (em cima do pilar do corredor das
-# torretas, manda cair) e SetaVoltarAoInicio (no chão lá embaixo, manda voltar
-# até a porta de metal do elevador). Ver fase1_oficina.gd.
+# Na Oficina do Carbono há três: SetaPrimeiraCaixa (sem texto: depois do
+# tutorial do bumerangue, aponta a primeira caixa elétrica até ela quebrar),
+# SetaDescer (em cima do pilar do corredor das torretas, manda cair) e
+# SetaVoltarAoInicio (no chão lá embaixo, manda voltar até a porta de metal do
+# elevador). Ver fase1_oficina.gd.
+#
+# E O GUIA AUTOMÁTICO? O GuiaDeCaminho (scripts/guia_de_caminho.gd) aponta o
+# caminho do objetivo da lista sozinho, em qualquer fase, quando a Cacau passa
+# tempo demais sem chegar mais perto dele. A SetaGuia é para o que ele não
+# sabe: um trecho em que o caminho certo não é a linha reta até o objetivo
+# (cair do pilar, voltar até o começo). Com uma SetaGuia na tela, o guia
+# automático fica quieto — as duas nunca aparecem juntas.
+
+## O grupo das SetaGuia: o GuiaDeCaminho pergunta a elas se estão na tela.
+const GRUPO := &"seta_guia"
 
 @export var direcao: SetaGo.Direcao = SetaGo.Direcao.DIREITA:
 	set(valor):
@@ -53,6 +70,7 @@ extends Node2D
 @export var so_no_chao: bool = true
 @export var manter_fora_do_gatilho: bool = false
 @export_range(0.0, 2000.0, 10.0, "suffix:px") var raio_de_chegada: float = 0.0
+@export var esconder_em: NodePath
 
 @export_group("Borda da tela")
 ## Distância mínima da ponta até cada borda da tela quando o alvo está fora
@@ -68,12 +86,15 @@ var _caminho_ate: String = ""
 var _tempo_no_gatilho: float = 0.0
 var _armada: bool = false
 var _aposentada: bool = false
+## Armada, mas com a Cacau dentro do "esconder_em".
+var _escondida_na_zona: bool = false
 
 
 func _ready() -> void:
 	_gatilho = get_node_or_null("Gatilho") as ReferenceRect
 	if Engine.is_editor_hint():
 		return
+	add_to_group(GRUPO)
 
 	_caminho_depois_de = _caminho_de(depois_de)
 	_caminho_ate = _caminho_de(ate)
@@ -94,6 +115,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+	_escondida_na_zona = false
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player == null or _aposentada:
 		_seta.esconder()
@@ -125,16 +147,36 @@ func _process(delta: float) -> void:
 
 	var chegou := raio_de_chegada > 0.0 \
 		and player.global_position.distance_to(global_position) <= raio_de_chegada
-	if _armada and not chegou:
+	var escondida := false
+	if not esconder_em.is_empty():
+		var zona := get_node_or_null(esconder_em) as Control
+		escondida = zona != null and zona.get_global_rect().has_point(player.global_position)
+	_escondida_na_zona = _armada and not chegou and escondida
+	if _armada and not chegou and not escondida:
 		_seta.ponta = _ponta_na_tela()
 		_seta.mostrar()
 	else:
 		_seta.esconder()
 
 
+## A seta está na tela (ou pedida: some sozinha com fala e pausa).
+func mostrando() -> bool:
+	return _seta != null and _seta.mostrando()
+
+
+## Mostrando, ou armada e escondida no "esconder_em": o caminho ali é dela, e
+## o GuiaDeCaminho automático continua quieto (não põe outro "POR AQUI").
+func guiando() -> bool:
+	return mostrando() or _escondida_na_zona
+
+
 ## As condições de "já pode": ferramenta e o que precisa ter sido feito antes.
 func _liberada() -> bool:
 	if not requer_habilidade.is_empty() and not Progresso.tem_habilidade(requer_habilidade):
+		return false
+	# Acabou de ganhar a ferramenta: espera a ficha de coleta e o tutorial dela
+	# saírem da tela.
+	if not requer_habilidade.is_empty() and FerramentasHUD.em_apresentacao(requer_habilidade):
 		return false
 	if not _caminho_depois_de.is_empty() and not EstadoMundo.ja_feito_caminho(_caminho_depois_de):
 		return false

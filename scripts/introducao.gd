@@ -11,7 +11,8 @@ extends Control
 # letra a letra, na letra dos tutoriais (a ari-w9500, no tamanho da ficha de
 # tutorial). Depois, em silêncio: "Mas o sonho não morreu com eles", décadas
 # depois, a Lua, o quarto da Cacau e o plantão do jornal procurando uma
-# criança para o módulo lunar. No fim, a tela fica preta e em silêncio, e a
+# criança — sem dizer para quê (o mistério só se desfaz no telhado da fase 2,
+# com o Dr. Chico). No fim, a tela fica preta e em silêncio, e a
 # cortina (TransicaoDeCena) leva ao world1 — onde o nome do jogo aparece no
 # céu, com a bossa nova, antes de a câmera descer até a Cacau
 # (abertura_da_historia.gd).
@@ -110,16 +111,18 @@ const ROTEIRO := [
 	{
 		"imagem": "Close na TV: o plantão do jornal, a jornalista na bancada.",
 		"corte": true,
+		# O PORQUÊ da criança fica em segredo até o telhado da fase 2, onde o
+		# Dr. Chico conta (lancamento_no_telhado.gd).
 		"paginas": [
-			"Jornalista:\n“...a missão lunar brasileira enfrenta um imprevisto de última hora. Um erro no projeto deixou o módulo pequeno demais para qualquer adulto.”",
-			"Jornalista:\n“O alinhamento orbital não espera. Por isso, o Programa Espacial Brasileiro faz um chamado inédito a todo o país.”",
-			"Jornalista:\n“Procura-se uma criança. Pequena o bastante para caber no módulo lunar.”",
+			"Jornalista:\n“...numa decisão que pegou o país de surpresa, o Programa Espacial Brasileiro fez hoje um chamado inédito.”",
+			"Jornalista:\n“Procura-se uma criança.”",
+			"Jornalista:\n“Para quê? A agência não revela. Diz apenas que não há tempo a perder...”",
 		],
 	},
 	{
 		"imagem": "Close no rosto da Cacau, com os olhos brilhando, iluminados pela TV.",
 		"corte": true,
-		"paginas": ["Jornalista:\n“E corajosa o bastante para entrar nele.”"],
+		"paginas": ["Jornalista:\n“...e que a escolhida vai precisar de muita coragem.”"],
 	},
 	{
 		"imagem": "A Cacau calça o tênis, apaga o abajur e sai do quarto. A porta fica aberta. A TV continua ligada, iluminando o quarto vazio.",

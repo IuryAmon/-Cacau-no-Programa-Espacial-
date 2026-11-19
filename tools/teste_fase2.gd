@@ -12,11 +12,14 @@ extends Node
 #   * OS PARES: toda porta, passagem e elevador da fase leva a uma cena que tem
 #     quem receba a tag dela;
 #   * A RUA: com a amostra gelada na mão, a saída para o corredor e a porta da
-#     torre barram; a plataforma do elevador de carga fica parada no chão, com
-#     o tubo recolhido;
-#   * O TELHADO: chegar marca a subida e a Cacau comenta; o cilindro de amostra
-#     vai para a mochila e não volta mais — antes disso, a escada não desce (a
-#     Cacau diz que precisa pegá-lo); anda-se para a frente e para trás: a
+#     torre barram; a plataforma do elevador de carga espera lá no alto até a
+#     Cacau descer do telhado nela, e depois fica parada no chão, com o tubo
+#     recolhido;
+#   * O TELHADO: chegar marca a subida e a Cacau comenta; os cilindros de
+#     amostra ficam em fileiras e colunas; o que ela pega vai para a mochila e
+#     não volta mais, e os outros ficam (um de cada vez: o E num deles vira a
+#     fala) — antes disso, a escada não desce (a Cacau diz que precisa pegar
+#     um); anda-se para a frente e para trás: a
 #     Cacau, menor e com a câmera mais perto, pisa só dentro da FaixaDoChao
 #     (←/→ e ↑/↓ param nas bordas, o pulo cai na mesma linha), e a grade e o
 #     muro da frente ficam na frente dela; O ELEVADOR: a cabine pintada sai
@@ -152,22 +155,46 @@ func _testar_rua() -> void:
 	var tubo: BlocoDeTiles = rua.tubo_do_elevador()
 	_checar(plataforma != null and plataforma.celulas() > 0 and tubo != null and tubo.celulas() > 0,
 		"o elevador de carga da rua: a plataforma e o tubo saem do Cenario 2")
-	if plataforma:
-		var area_agora := plataforma.area_agora(rua.area_do_elevador)
-		_checar(is_equal_approx(area_agora.end.y, rua.chao_do_elevador)
-				and is_equal_approx(tubo.corte_acima(), rua.chao_do_elevador),
-			"   parada, a base dela fica no chão (y = %.0f) e o tubo, recolhido" % area_agora.end.y)
-		_checar(plataforma.get_node_or_null("Piso") is StaticBody2D, "   e dá para pisar nela")
+	if plataforma == null:
+		return
+	var no_alto := plataforma.area_agora(rua.area_do_elevador)
+	_checar(is_equal_approx(no_alto.position.y, rua.topo_do_percurso)
+			and is_equal_approx(tubo.corte_acima(), no_alto.end.y),
+		"   antes de ela descer do telhado, ele espera lá no alto (topo em y = %.0f), com o tubo esticado"
+		% no_alto.position.y)
+	_checar(plataforma.get_node_or_null("Piso") is StaticBody2D, "   e dá para pisar nela")
+
+	# Depois da primeira descida, a rua abre com ele parado no chão.
+	MissaoNitrogenio.elevador_desceu = true
+	await _abrir(RUA)
+	rua = get_tree().current_scene
+	plataforma = rua.plataforma_do_elevador()
+	tubo = rua.tubo_do_elevador()
+	var area_agora := plataforma.area_agora(rua.area_do_elevador)
+	_checar(is_equal_approx(area_agora.end.y, rua.chao_do_elevador)
+			and is_equal_approx(tubo.corte_acima(), rua.chao_do_elevador),
+		"   depois que desceu, a base dele fica no chão (y = %.0f) e o tubo, recolhido" % area_agora.end.y)
+	MissaoNitrogenio.elevador_desceu = false
 
 
 func _testar_telhado() -> void:
 	print("\n--- O TELHADO ---")
+	# A cena do lançamento (no meio do telhado) tem teste próprio:
+	# teste_lancamento. Aqui ela já foi vista, senão pararia os testes do
+	# elevador no meio.
+	MissaoNitrogenio.viu_o_lancamento = true
 	Inventario.remover_item(MissaoNitrogenio.ID_CILINDRO_VAZIO)
 	await _abrir(MissaoNitrogenio.CENA_TELHADO)
 	var telhado := get_tree().current_scene
 	_checar(MissaoNitrogenio.subiu_a_torre, "chegar ao telhado marca a subida da torre")
-	var cilindro := telhado.get_node_or_null("CilindroDeAr") as CilindroDoTelhado
-	_checar(cilindro != null, "o cilindro de amostra está lá")
+	var estante := telhado.get_node_or_null("CilindrosDeAr") as CilindrosDoTelhado
+	var todos: Array[CilindroDoTelhado] = estante.cilindros() if estante else ([] as Array[CilindroDoTelhado])
+	_checar(estante != null and todos.size() == estante.fileiras * estante.colunas and todos.size() > 1,
+		"os cilindros de amostra estão lá, em %d fileiras e %d colunas"
+		% [estante.fileiras if estante else 0, estante.colunas if estante else 0])
+	var cilindro: CilindroDoTelhado = todos[0] if not todos.is_empty() else null
+	if estante and estante.fileiras >= 3:
+		await _testar_cilindros_atras_da_sola(estante)
 	await _esperar(func() -> bool: return Dialogic.current_timeline != null, 4.0)
 	_checar(Dialogic.current_timeline != null, "e a Cacau comenta ao chegar")
 	await _encerrar_fala()
@@ -203,6 +230,7 @@ func _testar_telhado() -> void:
 			and telhado.cabine_do_elevador().deslocamento == 0.0,
 		"   e o E no elevador também (a cabine não sai do lugar)")
 	await _encerrar_fala()
+	var nome_do_pego := String(cilindro.name)
 	cilindro._pegar()
 	await _esperar(func() -> bool: return Inventario.popup_aberto, 3.0)
 	_checar(Inventario.popup_aberto, "pegar abre a ficha do cilindro")
@@ -210,14 +238,70 @@ func _testar_telhado() -> void:
 		await Inventario.tela_hud_referencia.fechar_popup()
 	await _esperar(func() -> bool: return MissaoNitrogenio.tem_cilindro_vazio(), 3.0)
 	_checar(MissaoNitrogenio.tem_cilindro_vazio(), "e ele vai para a mochila")
+	# A fala de quem pegou vem um instante depois da ficha fechar.
+	await _esperar(func() -> bool: return Dialogic.current_timeline != null, 2.0)
 	await _encerrar_fala()
 	_checar(porta_escada.interativa, "com o cilindro na mochila, a escada volta a descer")
+
+	# Um de cada vez: com o dela na mochila, o E no do lado vira a fala.
+	var outro: CilindroDoTelhado = todos[1]
+	_pousar(player, outro.global_position + Vector2(0.0, -2.0))
+	# A área do cilindro leva uns quadros de física para ver a Cacau teleportada.
+	for i in 10:
+		await get_tree().physics_frame
+	await _quadros(2)
+	Input.action_press("interact")
+	await _esperar(func() -> bool: return Dialogic.current_timeline != null, 1.0)
+	Input.action_release("interact")
+	_checar(Dialogic.current_timeline != null
+			and Dialogic.current_timeline.resource_path.contains("cacau_um_cilindro_basta")
+			and outro.ainda_no_lugar() and estante.cilindros().size() == todos.size() - 1,
+		"   um de cada vez: com o dela na mochila, o E no do lado vira a fala e ele fica lá (fala: %s, de pé: %d)"
+		% [Dialogic.current_timeline.resource_path.get_file() if Dialogic.current_timeline else "nenhuma", estante.cilindros().size()])
+	await _encerrar_fala()
+
 	await _abrir(MissaoNitrogenio.CENA_TELHADO)
 	await _quadros(3)
-	_checar(get_tree().current_scene.get_node_or_null("CilindroDeAr") == null, "voltando ao telhado, ele não está mais lá")
+	var de_volta := get_tree().current_scene.get_node_or_null("CilindrosDeAr") as CilindrosDoTelhado
+	_checar(de_volta != null and de_volta.get_node_or_null(nome_do_pego) == null
+			and de_volta.cilindros().size() == todos.size() - 1,
+		"voltando ao telhado, o que ela pegou não está mais lá e os outros %d continuam"
+		% (de_volta.cilindros().size() if de_volta else 0))
 	await _encerrar_fala()
 	await _testar_faixa_do_telhado()
 	await _testar_elevador_do_telhado()
+
+
+## Na frente ou atrás: com a sola desenhada da Cacau (a última linha do sprite)
+## 3 px abaixo da base da terceira fileira — e a base da colisão dela ACIMA
+## dessa base —, as três fileiras do fundo passam por trás dela e as da frente,
+## na frente.
+func _testar_cilindros_atras_da_sola(estante: CilindrosDoTelhado) -> void:
+	var player := _player()
+	var posicao_antes := player.global_position
+	var pes_antes: float = player.altura_dos_pes()
+	var base_da_terceira: float = estante.global_position.y + estante.lugar(2, 0).y
+	var sola := base_da_terceira + 3.0
+	var da_colisao_a_sola: float = player._da_colisao_a_sola()
+	var pes := sola - da_colisao_a_sola
+	_pousar(player, Vector2(estante.global_position.x - 60.0, player.global_position.y + pes - player.altura_dos_pes()))
+	player._pisar_na_linha(pes)
+	for i in 4:
+		await get_tree().physics_frame
+	await _quadros(2)
+	var errados: Array[String] = []
+	for c in estante.cilindros():
+		var atras: bool = c.global_position.y < player.sola_no_chao()
+		if (c.z_index < player.z_index) != atras:
+			errados.append(String(c.name))
+	_checar(da_colisao_a_sola > 0.0 and pes < base_da_terceira and errados.is_empty(),
+		"   os cilindros com a base acima do pé desenhado dela passam por trás (sola em y = %.1f, colisão em %.1f; errados: %s)"
+		% [player.sola_no_chao(), player.altura_dos_pes(), ", ".join(errados) if not errados.is_empty() else "nenhum"])
+	# De volta para onde ela estava, com o chão da faixa junto.
+	_pousar(player, posicao_antes)
+	player._pisar_na_linha(pes_antes)
+	for i in 4:
+		await get_tree().physics_frame
 
 
 ## O elevador de carga: a cabine pintada afunda levando a Cacau e a rua abre
@@ -280,6 +364,7 @@ func _testar_elevador_do_telhado() -> void:
 		"   a plataforma desce até o chão e ela fica de pé nela, livre (pés em y = %.1f; o piso, %.0f)"
 		% [cacau.altura_dos_pes(), piso])
 	_checar(is_equal_approx(tubo.corte_acima(), rua.chao_do_elevador), "   e o tubo some inteiro, recolhido")
+	_checar(MissaoNitrogenio.elevador_desceu, "   e daqui em diante a rua abre com ele no chão")
 	await _segundos(0.5)
 
 

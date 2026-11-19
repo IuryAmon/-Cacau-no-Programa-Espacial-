@@ -50,9 +50,12 @@ func _ready() -> void:
 	get_tree().root.add_child(_hud)
 	await get_tree().process_frame
 
+	PaginasCaderno.esquecer_notas()
 	await _testar_painel_do_mapa()
 	await _testar_abandonar_no_meio()
 	await _testar_caminho_completo()
+	await _testar_pular_explicacao()
+	PaginasCaderno.esquecer_notas()
 	print("\n>>> %s <<<" % ("TUDO OK" if _falhas == 0 else "%d FALHA(S)" % _falhas))
 	get_tree().quit(1 if _falhas > 0 else 0)
 
@@ -410,6 +413,87 @@ func _testar_caminho_completo() -> void:
 	await get_tree().process_frame
 
 
+## "Já sei balancear" (a segunda opção da primeira fala): o roteiro acaba ali,
+## a equação fica toda da pessoa e a nota "balanceamento" vai para o caderno.
+## Com ela já no caderno, o balanceamento abre direto, sem o cientista.
+func _testar_pular_explicacao() -> void:
+	print("\n--- \"JÁ SEI BALANCEAR\" ---")
+	PaginasCaderno.esquecer_notas()
+	_dar_cilindros()
+	var receptor := _novo_receptor("ReceptorPulo")
+	await get_tree().process_frame
+	var puzzle: CanvasLayer = receptor.puzzle_ui
+	_checar(await _ate_o_balanceamento(receptor), "chegou na equação")
+	_checar(await _esperar_fala(puzzle), "a primeira fala abre")
+	var toques := 0
+	while Dialogic.current_state != Dialogic.States.AWAITING_CHOICE and toques < 30 \
+			and Dialogic.current_timeline != null:
+		Dialogic.Inputs.handle_input()
+		await _esperar(0.2)
+		toques += 1
+	_checar(Dialogic.current_state == Dialogic.States.AWAITING_CHOICE,
+		"ele pergunta se a pessoa quer a explicação")
+	_checar(not puzzle.destaque.esta_ativo(), "a pergunta vem sem holofote")
+	for tentativa in 10:
+		# O Dialogic segura as opções um instante depois de mostrar.
+		await _esperar(0.25)
+		Dialogic.Choices.select_choice(2)
+		await get_tree().process_frame
+		if Dialogic.current_state != Dialogic.States.AWAITING_CHOICE:
+			break
+	toques = 0
+	while puzzle.mostrando_dialogo_cientista and toques < 30:
+		if Dialogic.current_timeline != null:
+			Dialogic.Inputs.handle_input()
+		await _esperar(0.2)
+		toques += 1
+	_checar(not puzzle.mostrando_dialogo_cientista, "a fala de quem pulou acaba")
+	await _esperar(0.4)
+	_checar(Caderno.tem_nota("balanceamento"), "pular anota \"balanceamento\" no caderno")
+	_checar(puzzle._passo == puzzle.ROTEIRO.size() and puzzle._botao_do_passo == null
+		and not puzzle.destaque.esta_ativo(), "o roteiro acabou ali: sem holofote e sem seta")
+	_checar(not puzzle._em_transicao, "e a equação responde")
+	for botao in [puzzle.botao_mais_o2, puzzle.botao_mais_h2, puzzle.botao_mais_h2o,
+			puzzle.botao_mais_h2, puzzle.botao_mais_h2o]:
+		puzzle._input(_clique(botao.get_global_rect().get_center(), true))
+		await _esperar(0.3)
+	_checar(puzzle.coeficientes == [2, 1, 2], "a pessoa balanceia sozinha, na ordem que quiser")
+	_checar(not puzzle.mostrando_dialogo_cientista and Dialogic.current_timeline == null,
+		"sem o cientista no meio")
+
+	# Fecha no meio e volta: com a nota no caderno, não tem mais roteiro.
+	puzzle._input(_tecla(KEY_ESCAPE))
+	await _esperar(0.8)
+	_checar(not puzzle.visible, "ESC fecha")
+	_checar(await _ate_o_balanceamento(receptor), "de volta à equação")
+	await _esperar(1.0)
+	_checar(not puzzle.mostrando_dialogo_cientista and Dialogic.current_timeline == null
+		and puzzle._passo == puzzle.ROTEIRO.size() and puzzle._botao_do_passo == null,
+		"com a nota no caderno, o balanceamento abre direto, sem o cientista")
+	puzzle._input(_tecla(KEY_ESCAPE))
+	await _esperar(0.8)
+	receptor.get_parent().queue_free()
+	await get_tree().process_frame
+
+
+## Abre o receptor, joga os dois cilindros no tubo e monta o foguete. True se
+## chegou no balanceamento.
+func _ate_o_balanceamento(receptor: Area2D) -> bool:
+	var puzzle: CanvasLayer = receptor.puzzle_ui
+	var mochila: MochilaHUD = _hud.get_node("Mochila")
+	receptor.verificar_puzzle()
+	await _esperar(0.8)
+	await _arrastar_da_mochila(puzzle, mochila, ITEM_H2, puzzle.centro_da_boca())
+	await _esperar(2.0)
+	await _arrastar_da_mochila(puzzle, mochila, ITEM_O2, puzzle.centro_da_boca())
+	await _esperar(3.4)
+	await _arrastar_peca(puzzle, ITEM_H2, puzzle.vaga_h2.get_global_rect().get_center())
+	await _esperar(0.8)
+	await _arrastar_peca(puzzle, ITEM_O2, puzzle.vaga_o2.get_global_rect().get_center())
+	await _esperar(1.8)
+	return puzzle.etapa == puzzle.Etapa.BALANCEAMENTO and puzzle.grupo_equacao.visible
+
+
 # ─────────────────────────────────────────────────────────────
 # Apoio
 # ─────────────────────────────────────────────────────────────
@@ -521,11 +605,15 @@ func _esperar_texto(trecho: String) -> bool:
 
 
 ## Avança a fala, como quem joga (um toque termina de escrever, o seguinte
-## passa adiante), até aparecer a frase com esse trecho. True se apareceu.
+## passa adiante), até aparecer a frase com esse trecho. True se apareceu. Na
+## pergunta do começo, escolhe a explicação (a primeira opção).
 func _avancar_ate(trecho: String) -> bool:
 	var toques := 0
 	while not _texto_da_fala().contains(trecho) and toques < 40 and Dialogic.current_timeline != null:
-		Dialogic.Inputs.handle_input()
+		if Dialogic.current_state == Dialogic.States.AWAITING_CHOICE:
+			Dialogic.Choices.select_choice(1)
+		else:
+			Dialogic.Inputs.handle_input()
 		await _esperar(0.2)
 		toques += 1
 	return _texto_da_fala().contains(trecho)

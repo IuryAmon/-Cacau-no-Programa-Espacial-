@@ -103,7 +103,6 @@ func _testar_o_projeto() -> void:
 	var textos: Array = [TelaDePausa.TXT_TITULO]
 	for opcao: Dictionary in TelaDePausa.OPCOES:
 		textos.append(opcao["nome"])
-		textos.append(opcao["descricao"])
 	var faltando := _letras_que_faltam(textos)
 	_checar(faltando.is_empty(), "a fonte do jogo tem todas as letras da pausa%s" % ("" if faltando.is_empty() else " (faltam: %s)" % faltando))
 

@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://bqcswxtjmvga2" path="res://scripts/luz/ceu_pixel.gd" id="2_ceu"]
 [ext_resource type="Script" uid="uid://cnvlsxn10cq63" path="res://scripts/luz/astro_pixel.gd" id="3_astro"]
 [ext_resource type="Script" uid="uid://b7y477ivg3f42" path="res://scripts/luz/nuvens.gd" id="4_nuvens"]
-[ext_resource type="Texture2D" uid="uid://b63bgq1lbb2ag" path="res://assets/Area Aberta/GandalfHardcore Background layers/sun.png" id="5_sol"]
+[ext_resource type="Texture2D" uid="uid://cpv5w27wyng8l" path="res://assets/Area Aberta/Lua/2.png" id="5_lua"]
 [ext_resource type="Texture2D" uid="uid://dyonppdsygfwk" path="res://assets/Area Aberta/GandalfHardcore Background layers/Autumn BG/GandalfHardcore Background layers_layer 4.png" id="6_serra"]
 [ext_resource type="Texture2D" uid="uid://cst78juil3if7" path="res://assets/Area Aberta/GandalfHardcore Background layers/Normal BG/GandalfHardcore Background layers_layer 3.png" id="7_longe"]
 [ext_resource type="Texture2D" uid="uid://b6msrrif1ftd5" path="res://assets/Area Aberta/GandalfHardcore Background layers/Normal BG/GandalfHardcore Background layers_layer 2.png" id="8_meio"]
@@ -1605,21 +1605,24 @@ densidade = 0.004
 tamanho_das_estrelas = 2.0
 raio_do_clarao = Vector2(640, 260)
 
-[node name="CamadaDoSol" type="ParallaxLayer" parent="BG" unique_id=1651141106]
+[node name="CamadaDaLua" type="ParallaxLayer" parent="BG" unique_id=1651141106]
 
-[node name="Sol" type="Sprite2D" parent="BG/CamadaDoSol" unique_id=1439348018]
-position = Vector2(1040, 400)
-scale = Vector2(4, 4)
-texture = ExtResource("5_sol")
+[node name="Lua" type="Sprite2D" parent="BG/CamadaDaLua" unique_id=1439348018]
+texture_filter = 1
+position = Vector2(1080, 318)
+scale = Vector2(1.6, 1.6)
+texture = ExtResource("5_lua")
+region_enabled = true
+region_rect = Rect2(229, 64, 139, 139)
 script = ExtResource("3_astro")
-alcance = 76.0
-cor_interna = Color(1, 0.97, 0.74, 1)
-cor_externa = Color(1, 0.78, 0.42, 1)
-intensidade = 0.85
-queda = 1.0
-brilho_pixelado = true
+tipo = 1
+alcance = 124.0
+cor_interna = Color(0.7, 0.76, 1, 1)
+cor_externa = Color(0.3, 0.4, 0.95, 1)
+intensidade = 0.32
+cobertura = 0.0
+queda = 1.8
 aneis = 4
-pontilhado = 0.4
 
 [node name="NuvensDoFundo" type="ParallaxLayer" parent="BG" unique_id=1233035478]
 script = ExtResource("4_nuvens")
@@ -1717,6 +1720,7 @@ autoplay = "idle"
 
 [node name="Atmosfera" type="Node" parent="." unique_id=1808532511]
 script = ExtResource("16_atmosfera")
+momento = 2
 segue_a_partida = false
 
 [node name="PostesDeLuz" type="Node2D" parent="." unique_id=954248564]

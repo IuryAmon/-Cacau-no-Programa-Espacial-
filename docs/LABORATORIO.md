@@ -28,7 +28,7 @@ O Laboratório tem seis atividades:
 
 | Arquivo | O que é |
 |---|---|
-| `scenes/menu_principal.tscn` + `scripts/menu_principal.gd` | O menu principal: o cenário (a entrada da base ao entardecer, com a Cacau e o Dr. Chico) e os três botões. |
+| `scenes/menu_principal.tscn` + `scripts/menu_principal.gd` | O menu principal: o cenário (a entrada da base à noite, com a lua atrás da Cacau e do Dr. Chico) e os três botões. |
 | `scenes/laboratorio/menu_laboratorio.tscn` + `scripts/laboratorio/menu_laboratorio.gd` | O menu do Laboratório: um cartão por atividade. |
 | `scenes/laboratorio/monte_seu_atomo.tscn` | Monte seu átomo. |
 | `scenes/laboratorio/que_atomo_e_esse.tscn` | O quiz. |
@@ -94,14 +94,14 @@ caderno): não há 118 imagens para refazer.
 trecho da partida) e `IONS` (a carga do íon mais comum de cada elemento).
 
 **Pôr uma atividade nova no Laboratório.** Uma linha em `ATIVIDADES`
-(`scripts/laboratorio/menu_laboratorio.gd`) com a chave, o nome, a descrição e
+(`scripts/laboratorio/menu_laboratorio.gd`) com a chave, o nome e
 a cena; e o desenho do cartão em `_desenhar_a_figura`. Os cartões se arrumam
 sozinhos. A cena nova deve ter, na raiz, um script que estende
 `TelaInterativa` (veja "A base das telas").
 
 **O menu principal.** O cenário é uma cena comum, montada como uma fase e só
-com a arte do jogo: a entrada da base do `world1` ao entardecer, que é onde e
-quando a história começa. Abra `scenes/menu_principal.tscn` e mexa:
+com a arte do jogo: a entrada da base do `world1`, de noite, com a lua atrás
+dos dois. Abra `scenes/menu_principal.tscn` e mexa:
 
 - `Cenario/Cacau` e `Cenario/DrChico` — os dois personagens, cada um na
   animação de parado que tem no jogo. Arraste para mudar de lugar; *Flip H*
@@ -109,11 +109,11 @@ quando a história começa. Abra `scenes/menu_principal.tscn` e mexa:
 - `Cenario/Chao` e `Cenario/Detalhes` — o gramado, o piso de pedra, o pilarete,
   o poste e os tufos de capim são **tiles**: pinte como numa fase. O poste
   pintado acende sozinho (nó `PostesDeLuz`), como nas fases.
-- `BG/...` — o céu, o sol (`BG/CamadaDoSol/Sol`), as duas faixas de nuvens, a
+- `BG/...` — o céu, a lua (`BG/CamadaDaLua/Lua`), as duas faixas de nuvens, a
   serra e as três fileiras de pinheiros (cada uma é um nó `Arte`: arraste para
   os lados para escolher o trecho, para cima e para baixo para mostrar mais ou
   menos dela).
-- `Atmosfera.momento` — a hora. Ele está preso no entardecer e não mexe na
+- `Atmosfera.momento` — a hora. Ele está preso na noite e não mexe na
   hora da partida.
 
 A tela do menu não tem câmera: as medidas são em pixels da tela (1600 × 900) e

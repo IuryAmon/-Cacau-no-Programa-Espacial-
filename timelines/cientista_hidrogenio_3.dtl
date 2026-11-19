@@ -1,0 +1,4 @@
+join cientista (cientista_mto_feliz) leftmost [mirrored="true"]
+cientista (cientista_mto_feliz): Perfeito! 1 próton, nenhum nêutron e 1 elétron: o átomo de hidrogênio!
+cientista (cientista_feliz): Anota no caderno: com o Z e o A da tabela periódica, dá para montar qualquer átomo.
+do Caderno.anotar("atomo")

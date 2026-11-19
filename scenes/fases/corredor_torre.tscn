@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://cc0ud1fghyrfw" path="res://scripts/fases/corredor_torre.gd" id="1_script"]
 [ext_resource type="TileSet" uid="uid://b1re83kqucchr" path="res://assets/tilesets/tileset_fases.tres" id="2_tiles"]
-[ext_resource type="PackedScene" uid="uid://bojlwu3n38ixr" path="res://scenes/fases/componentes/porta_modelo.tscn" id="3_porta"]
 [ext_resource type="Script" uid="uid://cemix3p8exsjs" path="res://scripts/fases/passagem_de_cena.gd" id="4_passagem"]
 [ext_resource type="PackedScene" uid="uid://bmgkds67hbool" path="res://scenes/player.tscn" id="5_player"]
 [ext_resource type="Script" uid="uid://txyd3f255aod" path="res://scripts/fases/paralaxe_da_frente.gd" id="6_frente"]
@@ -20,6 +19,9 @@ height = 8
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_parede"]
 size = Vector2(96, 384)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_piso_da_entrada"]
+size = Vector2(420, 64)
 
 [node name="CorredorTorre" type="Node2D" unique_id=283792563]
 script = ExtResource("1_script")
@@ -70,18 +72,25 @@ metadata/_edit_lock_ = true
 [node name="Colisoes" type="Node2D" parent="." unique_id=1318780398]
 
 [node name="ParedeEsquerda" type="StaticBody2D" parent="Colisoes" unique_id=759857807]
-position = Vector2(48, 320)
+position = Vector2(-372, 320)
 
 [node name="Colisao" type="CollisionShape2D" parent="Colisoes/ParedeEsquerda" unique_id=607784405]
 position = Vector2(-92, 0)
 shape = SubResource("RectangleShape2D_parede")
 
-[node name="PortaLab" parent="." unique_id=1116760689 instance=ExtResource("3_porta")]
-position = Vector2(320, 394)
+[node name="PisoDaEntrada" type="StaticBody2D" parent="Colisoes" unique_id=1116760690]
+position = Vector2(-206, 544)
+
+[node name="Colisao" type="CollisionShape2D" parent="Colisoes/PisoDaEntrada" unique_id=1116760691]
+shape = SubResource("RectangleShape2D_piso_da_entrada")
+
+[node name="EntradaLab" type="Node2D" parent="." unique_id=1116760689]
+position = Vector2(24, 400)
+script = ExtResource("4_passagem")
 cena_destino = "res://scenes/laboratório_(world_2).tscn"
 tag_destino = "volta_da_torre"
-recebe_chegada = true
 tag_aqui = "entrada"
+sentido = -1.0
 
 [node name="SaidaTorre" type="Node2D" parent="." unique_id=817957888]
 position = Vector2(2344, 400)

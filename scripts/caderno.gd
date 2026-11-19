@@ -3,12 +3,15 @@ extends CanvasLayer
 # --- AUTOLOAD "Caderno" ---
 #
 # O caderno de anotações da Cacau. Ela o tem desde o começo do jogo: o ícone
-# fica no canto inferior esquerdo e M (△ no controle) abre e fecha.
+# (o caderninho e o mapinha) fica no canto inferior esquerdo e M (△ no
+# controle) abre e fecha.
 #
 # Aberto, ele tem duas ABAS, no alto da tela: CADERNO (as anotações) e MAPA (a
 # planta do Centro de Lançamento, com a Cacau onde ela está e o objetivo da
-# vez). Ele abre na aba em que ficou da última vez — menos quando chegou nota
-# nova: aí abre no CADERNO, na página dela.
+# vez). A primeira vez ele abre no MAPA; depois, sempre na aba em que a Cacau
+# ficou da última vez. Nota nova não muda isso: ela acende a marca de nota
+# nova no caderninho do ícone e na aba CADERNO, e o caderno já fica na página
+# dela, para quando a pessoa trocar de aba.
 #
 #   PaginasCaderno (scripts/paginas_caderno.gd)    O QUE está escrito
 #   PlantaDoMapa (scripts/planta_do_mapa.gd)       O QUE está no mapa
@@ -36,13 +39,18 @@ extends CanvasLayer
 # O ícone some junto com a lista de objetivos (fala, ficha de coleta, puzzle,
 # pausa, cenas sem a Cacau), e o caderno só abre com o ícone na tela.
 #
-# AS NOTAS. O caderno começa só até a página 3; as outras páginas são folhas
-# soltas pelo mapa (NotaCaderno, scripts/fases/nota_caderno.gd). Quando a Cacau
-# pega uma, a folha chama guardar_nota(): a página entra no caderno (quem
-# guarda quais ele tem é o PaginasCaderno), a folha voa de onde estava até o
-# ícone, o ícone pula e acende a marca de nota nova, e o aviso "NOTA
-# ADICIONADA" (CadernoAviso) sobe em cima dele. O caderno já fica aberto na
-# página da nota: o próximo M cai nela.
+# AS NOTAS. O caderno começa só até a página 3; as outras páginas a Cacau
+# ANOTA quando o Dr. Chico explica alguma coisa: a conversa dele chama
+# anotar() no fim (e também quando a pessoa escolhe pular a explicação). A
+# página entra no caderno (quem guarda quais ele tem é o PaginasCaderno), o
+# ícone pula e acende a marca de nota nova, e o aviso "NOTA ADICIONADA"
+# (CadernoAviso) sobe em cima dele — assim que o ícone voltar para a tela,
+# depois da fala e do puzzle. O caderno já fica aberto na página da nota: a
+# aba CADERNO cai nela. A marca apaga quando a pessoa vê a aba CADERNO.
+#
+# Uma nota também pode ser uma folha solta no mapa (NotaCaderno,
+# scripts/fases/nota_caderno.gd): a folha chama guardar_nota() e voa de onde
+# estava até o ícone antes do aviso.
 
 signal aberto_mudou(aberto: bool)
 ## Uma nota entrou no caderno (o nome dela nas PaginasCaderno.NOTAS).
@@ -122,7 +130,9 @@ var _alfa_icone: float = 0.0
 ## Foi o caderno que pausou o jogo (e é ele quem despausa).
 var _pausou: bool = false
 
-var _aba: int = Aba.CADERNO
+## A aba da vez: é nela que o caderno abre. Começa no MAPA (a primeira vez é
+## sempre o mapa) e depois é a última que a Cacau viu.
+var _aba: int = Aba.MAPA
 ## Na troca de aba: a que está saindo (-1 = nenhuma troca), de que lado a nova
 ## entra (1 = da direita) e o andamento (0 a 1).
 var _aba_saindo: int = -1
@@ -189,8 +199,10 @@ func _ready() -> void:
 
 	_abas = AbasDoCaderno.new()
 	_abas.name = "Abas"
+	_abas.icone = _icone
 	_abas.aba_clicada.connect(mostrar_aba)
 	_tela.add_child(_abas)
+	_abas.mostrar_na_hora(_aba)
 
 	_rodape = Control.new()
 	_rodape.name = "Rodape"
@@ -247,16 +259,13 @@ func abrir() -> void:
 		return
 	_aberto = true
 	_tela.visible = true
-	# Nota nova esperando: abre no caderno, na página dela.
-	if _icone.novidade:
-		_aba = Aba.CADERNO
 	_aba_saindo = -1
 	_troca = 1.0
+	# Na aba em que ficou (da primeira vez, no mapa).
 	_abas.mostrar_na_hora(_aba)
 	_mapa.ler_o_jogo()
-	# Abriu: a nota nova está sendo lida.
-	_icone.novidade = false
 	_aviso.dispensar()
+	_ver_a_aba()
 	Interacao.marcar_tela_aberta(_tela, true)
 	if not get_tree().paused:
 		get_tree().paused = true
@@ -295,6 +304,15 @@ func mostrar_aba(nova: int, sentido: int = 0) -> void:
 		_aba = nova
 		_abas.mostrar_na_hora(_aba)
 	aba_mudou.emit(_aba)
+	if _aberto:
+		_ver_a_aba()
+
+
+## A pessoa está vendo a aba da vez. Se é o CADERNO, a nota nova foi vista (ele
+## já está na página dela) e a marca apaga — no ícone e na aba.
+func _ver_a_aba() -> void:
+	if _aba == Aba.CADERNO:
+		_icone.novidade = false
 
 
 # ─────────────────────────────────────────────────────────────
@@ -317,9 +335,10 @@ func aviso() -> CadernoAviso:
 func guardar_nota(nota: String, de: Vector2 = Vector2.INF, tamanho: float = 72.0) -> bool:
 	if not PaginasCaderno.guardar_nota(nota):
 		return false
-	# O caderno já fica na página da nota, para o próximo M cair nela.
+	# O caderno já fica na página da nota: a aba CADERNO cai nela. A aba em que
+	# ele abre não muda (é a última que a Cacau viu); a marca de nota nova é
+	# que chama para o CADERNO.
 	_livro.ir_para_na_hora(PaginasCaderno.lugar_da_nota(nota))
-	mostrar_aba(Aba.CADERNO)
 	nota_guardada.emit(nota)
 	if not de.is_finite():
 		_ao_chegar_a_nota(nota)
@@ -329,6 +348,34 @@ func guardar_nota(nota: String, de: Vector2 = Vector2.INF, tamanho: float = 72.0
 		_icone.centro_do_caderno(), tamanho, _icone.size.y, DURACAO_VOO_DA_NOTA)
 	voo.chegou.connect(_ao_chegar_a_nota.bind(nota))
 	return true
+
+
+## A Cacau anota no caderno o que o Dr. Chico acabou de explicar: a nota entra
+## sem folha voando, e o aviso sobe quando o ícone voltar para a tela (depois
+## da fala e do puzzle). É o que as conversas chamam:
+##   do Caderno.anotar("atomo")
+## Anotar de novo uma nota que já está no caderno não faz nada.
+func anotar(nota: String) -> void:
+	if not PaginasCaderno.NOTAS.has(nota):
+		push_warning("Caderno.anotar(): não existe nota \"%s\" nas PaginasCaderno.NOTAS" % nota)
+		return
+	guardar_nota(nota)
+
+
+## Atalho de teste (tecla P e o F1 do ModoDev, em qualquer mapa): o caderno
+## inteiro de uma vez, com todas as notas que faltavam. Sem aviso — seriam cinco
+## em fila —, só a marca de nota nova no ícone. Devolve as notas que eram novas.
+func anotar_todas() -> PackedStringArray:
+	var novas := PackedStringArray()
+	for nota in PaginasCaderno.NOTAS:
+		if PaginasCaderno.guardar_nota(nota):
+			novas.append(nota)
+			nota_guardada.emit(nota)
+	if not novas.is_empty():
+		# O livro lê as páginas na hora: só precisa se recompor (na mesma página).
+		_livro.ir_para_na_hora(_livro.pagina())
+		_icone.novidade = true
+	return novas
 
 
 ## A folha entrou no caderno: o ícone pula e o aviso sobe.
@@ -403,18 +450,18 @@ func _pode_aparecer() -> bool:
 	return true
 
 
-## A folha da aba da vez sai do ícone crescendo e vai para o meio da tela
-## (entre as abas e o rodapé); fechando, faz o caminho de volta. A curva é a
-## mesma nos dois sentidos — rápida perto do ícone, mansa perto do meio —, e só
-## a abertura passa um pouco do tamanho antes de assentar. As abas descem do
+## A folha da aba da vez sai do desenho dela no ícone (o caderno do
+## caderninho, o mapa do mapinha) crescendo e vai para o meio da tela (entre as
+## abas e o rodapé); fechando, faz o caminho de volta. A curva é a mesma nos
+## dois sentidos — rápida perto do ícone, mansa perto do meio —, e só a
+## abertura passa um pouco do tamanho antes de assentar. As abas descem do
 ## alto junto. Na troca de aba, a folha que sai desliza e apaga, e a que entra
 ## vem do outro lado acendendo.
 func _posicionar() -> void:
 	var t := _abertura
 	var caminho := 1.0 - pow(1.0 - t, 3.0)
 	var crescimento := _passar_e_voltar(t) if _aberto else caminho
-	var origem := _icone.centro_do_caderno()
-	var meio := origem.lerp(_centro_do_conteudo(), caminho)
+	var centro := _centro_do_conteudo()
 	var parado := t >= 1.0 and _aba_saindo < 0
 	for i in Aba.size():
 		var folha := _folha(i)
@@ -422,6 +469,8 @@ func _posicionar() -> void:
 		folha.visible = presenca > 0.0
 		if not folha.visible:
 			continue
+		var origem := _icone.centro_do_mapa() if i == Aba.MAPA else _icone.centro_do_caderno()
+		var meio := origem.lerp(centro, caminho)
 		var escala := lerpf(_icone.size.y / _altura_da_folha(i), 1.0, crescimento)
 		folha.scale = Vector2(escala, escala)
 		folha.position = meio - folha.pivot_offset + Vector2(_deslize(i), 0.0)

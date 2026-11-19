@@ -1,3 +1,4 @@
 join cientista (cientista_mto_feliz) leftmost [mirrored="true"]
 cientista (cientista_mto_feliz): Perfeito! Hidrogênio, 4 e 4. Oxigênio, 2 e 2. Todos os elementos estão igualados, e é isso que quer dizer equação balanceada.
 cientista (cientista_feliz): Pode iniciar a simulação da combustão!
+do Caderno.anotar("balanceamento")

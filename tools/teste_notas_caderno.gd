@@ -1,37 +1,40 @@
 extends Node
 
-# Teste das notas do caderno (scripts/fases/nota_caderno.gd, o que mudou em
-# scripts/paginas_caderno.gd e scripts/caderno.gd, scripts/ui/caderno_aviso.gd
-# e a marca de nota nova do scripts/ui/caderno_icone.gd):
+# Teste das notas do caderno (scripts/paginas_caderno.gd, scripts/caderno.gd,
+# scripts/ui/caderno_aviso.gd, a marca de nota nova do scripts/ui/caderno_icone.gd
+# e a folha solta, scripts/fases/nota_caderno.gd):
 #
-#   * o caderno começa só até a página 3, e as páginas do átomo (4 a 7) são
-#     uma nota só, "O Átomo";
-#   * a nota entra no lugar dela, com o número das faces de sempre, e traz as
-#     duas páginas duplas de uma vez;
-#   * a nota mora no world1, dentro de NotasDoCaderno, no chão, atrás da Cacau
-#     e fora do canto em que o HUD rouba o clique no editor;
-#   * o botão E só aparece com a Cacau por perto;
-#   * o E pega a folha: ela some do mapa, voa até o ícone do caderno e a página
-#     entra no caderno, que já fica aberto nela;
-#   * quando a folha chega, o ícone pula e acende a marca de nota nova, e o
-#     aviso sobe em cima dele com o título e as páginas, dentro da tela e com
-#     todas as letras na fonte;
-#   * M abre o caderno na primeira página da nota nova, e a marca e o aviso
-#     somem; D vira para a segunda;
-#   * o aviso sai sozinho depois de lido, e a marca de nota nova fica até o
-#     caderno ser aberto;
-#   * recarregar a cena não traz a nota de volta;
+#   * o caderno começa só até a página 3; o resto são cinco notas — o átomo, a
+#     eletrosfera, o balanceamento, os gases e a destilação —, uma atrás da
+#     outra, sem buraco entre elas;
+#   * cada nota entra no lugar dela, com o número das faces de sempre, e traz
+#     todas as páginas duplas dela de uma vez, achada em qualquer ordem;
+#   * QUEM ANOTA É A CONVERSA: toda nota tem uma conversa do Dr. Chico que a
+#     ensina (do Caderno.anotar("nome")), toda conversa que anota fala de uma
+#     nota que existe e está registrada no Dialogic, e quem escolhe "Já sei..."
+#     também leva a nota;
+#   * a conversa de verdade, pelo Dialogic: a nota entra sem folha voando, o
+#     aviso espera a fala acabar e aí sobe com o título e as páginas; M abre o
+#     caderno onde ele ficou (a primeira vez, no MAPA), com a marca de nota
+#     nova na aba CADERNO, que já está na página da nota; a marca só apaga
+#     quando a pessoa vê o CADERNO;
+#   * o world1 não tem mais a folha do átomo no chão;
+#   * a folha solta (nota_caderno.tscn) continua funcionando, para uma nota
+#     futura no mapa: o botão E só aparece com a Cacau por perto, o E pega a
+#     folha, ela voa até o ícone e o aviso sobe; uma folha de nota que já está
+#     no caderno some sozinha;
 #   * com a ficha de coleta na tela o aviso espera ela fechar.
 #
 #   godot --headless --path . res://tools/teste_notas_caderno.tscn
 #
-# Com "-- --capturas=<pasta>" (e SEM --headless) salva a folha no mapa com o
-# botão, o voo, o aviso e o caderno aberto na nota, para conferir a olho.
+# Com "-- --capturas=<pasta>" (e SEM --headless) salva a folha com o botão, o
+# voo, o aviso e o caderno aberto na nota, para conferir a olho.
 
 const MUNDO := "res://scenes/world1.tscn"
-## No editor, o HUD da Cacau é desenhado aqui e ganha o clique (coordenadas do
-## editor, que são as globais da cena).
-const CANTO_DO_HUD_NO_EDITOR := Rect2(0, 0, 1600, 900)
+const PASTA_DAS_CONVERSAS := "res://timelines/"
+## Uma conversa que anota e pergunta antes: a do compressor (nota "gases").
+const CONVERSA_DE_TESTE := "res://timelines/cientista_compressor.dtl"
+const NOTAS_EM_ORDEM := ["atomo", "eletrosfera", "balanceamento", "gases", "destilacao"]
 
 var _falhas := 0
 var _pasta_capturas := ""
@@ -46,9 +49,12 @@ func _ready() -> void:
 
 	_testar_caderno_do_comeco()
 	_testar_numeracao()
-	await _testar_no_mapa_e_pegar()
-	await _testar_recarregar()
+	_testar_conversas_que_anotam()
+	await _testar_conversa_de_verdade()
+	_testar_world1_sem_folha()
+	await _testar_folha_solta()
 	await _testar_aviso_espera()
+	await _testar_tecla_p()
 	PaginasCaderno.esquecer_notas()
 	print("\n>>> %s <<<" % ("TUDO OK" if _falhas == 0 else "%d FALHA(S)" % _falhas))
 	get_tree().quit(1 if _falhas > 0 else 0)
@@ -73,23 +79,30 @@ func _testar_caderno_do_comeco() -> void:
 	_checar(PaginasCaderno.faces(2) == [{}, {}], "e nada depois dela")
 
 	var notas := PaginasCaderno.NOTAS
-	_checar(notas.keys() == ["atomo"], "a nota é uma só: a do átomo %s" % [notas.keys()])
-	_checar(PaginasCaderno.titulo_da_nota("atomo") == "O Átomo" \
-		and PaginasCaderno.numeros_da_nota("atomo") == Vector2i(4, 7),
-		"\"O Átomo\" traz as páginas 4 a 7")
-	var paginas := {}
+	_checar(notas.keys() == NOTAS_EM_ORDEM, "as notas, na ordem do caderno: %s" % [notas.keys()])
+	var esperados := {"atomo": Vector2i(4, 9), "eletrosfera": Vector2i(10, 11),
+		"balanceamento": Vector2i(12, 15), "gases": Vector2i(16, 17), "destilacao": Vector2i(18, 19)}
+	for nota in esperados:
+		_checar(PaginasCaderno.numeros_da_nota(nota) == esperados[nota],
+			"\"%s\" traz as páginas %d a %d" % [PaginasCaderno.titulo_da_nota(nota),
+				esperados[nota].x, esperados[nota].y])
+	# Uma atrás da outra, da página dupla 2 até a última, sem buraco e sem
+	# página de duas notas.
+	var seguidas: Array = []
 	var boas := true
 	for nota in notas:
 		if PaginasCaderno.titulo_da_nota(nota).is_empty() or PaginasCaderno.paginas_da_nota(nota).is_empty():
 			boas = false
-		for pagina: int in PaginasCaderno.paginas_da_nota(nota):
-			if paginas.has(pagina) or pagina < 0 or pagina >= PaginasCaderno.PAGINAS.size():
-				boas = false
-			paginas[pagina] = true
-	_checar(boas, "cada nota tem título e páginas só dela, que existem")
-	_checar(PaginasCaderno.PAGINAS[2][0].get("titulo") == PaginasCaderno.titulo_da_nota("atomo") \
-		and not PaginasCaderno.PAGINAS[3][0].has("titulo"),
-		"o título da nota é o da primeira página dela, e a segunda não tem título")
+		seguidas.append_array(PaginasCaderno.paginas_da_nota(nota))
+	_checar(boas, "cada nota tem título e páginas")
+	_checar(seguidas == range(2, PaginasCaderno.PAGINAS.size()),
+		"todas as páginas depois da 3 são de uma nota só, em ordem %s" % [seguidas])
+	var titulos_certos := true
+	for nota in notas:
+		var primeira: Dictionary = PaginasCaderno.PAGINAS[int(PaginasCaderno.paginas_da_nota(nota)[0])][0]
+		if primeira.get("titulo") != PaginasCaderno.titulo_da_nota(nota):
+			titulos_certos = false
+	_checar(titulos_certos, "o título de cada nota é o da primeira página dela")
 	var fonte := CadernoAviso.FONTE
 	var faltando := ""
 	var textos: Array = [CadernoAviso.CHAPEU, "páginas 0123456789 e a"]
@@ -108,131 +121,271 @@ func _testar_numeracao() -> void:
 	_checar(not PaginasCaderno.guardar_nota("nao_existe"), "nota que não existe não entra")
 	_checar(not PaginasCaderno.guardar_nota("atomistica"), "a atomística não é mais uma nota à parte")
 	_checar(PaginasCaderno.lugar_da_nota("atomo") == -1, "o átomo ainda não está no caderno")
-	_checar(PaginasCaderno.guardar_nota("atomo") and PaginasCaderno.quantas() == 4,
-		"achando a nota, o caderno ganha as duas páginas duplas dela de uma vez")
+	_checar(PaginasCaderno.guardar_nota("atomo") and PaginasCaderno.quantas() == 5,
+		"achando o átomo, o caderno ganha as três páginas duplas dele de uma vez")
 	_checar(PaginasCaderno.lugar_da_nota("atomo") == 2 \
 		and PaginasCaderno.faces(2)[0].get("titulo") == "O Átomo" \
-		and PaginasCaderno.faces(3)[0].get("arte") == PaginasCaderno.ARTE_HIDROGENIO,
-		"ela vem logo depois da epígrafe: o átomo e, na folha seguinte, a caixa do hidrogênio")
+		and PaginasCaderno.faces(3)[0].get("arte") == PaginasCaderno.ARTE_HIDROGENIO \
+		and PaginasCaderno.faces(4)[0].get("titulo") == "Hidrogênio",
+		"logo depois da epígrafe: o átomo, a caixa do hidrogênio e o hidrogênio montado")
 	_checar(PaginasCaderno.numero(1, 1) == 3 and PaginasCaderno.numero(2, 0) == 4 \
-		and PaginasCaderno.numero(3, 1) == 7,
-		"com os números de sempre: 4, 5, 6, 7")
+		and PaginasCaderno.numero(4, 1) == 9,
+		"com os números de sempre: 4 a 9")
 	_checar(not PaginasCaderno.guardar_nota("atomo") and PaginasCaderno.notas_achadas() == 1,
 		"a mesma nota não entra duas vezes")
+
+	# Os puzzles podem vir em qualquer ordem: a nota de trás entra antes da
+	# da frente, e cada uma vai para o lugar dela.
+	PaginasCaderno.esquecer_notas()
+	PaginasCaderno.guardar_nota("gases")
+	_checar(PaginasCaderno.lugar_da_nota("gases") == 2 and PaginasCaderno.numero(2, 0) == 16 \
+		and PaginasCaderno.numero(2, 1) == 17,
+		"só os gases: logo depois da epígrafe, mas com os números deles (16 e 17)")
+	PaginasCaderno.guardar_nota("eletrosfera")
+	_checar(PaginasCaderno.lugar_da_nota("eletrosfera") == 2 and PaginasCaderno.lugar_da_nota("gases") == 3,
+		"a eletrosfera, achada depois, entra na frente dos gases")
+	for nota in NOTAS_EM_ORDEM:
+		PaginasCaderno.guardar_nota(nota)
+	_checar(PaginasCaderno.quantas() == PaginasCaderno.PAGINAS.size() \
+		and PaginasCaderno.no_caderno() == range(PaginasCaderno.PAGINAS.size()),
+		"com todas, o caderno inteiro, na ordem (%d páginas duplas)" % PaginasCaderno.quantas())
 	PaginasCaderno.esquecer_notas()
 
 
-func _testar_no_mapa_e_pegar() -> void:
-	print("\n--- A NOTA NO WORLD1 ---")
-	var mundo := await _abrir()
-	var grupo := mundo.get_node_or_null("NotasDoCaderno")
-	_checar(grupo != null, "a nota mora no world1, dentro de NotasDoCaderno")
-	if grupo == null:
-		return
-	var player := mundo.get_node("Player") as CharacterBody2D
-	var notas := {}
-	for filho in grupo.get_children():
-		if filho is NotaCaderno:
-			notas[filho.nota] = filho
-	_checar(grupo.get_child_count() == 1 and notas.keys() == ["atomo"],
-		"é uma só: a do átomo %s" % [notas.keys()])
-	if not notas.has("atomo"):
-		return
-	var espaco := (mundo as Node2D).get_world_2d().direct_space_state
-	for nome in notas:
-		var nota: NotaCaderno = notas[nome]
-		var raio := PhysicsRayQueryParameters2D.create(nota.global_position + Vector2(0, -24),
-			nota.global_position + Vector2(0, 24))
-		raio.exclude = [player.get_rid()]
-		var batida := espaco.intersect_ray(raio)
-		var no_chao: bool = not batida.is_empty() and absf(batida["position"].y - nota.global_position.y) <= 2.0
-		_checar(no_chao, "%s: no chão (%s)" % [nota.name, nota.position])
-		_checar(not CANTO_DO_HUD_NO_EDITOR.has_point(nota.global_position),
-			"%s: fora do canto em que o HUD rouba o clique no editor" % nota.name)
-		_checar(nota.z_index < player.z_index and nota.z_index > 0,
-			"%s: atrás da Cacau e na frente do chão" % nota.name)
-		_checar(not (nota.get_node("Dica") as CanvasItem).visible, "%s: de longe, sem botão" % nota.name)
-		var arte := nota.caixa_da_arte()
-		_checar(arte.end.y < 0.0 and arte.position == arte.position.round() and arte.size == Vector2(42, 48),
-			"%s: a folha flutua acima do chão, em 2×, no pixel inteiro (%s)" % [nota.name, arte])
+## Lê as conversas em timelines/: quem anota o quê, e a pergunta "Quer que eu
+## explique?" com o "Já sei..." em segundo.
+func _testar_conversas_que_anotam() -> void:
+	print("\n--- AS CONVERSAS QUE ANOTAM ---")
+	var registradas: Dictionary = ProjectSettings.get_setting("dialogic/directories/dtl_directory", {})
+	var achar := RegEx.create_from_string("do Caderno\\.anotar\\(\"([^\"]*)\"\\)")
+	var ensinadas := {}
+	var nota_que_nao_existe := []
+	var fora_do_dialogic := []
+	var pulo_ruim := []
+	var com_pergunta := 0
+	for arquivo in DirAccess.get_files_at(PASTA_DAS_CONVERSAS):
+		if not arquivo.ends_with(".dtl"):
+			continue
+		var caminho := PASTA_DAS_CONVERSAS + arquivo
+		var texto := FileAccess.get_file_as_string(caminho)
+		var anota := false
+		for achado in achar.search_all(texto):
+			anota = true
+			var nota := achado.get_string(1)
+			if PaginasCaderno.NOTAS.has(nota):
+				ensinadas[nota] = true
+			else:
+				nota_que_nao_existe.append("%s: %s" % [arquivo, nota])
+		if anota and registradas.get(arquivo.get_basename(), "") != caminho:
+			fora_do_dialogic.append(arquivo)
+		if not texto.contains(ExplicacaoNoPuzzle.SINAL_PULAR):
+			continue
+		com_pergunta += 1
+		var opcoes: Array[String] = []
+		var ramo_de_pular := ""
+		for linha in texto.split("\n"):
+			if linha.begins_with("- "):
+				opcoes.append(linha.substr(2).strip_edges())
+			elif opcoes.size() >= 2:
+				ramo_de_pular += linha.strip_edges() + "\n"
+		var bom := opcoes.size() == 2 and opcoes[1].begins_with("Já sei") \
+			and ramo_de_pular.contains("[signal arg=\"%s\"]" % ExplicacaoNoPuzzle.SINAL_PULAR) \
+			and achar.search(ramo_de_pular) != null and ramo_de_pular.contains("[end_timeline]")
+		if not bom:
+			pulo_ruim.append(arquivo)
+	_checar(nota_que_nao_existe.is_empty(), "toda conversa anota uma nota que existe %s" % [nota_que_nao_existe])
+	_checar(fora_do_dialogic.is_empty(), "e está registrada no Dialogic %s" % [fora_do_dialogic])
+	var faltam := []
+	for nota in PaginasCaderno.NOTAS:
+		if not ensinadas.has(nota):
+			faltam.append(nota)
+	_checar(faltam.is_empty(), "toda nota tem uma conversa que a ensina %s" % [faltam])
+	_checar(com_pergunta == 6, "seis conversas perguntam se a Cacau quer a explicação (%d)" % com_pergunta)
+	_checar(pulo_ruim.is_empty(),
+		"em todas, \"Já sei...\" é a segunda opção, e quem pula também anota %s" % [pulo_ruim])
 
-	print("\n--- PEGAR A NOTA ---")
-	var atomo: NotaCaderno = notas["atomo"]
-	await _chegar_perto(player, atomo)
-	var dica := atomo.get_node("Dica") as CanvasItem
-	_checar(dica.visible, "de perto, o botão E aparece em cima da folha")
-	_checar(dica.global_position.y < atomo.to_global(atomo.caixa_da_arte().position).y,
-		"o botão fica acima dela")
+
+## A conversa do compressor de verdade, escolhendo "Já sei como funciona".
+func _testar_conversa_de_verdade() -> void:
+	print("\n--- A CONVERSA ANOTA ---")
+	PaginasCaderno.esquecer_notas()
+	var cacau := Node.new()
+	cacau.add_to_group("player")
+	add_child(cacau)
 	await _esperar(0.4)
-	_checar(_icone().visible and is_equal_approx(_icone().modulate.a, 1.0), "o ícone do caderno está na tela")
-	_checar(not _icone().novidade and not Caderno.aviso().ocupado(), "sem marca de nota nova nem aviso")
-	await _capturar("1_folha_com_botao")
+	var aviso := Caderno.aviso()
+	_checar(_icone().visible and not aviso.ocupado(), "o ícone do caderno está na tela, sem aviso")
+	var avisadas: Array = []
+	var ao_guardar := func(n: String) -> void: avisadas.append(n)
+	Caderno.nota_guardada.connect(ao_guardar)
+
+	Dialogic.start(CONVERSA_DE_TESTE)
+	_checar(await _ate_a_pergunta(), "o Dr. Chico pergunta se a Cacau quer a explicação")
+	_checar(not Caderno.tem_nota("gases"), "antes da resposta, nada anotado")
+	_checar(not _icone().visible, "com a fala na tela, o ícone do caderno some")
+	_checar(await _escolher(2), "\"Já sei como funciona\"")
+	await _ate(func() -> bool: return Caderno.tem_nota("gases"), 3.0)
+	_checar(Caderno.tem_nota("gases") and avisadas == ["gases"], "a conversa anota \"gases\" no caderno")
+	_checar(Caderno.get_node_or_null("VooDeItem") == null, "sem folha voando: foi a Cacau quem anotou")
+	_checar(Caderno.livro().pagina() == PaginasCaderno.lugar_da_nota("gases"),
+		"e o caderno já fica aberto na nota nova")
+	_checar(_icone().novidade and not aviso.na_tela(), "a marca acende, mas o aviso espera a fala acabar")
+	var toques := 0
+	while Dialogic.current_timeline != null and toques < 30:
+		Dialogic.Inputs.handle_input()
+		await _esperar(0.2)
+		toques += 1
+	_checar(Dialogic.current_timeline == null, "a conversa acaba")
+	await _ate(aviso.na_tela)
+	_checar(aviso.na_tela() and aviso.titulo_atual() == "Os Gases" and aviso.texto_das_paginas() == "páginas 16 e 17",
+		"aí o aviso sobe: %s, %s" % [aviso.titulo_atual(), aviso.texto_das_paginas()])
+	var caixa := aviso.caixa()
+	_checar(get_viewport().get_visible_rect().encloses(caixa) and caixa.end.y <= _icone().get_global_rect().position.y \
+		and caixa.position.x == _icone().get_global_rect().position.x,
+		"em cima do ícone, dentro da tela (%s)" % caixa)
+	await _capturar("1_aviso_da_conversa")
+
+	_tecla(KEY_M)
+	await _quadros(2)
+	_checar(Caderno.aberto() and Caderno.aba() == Caderno.Aba.MAPA,
+		"M abre o caderno onde ele ficou — a primeira vez, no MAPA: nota nova não muda a aba")
+	_checar(not aviso.na_tela(), "o aviso sai")
+	_checar(_icone().novidade and Caderno.abas().tem_nota_nova(),
+		"mas a marca continua, no ícone e na aba CADERNO: a nota ainda não foi vista")
+	await _esperar(Caderno.DURACAO_ABRIR + 0.15)
+	_tecla(KEY_E)
+	await _esperar(Caderno.DURACAO_TROCA + 0.1)
+	var livro := Caderno.livro()
+	_checar(Caderno.aba() == Caderno.Aba.CADERNO and livro.visible and not _icone().novidade,
+		"E troca para o CADERNO, e a marca apaga")
+	_checar(livro._faces[0].dados.get("titulo") == "Os Gases" and livro._faces[0].numero == 16 \
+		and livro._faces[1].numero == 17, "aberto na nota nova: Os Gases, páginas 16 e 17")
+	await _capturar("2_caderno_na_nota")
+	_tecla(KEY_M)
+	await _esperar(Caderno.DURACAO_FECHAR + 0.5)
+	_checar(not Caderno.aberto() and not aviso.ocupado(), "fechado, sem aviso sobrando")
+
+	# Conversa que anota de novo a mesma nota: nada acontece.
+	Caderno.anotar("gases")
+	Caderno.anotar("nota_que_nao_existe")
+	await _quadros(2)
+	_checar(avisadas == ["gases"] and not aviso.ocupado() and PaginasCaderno.notas_achadas() == 1,
+		"anotar de novo (ou uma nota que não existe) não faz nada")
+	Caderno.nota_guardada.disconnect(ao_guardar)
+	cacau.queue_free()
+	await _quadros(2)
+	PaginasCaderno.esquecer_notas()
+
+
+func _testar_world1_sem_folha() -> void:
+	print("\n--- O WORLD1 ---")
+	var cena := FileAccess.get_file_as_string(MUNDO)
+	_checar(not cena.is_empty() and not cena.contains("nota_caderno.tscn") and not cena.contains("NotasDoCaderno"),
+		"não tem mais a folha do átomo no chão: quem ensina é o Dr. Chico, no puzzle do hidrogênio")
+
+
+## A folha solta, num mapinha só dela: o chão não importa, só a Cacau chegando
+## perto (a Colisao da folha de verdade é que acende o botão).
+func _testar_folha_solta() -> void:
+	print("\n--- A FOLHA SOLTA (para uma nota no mapa) ---")
+	PaginasCaderno.esquecer_notas()
+	var mundo := Node2D.new()
+	mundo.name = "MapinhaDaFolha"
+	var cacau := CharacterBody2D.new()
+	cacau.name = "Cacau"
+	cacau.add_to_group("player")
+	cacau.z_index = 2
+	var forma := CollisionShape2D.new()
+	var corpo := RectangleShape2D.new()
+	corpo.size = Vector2(28, 60)
+	forma.shape = corpo
+	cacau.add_child(forma)
+	cacau.position = Vector2(300, 300)
+	mundo.add_child(cacau)
+	var folha := (load(NotaCaderno.CENA) as PackedScene).instantiate() as NotaCaderno
+	folha.nota = "atomo"
+	folha.position = Vector2(800, 520)
+	mundo.add_child(folha)
+	add_child(mundo)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await _quadros(2)
+
+	var dica := folha.get_node("Dica") as CanvasItem
+	_checar(not dica.visible, "de longe, sem botão")
+	_checar(folha.z_index < cacau.z_index and folha.z_index > 0, "atrás da Cacau e na frente do chão")
+	var arte := folha.caixa_da_arte()
+	_checar(arte.end.y < 0.0 and arte.position == arte.position.round() and arte.size == Vector2(42, 48),
+		"a folha flutua acima do chão, em 2×, no pixel inteiro (%s)" % arte)
+
+	cacau.global_position = folha.global_position + Vector2(-34, -42)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await _esperar(0.4)
+	_checar(dica.visible, "de perto, o botão E aparece em cima da folha")
+	_checar(dica.global_position.y < folha.to_global(folha.caixa_da_arte().position).y, "o botão fica acima dela")
+	_checar(_icone().visible and not _icone().novidade and not Caderno.aviso().ocupado(),
+		"o ícone do caderno na tela, sem marca de nota nova nem aviso")
+	await _capturar("3_folha_com_botao")
 
 	var avisadas: Array = []
-	Caderno.nota_guardada.connect(func(n: String) -> void: avisadas.append(n))
+	var ao_guardar := func(n: String) -> void: avisadas.append(n)
+	Caderno.nota_guardada.connect(ao_guardar)
 	await _apertar_e()
 	_checar(Caderno.tem_nota("atomo") and avisadas == ["atomo"], "o E pega a folha: a nota entra no caderno")
-	_checar(not is_instance_valid(atomo), "a folha some do mapa")
-	_checar(PaginasCaderno.quantas() == 4 and Caderno.livro().pagina() == PaginasCaderno.lugar_da_nota("atomo"),
+	_checar(not is_instance_valid(folha), "a folha some do mapa")
+	_checar(PaginasCaderno.quantas() == 5 and Caderno.livro().pagina() == PaginasCaderno.lugar_da_nota("atomo"),
 		"o caderno ganha as páginas e já fica aberto na primeira delas")
 	var voo := Caderno.get_node_or_null("VooDeItem") as VooDeItem
 	_checar(voo != null and voo.textura == CadernoAviso.ARTE, "a folha voa para o ícone do caderno")
 	_checar(not _icone().novidade and not Caderno.aviso().ocupado(), "no meio do voo, ainda sem marca e sem aviso")
 	await _esperar(Caderno.DURACAO_VOO_DA_NOTA * 0.5)
-	await _capturar("2_voo")
+	await _capturar("4_voo")
 	await _ate(func() -> bool: return _icone().novidade)
 	_checar(_icone().novidade and _icone().pulando(), "a folha chega: o ícone pula e acende a marca de nota nova")
-	_checar(Caderno.aviso().ocupado(), "e o aviso sobe")
-	await _esperar(CadernoAviso.T_ENTRAR * 0.4)
-	await _capturar("3_chegou")
 	var aviso := Caderno.aviso()
+	_checar(aviso.ocupado(), "e o aviso sobe")
 	await _ate(aviso.na_tela)
-	_checar(aviso.na_tela() and aviso.titulo_atual() == "O Átomo" and aviso.texto_das_paginas() == "páginas 4 a 7",
-		"\"%s\" com o título e as páginas: %s, %s" % [CadernoAviso.CHAPEU, aviso.titulo_atual(), aviso.texto_das_paginas()])
-	var caixa := aviso.caixa()
-	_checar(get_viewport().get_visible_rect().encloses(caixa) and caixa.end.y <= _icone().get_global_rect().position.y \
-		and caixa.position.x == _icone().get_global_rect().position.x,
-		"o aviso fica em cima do ícone, dentro da tela (%s)" % caixa)
-	await _capturar("4_aviso")
+	_checar(aviso.na_tela() and aviso.titulo_atual() == "O Átomo" and aviso.texto_das_paginas() == "páginas 4 a 9",
+		"\"%s\": %s, %s" % [CadernoAviso.CHAPEU, aviso.titulo_atual(), aviso.texto_das_paginas()])
+	await _capturar("5_aviso_da_folha")
 
-	print("\n--- ABRIR O CADERNO NA NOTA ---")
 	_tecla(KEY_M)
 	await _quadros(2)
-	_checar(Caderno.aberto(), "M abre o caderno")
-	_checar(not _icone().novidade and not aviso.na_tela(), "a marca apaga e o aviso sai")
+	_checar(Caderno.aberto() and Caderno.aba() == Caderno.Aba.CADERNO and not _icone().novidade,
+		"M abre o caderno no CADERNO, onde ele ficou: a nota é vista e a marca apaga")
 	await _esperar(Caderno.DURACAO_ABRIR + 0.15)
 	var livro := Caderno.livro()
 	_checar(livro._faces[0].dados.get("titulo") == "O Átomo" and livro._faces[0].numero == 4 \
 		and livro._faces[1].numero == 5, "aberto na nota nova: O Átomo, páginas 4 e 5")
-	await _capturar("5_caderno_na_nota")
+	await _capturar("6_caderno_no_atomo")
 	_tecla(KEY_D)
 	await _ate(func() -> bool: return livro.pagina() == 3 and not livro.virando())
-	_checar(livro.pagina() == 3 and not livro._faces[0].dados.has("titulo") \
-		and livro._faces[0].numero == 6 and livro._faces[1].numero == 7,
-		"D vira para o resto da nota: a caixa do hidrogênio, sem título, páginas 6 e 7")
-	await _capturar("6_resto_da_nota")
+	_checar(livro.pagina() == 3 and livro._faces[0].numero == 6 and livro._faces[1].numero == 7,
+		"D vira para a caixa do hidrogênio, páginas 6 e 7")
+	_tecla(KEY_D)
+	await _ate(func() -> bool: return livro.pagina() == 4 and not livro.virando())
+	_checar(livro.pagina() == 4 and livro._faces[0].dados.get("titulo") == "Hidrogênio" \
+		and livro._faces[1].numero == 9, "e para o hidrogênio montado, páginas 8 e 9")
 	_tecla(KEY_D)
 	await _quadros(3)
-	_checar(not livro.virando() and livro.pagina() == 3, "e é a última página do caderno")
+	_checar(not livro.virando() and livro.pagina() == 4, "que é a última página do caderno")
 	_tecla(KEY_M)
 	await _esperar(Caderno.DURACAO_FECHAR + 0.5)
-	_checar(not Caderno.aberto() and not aviso.ocupado(), "fechado, sem aviso sobrando")
-	_checar(not _icone().novidade, "nem marca de nota nova")
-	await _fechar(mundo)
+	_checar(not Caderno.aberto() and not aviso.ocupado() and not _icone().novidade,
+		"fechado, sem aviso e sem marca sobrando")
+	Caderno.nota_guardada.disconnect(ao_guardar)
 
-
-func _testar_recarregar() -> void:
-	print("\n--- RECARREGAR A CENA ---")
-	var mundo := await _abrir()
-	var grupo := mundo.get_node_or_null("NotasDoCaderno")
+	# Morrer ou voltar para a cena não traz a folha de volta: quem lembra é o
+	# caderno.
+	var outra := (load(NotaCaderno.CENA) as PackedScene).instantiate() as NotaCaderno
+	outra.nota = "atomo"
+	mundo.add_child(outra)
 	await _quadros(2)
-	_checar(grupo != null and grupo.get_child_count() == 0, "recarregar não traz a nota de volta")
-	await _fechar(mundo)
+	_checar(not is_instance_valid(outra), "uma folha de nota que já está no caderno some sozinha")
+	mundo.queue_free()
+	await _quadros(2)
 	PaginasCaderno.esquecer_notas()
-	mundo = await _abrir()
-	grupo = mundo.get_node_or_null("NotasDoCaderno")
-	_checar(grupo != null and grupo.get_child_count() == 1, "num jogo novo, ela está lá de novo")
-	await _fechar(mundo)
 
 
 func _testar_aviso_espera() -> void:
@@ -254,43 +407,73 @@ func _testar_aviso_espera() -> void:
 	_checar(not Caderno.guardar_nota("atomo"), "pedir a mesma nota de novo não faz nada")
 	await _esperar(CadernoAviso.T_SEGURAR + CadernoAviso.T_SAIR + 0.3)
 	_checar(not aviso.ocupado() and not aviso.visible, "o aviso sai sozinho depois de lido")
-	_checar(_icone().novidade, "e a marca de nota nova continua até o caderno ser aberto")
+	_checar(_icone().novidade, "e a marca de nota nova continua até a pessoa ver o CADERNO")
 	_icone().novidade = false
 	cacau.queue_free()
 
 
-# ─────────────────────────────────────────────────────────────
-
-func _abrir() -> Node:
+## O atalho de teste P (o de ganhar todas as ferramentas) também dá o caderno
+## inteiro — no world1, onde nenhuma explicação aconteceu ainda.
+func _testar_tecla_p() -> void:
+	print("\n--- A TECLA P NO WORLD1 ---")
+	PaginasCaderno.esquecer_notas()
 	var mundo: Node = (load(MUNDO) as PackedScene).instantiate()
 	get_tree().root.add_child.call_deferred(mundo)
 	await _quadros(2)
-	# A personagem fica parada fora da física: cair ou morrer recarregaria a
-	# cena atual (este teste) no meio do caminho.
+	# Parada fora da física: cair ou morrer recarregaria a cena atual (este teste).
 	var player := mundo.get_node("Player") as CharacterBody2D
 	player.set_physics_process(false)
-	await get_tree().physics_frame
-	await _quadros(2)
-	return mundo
-
-
-## Põe a Cacau em pé ao lado da folha e deixa a física perceber: é a Colisao
-## da nota de verdade que acende o botão, não uma chamada direta.
-func _chegar_perto(player: Node2D, nota: Node2D) -> void:
-	player.global_position = nota.global_position + Vector2(-34, -42)
-	await get_tree().physics_frame
-	await get_tree().physics_frame
-	# A câmera tem suavização: espera ela chegar na personagem (capturas).
-	await _esperar(1.5)
-
-
-func _fechar(mundo: Node) -> void:
+	await _esperar(0.3)
+	var aviso := Caderno.aviso()
+	_checar(PaginasCaderno.quantas() == 2, "o caderno começa só até a página 3")
+	_tecla(KEY_P)
+	await _quadros(3)
+	_checar(PaginasCaderno.notas_achadas() == PaginasCaderno.NOTAS.size() \
+		and PaginasCaderno.quantas() == PaginasCaderno.PAGINAS.size(),
+		"P: todas as notas, o caderno inteiro (%d páginas duplas)" % PaginasCaderno.quantas())
+	_checar(_icone().novidade and not aviso.ocupado(), "com a marca de nota nova e sem fila de avisos")
+	var livro := Caderno.livro()
+	livro.ir_para_na_hora(PaginasCaderno.quantas() - 1)
+	_checar(livro._faces[0].dados.get("titulo") == "Destilação" and livro._faces[1].numero == 19,
+		"a última página é a da destilação (19)")
+	_tecla(KEY_P)
+	await _quadros(3)
+	_checar(PaginasCaderno.quantas() == PaginasCaderno.PAGINAS.size() and not aviso.ocupado(),
+		"P de novo não muda nada")
+	_icone().novidade = false
 	mundo.queue_free()
 	await _quadros(2)
+	PaginasCaderno.esquecer_notas()
 
+
+# ─────────────────────────────────────────────────────────────
 
 func _icone() -> CadernoIcone:
 	return Caderno.get_node("Icone")
+
+
+## Passa as falas até a pergunta ("Quer que eu explique...?"). True se chegou.
+func _ate_a_pergunta() -> bool:
+	await _ate(func() -> bool: return Dialogic.current_timeline != null, 3.0)
+	var toques := 0
+	while Dialogic.current_state != Dialogic.States.AWAITING_CHOICE and toques < 40 \
+			and Dialogic.current_timeline != null:
+		Dialogic.Inputs.handle_input()
+		await _esperar(0.2)
+		toques += 1
+	return Dialogic.current_state == Dialogic.States.AWAITING_CHOICE
+
+
+## Escolhe a opção (1 = a primeira). O Dialogic segura as opções um instante
+## depois de mostrá-las: tenta de novo até pegar.
+func _escolher(opcao: int) -> bool:
+	for tentativa in 10:
+		await _esperar(0.25)
+		Dialogic.Choices.select_choice(opcao)
+		await get_tree().process_frame
+		if Dialogic.current_state != Dialogic.States.AWAITING_CHOICE:
+			return true
+	return false
 
 
 func _apertar_e() -> void:

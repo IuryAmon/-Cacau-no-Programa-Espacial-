@@ -1,0 +1,385 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/puzzle_carbono14.gd" id="1_c14"]
+[ext_resource type="AudioStream" uid="uid://d184o4jmhqq0t" path="res://sounds/PuzzleConcluido2.mp3" id="2_sucesso"]
+[ext_resource type="AudioStream" uid="uid://0t8yju2oahhm" path="res://sounds/AcessoNegado.mp3" id="3_erro"]
+[ext_resource type="AudioStream" uid="uid://ca5jnwx1guwkn" path="res://sounds/POP.mp3" id="4_pop"]
+[ext_resource type="FontFile" uid="uid://ddvvjc61ngamd" path="res://assets/fonts/ari-w9500-display.ttf" id="5_fonte"]
+[ext_resource type="Texture2D" uid="uid://cji6avv68agjd" path="res://assets/UI/Computador receptor/tela_computador.png" id="6_tela"]
+[ext_resource type="Shader" path="res://shaders/tela_crt.gdshader" id="7_crt"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_caixa"]
+bg_color = Color(0.05, 0.1, 0.18, 0.55)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.9, 0.95, 1, 0.9)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_certa"]
+bg_color = Color(0.05, 0.18, 0.1, 0.55)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.4, 1, 0.4, 1)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_brilho"]
+blend_mode = 1
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("7_crt")
+shader_parameter/forca_linhas = 0.1
+shader_parameter/periodo = 4.0
+shader_parameter/vinheta = 0.45
+
+[node name="PuzzleCarbono14" type="CanvasLayer"]
+process_mode = 3
+layer = 98
+script = ExtResource("1_c14")
+
+[node name="AudioSucesso" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_sucesso")
+volume_db = 2.0
+
+[node name="AudioErro" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_erro")
+volume_db = 2.0
+
+[node name="AudioPop" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_pop")
+volume_db = -6.0
+
+[node name="RootControl" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Fundo" type="ColorRect" parent="RootControl"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.75)
+
+[node name="Instrucoes" type="Label" parent="RootControl"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 20.0
+offset_right = 154.0
+offset_bottom = 52.0
+theme_override_colors/font_color = Color(0.65, 0.65, 0.8, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 11
+text = "{fechar}
+para fechar"
+horizontal_alignment = 1
+
+[node name="Tela" type="TextureRect" parent="RootControl"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 278.0
+offset_top = 72.0
+offset_right = 1148.0
+offset_bottom = 702.0
+scale = Vector2(1.2, 1.2)
+mouse_filter = 2
+texture = ExtResource("6_tela")
+expand_mode = 1
+
+[node name="Display" type="Control" parent="RootControl/Tela"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 0
+offset_left = 42.0
+offset_top = 42.0
+offset_right = 828.0
+offset_bottom = 567.0
+pivot_offset = Vector2(393, 262.5)
+mouse_filter = 2
+
+[node name="Cabecalho" type="Label" parent="RootControl/Tela/Display"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 14.0
+offset_right = 764.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.56, 0.78, 1, 0.9)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 11
+text = "LIBERAÇÃO DO ELEVADOR"
+
+[node name="GrupoPergunta" type="Control" parent="RootControl/Tela/Display"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Pergunta" type="Label" parent="RootControl/Tela/Display/GrupoPergunta"]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 84.0
+offset_right = 738.0
+offset_bottom = 214.0
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_constants/line_spacing = 6
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 22
+text = "QUAL ISÓTOPO RADIOATIVO...?"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Respostas" type="Control" parent="RootControl/Tela/Display/GrupoPergunta"]
+layout_mode = 0
+anchors_preset = 0
+offset_top = 248.0
+offset_right = 786.0
+offset_bottom = 420.0
+mouse_filter = 2
+
+[node name="Resposta1" type="Panel" parent="RootControl/Tela/Display/GrupoPergunta/Respostas"]
+layout_mode = 0
+offset_left = 108.0
+offset_right = 258.0
+offset_bottom = 170.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_caixa")
+
+[node name="Massa" type="Label" parent="RootControl/Tela/Display/GrupoPergunta/Respostas/Resposta1"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = 76.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 20
+text = "12"
+
+[node name="Simbolo" type="Label" parent="RootControl/Tela/Display/GrupoPergunta/Respostas/Resposta1"]
+layout_mode = 0
+offset_top = 30.0
+offset_right = 150.0
+offset_bottom = 114.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 64
+text = "C"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Nome" type="Label" parent="RootControl/Tela/Display/GrupoPergunta/Respostas/Resposta1"]
+layout_mode = 0
+offset_top = 120.0
+offset_right = 150.0
+offset_bottom = 148.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 17
+text = "Carbono-12"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resposta2" type="Panel" parent="RootControl/Tela/Display/GrupoPergunta/Respostas"]
+layout_mode = 0
+offset_left = 318.0
+offset_right = 468.0
+offset_bottom = 170.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_caixa")
+
+[node name="Massa" type="Label" parent="RootControl/Tela/Display/GrupoPergunta/Respostas/Resposta2"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = 76.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 20
+text = "13"
+
+[node name="Simbolo" type="Label" parent="RootControl/Tela/Display/GrupoPergunta/Respostas/Resposta2"]
+layout_mode = 0
+offset_top = 30.0
+offset_right = 150.0
+offset_bottom = 114.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 64
+text = "C"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Nome" type="Label" parent="RootControl/Tela/Display/GrupoPergunta/Respostas/Resposta2"]
+layout_mode = 0
+offset_top = 120.0
+offset_right = 150.0
+offset_bottom = 148.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 17
+text = "Carbono-13"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resposta3" type="Panel" parent="RootControl/Tela/Display/GrupoPergunta/Respostas"]
+layout_mode = 0
+offset_left = 528.0
+offset_right = 678.0
+offset_bottom = 170.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_caixa")
+
+[node name="Massa" type="Label" parent="RootControl/Tela/Display/GrupoPergunta/Respostas/Resposta3"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = 76.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 20
+text = "14"
+
+[node name="Simbolo" type="Label" parent="RootControl/Tela/Display/GrupoPergunta/Respostas/Resposta3"]
+layout_mode = 0
+offset_top = 30.0
+offset_right = 150.0
+offset_bottom = 114.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 64
+text = "C"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Nome" type="Label" parent="RootControl/Tela/Display/GrupoPergunta/Respostas/Resposta3"]
+layout_mode = 0
+offset_top = 120.0
+offset_right = 150.0
+offset_bottom = 148.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 17
+text = "Carbono-14"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GrupoLiberado" type="Control" parent="RootControl/Tela/Display"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LabelLiberado" type="Label" parent="RootControl/Tela/Display/GrupoLiberado"]
+layout_mode = 0
+offset_top = 104.0
+offset_right = 786.0
+offset_bottom = 154.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 33
+text = "ELEVADOR LIBERADO!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Isotopo" type="Panel" parent="RootControl/Tela/Display/GrupoLiberado"]
+layout_mode = 0
+offset_left = 318.0
+offset_top = 214.0
+offset_right = 468.0
+offset_bottom = 384.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_certa")
+
+[node name="Massa" type="Label" parent="RootControl/Tela/Display/GrupoLiberado/Isotopo"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = 76.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 20
+text = "14"
+
+[node name="Simbolo" type="Label" parent="RootControl/Tela/Display/GrupoLiberado/Isotopo"]
+layout_mode = 0
+offset_top = 30.0
+offset_right = 150.0
+offset_bottom = 114.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 64
+text = "C"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Nome" type="Label" parent="RootControl/Tela/Display/GrupoLiberado/Isotopo"]
+layout_mode = 0
+offset_top = 120.0
+offset_right = 150.0
+offset_bottom = 148.0
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 17
+text = "Carbono-14"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Rodape" type="Label" parent="RootControl/Tela/Display"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 492.0
+offset_right = 764.0
+offset_bottom = 512.0
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 0.9)
+theme_override_fonts/font = ExtResource("5_fonte")
+theme_override_font_sizes/font_size = 11
+text = "RESPONDA PARA LIBERAR O ELEVADOR"
+
+[node name="Aura" type="ColorRect" parent="RootControl/Tela/Display"]
+material = SubResource("CanvasItemMaterial_brilho")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.25, 0.6, 1, 0.14)
+
+[node name="Varredura" type="ColorRect" parent="RootControl/Tela/Display"]
+material = SubResource("ShaderMaterial_crt")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Led" type="ColorRect" parent="RootControl/Tela"]
+layout_mode = 0
+offset_left = 762.0
+offset_top = 597.0
+offset_right = 774.0
+offset_bottom = 603.0
+mouse_filter = 2
+color = Color(0.9, 0.12, 0.1, 1)

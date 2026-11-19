@@ -7,9 +7,10 @@ extends FaseBase
 # portinha da casinha da escada, que é o par da porta do último andar da torre
 # (fase2_torre_interior.tscn). Aqui estão:
 #
-#   CilindroDeAr     o cilindro de amostra VAZIO (componentes/
-#                    cilindro_do_telhado.tscn): o E pega e ele vai para a
-#                    mochila.
+#   CilindrosDeAr    a estante de cilindros de amostra VAZIOS, em fileiras e
+#                    colunas (cilindros_do_telhado.gd): o E pega o mais perto
+#                    e ele vai para a mochila. Um de cada vez: com o dela já
+#                    pego, o E nos outros vira uma fala.
 #
 # O ELEVADOR DE CARGA leva do telhado para a rua (fase2_torre.tscn). A cabine é
 # PINTADA nos tiles: tudo, de qualquer camada, dentro da "Area Do Elevador"
@@ -32,10 +33,16 @@ extends FaseBase
 # "Zoom Da Camera" dele). O pulo sobe e cai na mesma linha; as velocidades da
 # faixa estão no Player ("Velocidade Na Faixa" e "Velocidade De Profundidade").
 #
+# A CÂMERA FICA PARADA NA VERTICAL, com a base da tela travada em y = 639 (a
+# guia horizontal do editor): o LimitesDaCamera vai de y = 189 a y = 639, a
+# altura exata da tela com o zoom 2 da Cacau (900 ÷ 2 = 450 px). Nem o pulo
+# mexe nela. Mudou o "Zoom Da Camera" do Player, refaça o topo: 639 menos
+# 900 ÷ o zoom novo.
+#
 # Chegar aqui marca MissaoNitrogenio.subiu_a_torre. Na primeira chegada, com o
 # cilindro ainda no lugar, a Cacau comenta ("fala_ao_chegar").
 #
-# SEM O CILINDRO, NÃO SE DESCE: enquanto ele estiver no suporte, a PortaEscada
+# SEM O CILINDRO, NÃO SE DESCE: enquanto ela não pegar um, a PortaEscada
 # não leva para baixo. O E na porta vira a fala "fala_sem_cilindro" ("Eu
 # preciso pegar o cilindro antes!"). É o mesmo jeito da rua com a amostra
 # gelada na mão (fase2_torre.gd). No modo dev a porta fica livre.
@@ -50,7 +57,8 @@ extends FaseBase
 #   MuroDaFrente  o muro de tijolos embaixo da grade da frente (tileset das
 #                 fases, na mesma grade do Terreno), também z_index 10 e sem
 #                 colisão.
-# A PortaEscada e o CilindroDeAr ficam com a origem no chão, na linha do fundo.
+# A PortaEscada fica com a origem no chão, na linha do fundo; a CilindrosDeAr, com
+# y na base da fileira do fundo (ver cilindros_do_telhado.gd).
 #
 # O MURO NA FRENTE DELA começa em y = 564 (a base da grade da frente, a guia
 # horizontal do editor): abaixo disso, NADA do sprite da Cacau é desenhado —
@@ -58,6 +66,14 @@ extends FaseBase
 # do muro. O valor é o "Topo Do Muro Da Frente", no Inspector do nó raiz
 # (Fase2Telhado); quem esconde é o shader corte_abaixo.gdshader no sprite
 # dela (esconder_abaixo_de, em player.gd).
+#
+# O LANÇAMENTO: na primeira vez que ela passa do "Gatilho Do Lancamento"
+# (x do mundo, a caminho do elevador), o Dr. Chico sobe atrás dela, os dois
+# vão até a grade do fundo e veem um foguete brasileiro subir com um satélite
+# — é ali que ele conta que ela vai para a Lua. Tudo nasce na hora (nada na
+# cena): ver scripts/fases/lancamento_no_telhado.gd. As regulagens e a música
+# da cena ficam no grupo "Lançamento" do Inspector da raiz. Não acontece com a
+# amostra gelada na mão (o relógio dela não espera).
 
 ## A Cacau, na primeira vez que sai da escada para o telhado.
 @export var fala_ao_chegar: String = "cacau_torre_telhado"
@@ -75,16 +91,46 @@ extends FaseBase
 ## Quanto tempo a cabine leva para afundar (s).
 @export var duracao_da_descida: float = 1.8
 
+@export_group("Lançamento")
+## Liga a cena do foguete (acontece uma vez só; ver lancamento_no_telhado.gd).
+@export var cena_do_lancamento: bool = true
+## Andando para a direita, ela dispara a cena ao passar deste x (px do mundo).
+@export var gatilho_do_lancamento: float = 800.0
+## Onde ela para, na grade do fundo (x do mundo). O Dr. Chico fica à esquerda.
+@export var beirada_do_lancamento: float = 880.0
+## A beirada do fundo do telhado (y do mundo, o pé da grade do fundo): o
+## foguete parte escondido logo abaixo dela e aparece por entre a grade.
+@export var beirada_do_fundo: float = 508.0
+## Zoom da câmera olhando o céu (menor = mais céu). Em 1,6 a lua aparece.
+@export var zoom_do_ceu: float = 1.6
+## A música da cena. Vazio: só os sons do lançamento (a trilha da fase pausa).
+@export var musica_do_lancamento: AudioStream
+@export var volume_da_musica_do_lancamento_db: float = -6.0
+## Quando a música da cena entra.
+@export_enum("Na chegada do Dr. Chico", "Na ignição", "Na conversa") var musica_entra: int = 1
+
+@export_group("Antena")
+## A antena com a luz vermelha piscando no teto da casinha da escada
+## (scripts/fx/antena_de_aviso.gd). Desligado, ela não aparece.
+@export var antena: bool = true
+## O pé da antena (o meio da base), em cima do teto da casinha.
+@export var pe_da_antena := Vector2(372, 289)
+## Altura do mastro, em pixels do mundo (sem a haste da lâmpada).
+@export_range(24, 120, 1) var altura_da_antena: int = 62
+@export_range(0.4, 5.0, 0.05) var piscada_da_antena: float = 1.6
+
 ## Das bordas da cabine para dentro, quanto o meio da Cacau precisa estar para
 ## o E aparecer (px).
 const MARGEM_DA_CABINE := 12.0
+const CENA_DO_LANCAMENTO := preload("res://scripts/fases/lancamento_no_telhado.gd")
+const ANTENA_DE_AVISO := preload("res://scripts/fx/antena_de_aviso.gd")
 
 @onready var _porta_escada: Area2D = get_node_or_null("PortaEscada")
-@onready var _cilindro: CilindroDoTelhado = get_node_or_null("CilindroDeAr")
 
 var _cabine: BlocoDeTiles = null
 var _e_da_cabine: IndicadorEntrada = null
 var _descendo: bool = false
+var _lancamento: CENA_DO_LANCAMENTO = null
 
 
 func _ready() -> void:
@@ -92,6 +138,7 @@ func _ready() -> void:
 	if player and player.has_method("esconder_abaixo_de") and topo_do_muro_da_frente > 0.0:
 		player.esconder_abaixo_de(topo_do_muro_da_frente)
 	_montar_elevador()
+	_montar_a_antena()
 	_atualizar_travas()
 	var primeira_vez := not MissaoNitrogenio.subiu_a_torre
 	MissaoNitrogenio.subiu_a_torre = true
@@ -103,11 +150,13 @@ func _process(_delta: float) -> void:
 	_atualizar_travas()
 	_vigiar_porta_da_escada()
 	_vigiar_elevador()
+	_vigiar_o_lancamento()
 
 
-## O cilindro ainda está no suporte (o nó some quando já foi pego antes).
+## Ela ainda não pegou o cilindro dela (nenhum na mochila nem mais adiante no
+## caminho do nitrogênio; ver CilindroDoTelhado.cacau_tem_um).
 func cilindro_no_lugar() -> bool:
-	return is_instance_valid(_cilindro) and _cilindro.ainda_no_lugar()
+	return not CilindroDoTelhado.cacau_tem_um(get_tree())
 
 
 func _atualizar_travas() -> void:
@@ -137,6 +186,65 @@ func _falar_quando_livre() -> void:
 		await get_tree().process_frame
 	if is_inside_tree():
 		DialogicBridge.falar(fala_ao_chegar)
+
+
+# --- A ANTENA ---
+
+## Nasce no jogo (nada gravado na cena): o lugar e o ritmo vêm do grupo
+## "Antena" do Inspector. Fica atrás da beirada do teto (Terreno), que cobre o
+## pé dela.
+func _montar_a_antena() -> void:
+	if not antena or get_node_or_null("AntenaDeAviso") != null:
+		return
+	var nova := ANTENA_DE_AVISO.new()
+	nova.name = "AntenaDeAviso"
+	nova.position = pe_da_antena
+	nova.altura = altura_da_antena
+	nova.periodo = piscada_da_antena
+	nova.z_index = -6
+	add_child(nova)
+
+
+# --- O LANÇAMENTO ---
+
+## A cena do foguete começa quando ela passa do gatilho, livre e no chão, sem
+## nenhuma outra tela ou fala no ar.
+func _vigiar_o_lancamento() -> void:
+	if not pode_comecar_o_lancamento():
+		return
+	if player.global_position.x < gatilho_do_lancamento:
+		return
+	comecar_o_lancamento()
+
+
+func pode_comecar_o_lancamento() -> bool:
+	if not cena_do_lancamento or MissaoNitrogenio.viu_o_lancamento or is_instance_valid(_lancamento):
+		return false
+	if player == null or _descendo or not player.pode_se_mover or not player.is_on_floor():
+		return false
+	# Com a amostra gelada na mão o relógio corre: nada de parar para ver.
+	if MissaoNitrogenio.carregando_amostra() or ModoDev.voando:
+		return false
+	return not Interacao.ocupada() and Dialogic.current_timeline == null \
+		and not FadeTela.cobrindo(get_tree())
+
+
+## Dispara a cena (uma vez só: ela mesma marca MissaoNitrogenio.viu_o_lancamento).
+func comecar_o_lancamento() -> CENA_DO_LANCAMENTO:
+	if is_instance_valid(_lancamento):
+		return _lancamento
+	_lancamento = CENA_DO_LANCAMENTO.new()
+	_lancamento.beirada_x = beirada_do_lancamento
+	_lancamento.beirada_do_fundo_y = beirada_do_fundo
+	_lancamento.zoom_do_ceu = zoom_do_ceu
+	_lancamento.musica = musica_do_lancamento
+	_lancamento.volume_da_musica_db = volume_da_musica_do_lancamento_db
+	_lancamento.musica_entra = musica_entra
+	if _porta_escada:
+		_lancamento.porta_x = _porta_escada.global_position.x
+	add_child(_lancamento)
+	_lancamento.comecar()
+	return _lancamento
 
 
 # --- O ELEVADOR DE CARGA ---
@@ -276,3 +384,10 @@ func _tocar(cacau: CharacterBody2D, animacao: StringName) -> void:
 ## A cabine (para o teste e o modo dev).
 func cabine_do_elevador() -> BlocoDeTiles:
 	return _cabine
+
+
+## A saída sem nó, para o GuiaDeCaminho (scripts/guia_de_caminho.gd): o
+## elevador de carga desce à rua. A seta aponta para o alto da cabine.
+func saidas_para_o_guia() -> Array[Dictionary]:
+	return [{"cena": MissaoNitrogenio.CENA_RUA,
+		"posicao": Vector2(area_do_elevador.get_center().x, area_do_elevador.position.y)}]

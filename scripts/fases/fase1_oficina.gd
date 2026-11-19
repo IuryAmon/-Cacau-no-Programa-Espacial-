@@ -23,7 +23,10 @@ extends FaseBase
 #                mínimo para ela caber no vão entre a parede e a cabine), que é
 #                o que não deixa ninguém cair do mundo por ali
 #   ② TREINO     escola do arremesso — em construção manual no editor; só a
-#                caixa elétrica AlvoFixo1 ficou de placeholder
+#                caixa elétrica AlvoFixo1 ficou de placeholder. Assim que o
+#                tutorial do bumerangue fecha, uma seta sem texto
+#                (GuiasDeCaminho/SetaPrimeiraCaixa) aponta para ela até ela
+#                quebrar
 #   ②b PORTÃO    no meio do mapa, uma BARREIRA fecha a passagem e só cai com os
 #                DOIS painéis quebrados a bumerangue (PortaoPaineis) — sem
 #                janela de tempo: pode ser um arremesso para cada
@@ -32,12 +35,12 @@ extends FaseBase
 #                no export "caixa_eletrica" de cada serra
 #   ③ CORREDORES passagem até o depósito e, no meio dela, o ELEVADOR DE CARGA
 #                (ElevadorCarga/): a plataforma espera no chão e o terminal ao
-#                lado dela só a libera depois do PuzzleGuincho — converter a
-#                MASSA da Cacau (balança, em kg) na FORÇA do peso dela (o
-#                guincho, em N). É a plataforma do world1, mas acionada por
-#                entender a máquina em vez de conversar com o cientista; a
-#                ligação terminal -> plataforma é o export "alvo" do
-#                TerminalGuincho
+#                lado dela só a libera depois do PuzzleCarbono14 — a pergunta
+#                do carbono-14 (qual isótopo radioativo data fósseis de até 50
+#                mil anos), que antes era uma curiosidade no rádio. É a
+#                plataforma do world1, mas acionada pelo terminal em vez de
+#                conversar com o cientista; a ligação terminal -> plataforma é
+#                o export "alvo" do TerminalGuincho
 #   ④ DEPÓSITO   coleta de cascas de babaçu
 #   ⑤ PÁTIO      no fim do mapa, a gaiola de vidro do MAÇARICO: balancear a
 #                queima do acetileno em duas etapas (puzzle_macarico) destranca

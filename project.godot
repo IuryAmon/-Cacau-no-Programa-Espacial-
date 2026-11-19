@@ -29,8 +29,9 @@ Objetivos="*res://scripts/objetivos.gd"
 Caderno="*res://scripts/caderno.gd"
 ModoDev="*res://scripts/modo_dev.gd"
 TrilhaSonora="*res://scripts/trilha_sonora.gd"
-Dialogic="*uid://c3b5clqd5sgir"
 Pausa="*res://scripts/pausa.gd"
+GuiaDeCaminho="*res://scripts/guia_de_caminho.gd"
+Dialogic="*uid://c3b5clqd5sgir"
 
 [dialogic]
 
@@ -54,6 +55,7 @@ directories/dtl_directory={
 "cacau_tem_nitrogenio": "res://timelines/cacau_tem_nitrogenio.dtl",
 "cacau_terminar_carvao": "res://timelines/cacau_terminar_carvao.dtl",
 "cacau_torre_telhado": "res://timelines/cacau_torre_telhado.dtl",
+"cacau_um_cilindro_basta": "res://timelines/cacau_um_cilindro_basta.dtl",
 "cacau_ve_foguete": "res://timelines/cacau_ve_foguete.dtl",
 "cientista_balanceamento_1": "res://timelines/cientista_balanceamento_1.dtl",
 "cientista_balanceamento_2": "res://timelines/cientista_balanceamento_2.dtl",
@@ -69,7 +71,15 @@ directories/dtl_directory={
 "cientista_dica_tem_o2": "res://timelines/cientista_dica_tem_o2.dtl",
 "cientista_fase1": "res://timelines/cientista_fase1.dtl",
 "cientista_final_fase": "res://timelines/cientista_final_fase.dtl",
+"cientista_hidrogenio_1": "res://timelines/cientista_hidrogenio_1.dtl",
+"cientista_hidrogenio_2": "res://timelines/cientista_hidrogenio_2.dtl",
+"cientista_hidrogenio_3": "res://timelines/cientista_hidrogenio_3.dtl",
+"cientista_lancamento_chegada": "res://timelines/cientista_lancamento_chegada.dtl",
+"cientista_lancamento_lua": "res://timelines/cientista_lancamento_lua.dtl",
 "cientista_laser_aberto": "res://timelines/cientista_laser_aberto.dtl",
+"cientista_oxigenio_1": "res://timelines/cientista_oxigenio_1.dtl",
+"cientista_oxigenio_2": "res://timelines/cientista_oxigenio_2.dtl",
+"cientista_oxigenio_3": "res://timelines/cientista_oxigenio_3.dtl",
 "jaleco": "res://timelines/jaleco.dtl",
 "radio_fase1": "res://timelines/radio_fase1.dtl",
 "radio_fase2": "res://timelines/radio_fase2.dtl",

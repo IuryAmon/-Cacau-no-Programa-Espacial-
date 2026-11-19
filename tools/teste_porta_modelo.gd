@@ -11,17 +11,21 @@ extends Node
 # Casos:
 #   * a cena é a porta da ala de eletrólise com o "porta modelo.png": 12
 #     quadros de 148x134, abrindo 0->11 e fechando ao contrário;
-#   * Torre de Gases, Torre de Lançamento, as voltas ao laboratório (fases 3 e
-#     final) e a cápsula usam a porta modelo; só o alçapão do fosso continua
-#     PortaFase. A fase 2 não tem porta: entra-se e sai-se dela andando, por
-#     uma PassagemDeCena na ponta esquerda;
+#   * as voltas ao laboratório (fases 3 e final) e a cápsula usam a porta
+#     modelo; só o alçapão do fosso continua PortaFase. A Torre de Lançamento
+#     ficou sem entrada em 2026-11-18 (a porta verde do laboratório saiu). O
+#     caminho da fase 2 não tem porta de cena: laboratório, corredor da torre e
+#     fase 2 se ligam por PassagemDeCena, entra-se e sai-se andando — no
+#     laboratório, depois de derretida a porta de metal (PortaMetalTorre);
 #   * toda porta com destino acha, na outra cena, a porta que a recebe (ou a
-#     passagem: a ponta do corredor da torre é uma PassagemDeCena);
+#     passagem) — menos as voltas de VOLTAS_SEM_PORTA;
+#   * o E entra pela porta e o W não (na do átrio do subsolo, de volta ao
+#     laboratório pelo alçapão);
 #   * cada porta nova fica em pé no chão (o vão dela na altura do piso);
 #   * a viagem de verdade: laboratório -> corredor -> Torre e a volta pelo
-#     mesmo caminho (o corredor tem um teste só dele, teste_corredor_torre),
-#     alçapão do fosso -> subsolo -> alçapão, e a cápsula não deixa a volta da
-#     órbita sair pela porta do simulador.
+#     mesmo caminho, tudo por passagens (o corredor tem um teste só dele,
+#     teste_corredor_torre), alçapão do fosso -> subsolo -> alçapão, e a
+#     cápsula não deixa a volta da órbita sair pela porta do simulador.
 
 const LAB := "res://scenes/laboratório_(world_2).tscn"
 const FASE1 := "res://scenes/fases/fase1_oficina.tscn"
@@ -51,11 +55,15 @@ const SCRIPT_PORTA := "res://scripts/porta_simulador.gd"
 
 ## As portas que ganharam a porta modelo.
 const PORTAS_MODELO := {
-	LAB: ["PortaTorre", "PortaLancamento"],
-	CORREDOR: ["PortaLab"],
 	FASE3: ["Atrio/PortaFosso"],
 	FASE_FINAL: ["Portao/PortaHub", "Plataforma/Capsula/PortaCapsula"],
 }
+## Voltas sem quem as receba, de propósito (tag_destino -> cena de destino). A
+## Torre de Lançamento ficou sem entrada em 2026-11-18: a porta de saída dela
+## (Portao/PortaHub) continua mandando para "volta_do_lancamento", à espera da
+## porta nova no laboratório; enquanto isso, quem sai de lá (só pelo modo dev)
+## aparece no ponto de partida do laboratório.
+const VOLTAS_SEM_PORTA := {"volta_do_lancamento": LAB}
 ## Do centro da cápsula da Cacau até a sola.
 const ATE_A_SOLA := 36.0
 
@@ -134,7 +142,12 @@ func _testar_botao_e() -> void:
 	_checar(lab.get_node_or_null("PortaSimulador/IconeInteragir") is IconeInteragir
 			and not lab.has_node("PortaSimulador/IconeTeclaW"),
 		"a porta do simulador (montada direto no laboratório) também é E/□")
-	var porta := lab.get_node("PortaTorre")
+	# A porta modelo do átrio do subsolo, a que volta ao laboratório. (Era a da
+	# Torre de Lançamento, no laboratório, que saiu.)
+	await _abrir(FASE3)
+	await _segundos(1.0)
+	var subsolo := get_tree().current_scene
+	var porta := subsolo.get_node("Atrio/PortaFosso")
 	var icone := porta.get_node("IconeInteragir") as IconeInteragir
 	var sprite := porta.get_node("SpritePorta") as AnimatedSprite2D
 	_checar(not icone.visible, "longe da porta, nenhum botão")
@@ -148,16 +161,20 @@ func _testar_botao_e() -> void:
 	_checar(porta._player_dentro and icone.visible, "na frente da porta, o botão E aparece")
 	await _toque("ui_up")
 	await _quadros(3)
-	_checar(not porta._ocupada and get_tree().current_scene == lab, "o W não abre a porta")
+	_checar(not porta._ocupada and get_tree().current_scene == subsolo, "o W não abre a porta")
 	await _toque("interact")
 	await _quadros(2)
 	_checar(porta._ocupada, "o E abre a porta")
 	_checar(not icone.visible, "   e o botão some enquanto ela entra")
-	await _esperar_cena(CORREDOR)
+	await _esperar_cena(LAB)
+	await _quadros(5)
+	var alcapao := get_tree().current_scene.get_node("FossoVentilacao") as Node2D
+	_checar(absf(_player().global_position.x - alcapao.global_position.x) < 24.0,
+		"   e ela sai no laboratório, no alçapão do fosso (x = %.0f, alçapão em %.0f)"
+		% [_player().global_position.x, alcapao.global_position.x])
 	# Espera a chegada acabar: trocar de cena com a tela ainda clareando deixa
 	# o FadeTela da cena velha acordando sem ela (e o Godot cai).
-	await _conferir_saida(get_tree().current_scene.get_node("PortaLab"), "   e ela sai no corredor")
-	await _segundos(0.5)
+	await _segundos(1.5)
 
 
 func _toque(acao: String) -> void:
@@ -220,16 +237,33 @@ func _testar_portas_nas_cenas() -> void:
 		if s.para == ORBITA:
 			continue
 		var achou: String = recebe.get(s.para, {}).get(s.tag, "")
+		if VOLTAS_SEM_PORTA.get(s.tag, "") == s.para:
+			_checar(achou == "", "%s %s -> %s: \"%s\" fica sem quem receba, de propósito (a Torre de Lançamento está sem entrada)%s"
+				% [s.de.get_file(), s.porta, s.para.get_file(), s.tag,
+				"" if achou == "" else " — mas %s recebe: tire a volta de VOLTAS_SEM_PORTA" % achou])
+			continue
 		_checar(achou != "", "%s %s -> %s: quem recebe \"%s\" é %s" % [s.de.get_file(), s.porta, s.para.get_file(), s.tag, achou])
 
 
 func _testar_torre_ida_e_volta() -> void:
 	print("\n--- LABORATÓRIO -> CORREDOR -> TORRE -> CORREDOR -> LABORATÓRIO ---")
-	# A porta da Torre dá num corredor, e é o fundo dele que leva à fase.
+	# Sem porta de cena: a ponta direita do laboratório dá na esquerda do
+	# corredor, e é o fundo dele que leva à fase. A porta de metal da ponta
+	# já derretida (quem a derrete é o teste_corredor_torre).
+	EstadoMundo._feitos[RoteiroObjetivos.PORTA_METAL_TORRE] = true
 	await _abrir(LAB)
-	await _usar(get_tree().current_scene.get_node("PortaTorre"))
+	await _segundos(0.5)
+	var saida_lab := get_tree().current_scene.get_node("SaidaCorredor") as PassagemDeCena
+	_player().global_position.x = saida_lab.global_position.x + 4.0
 	await _esperar_cena(CORREDOR)
-	await _conferir_saida(get_tree().current_scene.get_node("PortaLab"), "chegou no corredor saindo pela porta dele")
+	var entrada_lab := get_tree().current_scene.get_node("EntradaLab") as PassagemDeCena
+	for i in 400:
+		if not entrada_lab._chegando:
+			break
+		await get_tree().process_frame
+	_checar(not entrada_lab._chegando and _player().pode_se_mover
+		and _player().global_position.x > entrada_lab.global_position.x,
+		"cruzou a ponta direita do laboratório e chegou no corredor entrando andando pela esquerda")
 
 	# Cruzou a linha do fundo, a cena troca sozinha.
 	var saida := get_tree().current_scene.get_node("SaidaTorre") as PassagemDeCena
@@ -259,9 +293,19 @@ func _testar_torre_ida_e_volta() -> void:
 		and _player().global_position.x < saida.global_position.x,
 		"voltou pelo fundo do corredor e entrou andando")
 
-	await _usar(get_tree().current_scene.get_node("PortaLab"))
+	await _quadros(3)
+	entrada_lab = get_tree().current_scene.get_node("EntradaLab") as PassagemDeCena
+	_player().global_position.x = entrada_lab.global_position.x - 4.0
 	await _esperar_cena(LAB)
-	await _conferir_saida(get_tree().current_scene.get_node("PortaTorre"), "voltou ao laboratório saindo pela porta da Torre")
+	saida_lab = get_tree().current_scene.get_node("SaidaCorredor") as PassagemDeCena
+	for i in 400:
+		if not saida_lab._chegando:
+			break
+		await get_tree().process_frame
+	_checar(not saida_lab._chegando and _player().pode_se_mover
+		and _player().global_position.x < saida_lab.global_position.x,
+		"voltou ao laboratório entrando andando pela ponta direita")
+	await _segundos(1.0)  # o laboratório termina de clarear
 
 
 func _testar_fosso_ida_e_volta() -> void:

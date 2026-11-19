@@ -114,16 +114,36 @@ func retangulo_do_bulbo() -> Rect2:
 	return Rect2(roundf((size.x - LADO_DO_BULBO) * 0.5), size.y - LADO_DO_BULBO - 12.0, LADO_DO_BULBO, LADO_DO_BULBO)
 
 
-## Onde clicar e arrastar pega: a ficha, com o lugar do ponteiro à esquerda.
+## Onde clicar e arrastar pega: a ficha, com o lugar do ponteiro à esquerda —
+## e a plaquinha inteira dele, até a ponta do número (é ela que a mão da dica
+## mostra piscando; com um número largo, ela passa dos 40 px).
 func retangulo_de_pegar() -> Rect2:
 	var ficha := retangulo_da_ficha()
-	return Rect2(ficha.position.x - 40.0, FOLGA_DE_CIMA - 14.0, ficha.size.x + 40.0,
+	var coluna := Rect2(ficha.position.x - 40.0, FOLGA_DE_CIMA - 14.0, ficha.size.x + 40.0,
 		size.y - FOLGA_DE_BAIXO - FOLGA_DE_CIMA + 28.0)
+	return coluna.merge(retangulo_do_ponteiro())
 
 
 ## O mesmo, na tela.
 func retangulo_de_pegar_na_tela() -> Rect2:
 	var local := retangulo_de_pegar()
+	return Rect2(global_position + local.position, local.size)
+
+
+## A plaquinha do ponteiro, com a ponta, em px do nó: o que a mão arrasta.
+func retangulo_do_ponteiro() -> Rect2:
+	var ficha := retangulo_da_ficha()
+	var y := roundf(altura_de(pedida))
+	var texto := MisturasDoDestilador.graus(roundf(pedida))
+	var largura := PecasDoLaboratorio.retangulo_da_plaquinha(Vector2.ZERO, texto).size.x
+	var ponta := ficha.position.x - 2.0
+	var placa := PecasDoLaboratorio.retangulo_da_plaquinha(Vector2(ponta - 18.0 - largura * 0.5, y), texto)
+	return placa.merge(Rect2(ponta - 18.0, y - 8.0, 18.0, 16.0))
+
+
+## O mesmo, na tela.
+func retangulo_do_ponteiro_na_tela() -> Rect2:
+	var local := retangulo_do_ponteiro()
 	return Rect2(global_position + local.position, local.size)
 
 
@@ -215,10 +235,20 @@ func _desenhar_o_ponteiro(ficha: Rect2) -> void:
 	for i in 4:
 		draw_rect(Rect2(ponta - 4.0 - i * 4.0, y - 2.0 - i * 2.0, 4.0, 4.0 + i * 4.0),
 			EstiloHUD.CLARO if em_foco else EstiloHUD.PAPEL)
+	var placa := PecasDoLaboratorio.retangulo_da_plaquinha(meio, texto)
 	if em_foco:
-		EstiloHUD.bloco(self, PecasDoLaboratorio.retangulo_da_plaquinha(meio, texto).grow(4.0), EstiloHUD.CLARO)
+		EstiloHUD.bloco(self, placa.grow(4.0), EstiloHUD.CLARO)
 	PecasDoLaboratorio.plaquinha(self, meio, texto, 22,
 		PecasDoLaboratorio.PAPEL_ACESO if em_foco else EstiloHUD.PAPEL)
+	# A alça: duas setinhas, em cima e embaixo da plaquinha — ela sobe e desce.
+	# Acesas com o ponteiro do mouse em cima (ou arrastando).
+	var cor := EstiloHUD.CLARO if em_foco else Color(EstiloHUD.CLARO, 0.55)
+	var x := roundf(placa.get_center().x)
+	for i in 3:
+		var degrau := 2.0 + i * 4.0
+		# A de cima com a ponta no alto; a de baixo com a ponta embaixo.
+		draw_rect(Rect2(x - degrau * 0.5, placa.position.y - 10.0 + i * 2.0, degrau, 2.0), cor)
+		draw_rect(Rect2(x - degrau * 0.5, placa.end.y + 12.0 - i * 2.0, degrau, 2.0), cor)
 
 
 func _cor(graus: float) -> Color:

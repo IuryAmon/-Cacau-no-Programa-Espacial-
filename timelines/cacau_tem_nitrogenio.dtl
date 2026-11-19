@@ -1,3 +1,4 @@
 join cacau (cacau_feliz) left
-cacau: Nitrogênio quase puro! Só um pouquinho de oxigênio e argônio evaporou junto.
-cacau: E ele é quase 80% do ar que a gente respira. Hora de levar pro painel CHONPS, no laboratório!
+cacau: Deu {DialogicBridge.pureza_do_nitrogenio()}% de nitrogênio! O resto é o pouquinho de oxigênio e argônio que evaporou junto.
+cacau: No ar que a gente respira ele é só 78%, todo misturado. A coluna deixou ele quase sozinho!
+cacau: Hora de levar pro painel CHONPS, no laboratório!

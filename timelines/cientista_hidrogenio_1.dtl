@@ -1,0 +1,15 @@
+join cientista (cientista_feliz) leftmost [mirrored="true"]
+cientista (cientista_feliz): Essa gaiola só abre com o átomo de hidrogênio montado.
+cientista: Quer que eu explique como descobrir as partículas dele?
+- Quero, me explica!
+	[signal arg="caixa"]
+	cientista (cientista_mto_feliz): Tudo começa nesta caixinha. É o hidrogênio, do jeito que ele aparece na tabela periódica!
+	[signal arg="z"]
+	cientista (cientista_feliz): O número de cima é o número atômico, o Z. Ele conta os prótons do núcleo: o hidrogênio tem 1.
+	[signal arg="proton"]
+	cientista: Arraste o próton para o núcleo, bem no meio do átomo.
+- Já sei montar
+	[signal arg="pular_explicacao"]
+	do Caderno.anotar("atomo")
+	cientista (cientista_mto_feliz): Então mãos à obra! Se esquecer de alguma coisa, está tudo no seu caderno.
+	[end_timeline]

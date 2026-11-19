@@ -199,3 +199,79 @@ static func altura_das_linhas(linhas: int, tamanho: int, entrelinha: float) -> f
 ## Quantas linhas o texto ocupa nesta largura.
 static func contar_linhas(texto: String, tamanho: int, largura_disponivel: float) -> int:
 	return EstiloHUD.quebrar(FONTE, texto, tamanho, largura_disponivel).size()
+
+
+## Texto claro com contorno (o rótulo do HUD), centrado em "meio": é como as
+## telas escrevem direto em cima do fundo escuro — a frase do que fazer, o nome
+## de um controle.
+static func escrever_claro_no_meio(ci: CanvasItem, meio: Vector2, texto: String, tamanho: int,
+		cor: Color = EstiloHUD.CLARO) -> void:
+	if texto.is_empty() or cor.a <= 0.0:
+		return
+	var sobe := FONTE.get_ascent(tamanho)
+	var desce := FONTE.get_descent(tamanho)
+	EstiloHUD.rotulo(ci, FONTE, Vector2(meio.x - largura(texto, tamanho) * 0.5, meio.y + (sobe - desce) * 0.5).round(),
+		texto, tamanho, cor)
+
+
+# ─────────────────────────────────────────────────────────────
+# A LISTA DE METAS (o OBJETIVO dos puzzles)
+# ─────────────────────────────────────────────────────────────
+
+## O verde do visto e da barra cheia.
+const COR_DA_META_FEITA := Color("3ecf72")
+const ALTURA_DA_META := 52.0
+const LADO_DO_QUADRADINHO := 22.0
+const ALTURA_DA_BARRA := 8.0
+
+
+## A ficha do OBJETIVO: o título e, embaixo, uma linha por meta. Cada meta é um
+## dicionário com "texto", "feita" (bool) e, se quiser, "progresso" (0..1: a
+## barrinha embaixo do texto, que enche até a meta ser cumprida) e "pulo"
+## (0..1: o quadradinho incha quando ela acaba de ser cumprida). Uma meta sem
+## progresso é uma condição ("SEM ESTOURAR"): só o quadradinho, e o texto pode
+## ocupar duas linhas.
+static func lista_de_metas(ci: CanvasItem, caixa: Rect2, titulo: String, metas: Array) -> void:
+	EstiloHUD.ficha(ci, caixa)
+	escrever(ci, caixa.position + Vector2(18, 16), titulo, 13, EstiloHUD.TINTA_FRACA)
+	for i in metas.size():
+		var meta: Dictionary = metas[i]
+		_meta(ci, Vector2(caixa.position.x + 18.0, caixa.position.y + 50.0 + i * ALTURA_DA_META),
+			caixa.size.x - 36.0, meta)
+
+
+## A altura que a ficha do OBJETIVO precisa para tantas metas.
+static func altura_da_lista_de_metas(quantas: int) -> float:
+	return 50.0 + quantas * ALTURA_DA_META - 6.0
+
+
+static func _meta(ci: CanvasItem, canto: Vector2, largura_toda: float, meta: Dictionary) -> void:
+	var feita := bool(meta.get("feita", false))
+	var pulo := float(meta.get("pulo", 0.0))
+	var quadrado := Rect2(canto.x, canto.y - 2.0, LADO_DO_QUADRADINHO, LADO_DO_QUADRADINHO).grow(roundf(pulo * 3.0))
+	EstiloHUD.bloco(ci, quadrado, EstiloHUD.TINTA)
+	ci.draw_rect(quadrado.grow(-3.0), COR_DA_META_FEITA if feita else EstiloHUD.PAPEL_DOBRA)
+	if feita:
+		# O visto, em pixels.
+		var c := quadrado.get_center()
+		for k in 3:
+			ci.draw_rect(Rect2(c + Vector2(-6 + k * 2, -1 + k * 2), Vector2(3, 3)), EstiloHUD.TINTA)
+		for k in 4:
+			ci.draw_rect(Rect2(c + Vector2(0 + k * 2, 3 - k * 3), Vector2(3, 3)), EstiloHUD.TINTA)
+	var x := canto.x + LADO_DO_QUADRADINHO + 10.0
+	var largura_do_texto := largura_toda - (x - canto.x)
+	var texto := String(meta.get("texto", ""))
+	if not meta.has("progresso"):
+		escrever_em_linhas(ci, Rect2(x, canto.y - 2.0, largura_do_texto, 40.0), texto, 13, EstiloHUD.TINTA, 16.0, false)
+		return
+	escrever(ci, Vector2(x, canto.y - 2.0), texto, 13, EstiloHUD.TINTA)
+	# A barrinha: o trilho de papel com o contorno de tinta, e o que já foi
+	# feito em tinta (verde quando completa).
+	var trilho := Rect2(x, canto.y + 18.0, largura_do_texto, ALTURA_DA_BARRA)
+	EstiloHUD.bloco(ci, trilho, EstiloHUD.TINTA, 1.0)
+	var dentro := trilho.grow(-2.0)
+	ci.draw_rect(dentro, EstiloHUD.PAPEL_DOBRA)
+	var cheio := 1.0 if feita else clampf(float(meta["progresso"]), 0.0, 1.0)
+	if cheio > 0.0:
+		ci.draw_rect(Rect2(dentro.position, Vector2(maxf(roundf(dentro.size.x * cheio), 2.0), dentro.size.y)),
+			COR_DA_META_FEITA if feita else EstiloHUD.TINTA_FRACA)

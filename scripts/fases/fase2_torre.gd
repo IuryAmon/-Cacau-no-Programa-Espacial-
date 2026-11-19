@@ -28,9 +28,12 @@ extends FaseBase
 # caminho só para dar para ver) e, embaixo dela até o chão, o TUBO que a
 # empurra (colunas 56 e 58). No jogo, a plataforma vira o nó ElevadorDeCarga
 # e o tubo, o TuboDoElevador (ver bloco_de_tiles.gd):
-#   - parada, a plataforma fica lá embaixo, com a base no "Chao Do Elevador"
-#     (y = 512), e dá para pisar nela (o piso fica "Altura Do Piso" abaixo do
-#     topo dela). O tubo fica todo recolhido;
+#   - até a Cacau descer do telhado nele, a plataforma fica LÁ NO ALTO, no
+#     "Topo Do Percurso", esperando no telhado, com o tubo esticado até ela;
+#   - depois que desceu (MissaoNitrogenio.elevador_desceu), ela fica lá
+#     embaixo, com a base no "Chao Do Elevador" (y = 512), e dá para pisar
+#     nela (o piso fica "Altura Do Piso" abaixo do topo dela). O tubo fica
+#     todo recolhido;
 #   - chegando do telhado (MissaoNitrogenio.chegando_de_elevador), a rua abre
 #     com a Cacau em cima da plataforma, lá no alto ("Topo Do Percurso", acima
 #     do que a câmera mostra), e ela desce até o chão. O tubo vai até onde a
@@ -173,7 +176,8 @@ func ao_barrar_a_saida() -> void:
 # --- O ELEVADOR DE CARGA ---
 
 ## Tira a plataforma e o tubo do "Cenario 2" (ver bloco_de_tiles.gd), põe o
-## piso em que se pisa e deixa a plataforma parada lá embaixo.
+## piso em que se pisa e deixa a plataforma parada: lá no alto até a primeira
+## descida, lá embaixo depois dela.
 func _montar_elevador() -> void:
 	var camada := get_node_or_null(camada_do_elevador) as TileMapLayer
 	if camada == null:
@@ -201,7 +205,8 @@ func _montar_elevador() -> void:
 	piso.add_child(forma)
 	_plataforma.add_child(piso)
 
-	_por_elevador_em(_deslocamento_embaixo())
+	_por_elevador_em(_deslocamento_embaixo() if MissaoNitrogenio.elevador_desceu \
+		else _deslocamento_em_cima())
 
 
 ## A rua abrindo com a Cacau em cima da plataforma, lá no alto: ela desce até
@@ -210,7 +215,10 @@ func _chegar_de_elevador() -> void:
 	if _plataforma == null or player == null:
 		return
 	var cacau := player
-	var em_cima := topo_do_percurso - area_do_elevador.position.y
+	# Desceu: daqui em diante a rua abre com ele no chão (mesmo se ela morrer
+	# no meio da descida e renascer em cima dele, lá embaixo).
+	MissaoNitrogenio.elevador_desceu = true
+	var em_cima := _deslocamento_em_cima()
 	var embaixo := _deslocamento_embaixo()
 	cacau.velocity = Vector2.ZERO
 	cacau.pode_se_mover = false
@@ -251,6 +259,11 @@ func _por_elevador_em(d: float) -> void:
 ## Parada: a base da plataforma no chão.
 func _deslocamento_embaixo() -> float:
 	return chao_do_elevador - area_do_elevador.end.y
+
+
+## Esperando no telhado: o topo da plataforma no "Topo Do Percurso".
+func _deslocamento_em_cima() -> float:
+	return topo_do_percurso - area_do_elevador.position.y
 
 
 ## Onde fica a ORIGEM da Cacau com os pés no piso da plataforma, no meio dela.

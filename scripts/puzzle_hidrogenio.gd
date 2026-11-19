@@ -2,6 +2,48 @@ extends CanvasLayer
 
 signal puzzle_resolvido
 
+# --- O CIENTISTA EXPLICA (ver scripts/ui/explicacao_no_puzzle.gd) ---
+#
+# Na primeira vez, o cientista explica como tirar as partículas do átomo da
+# caixinha da tabela periódica: o Z (número de cima) dá os prótons, o A
+# (número de baixo, arredondado) menos o Z dá os nêutrons e, no átomo neutro,
+# os elétrons são tantos quanto os prótons. O holofote acende o que ele cita e,
+# no passo do próton, só o próton responde. A primeira fala oferece "Já sei
+# montar" para pular. No fim (ou ao pular) a conversa anota a nota "atomo" no
+# caderno, e daí em diante o puzzle abre sem explicação.
+
+const NOTA := "atomo"
+const ROTEIRO := [
+	{
+		"fala": "cientista_hidrogenio_1",
+		"sinais": {
+			"caixa": {"mostrar": ["caixa"]},
+			"z": {"mostrar": ["caixa"], "enfase": ["caixa_z"]},
+			"proton": {"mostrar": ["peca_proton", "nucleo"]},
+		},
+		"acao": "proton",
+		"meta": "proton",
+	},
+	{
+		"fala": "cientista_hidrogenio_2",
+		"mostrar": ["contagem"], "enfase": ["contagem_proton"],
+		"sinais": {
+			"a": {"mostrar": ["caixa"], "enfase": ["caixa_a"]},
+			"neutron": {"mostrar": ["peca_neutron", "contagem"], "enfase": ["contagem_neutron"]},
+			"eletron": {"mostrar": ["peca_eletron", "eletrosfera"]},
+		},
+		"meta": "resolvido",
+	},
+	{
+		"fala": "cientista_hidrogenio_3",
+		"mostrar": ["contagem"],
+	},
+]
+## Onde ficam, dentro da caixinha (152 x 184), o número de cima (Z) e o de
+## baixo (a massa, A).
+const CAIXA_Z := Rect2(10, 10, 38, 38)
+const CAIXA_A := Rect2(28, 140, 96, 36)
+
 const ORBIT_SPEED := 2.0
 
 var peca_arrastando: Control = null
@@ -26,6 +68,10 @@ var _tween_prompt_gaiola: Tween = null
 ## Onde está o ponteiro, lido dos eventos: o mouse de verdade ou o cursor do
 ## controle (que não move o mouse do sistema — ver cursor_virtual.gd).
 var _ponteiro: Vector2 = Vector2.ZERO
+
+## O holofote da explicação, por cima da tela (criado no _ready).
+var destaque: DestaqueTutorial
+var explicacao: ExplicacaoNoPuzzle
 
 @onready var root_control:   Control             = $RootControl
 @onready var zona_nucleo:    Control             = $RootControl/ZonaNucleo
@@ -56,6 +102,11 @@ func _ready():
 	painel_mat = ShaderMaterial.new()
 	painel_mat.shader = load("res://shaders/painel_red_to_green.gdshader")
 	painel.material = painel_mat
+	destaque = DestaqueTutorial.new()
+	destaque.name = "Destaque"
+	destaque.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root_control.add_child(destaque)
+	explicacao = ExplicacaoNoPuzzle.new(self, ROTEIRO)
 	await get_tree().process_frame
 	pos_inicial_proton  = peca_proton.global_position
 	pos_inicial_neutron = peca_neutron.global_position
@@ -89,8 +140,12 @@ func abrir_puzzle():
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
 		player.pode_se_mover = false
+	destaque.limpar(true)
+	if not Caderno.tem_nota(NOTA):
+		explicacao.comecar()
 
 func fechar_puzzle(resolvido: bool):
+	explicacao.cancelar()
 	hide()
 	Interacao.marcar_tela_aberta(self, false)
 	set_process(false)
@@ -113,6 +168,9 @@ func _process(delta: float):
 
 func _input(event: InputEvent):
 	if not visible:
+		return
+	if explicacao.falando:
+		# A fala do cientista está por cima: clique e teclas são dela.
 		return
 	get_viewport().set_input_as_handled()
 	# A tela está por cima de tudo: o E que fecha o puzzle não pode sobrar para
@@ -159,6 +217,8 @@ func alvos_do_cursor() -> Array[Rect2]:
 	if peca_arrastando:
 		alvos.append(zona_nucleo.get_global_rect())
 		alvos.append(zona_orbita.get_global_rect())
+	elif explicacao.acao() == "proton":
+		alvos.append(peca_proton.get_global_rect())
 	else:
 		for peca in [peca_proton, peca_neutron, peca_eletron]:
 			alvos.append(peca.get_global_rect())
@@ -176,6 +236,10 @@ func dicas_do_controle() -> Array:
 
 func _iniciar_arrasto(mouse_pos: Vector2):
 	if travado:
+		return
+	# Na explicação, o passo do próton: só ele responde.
+	if explicacao.acao() == "proton" and not peca_proton.get_global_rect().has_point(mouse_pos):
+		destaque.cutucar()
 		return
 	# Próton — sempre arrastável (permite remover do núcleo)
 	if peca_proton.get_global_rect().has_point(mouse_pos):
@@ -251,6 +315,8 @@ func _soltar_peca(mouse_pos: Vector2):
 			else:
 				_animar_para(peca, pos_inicial_proton)
 				_atualizar_labels()
+				if explicacao.acao() == "proton":
+					destaque.cutucar()
 
 		"eletron":
 			var dist = mouse_pos.distance_to(nucleus_center)
@@ -266,6 +332,7 @@ func _soltar_peca(mouse_pos: Vector2):
 				_atualizar_labels()
 
 	_tocar_som_solto()
+	explicacao.conferir()
 
 # Som de "soltar" genérico (reaproveita o som de drag), usado quando nenhum
 # outro som (erro, sucesso...) já está tocando para esse solte.
@@ -360,3 +427,68 @@ func _shake(label: Label):
 	tween.tween_property(label, "position", origem + Vector2(-5, 0), 0.04)
 	tween.tween_property(label, "position", origem + Vector2(3, 0),  0.03)
 	tween.tween_property(label, "position", origem,                  0.03)
+
+
+# ------------------------- A EXPLICAÇÃO (ver explicacao_no_puzzle.gd) -------------------------
+
+## Os lugares da tela que o holofote acende, pelos nomes do ROTEIRO.
+func retangulos_para(nomes: Array) -> Array[Rect2]:
+	var caixa: Rect2 = $RootControl/CaixaHidrogenio.get_global_rect()
+	var retangulos: Array[Rect2] = []
+	for nome in nomes:
+		match nome:
+			"caixa":
+				retangulos.append(caixa)
+			"caixa_z":
+				retangulos.append(Rect2(caixa.position + CAIXA_Z.position, CAIXA_Z.size))
+			"caixa_a":
+				retangulos.append(Rect2(caixa.position + CAIXA_A.position, CAIXA_A.size))
+			"contagem":
+				retangulos.append(ExplicacaoNoPuzzle.retangulo_do_texto(label_proton)
+					.merge(ExplicacaoNoPuzzle.retangulo_do_texto(label_eletron))
+					.merge(ExplicacaoNoPuzzle.retangulo_do_texto(label_neutron)))
+			"contagem_proton":
+				retangulos.append(ExplicacaoNoPuzzle.retangulo_do_texto(label_proton))
+			"contagem_eletron":
+				retangulos.append(ExplicacaoNoPuzzle.retangulo_do_texto(label_eletron))
+			"contagem_neutron":
+				retangulos.append(ExplicacaoNoPuzzle.retangulo_do_texto(label_neutron))
+			"nucleo":
+				# O miolo e a palavra "Núcleo" logo abaixo dele.
+				retangulos.append(zona_nucleo.get_global_rect().grow_individual(16, 12, 16, 34))
+			"eletrosfera":
+				retangulos.append($RootControl/AtomoBG.get_global_rect())
+			"peca_proton":
+				retangulos.append(_peca_com_nome(pos_inicial_proton, peca_proton, $RootControl/LabelNomeP))
+			"peca_neutron":
+				retangulos.append(_peca_com_nome(pos_inicial_neutron, peca_neutron, $RootControl/LabelNomeN))
+			"peca_eletron":
+				retangulos.append(_peca_com_nome(pos_inicial_eletron, peca_eletron, $RootControl/LabelNomeE))
+			_:
+				push_warning("PuzzleHidrogenio: lugar \"%s\" desconhecido" % nome)
+	return retangulos
+
+
+## O passo pede para levar uma peça: a seta vai nela, e o lugar de soltar fica
+## aceso junto.
+func retangulos_da_acao(acao: String) -> Array[Rect2]:
+	match acao:
+		"proton":
+			return retangulos_para(["peca_proton", "nucleo"])
+	return []
+
+
+func meta_cumprida(meta: String) -> bool:
+	match meta:
+		"proton":
+			return proton_colocado
+		"resolvido":
+			return travado
+	return false
+
+
+## A peça no lugar de partida (ela pode estar no meio de um deslize) com o
+## nome escrito embaixo.
+func _peca_com_nome(inicial: Vector2, peca: Control, nome: Label) -> Rect2:
+	return Rect2(inicial, peca.get_global_rect().size) \
+		.merge(ExplicacaoNoPuzzle.retangulo_do_texto(nome)).grow(6)

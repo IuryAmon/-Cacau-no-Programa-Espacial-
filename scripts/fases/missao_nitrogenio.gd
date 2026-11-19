@@ -43,6 +43,10 @@ const NOME_CILINDRO_VAZIO := "Cilindro de Ar (Vazio)"
 const DESCRICAO_CILINDRO_VAZIO := "Um cilindro de amostra, vazio e leve. No compressor, dá para enchê-lo com o ar da sala."
 const TEXTURA_CILINDRO_VAZIO := preload("res://assets/fase nitrogenio/Cilindro de Ar.png")
 
+## A pureza que a Cacau fala se o cilindro verde apareceu sem passar pelo
+## puzzle (atalho de teste): um resultado típico de quem acerta o ponto.
+const PUREZA_SEM_MEDIDA := 95
+
 const NOME_AMOSTRA := "Cilindro de Ar Líquido (Amostra)"
 const DESCRICAO_AMOSTRA := "Ar apertado e gelado até virar líquido. Fechado, o calor da sala vai entrando e a pressão sobe: leve à coluna de destilação antes que ele estoure!"
 const TEXTURA_AMOSTRA := preload("res://assets/fase nitrogenio/cilindro de ar liquido.png")
@@ -56,6 +60,9 @@ static var amostra: GasFechado = null
 static var amostra_na_coluna: bool = false
 ## A coluna já separou o ar: o cilindro de nitrogênio está pronto (ou já foi).
 static var nitrogenio_destilado: bool = false
+## Quanto do cilindro verde é nitrogênio (0..1): o que a comemoração do puzzle
+## mostrou na hora de retirar. 0 = ninguém mediu (ver pureza_em_porcentagem).
+static var pureza_do_nitrogenio: float = 0.0
 ## O Dr. Chico já explicou o compressor (a fala da primeira vez).
 static var explicou_o_compressor: bool = false
 ## A explicação da coluna já passou pelo menos uma vez com a amostra.
@@ -66,6 +73,12 @@ static var subiu_a_torre: bool = false
 ## cima da plataforma, descendo até o chão (ver fase2_telhado.gd e
 ## fase2_torre.gd). Só vale para a próxima vez que a rua abrir.
 static var chegando_de_elevador: bool = false
+## O elevador de carga da rua já desceu com ela uma vez. Antes disso ele fica
+## lá no alto, esperando no telhado; depois, parado no chão da rua.
+static var elevador_desceu: bool = false
+## A Cacau já viu, do telhado, o foguete do satélite subir com o Dr. Chico (a
+## cena de lancamento_no_telhado.gd). Acontece uma vez só.
+static var viu_o_lancamento: bool = false
 
 static var _maquina: MaquinaDeCompressao = null
 
@@ -126,10 +139,23 @@ static func entregar_amostra_na_coluna() -> void:
 	Inventario.remover_item(ID_AMOSTRA)
 
 
-## A coluna separou o ar e o cilindro verde de nitrogênio está pronto.
-static func concluir_destilacao() -> void:
+## A coluna separou o ar e o cilindro verde de nitrogênio está pronto, com
+## "pureza" (0..1) de nitrogênio.
+static func concluir_destilacao(pureza: float = 0.0) -> void:
 	nitrogenio_destilado = true
 	amostra_na_coluna = false
+	if pureza > 0.0:
+		pureza_do_nitrogenio = pureza
+
+
+## A pureza do cilindro verde, em porcentagem inteira, como o puzzle escreve
+## ("93% DE NITROGÊNIO NO CILINDRO"). É o número que a Cacau fala ao pegar o
+## cilindro (cacau_tem_nitrogenio). Sem medida (o cilindro apareceu por atalho
+## de teste), vale PUREZA_SEM_MEDIDA.
+static func pureza_em_porcentagem() -> int:
+	if pureza_do_nitrogenio <= 0.0:
+		return PUREZA_SEM_MEDIDA
+	return roundi(pureza_do_nitrogenio * 100.0)
 
 
 ## Fim de jogo, tentar de novo: o cilindro vazio volta preso no compressor e a
@@ -163,8 +189,11 @@ static func esquecer() -> void:
 	amostra = null
 	amostra_na_coluna = false
 	nitrogenio_destilado = false
+	pureza_do_nitrogenio = 0.0
 	explicou_o_compressor = false
 	explicou_a_destilacao = false
 	subiu_a_torre = false
 	chegando_de_elevador = false
+	elevador_desceu = false
+	viu_o_lancamento = false
 	_maquina = null

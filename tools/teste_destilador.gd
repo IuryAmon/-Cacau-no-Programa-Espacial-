@@ -32,6 +32,11 @@ extends Node
 #     por marca; a caixa de fala não cobre a coluna nem as fichas; no fim a
 #     tela fecha sozinha e o jogo volta; o E abre de novo do zero; o ESC fecha
 #     no meio;
+#   * O PUZZLE NA SALA: com a amostra na coluna, o puzzle não troca de tela —
+#     a Cacau sai de baixo da régua, a câmera chega perto e ele nasce em cima
+#     da coluna do mapa, do tamanho dela; o raio X cobre a coluna de aço e ela
+#     some; a mão da dica mostra o gesto no ponteiro do termômetro; o ESC fecha
+#     e tudo volta;
 #   * sem conversa (timeline vazia) o desenho passa sozinho e o E fecha;
 #   * toda letra da tela existe na fonte, e em lugar nenhum ela fala em
 #     "aquecer": não há aquecedor, o calor vem do ambiente.
@@ -62,6 +67,7 @@ func _ready() -> void:
 	await _testar_puzzle()
 	await _testar_conversa()
 	await _testar_na_fase()
+	await _testar_puzzle_na_sala()
 	await _testar_sem_fala()
 	print("\n>>> %s <<<" % ("TUDO OK" if _falhas == 0 else "%d FALHA(S)" % _falhas))
 	get_tree().quit(1 if _falhas > 0 else 0)
@@ -378,8 +384,14 @@ func _todas_dentro_da_coluna(coluna: ColunaDestilacao) -> bool:
 func _testar_puzzle() -> void:
 	print("\n--- O PUZZLE DA AMOSTRA ---")
 	var tela := await _abrir_o_puzzle()
-	_checar(tela.aviso() == TelaDaDestilacao.TXT_COMECO and not tela.pode_retirar(),
-		"começa com o ar líquido no fundo, dizendo como começar, sem nada para retirar")
+	var comecar := TelaDaDestilacao.TXT_COMECAR % MisturasDoDestilador.graus(roundf(tela.coluna.bolha_do_fundo()))
+	_checar(tela.aviso() == comecar and comecar.contains("-194 °C") and not tela.pode_retirar(),
+		"começa com o ar líquido no fundo, dizendo como começar e em que temperatura o ar ferve, sem nada para retirar (\"%s\")" \
+		% tela.aviso())
+	_checar(tela.termometro.marcas.size() == 3 and tela.termometro.marcas.all(func(m: Dictionary) -> bool: return not m.has("texto")),
+		"no termômetro, só as três marcas das substâncias (sem a do ponto de bolha, que anda)")
+	_checar(not tela.coluna.com_plaquinhas, "e a coluna só com a régua, sem as plaquinhas de cada andar")
+	_checar(tela._meta(1) and not tela._meta(0), "no OBJETIVO, o oxigênio começa no fundo e o nitrogênio ainda não subiu")
 
 	# Frio demais: a mistura ferve, mas o nitrogênio não sobe todo.
 	tela.pedir_temperatura(-191.0)
@@ -405,9 +417,15 @@ func _testar_puzzle() -> void:
 		% [roundi(pureza * 100.0), roundi(tela.recuperacao() * 100.0)])
 	_checar(tela.coluna.dono_do_andar(0) == "O2" and tela.aviso() == TelaDaDestilacao.TXT_PRONTO % roundi(pureza * 100.0),
 		"o oxigênio é a maioria no fundo, e o aviso mostra a pureza (\"%s\")" % tela.aviso())
+	_checar(tela._meta(0) and tela._meta(1), "pronta, as duas metas do OBJETIVO estão cumpridas")
 	var retirou := [false]
 	tela.nitrogenio_retirado.connect(func() -> void: retirou[0] = true)
-	tela.retirar_nitrogenio()
+	var tecla_e := InputEventKey.new()
+	tecla_e.keycode = KEY_E
+	tecla_e.physical_keycode = KEY_E
+	tecla_e.pressed = true
+	tela._ao_receber(tecla_e)
+	_checar(tela.get("_estado") == TelaDaDestilacao.Estado.RETIRANDO, "o E do teclado retira o nitrogênio")
 	await _esperar_segundos(0.8)
 	var toque := InputEventAction.new()
 	toque.action = Interacao.ACAO
@@ -424,6 +442,7 @@ func _testar_puzzle() -> void:
 	_checar(tela.secou() and tela.misturou() and not tela.pode_retirar() and tela.aviso() == TelaDaDestilacao.TXT_MISTUROU,
 		"a -176 °C (acima dos -183 do oxigênio) o fundo seca, o oxigênio suja o topo (%d%% de N2) e não dá para retirar" \
 		% roundi(tela.pureza_do_topo() * 100.0))
+	_checar(not tela._meta(1), "e a meta do oxigênio no fundo se desmarca")
 	tela.queue_free()
 	await get_tree().process_frame
 
@@ -457,19 +476,34 @@ func _testar_conversa() -> void:
 	_checar(diretorio.get("cientista_destilador", "") == TIMELINE,
 		"e está registrada no Dialogic (project.godot)")
 	var linhas := FileAccess.get_file_as_string(TIMELINE).split("\n", false)
+	# Depois da primeira fala ele pergunta se a Cacau quer a explicação: a
+	# primeira opção segue com ela, a segunda ("Já sei...") pula. As marcas e
+	# as falas contadas aqui são as da explicação; o ramo de quem pula é
+	# conferido à parte.
 	var marcas: Array[String] = []
 	var marca_sem_fala := false
 	var falas := 0
 	var fala_longa := ""
 	var fala_de := {}
+	var opcoes: Array[String] = []
+	var ramo_de_pular := ""
+	var explicacao := ""
 	for i in linhas.size():
 		var linha := linhas[i].strip_edges()
+		if linhas[i].begins_with("- "):
+			opcoes.append(linha.substr(2))
+			continue
+		if opcoes.size() >= 2:
+			ramo_de_pular += linha + "\n"
+			continue
+		explicacao += linha + "\n"
 		if linha.begins_with("[signal arg=\""):
 			marcas.append(linha.trim_prefix("[signal arg=\"").trim_suffix("\"]"))
-			if i + 1 >= linhas.size() or not linhas[i + 1].begins_with("cientista"):
+			var seguinte := linhas[i + 1].strip_edges() if i + 1 < linhas.size() else ""
+			if not seguinte.begins_with("cientista"):
 				marca_sem_fala = true
 			else:
-				fala_de[marcas[-1]] = linhas[i + 1].substr(linhas[i + 1].find(": ") + 2).to_lower()
+				fala_de[marcas[-1]] = seguinte.substr(seguinte.find(": ") + 2).to_lower()
 		elif linha.begins_with("cientista"):
 			falas += 1
 			var texto := linha.substr(linha.find(": ") + 2)
@@ -478,7 +512,14 @@ func _testar_conversa() -> void:
 	_checar(marcas == ExplicacaoDestilador.MARCOS,
 		"ela tem as marcas do desenho, na ordem %s" % [marcas])
 	_checar(not marca_sem_fala, "cada marca vem logo antes da fala que a comenta")
-	_checar(falas == marcas.size(), "uma fala por marca (%d)" % falas)
+	_checar(falas == marcas.size() + 1, "uma fala por marca, mais a pergunta (%d)" % falas)
+	_checar(opcoes.size() == 2 and opcoes[1].begins_with("Já sei"),
+		"ele pergunta, e a segunda opção é a de pular %s" % [opcoes])
+	_checar(explicacao.strip_edges().ends_with("do Caderno.anotar(\"destilacao\")"),
+		"a explicação inteira acaba anotando \"destilacao\" no caderno")
+	_checar(ramo_de_pular.contains("do Caderno.anotar(\"destilacao\")")
+			and ramo_de_pular.contains("[signal arg=\"%s\"]" % ExplicacaoNoPuzzle.SINAL_PULAR),
+		"e quem pula também leva a anotação")
 	_checar(fala_longa.is_empty(), "nenhuma fala passa de 100 letras %s" % fala_longa)
 	_checar(linhas[0].contains("cientistaradio"), "o Dr. Chico entra com o retrato do rádio")
 	var falas_juntas := FileAccess.get_file_as_string(TIMELINE).to_lower()
@@ -741,9 +782,26 @@ func _testar_na_fase() -> void:
 	_checar(Dialogic.current_timeline == null and not Interacao.ocupada(), "a conversa acabou")
 	_checar(sprite.visible, "a coluna do mapa reaparece")
 	_checar(destilador.ja_explicou(), "e fica anotado que a explicação foi vista")
+	_checar(Caderno.tem_nota("destilacao"), "e a Cacau anotou a destilação no caderno")
 	await _esperar_segundos(0.4)
 	_checar(dica.visible, "o botão acende de novo: dá para ver outra vez")
 	await _capturar("12_de_volta")
+
+	# --- "JÁ SEI COMO FUNCIONA" ---
+	PaginasCaderno.esquecer_notas()
+	var marcas_ao_pular: Array[String] = []
+	var ao_marcar := func(nome: String) -> void: marcas_ao_pular.append(nome)
+	tela.marco.connect(ao_marcar)
+	destilador.explicar()
+	_checar(await _esperar(func() -> bool: return tela.marco_atual() == "raio_x", 6.0),
+		"de novo, a conversa começa pelo raio X")
+	_checar(await _passar_ate(func() -> bool: return not tela.esta_aberta(), 10.0, 2),
+		"\"Já sei como funciona\": a conversa acaba ali e a tela fecha")
+	tela.marco.disconnect(ao_marcar)
+	_checar(marcas_ao_pular == ["raio_x"], "o desenho parou no raio X %s" % [marcas_ao_pular])
+	_checar(Caderno.tem_nota("destilacao"), "e quem pula também leva a anotação")
+	_checar(not get_tree().paused and player.pode_se_mover, "o jogo volta")
+	await _esperar_segundos(0.4)
 
 	# --- DE NOVO, E O ESC NO MEIO ---
 	destilador.explicar()
@@ -840,14 +898,18 @@ func _ate(tela: ExplicacaoDestilador, marco: String) -> bool:
 	return await _passar_ate(func() -> bool: return tela.marco_atual() == marco, 8.0)
 
 
-## Aperta "passar a fala" quatro vezes por segundo até a condição valer.
-func _passar_ate(condicao: Callable, limite: float) -> bool:
+## Aperta "passar a fala" quatro vezes por segundo até a condição valer. Na
+## pergunta ("Quer que eu explique?"), escolhe a "opcao" (1 = a explicação).
+func _passar_ate(condicao: Callable, limite: float, opcao: int = 1) -> bool:
 	var t := 0.0
 	var proximo := 0.0
 	while not condicao.call() and t < limite:
 		if t >= proximo:
 			proximo = t + 0.25
-			Dialogic.Inputs.handle_input()
+			if Dialogic.current_state == Dialogic.States.AWAITING_CHOICE:
+				Dialogic.Choices.select_choice(opcao)
+			else:
+				Dialogic.Inputs.handle_input()
 		await get_tree().process_frame
 		t += get_process_delta_time()
 	return condicao.call()
@@ -866,6 +928,56 @@ func _apertar(acao: StringName) -> void:
 	toque.action = acao
 	toque.pressed = true
 	Input.parse_input_event(toque)
+
+
+## O puzzle da amostra nasce em cima da coluna, na própria sala.
+func _testar_puzzle_na_sala() -> void:
+	print("\n--- O PUZZLE EM CIMA DA COLUNA (na sala) ---")
+	var fase := await _abrir()
+	var destilador := fase.get_node_or_null("Destilador") as Destilador
+	if destilador == null:
+		_checar(false, "a coluna de destilação mora na sala de destilação")
+		await _fechar(fase)
+		return
+	var player := fase.get_node("Player") as CharacterBody2D
+	var sprite := destilador.get_node("Sprite") as Sprite2D
+	await _esperar(func() -> bool: return player.pode_se_mover and not get_tree().paused, 6.0)
+	MissaoNitrogenio.explicou_a_destilacao = true
+	MissaoNitrogenio.amostra_na_coluna = true
+	TelaDaDestilacao.arrastou_o_termometro = false
+	# A Cacau encostada na coluna (ela é sólida), embaixo de onde a régua vai ficar.
+	player.global_position.x = destilador.recorte_no_mundo().position.x - 30.0
+	await get_tree().process_frame
+	destilador.abrir_destilacao()
+	await _esperar(func() -> bool: return destilador.tela_da_destilacao_aberta() != null, 8.0)
+	var tela := destilador.tela_da_destilacao_aberta()
+	_checar(tela != null and is_instance_valid(fase) and fase.is_inside_tree(),
+		"com a amostra na coluna, o puzzle abre na própria sala")
+	if tela == null:
+		MissaoNitrogenio.amostra_na_coluna = false
+		await _fechar(fase)
+		return
+	var recorte := destilador.recorte_no_mundo()
+	var na_tela := get_viewport().get_canvas_transform() * recorte
+	_checar(tela.coluna_no_mundo.position.distance_to(na_tela.position) < 1.0
+			and tela.coluna_no_mundo.size.distance_to(na_tela.size) < 1.0,
+		"o puzzle nasce em cima da coluna do mapa, do tamanho dela (coluna %s, puzzle %s)" % [na_tela, tela.coluna_no_mundo])
+	_checar(get_tree().paused and not player.pode_se_mover, "o jogo para e a Cacau não anda")
+	var livre := recorte.position.x - TelaDaDestilacao.LARGURA_DA_REGUA_E_NOMES / Destilador.ZOOM_DA_DESTILACAO
+	_checar(player.global_position.x + Destilador.MEIA_LARGURA_DA_CACAU <= livre + 0.5,
+		"a Cacau saiu de baixo da régua e dos nomes (x %.0f; a régua começa em %.0f, a coluna em %.0f)" % [player.global_position.x, livre, recorte.position.x])
+	await _esperar(func() -> bool: return not tela.bloqueada, 4.0)
+	_checar(not tela.bloqueada and not sprite.visible, "coberta pelo raio X, a coluna de aço some")
+	_checar(tela._dica_do_mouse != null and tela._dica_do_mouse.mostrando(),
+		"a mão da dica mostra o gesto no ponteiro do termômetro")
+	await _capturar("destilador_no_mapa")
+	tela._ao_pedir_para_voltar()
+	await _esperar(func() -> bool: return not destilador.destilando(), 6.0)
+	_checar(not destilador.destilando() and sprite.visible and not get_tree().paused and player.pode_se_mover,
+		"o ESC fecha: a coluna de aço volta e o jogo segue")
+	_checar(get_viewport().get_camera_2d() == player.get_node("Camera2D"), "a câmera volta para a Cacau")
+	MissaoNitrogenio.amostra_na_coluna = false
+	await _fechar(fase)
 
 
 func _esperar(condicao: Callable, limite: float) -> bool:

@@ -103,6 +103,7 @@ func _ao_abrir() -> void:
 		registrar_alvo("mistura_" + chave, retangulo_da_mistura.bind(i), escolher_mistura.bind(chave))
 	registrar_alvo("recomecar", retangulo_do_recomecar, recomecar)
 	registrar_alvo("termometro", termometro.retangulo_de_pegar_na_tela, _pegar_o_ponteiro)
+	marcar_arrastavel("termometro")
 	registrar_alvo("mais_quente", setas.retangulo_do_botao.bind(1), mudar_temperatura.bind(1), Callable(), true)
 	registrar_alvo("mais_frio", setas.retangulo_do_botao.bind(-1), mudar_temperatura.bind(-1), Callable(), true)
 	escolher_mistura(String(MisturasDoDestilador.MISTURAS[0]["chave"]), false)
@@ -112,6 +113,7 @@ func _a_cada_quadro(delta: float) -> void:
 	termometro.pedida = coluna.temperatura_pedida()
 	termometro.medida = coluna.temperatura()
 	termometro.em_foco = _arrastando or alvo_em_foco() == "termometro"
+	arrastando_com_o_mouse = _arrastando
 	_atualizar_as_marcas()
 	_pulo_do_aviso = move_toward(_pulo_do_aviso, 0.0, delta / 0.45)
 	painel.queue_redraw()

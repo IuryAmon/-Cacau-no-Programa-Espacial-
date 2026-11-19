@@ -19,9 +19,9 @@ extends TelaInterativa
 # ou o analógico levam o foco; E, ENTER, ESPAÇO ou ✕ apertam.
 
 const OPCOES := [
-	{"chave": "continuar", "nome": "CONTINUAR", "descricao": "VOLTA PARA O JOGO"},
-	{"chave": "reiniciar", "nome": "REINICIAR", "descricao": "RECOMEÇA DO ÚLTIMO CHECKPOINT"},
-	{"chave": "menu", "nome": "MENU INICIAL", "descricao": "VOLTA PARA A TELA DE TÍTULO"},
+	{"chave": "continuar", "nome": "CONTINUAR"},
+	{"chave": "reiniciar", "nome": "REINICIAR"},
+	{"chave": "menu", "nome": "MENU INICIAL"},
 ]
 
 const TXT_TITULO := "PAUSA"
@@ -30,10 +30,9 @@ const CONTORNO_DO_TITULO := 12
 ## A linha de base do título e o alto do primeiro botão (px da tela).
 const BASE_DO_TITULO := 286.0
 const TOPO_DOS_BOTOES := 336.0
-const TAMANHO_DO_BOTAO := Vector2(480, 84)
+const TAMANHO_DO_BOTAO := Vector2(440, 72)
 const ENTRE_BOTOES := 22.0
 const TAM_NOME := 33
-const TAM_DESCRICAO := 11
 
 ## O véu por cima do jogo parado (o mesmo tom do fim de jogo, mais leve).
 const VEU := Color(0.04, 0.03, 0.07, 0.74)
@@ -153,10 +152,9 @@ func _desenhar() -> void:
 		caixa.position.y += roundf((1.0 - ease(t, 0.4)) * ALTURA_DA_SUBIDA)
 		var ficha := PecasDoLaboratorio.ficha_de_botao(_desenho, caixa, alvo_em_foco() == chave,
 			alvo_segurado() == chave)
-		PecasDoLaboratorio.escrever_no_meio(_desenho, Vector2(ficha.get_center().x, ficha.position.y + 32.0),
+		# Só o nome: ele já diz o que o botão faz.
+		PecasDoLaboratorio.escrever_no_meio(_desenho, ficha.get_center() - Vector2(0, 1),
 			String(dados["nome"]), TAM_NOME, EstiloHUD.TINTA)
-		PecasDoLaboratorio.escrever_no_meio(_desenho, Vector2(ficha.get_center().x, ficha.end.y - 22.0),
-			String(dados["descricao"]), TAM_DESCRICAO, EstiloHUD.TINTA_FRACA)
 
 	PecasDoLaboratorio.dicas_de_teclado(_desenho, Vector2(size.x * 0.5, size.y - 34.0),
 		[[["tecla_w", "tecla_s"], "ESCOLHER"], [["tecla_e"], "ENTRAR"], [["tecla_esc"], "CONTINUAR"]])

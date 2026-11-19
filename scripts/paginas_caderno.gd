@@ -47,22 +47,44 @@ extends RefCounted
 #                   fórmula. Com "formulas_no_meio", cada fórmula vai
 #                   centrada na face, e com "formula_embaixo", embaixo do
 #                   texto dela
+#   "blocos"        "blocos": textos, fórmulas e desenhos, um embaixo do outro,
+#                   cada um centrado na face — {"texto"} (com *destaque* e
+#                   {nome}; "cor": "fraca", "alinhar"), {"formula"},
+#                   {"desenho": nome, ...} e {"espaco": px}. Os desenhos são
+#                   feitos na própria face, com as tintas do caderno (o átomo,
+#                   as moléculas, o êmbolo, o termômetro...): a lista e o que
+#                   cada um pede estão na FaceCaderno (_desenho())
+#   "passos"        "passos": uma lista numerada, o número grande à esquerda e
+#                   o texto quebrado ao lado dele
+#
+# ÍNDICES: escreva H₂O com o ₂ de verdade (os algarismos de índice, ₀ a ₉). A
+# fonte não tem esses algarismos; a face escreve cada um menor e mais baixo.
 #
 # O texto é quebrado e medido na face; o teste_caderno confere que tudo cabe
 # no papel.
 #
 # O CADERNO NÃO VEM INTEIRO. A Cacau começa com ele só até a página 3 (a folha
-# de rosto e a epígrafe); as outras páginas são NOTAS soltas pelo mapa
-# (scenes/fases/componentes/nota_caderno.tscn). Cada nota das NOTAS devolve as
+# de rosto e a epígrafe); as outras páginas são NOTAS que ela ANOTA quando o
+# Dr. Chico explica alguma coisa. Quem anota é a conversa dele: a timeline
+# chama do Caderno.anotar("nome da nota") no fim da explicação e também no
+# caminho de quem escolhe pular ("Já sei..."). Cada nota das NOTAS devolve as
 # páginas duplas dela ao caderno, no lugar delas: o número de cada face não
 # muda, então, com uma nota faltando no meio, a numeração pula. Página que
 # nenhuma nota traz já vem no caderno.
 #
-# Por enquanto a nota é uma só, "O Átomo": ela traz as páginas 4 a 7 (o átomo
-# e, na folha seguinte, a caixa do elemento e as contas).
+#   "atomo"          O Átomo (4 a 9): o puzzle do hidrogênio, no world1
+#   "eletrosfera"    Eletrosfera (10 e 11): o puzzle do oxigênio, no world1
+#   "balanceamento"  Balanceamento (12 a 15): o puzzle do foguete, no world1
+#   "gases"          Os Gases (16 e 17): o compressor da fase do nitrogênio
+#   "destilacao"     Destilação (18 e 19): a coluna de destilação (a
+#                    explicação dela e a abertura do puzzle da amostra)
+#
+# Uma nota também pode ser uma folha solta no mapa, para pegar com o E
+# (scenes/fases/componentes/nota_caderno.tscn, com o nome dela) — hoje
+# nenhuma está.
 #
 # PARA UMA NOTA NOVA: escreva as páginas duplas nas PAGINAS, dê um nome a ela
-# nas NOTAS e ponha uma nota_caderno.tscn no mapa com esse nome.
+# nas NOTAS e ponha o do Caderno.anotar("nome") na conversa que a ensina.
 
 const ARTE_HIDROGENIO := preload("res://assets/caderno de anotaçõess/Hidrogênio tabela periódica.png")
 const ARTE_LITIO := preload("res://assets/caderno de anotaçõess/litio atomo3.png")
@@ -161,14 +183,186 @@ const PAGINAS := [
 			],
 		},
 	],
+	[
+		# O fim da nota do átomo: as contas feitas com a caixa do hidrogênio,
+		# do jeito que o Dr. Chico explica no puzzle dele.
+		{
+			"tipo": "blocos",
+			"titulo": "Hidrogênio",
+			"icones": ARTE_PARTICULAS,
+			"pedacos": PARTICULAS,
+			"blocos": [
+				{"desenho": "atomo", "protons": 1, "neutrons": 0, "camadas": [1], "raios": [72.0],
+					"angulos": [-45.0],
+					"marcas": [
+						{"parte": "eletron", "rumo": "cima", "texto": "1 elétron"},
+						{"parte": "nucleo", "rumo": "baixo", "texto": "1 próton"},
+					]},
+				{"texto": "e nenhum nêutron", "cor": "fraca"},
+			],
+		},
+		{
+			"tipo": "propriedades",
+			"icones": ARTE_PARTICULAS,
+			"pedacos": PARTICULAS,
+			"itens": [
+				{"formula": "Z = 1", "texto": "O número de cima da caixa: *1 próton* {próton}."},
+				{"formula": "A = 1,008 ≈ 1", "texto": "A massa, arredondada para o inteiro mais perto."},
+				{"formula": "n = A - Z = 0", "texto": "O que sobra são os *nêutrons* {nêutron}: nenhum."},
+				{"formula": "e = p = 1", "texto": "Átomo neutro: *1 elétron* {elétron}."},
+			],
+		},
+	],
+	[
+		# A eletrosfera (o puzzle do oxigênio): as camadas e quantos elétrons
+		# cabem em cada uma.
+		{
+			"tipo": "blocos",
+			"titulo": "Eletrosfera",
+			"icones": ARTE_PARTICULAS,
+			"pedacos": PARTICULAS,
+			"blocos": [
+				# O oxigênio. Os elétrons da L começam em 15°, para nenhum ficar
+				# no caminho dos traços (em cima, embaixo e à direita).
+				{"desenho": "atomo", "protons": 8, "neutrons": 8, "camadas": [2, 6], "raios": [63.0, 108.0],
+					"angulos": [45.0, 15.0],
+					"marcas": [
+						{"parte": "camada0", "rumo": "cima", "texto": "camada K"},
+						{"parte": "camada1", "rumo": "direita", "texto": "camada L"},
+						{"parte": "nucleo", "rumo": "baixo", "texto": "núcleo"},
+					]},
+			],
+		},
+		{
+			"tipo": "propriedades",
+			"icones": ARTE_PARTICULAS,
+			"pedacos": PARTICULAS,
+			"itens": [
+				{"formula": "K ≤ 2", "texto": "Na *camada K*, a de dentro, só cabem *2 elétrons* {elétron}. Ela enche primeiro."},
+				{"formula": "L ≤ 8", "texto": "O que sobra vai para a *camada L*, que tem lugar para *8*."},
+				{"formula": "8 = 2 + 6", "texto": "Oxigênio: Z = 8, então *8 elétrons* {elétron}. A K fica com 2 e a L, com 6."},
+			],
+		},
+	],
+	[
+		# O balanceamento (o puzzle do foguete): por que balancear e o passo a
+		# passo do Dr. Chico.
+		{
+			"tipo": "blocos",
+			"titulo": "Balanceamento",
+			"blocos": [
+				{"texto": "“Na natureza nada se cria, nada se perde, tudo se transforma.”", "cor": "fraca"},
+				{"texto": "— Lavoisier", "cor": "fraca", "alinhar": "direita"},
+				{"espaco": 4},
+				{"desenho": "equacao", "termos": [["2", "H₂"], "+", ["", "O₂"], "→", ["2", "H₂O"]],
+					"lados": ["reagentes", "produtos"]},
+				{"texto": "Os mesmos átomos antes e depois: *4 H* e *2 O*."},
+			],
+		},
+		{
+			"tipo": "passos",
+			"titulo": "Passo a Passo",
+			"passos": [
+				"Ponha *uma molécula de cada* substância.",
+				"Conte os átomos de cada elemento nos *dois lados*.",
+				"Onde um elemento estiver em *menor quantidade*, ponha mais uma molécula que tenha ele.",
+				"Repita até *todos* os elementos ficarem iguais.",
+			],
+		},
+	],
+	[
+		# Continua o balanceamento: o exemplo da queima do hidrogênio, passo a
+		# passo, e as duas partes de um termo da equação.
+		{
+			"tipo": "blocos",
+			"titulo": "Exemplo",
+			"blocos": [
+				{"formula": "H₂ + O₂ → H₂O"},
+				{"texto": "Oxigênio: 2 e *1*. Falta nos produtos: *mais uma H₂O*."},
+				{"espaco": 6},
+				{"formula": "H₂ + O₂ → 2 H₂O"},
+				{"texto": "Hidrogênio: *2* e 4. Falta nos reagentes: *mais uma H₂*."},
+				{"espaco": 6},
+				{"formula": "2 H₂ + O₂ → 2 H₂O"},
+				{"texto": "H: 4 e 4. O: 2 e 2. *Balanceada!*"},
+			],
+		},
+		{
+			"tipo": "blocos",
+			"blocos": [
+				{"desenho": "formula_anotada", "formula": "2 H₂O",
+					"marcas": [
+						{"parte": "coeficiente", "rumo": "cima", "texto": "coeficiente"},
+						{"parte": "indice", "rumo": "baixo", "texto": "índice"},
+					]},
+				{"desenho": "moleculas", "formula": "H₂O", "quantas": 2},
+				{"espaco": 4},
+				{"texto": "O *coeficiente* conta as moléculas: é ele que você muda."},
+				{"texto": "O *índice* conta os átomos da molécula e *nunca muda*."},
+				{"texto": "Use os *menores números inteiros*: 2, 1 e 2, e não 4, 2 e 4."},
+			],
+		},
+	],
+	[
+		# Os gases (o compressor da fase do nitrogênio).
+		{
+			"tipo": "blocos",
+			"titulo": "Os Gases",
+			"blocos": [
+				# A tabelinha embaixo: [o da esquerda, o nome da linha, o da direita].
+				{"desenho": "embolos", "legendas": [["grande", "volume", "pequeno"],
+					["baixa", "pressão", "alta"]]},
+				{"texto": "As mesmas moléculas, com menos espaço, batem mais nas paredes."},
+			],
+		},
+		{
+			"tipo": "propriedades",
+			"itens": [
+				{"formula": "V↓  P↑", "texto": "Desceu o êmbolo: o *volume* diminui e a *pressão* sobe."},
+				{"formula": "comprimir → calor", "texto": "Apertar o gás *esquenta* ele: as moléculas correm mais."},
+				{"formula": "frio → líquido", "texto": "No frio, elas ficam lentas e a pressão cai. Bem frio e apertado, o ar vira *líquido*."},
+			],
+		},
+	],
+	[
+		# A destilação (a coluna da fase do nitrogênio): os pontos de ebulição
+		# dos gases do ar, nos números da própria coluna.
+		{
+			"tipo": "blocos",
+			"titulo": "Destilação",
+			"blocos": [
+				{"desenho": "termometro", "de": -201.0, "ate": -181.0, "nivel": -194.0,
+					"marcas": [
+						{"t": -183.0, "texto": "oxigênio O₂"},
+						{"t": -186.0, "texto": "argônio Ar"},
+						{"t": -194.0, "texto": "a mistura", "fraca": true},
+						{"t": -196.0, "texto": "nitrogênio N₂"},
+						{"t": -200.0, "texto": "ar líquido", "fraca": true},
+					]},
+			],
+		},
+		{
+			"tipo": "propriedades",
+			"itens": [
+				{"formula": "ebulição", "texto": "O *ponto de ebulição* é a temperatura em que o líquido ferve."},
+				{"formula": "evaporar", "texto": "Acontece antes de ferver, só na superfície: é a roupa no varal."},
+				{"formula": "N₂ evapora antes", "texto": "O ponto dele é o mais *baixo*: o vapor sobe rico em *nitrogênio*, e o *oxigênio* fica no fundo."},
+			],
+		},
+	],
 ]
 
-## As notas soltas pelo mapa: o nome de cada uma (é o que a nota_caderno.tscn
-## escolhe no editor), o "titulo" que aparece no aviso de nota adicionada e as
-## "paginas" que ela devolve ao caderno (a posição de cada uma nas PAGINAS,
-## contando do 0, na ordem).
+## As notas: o nome de cada uma (é o que a conversa passa para o
+## Caderno.anotar(), ou o que a nota_caderno.tscn escolhe no editor), o
+## "titulo" que aparece no aviso de nota adicionada e as "paginas" que ela
+## devolve ao caderno (a posição de cada uma nas PAGINAS, contando do 0, na
+## ordem).
 const NOTAS := {
-	"atomo": {"titulo": "O Átomo", "paginas": [2, 3]},
+	"atomo": {"titulo": "O Átomo", "paginas": [2, 3, 4]},
+	"eletrosfera": {"titulo": "Eletrosfera", "paginas": [5]},
+	"balanceamento": {"titulo": "Balanceamento", "paginas": [6, 7]},
+	"gases": {"titulo": "Os Gases", "paginas": [8]},
+	"destilacao": {"titulo": "Destilação", "paginas": [9]},
 }
 
 ## O caderno inteiro: as PAGINAS. O teste_caderno põe folhas a mais aqui para

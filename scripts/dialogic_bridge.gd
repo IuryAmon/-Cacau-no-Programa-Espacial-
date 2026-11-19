@@ -31,6 +31,46 @@ func entregar_h_e_o() -> void:
 		Progresso.dar_celula("O")
 
 
+# --- O LANÇAMENTO, NO TELHADO DA FASE 2 ---
+#
+# A timeline cientista_lancamento_lua chama a cena três vezes: antes do "Você
+# vai... pra Lua." (o suspense: a caixa some e a câmera chega devagar nos
+# dois), logo antes do "EU?! PRA LUA?!" (ela vira para ele num pulinho, com o
+# balão "?!") e logo depois dele (ela comemora no telhado, com pulos e
+# coração). Quem encena é a cena do lançamento (lancamento_no_telhado.gd),
+# achada pelo grupo.
+
+func lancamento_suspense() -> void:
+	var cena := get_tree().get_first_node_in_group("cena_do_lancamento")
+	if cena and cena.has_method("suspense"):
+		await cena.suspense()
+
+
+func lancamento_virar_para_ele() -> void:
+	var cena := get_tree().get_first_node_in_group("cena_do_lancamento")
+	if cena and cena.has_method("virar_para_ele"):
+		await cena.virar_para_ele()
+
+
+func lancamento_comemorar() -> void:
+	var cena := get_tree().get_first_node_in_group("cena_do_lancamento")
+	if cena and cena.has_method("comemorar"):
+		await cena.comemorar()
+
+
+# --- NÚMEROS DO JOGO DENTRO DAS FALAS ---
+#
+# Uma fala pode citar um número que só existe na hora (a pureza que o puzzle
+# deu, por exemplo) escrevendo {DialogicBridge.funcao()} no texto da timeline:
+# o Dialogic calcula a expressão com os autoloads. Assim nenhuma variável nova
+# precisa ser cadastrada no project.godot.
+
+## A porcentagem de nitrogênio no cilindro verde, a mesma que a comemoração do
+## puzzle da destilação mostrou. Usada em cacau_tem_nitrogenio.
+func pureza_do_nitrogenio() -> int:
+	return MissaoNitrogenio.pureza_em_porcentagem()
+
+
 # --- FALA CURTA DO CENÁRIO ---
 #
 # Quando um obstáculo precisa fazer a Cacau comentar alguma coisa (a porta de

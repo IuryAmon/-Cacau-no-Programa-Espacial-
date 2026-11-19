@@ -153,30 +153,33 @@ func _draw() -> void:
 
 
 # O véu cobre a tela inteira menos os furos. Como draw_* não recorta
-# polígono, ele é montado com retângulos: uma faixa acima de todos os furos,
-# uma abaixo, e na altura deles os vãos entre um furo e outro.
+# polígono, ele é montado com retângulos: a tela é fatiada em colunas nas
+# bordas esquerda e direita dos furos e, em cada coluna, o véu preenche o que
+# sobra entre os furos que passam por ela. Assim vale também para furos um em
+# cima do outro (a peça e, embaixo dela, a contagem).
 func _desenhar_veu() -> void:
 	var cor := EstiloHUD.com_alfa(VEU, _forca)
-	var tela := Rect2(Vector2.ZERO, size)
-	if _furos.is_empty():
-		draw_rect(tela, cor)
-		return
-	var ordenados: Array[Rect2] = _furos.duplicate()
-	ordenados.sort_custom(func(a: Rect2, b: Rect2) -> bool: return a.position.x < b.position.x)
-	var topo := ordenados[0].position.y
-	var base := ordenados[0].end.y
-	for f in ordenados:
-		topo = minf(topo, f.position.y)
-		base = maxf(base, f.end.y)
-	_retangulo(Rect2(0.0, 0.0, size.x, topo), cor)
-	_retangulo(Rect2(0.0, base, size.x, size.y - base), cor)
-	var x := 0.0
-	for f in ordenados:
-		_retangulo(Rect2(x, topo, f.position.x - x, base - topo), cor)
-		_retangulo(Rect2(f.position.x, topo, f.size.x, f.position.y - topo), cor)
-		_retangulo(Rect2(f.position.x, f.end.y, f.size.x, base - f.end.y), cor)
-		x = maxf(x, f.end.x)
-	_retangulo(Rect2(x, topo, size.x - x, base - topo), cor)
+	var bordas: Array[float] = [0.0, size.x]
+	for f in _furos:
+		bordas.append(clampf(f.position.x, 0.0, size.x))
+		bordas.append(clampf(f.end.x, 0.0, size.x))
+	bordas.sort()
+	for i in bordas.size() - 1:
+		var x0 := bordas[i]
+		var x1 := bordas[i + 1]
+		if x1 <= x0:
+			continue
+		var meio := (x0 + x1) * 0.5
+		var vaos: Array[Vector2] = []
+		for f in _furos:
+			if f.position.x <= meio and meio <= f.end.x:
+				vaos.append(Vector2(f.position.y, f.end.y))
+		vaos.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x < b.x)
+		var y := 0.0
+		for vao in vaos:
+			_retangulo(Rect2(x0, y, x1 - x0, vao.x - y), cor)
+			y = maxf(y, vao.y)
+		_retangulo(Rect2(x0, y, x1 - x0, size.y - y), cor)
 
 
 func _retangulo(r: Rect2, cor: Color) -> void:

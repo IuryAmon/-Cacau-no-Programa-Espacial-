@@ -948,12 +948,15 @@ func _debug_avancar_a_hora() -> void:
 ## Atalho de debug (tecla P, em qualquer mapa): entrega de uma vez todas as
 ## ferramentas do Progresso.HABILIDADES — maçarico, bumerangue, mochila,
 ## sinalizador e botas (a lanterna saiu do jogo por enquanto).
-## Vão direto para os equipamentos, sem ficha de coleta nem tutorial.
+## Vão direto para os equipamentos, sem ficha de coleta nem tutorial. Também
+## põe no caderno todas as notas que faltavam (Caderno.anotar_todas).
 func _debug_pegar_todas_ferramentas() -> void:
 	if not OS.is_debug_build():
 		return
 	var pegas := ModoDev.dar_todas_as_ferramentas()
 	print("DEBUG [Player]: ferramentas pegas via tecla P -> ", pegas if not pegas.is_empty() else "nenhuma (já tinha todas)")
+	var notas := Caderno.anotar_todas()
+	print("DEBUG [Player]: notas do caderno via tecla P -> ", notas if not notas.is_empty() else "nenhuma (já tinha todas)")
 	_debug_pegar_cilindro_de_ar()
 
 
@@ -1071,6 +1074,29 @@ func esta_na_faixa() -> bool:
 ## Onde estão os pés dela (a base da forma de colisão), em y do mundo.
 func altura_dos_pes() -> float:
 	return _altura_dos_pes()
+
+
+## A SOLA DESENHADA (a última linha do sprite), em y do mundo, contada do chão
+## em que ela pisa: no pulo, continua na linha do chão. É com ela que os objetos
+## de uma faixa (os cilindros do telhado) decidem se passam na frente ou atrás
+## dela — o desenho do pé fica uns pixels abaixo da base da colisão.
+func sola_no_chao() -> float:
+	var chao := _linha_da_faixa if _na_faixa else _altura_dos_pes()
+	return chao + _da_colisao_a_sola()
+
+
+## Da base da colisão até a última linha do quadro de agora do sprite (os
+## quadros da Cacau terminam no pé, sem linha vazia embaixo).
+func _da_colisao_a_sola() -> float:
+	var sprite := _animated_sprite as AnimatedSprite2D
+	if sprite == null or sprite.sprite_frames == null \
+			or not sprite.sprite_frames.has_animation(sprite.animation):
+		return 0.0
+	var quadro: Texture2D = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	if quadro == null:
+		return 0.0
+	var base := sprite.offset + Vector2(0.0, quadro.get_size().y * (0.5 if sprite.centered else 1.0))
+	return (sprite.get_global_transform() * base).y - _altura_dos_pes()
 
 
 ## O muro da frente: nada do sprite da Cacau é desenhado abaixo da altura "y"

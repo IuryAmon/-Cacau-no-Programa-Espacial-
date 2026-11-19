@@ -14,8 +14,9 @@ extends Node2D
 ## Quanto a tela leva para clarear na chegada.
 @export var duracao_clarear: float = 1.0
 ## Onde a sala acaba à direita: o fim do chão e da parede do fundo, depois do
-## fosso de ventilação. A câmera não passa daqui (senão mostra o vazio) e o
-## nó ParedeDireita, encostado nesta linha, segura a Cacau.
+## fosso de ventilação. A câmera não passa daqui (senão mostra o vazio). Logo
+## antes desta linha fica a SaidaCorredor: andando para fora por ela, a Cacau
+## vai para o corredor da torre (ver o HUB, mais abaixo).
 @export var fim_da_sala: int = 3564
 
 @onready var _camera: Camera2D = $Player/Camera2D
@@ -39,20 +40,36 @@ func _ready() -> void:
 # --- O HUB DO PLANO v2 ---
 #
 # O laboratório é a base central: painel do CHONPS ao centro e os acessos às
-# fases (oficina, base da torre, fosso de ventilação no piso e torre de
-# lançamento). Esses nós NÃO nascem por código e NÃO vivem mais numa cena
-# separada: eles são filhos diretos do laboratório (PainelChonps, PortaOficina,
-# PortaTorre, FossoVentilacao, PortaLancamento). Abra
-# scenes/laboratório_(world_2).tscn e arraste cada um na viewport, com o
-# cenário da sala em volta — antes eles estavam dentro de hub_fases.tscn e só
-# dava para posicioná-los no vazio, sem ver onde caíam de verdade.
+# fases (a porta da oficina, o fosso de ventilação no piso e, na ponta direita,
+# a saída para a torre de gases). Esses nós NÃO nascem por código e NÃO vivem
+# mais numa cena separada: eles são filhos diretos do laboratório
+# (PainelChonps, PortaOficina, FossoVentilacao, PortaMetalTorre,
+# SaidaCorredor). Abra scenes/laboratório_(world_2).tscn e arraste cada um na
+# viewport, com o cenário da sala em volta — antes eles estavam dentro de
+# hub_fases.tscn e só dava para posicioná-los no vazio, sem ver onde caíam de
+# verdade.
 #
-# Da esquerda para a direita: PortaOficina, PortaTorre, o PainelChonps com o
-# ReceptorChonps embaixo, PortaLancamento, PortaSimulador e, depois dele, o
-# FossoVentilacao no piso. Painel e receptor ficam no MEIO das duas portas
-# vizinhas (x = 2155, entre a PortaTorre em 1650 e a PortaLancamento em
-# 2659): mudou uma dessas portas de lugar, recentralize os dois, sempre no
-# mesmo x. A sala acaba em fim_da_sala (aqui em cima), com o nó ParedeDireita.
+# Da esquerda para a direita: PortaOficina (a Ala de Pirólise, fase 1), o
+# PainelChonps com o ReceptorChonps embaixo, PortaSimulador, o FossoVentilacao
+# no piso e, na ponta, a PlacaDestilador, a PortaMetalTorre e a SaidaCorredor.
+# A porta da Torre de Lançamento (a porta verde, entre o painel e o simulador)
+# saiu em 2026-11-18: daqui não se vai mais ao final do jogo.
+#
+# A PONTA DIREITA É UMA PAREDE COM PORTA DE METAL, o espelho da ponta esquerda
+# (lá, a parede tem a porta de laser embaixo). A parede são tiles da camada
+# TileMap/Detalhes — a mesma coluna da esquerda, espelhada e uma linha mais
+# alta, para o pé dela encostar no alto da porta — e a PortaMetalTorre
+# (componentes/porta_metal_macarico.tscn) fecha o vão: só passa quem a derreter
+# com o maçarico. Como o world1 fica à esquerda (pelo laser), a torre de gases
+# fica à DIREITA — é o que o mapa do caderno mostra. A SaidaCorredor (uma
+# PassagemDeCena, passagem_de_cena.gd) fica 24 px antes de fim_da_sala, por
+# trás da porta: derretida a porta, cruzou a linha, a Cacau sai andando e
+# chega andando no corredor da torre, pela ponta esquerda dele; na volta ela
+# entra andando por aqui, por cima da sucata da porta, e para embaixo da placa
+# (a "distancia_entrada" dela é curta de propósito: com a padrão, ela pararia
+# em cima do alçapão do fosso, com o botão E aceso). Depois da linha há o
+# PisoDaSaida (um chão invisível, fora do quadro, para ela seguir andando
+# enquanto a tela apaga) e, no fim dele, a ParedeDireita.
 func _montar_conteudo_de_fases() -> void:
 	FerramentasPlayer.instalar($Player)
 

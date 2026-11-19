@@ -5,8 +5,8 @@ extends Node
 # scripts/paginas_caderno.gd), apertando as teclas de verdade:
 #
 #   * a ação "caderno" é M e △, e os atalhos de teste saíram do M;
-#   * o ícone aparece com a Cacau em cena, com a tecla M desenhada (e o △ de
-#     controle na mão);
+#   * o ícone aparece com a Cacau em cena — o caderninho e, ao lado, o
+#     mapinha —, com a tecla M desenhada (e o △ de controle na mão);
 #   * o △ que fecha um puzzle não abre o caderno junto;
 #   * M abre: o jogo pausa, o caderno segura as teclas e sai do ícone; aberto,
 #     o ícone some. M e ESC fecham, o jogo volta e o espaço apertado em cima do
@@ -37,8 +37,8 @@ extends Node
 #     atômico, o número de massa e as partículas na cor das fórmulas;
 #   * cada face tem o número dela no canto de baixo de fora (a folha de rosto é
 #     a 1; esquerda par, direita ímpar), também na folha que vira;
-#   * todo texto cabe no papel (o nome, no vão da caixa) e toda letra existe
-#     na fonte;
+#   * todo texto cabe no papel (o nome, no vão da caixa), todo desenho fica
+#     dentro da margem e toda letra existe na fonte;
 #   * com a ficha de coleta aberta ou sem a Cacau em cena, o ícone some e M
 #     não abre.
 #
@@ -137,6 +137,8 @@ func _testar_paginas() -> void:
 	var fora := PackedStringArray()
 	var cantos := PackedStringArray()
 	var marcas_escritas := PackedStringArray()
+	var desenhos_fora := PackedStringArray()
+	var desenhos := 0
 	for p in paginas.size():
 		_checar(not (paginas[p][0].is_empty() and paginas[p][1].is_empty()),
 			"página %d escrita" % (p + 1))
@@ -157,6 +159,16 @@ func _testar_paginas() -> void:
 				for c in String(item["texto"]):
 					if c != " " and not fonte.has_char(c.unicode_at(0)) and not faltando.contains(c):
 						faltando += c
+			# Os desenhos (traços, discos, polígonos e artes) também ficam dentro
+			# da margem. Da arte conta onde ela tem tinta, não a moldura vazia.
+			for item in itens:
+				if item.has("texto"):
+					continue
+				var caixa_do_desenho: Rect2 = item["tinta"] if item.has("tinta") else FaceCaderno._caixa_de([item])
+				desenhos += 1
+				if caixa_do_desenho.has_area() and not face.area_util().grow(0.5).encloses(caixa_do_desenho):
+					desenhos_fora.append("%d%s: %s" % [p, "ED"[lado], caixa_do_desenho])
+					break
 			# O número é o último: no canto de baixo de fora. O verso da capa
 			# não tem.
 			if face.numero == 0:
@@ -171,6 +183,7 @@ func _testar_paginas() -> void:
 				cantos.append("%d: %s" % [face.numero, caixa_numero])
 			face.free()
 	_checar(fora.is_empty(), "todo texto cabe no papel, e o nome no vão da caixa %s" % [fora])
+	_checar(desenhos_fora.is_empty(), "todo desenho cabe dentro da margem (%d itens) %s" % [desenhos, desenhos_fora])
 	_checar(faltando.is_empty(), "toda letra existe na fonte [%s]" % faltando)
 	_checar(marcas_escritas.is_empty(), "todo {nome} virou ícone e todo *destaque*, cor %s" % [marcas_escritas])
 	_checar(cantos.is_empty(),
@@ -385,6 +398,11 @@ func _testar_icone() -> void:
 	var tela := get_viewport().get_visible_rect().size
 	_checar(canto.position.x < tela.x * 0.1 and canto.end.y > tela.y * 0.9,
 		"no canto inferior esquerdo (%s)" % canto)
+	var caderninho := icone.caixa_do_caderno()
+	var mapinha := icone.caixa_do_mapa()
+	_checar(mapinha.position.x >= caderninho.end.x and is_equal_approx(mapinha.end.y, caderninho.end.y) \
+		and Rect2(Vector2.ZERO, icone.size).encloses(mapinha),
+		"com o caderninho e, ao lado, o mapinha (%s, %s)" % [caderninho, mapinha])
 	_checar(icone.nome_da_tecla() == "tecla_m", "com a tecla M desenhada ao lado")
 	_checar(BotoesControle.anima("tecla_m"), "e a tecla M afunda em loop")
 	await _capturar("0_icone")
@@ -392,6 +410,9 @@ func _testar_icone() -> void:
 
 func _testar_abrir_e_fechar() -> void:
 	print("\n--- ABRIR E FECHAR ---")
+	# Este é o teste do livro: o caderno abre na aba CADERNO. (A primeira vez
+	# ele abriria no MAPA; as abas são do teste_mapa.)
+	Caderno.mostrar_aba(Caderno.Aba.CADERNO)
 	_tecla(KEY_M)
 	await _quadros(2)
 	_checar(Caderno.aberto(), "M abre o caderno")

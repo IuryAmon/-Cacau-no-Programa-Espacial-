@@ -1,0 +1,23 @@
+join cacau (cacau_feliz) left
+join cientista (cientista_feliz) right
+cacau: [speed=1.6]Que lindo...
+cientista (cientista_mto_feliz): É um satélite brasileiro indo pra órbita.
+cientista (cientista_serio): A próxima missão vai ser bem maior. Por isso o treino é puxado.
+cacau: Maior... quanto?
+cientista (cientista_serio): [speed=2.5]Se você passar no teste...
+do DialogicBridge.lancamento_suspense()
+cientista (cientista_feliz): [speed=3]Você vai...[pause=1.5] pra Lua.
+do DialogicBridge.lancamento_virar_para_ele()
+update cacau (cacau_feliz) [animation="Shake X" length=0.15 repeat=2]
+cacau: [speed=0.6]EU?! PRA LUA?!
+do DialogicBridge.lancamento_comemorar()
+cacau: [speed=2]Eu sempre sonhei com isso...
+cacau: Mas... por que uma criança?
+cientista (cientista_feliz): Bom... o matemático faltou no dia de calcular o módulo lunar.
+cientista (cientista_mto_feliz): Eu fiz as contas...[pause=0.5] e confundi uma vírgula.
+cientista: O módulo ficou pequeno demais pra um adulto!
+cientista (cientista_feliz): Mas vamos esquecer isso. Todo mundo erra, não é?
+cacau (cacau_superneutro): [speed=3]...
+cacau: [speed=2]Eu... na Lua...[pause=0.8] de verdade...
+cientista (cientista_mto_feliz): Não pensa demais! A hora do lançamento tá chegando.
+leave --All--

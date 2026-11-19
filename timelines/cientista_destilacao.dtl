@@ -1,5 +1,13 @@
 join cientista (cientistaradio) right
 cientista (cientistaradio): A amostra chegou inteira! Ela entra na coluna pela válvula de expansão: saindo da pressão, o ar esfria mais e fica todo líquido.
-cientista: Agora é você quem manda no calor do fundo. A mistura ferve a uns -194 °C, e o vapor sai rico em nitrogênio.
-cientista: Mas o oxigênio e o argônio evaporam um pouco junto: nada sai puro. Cada bandeja deixa o vapor mais rico.
-cientista: Esquente até o nitrogênio subir quase todo, sem passar dos -183 °C do oxigênio: senão ele ferve todo e suja o topo!
+cientista: Quer que eu explique como separar o nitrogênio?
+- Quero, me explica!
+	cientista: Agora é você quem manda no calor do fundo. A mistura ferve a uns -194 °C, e o vapor sai rico em nitrogênio.
+	cientista: Mas o oxigênio e o argônio evaporam um pouco junto: nada sai puro. Cada bandeja deixa o vapor mais rico.
+	cientista: Esquente até o nitrogênio subir quase todo, sem passar dos -183 °C do oxigênio: senão ele ferve todo e suja o topo!
+	do Caderno.anotar("destilacao")
+- Já sei como funciona
+	[signal arg="pular_explicacao"]
+	do Caderno.anotar("destilacao")
+	cientista: Então capricha! Esquente o fundo sem passar dos -183 °C do oxigênio.
+	[end_timeline]

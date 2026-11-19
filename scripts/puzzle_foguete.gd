@@ -74,6 +74,13 @@ const TIMELINE_DICA_EQUACAO_DOBRADA := "cientista_dica_equacao_dobrada"
 #              passo termina pelo próprio botão).
 #
 # Nomes que "mostrar" e "enfase" aceitam: ver _retangulos_para().
+#
+# PULAR. A primeira fala pergunta se a pessoa quer a explicação; a segunda
+# opção ("Já sei balancear") solta [signal arg="pular_explicacao"]: o roteiro
+# para ali e a equação fica toda da pessoa. Quem anota a nota "balanceamento"
+# no caderno é a conversa (no fim da explicação, ou no caminho de quem pula),
+# e com ela já no caderno o balanceamento abre direto, sem roteiro.
+const NOTA_BALANCEAMENTO := "balanceamento"
 const PASTA_FALAS := "res://timelines/"
 const ROTEIRO := [
 	# 1º: uma molécula de cada.
@@ -193,6 +200,8 @@ var textura_h2o: Texture2D = null
 # ao acordar, a tela já tiver sido fechada (ou fechada e reaberta).
 var _sessao: int = 0
 var _em_transicao: bool = false
+## A pessoa escolheu "Já sei balancear" na fala de agora.
+var _pulou_explicacao: bool = false
 var _tweens: Array = []
 var _tween_prompt_acesso: Tween = null
 var _tempo: float = 0.0
@@ -398,6 +407,7 @@ func _resetar():
 	_clarao_tubo = 0.0
 	_passo       = -1
 	_botao_do_passo = null
+	_pulou_explicacao = false
 	destaque.limpar(true)
 	if _tween_prompt_acesso:
 		_tween_prompt_acesso.kill()
@@ -636,19 +646,21 @@ func dicas_do_controle() -> Array:
 		dicas.append(["fechar", "SAIR"])
 	return dicas
 
-# Cursor de mão sobre o que dá para pegar/clicar; o alvéolo da mochila acende.
+# O cursor: mão aberta sobre o que dá para arrastar (o cilindro na mochila, as
+# peças da montagem), fechada segurando, o dedo sobre o que se clica (ver
+# MaoDoMouse); o alvéolo da mochila acende.
 func _atualizar_foco(pos: Vector2):
 	var mao_livre := _mao == null and _peca == null
 	var cursor := Input.CURSOR_ARROW
 	var foco := -1
 	if not mao_livre:
-		cursor = Input.CURSOR_DRAG
+		cursor = MaoDoMouse.CURSOR_SEGURANDO
 	elif etapa == Etapa.COLETA and _mochila != null:
 		foco = _mochila.slot_no_ponto(pos)
 		if foco >= 0:
-			cursor = Input.CURSOR_POINTING_HAND
+			cursor = MaoDoMouse.CURSOR_DE_PEGAR
 	elif etapa == Etapa.MONTAGEM and not _em_transicao and _peca_no_ponto(pos) != "":
-		cursor = Input.CURSOR_POINTING_HAND
+		cursor = MaoDoMouse.CURSOR_DE_PEGAR
 	elif etapa == Etapa.BALANCEAMENTO and _botao_fase2_no_ponto(pos) != null:
 		cursor = Input.CURSOR_POINTING_HAND
 	if _mochila != null:
@@ -926,7 +938,10 @@ func _ir_para_fase2():
 	if sessao != _sessao:
 		return
 	_em_transicao = false
-	_executar_passo(0)
+	if Caderno.tem_nota(NOTA_BALANCEAMENTO):
+		_abandonar_roteiro()
+	else:
+		_executar_passo(0)
 
 func _clicar_fase2(mouse_pos: Vector2):
 	if travado or _em_transicao or not grupo_equacao.visible:
@@ -1111,17 +1126,25 @@ func _executar_passo(indice: int):
 		# para o que o cientista está citando naquela frase.
 		var sinais: Dictionary = passo.get("sinais", {})
 		var ao_sinal := func(argumento: Variant) -> void:
-			if not (argumento is String and sinais.has(argumento)) or sessao != _sessao:
+			if not argumento is String or sessao != _sessao:
+				return
+			if argumento == ExplicacaoNoPuzzle.SINAL_PULAR:
+				_pulou_explicacao = true
+				destaque.limpar()
+				return
+			if not sinais.has(argumento):
 				return
 			var foco: Dictionary = sinais[argumento]
 			destaque.focar(_retangulos_para(foco.get("mostrar", [])), false,
 				_retangulos_para(foco.get("enfase", [])))
-		if not sinais.is_empty():
-			Dialogic.signal_event.connect(ao_sinal)
+		Dialogic.signal_event.connect(ao_sinal)
 		await _falar_cientista(PASTA_FALAS + passo["fala"] + ".dtl")
 		if Dialogic.signal_event.is_connected(ao_sinal):
 			Dialogic.signal_event.disconnect(ao_sinal)
 		if sessao != _sessao:
+			return
+		if _pulou_explicacao:
+			_abandonar_roteiro()
 			return
 
 	var botao := _botao_por_nome(passo["botao"])
@@ -1130,6 +1153,14 @@ func _executar_passo(indice: int):
 		destaque.focar([_retangulo_do_botao(botao)], true)
 	else:
 		destaque.limpar()
+	_em_transicao = false
+
+## Sem roteiro (a pessoa pulou a explicação, ou ela já está no caderno): a
+## equação fica toda da pessoa, sem holofote e com todos os botões.
+func _abandonar_roteiro():
+	_passo = ROTEIRO.size()
+	_botao_do_passo = null
+	destaque.limpar()
 	_em_transicao = false
 
 ## Chamado a cada mudança de coeficiente: chegou na meta do passo, avança.

@@ -11,11 +11,11 @@ Tudo é arrastável, redimensionável e trocável direto no editor.
 | `scenes/fases/fase1_oficina.tscn` | Oficina do Carbono |
 | `scenes/fases/corredor_patio.tscn` | Corredor entre o elevador da oficina e o pátio — o elevador chega nele, e o fundo dele dá no pátio |
 | `scenes/fases/fase1_2_exterior.tscn` | Pátio da Oficina (fase 1.2) — tela única, a céu aberto; entra-se andando pela esquerda, vindo do corredor do pátio |
-| `scenes/fases/corredor_torre.tscn` | Corredor entre o laboratório e a fase 2 — a porta da torre dá nele, e o fundo dele dá na fase |
+| `scenes/fases/corredor_torre.tscn` | Corredor entre o laboratório e a fase 2 — a ponta direita do laboratório dá nele, e o fundo dele dá na fase |
 | `scenes/fases/fase2_torre.tscn` | Fase 2, a do nitrogênio: a rua da Torre de Gases, com os três prédios (ver "A fase 2", abaixo) |
 | `scenes/fases/fase2_sala_compressor.tscn` | A sala do compressor (o puzzle do gás) |
 | `scenes/fases/fase2_torre_interior.tscn` | A Torre de Gases por dentro: oito andares de subida |
-| `scenes/fases/fase2_telhado.tscn` | O telhado da torre (o cilindro de amostra e o elevador de carga) |
+| `scenes/fases/fase2_telhado.tscn` | O telhado da torre (os cilindros de amostra e o elevador de carga) |
 | `scenes/fases/fase2_sala_destilacao.tscn` | A sala de destilação (a mochila de N₂, a coluna, o cilindro de N₂) |
 | `scenes/fases/fase3_subsolo.tscn` | Subsolo em blecaute (P + S) |
 | `scenes/fases/fase_final.tscn` | Torre de lançamento |
@@ -80,6 +80,14 @@ dela na folha em `TECLAS` (cada tecla ocupa 16×16 px no primeiro bloco) e
 acrescente o nome no **fim** de `NOMES`. Tecla que ainda não está ligada
 aparece no HUD como uma tampinha com a letra escrita.
 
+No world1, os avisos escritos no cenário também usam essa folha: o
+"Pressione W A S D ou o direcional para movimentar-se" do começo
+(`BotaoMoviment`) e, em cima do primeiro vão, o "Pressione [ESPAÇO] ou ✕ para
+pular" (`BotaoPulo`, `scripts/botao_pulo.gd` — a barra de espaço da folha e o ✕
+do controle, que afundam quando o jogador aperta). Para mudar o aviso do pulo de
+lugar, arraste o `BotaoPulo` (a posição é o meio do bloco); os textos, o tamanho
+da letra e das teclas ficam no Inspetor.
+
 ## O HUD: a vida, a mochila e os equipamentos
 
 O HUD é feito de uma peça só, a **ficha**: o quadrado da caixa de elemento do
@@ -126,6 +134,22 @@ teste automático é `tools/teste_hud.tscn` (com `-- --capturas=<pasta>`, sem
 `--headless`, ele salva imagens do HUD no pátio, no dano, no perigo e na
 cura); a ficha de coleta e a mochila têm o `tools/teste_popup_item.tscn`.
 
+## O cursor do mouse
+
+O jogo não mostra nenhum cursor do sistema: todos vêm de
+`assets/UI/Roret_Cursor/png/`, nos menus, no caderno e nos puzzles. A seta é o
+`cursor_default`; em cima do que se clica, a mão que aponta (`cursor_select`),
+que dobra o dedo (`cursor_select_tap`) enquanto o botão está apertado; em cima
+do que se arrasta, a mão aberta (`cursor_grab`), que fecha (`cursor_grabbing`)
+enquanto segura. A mão que mostra o gesto de arrastar nos puzzles e o cursor do
+controle desenham as mesmas imagens.
+
+Para trocar um cursor, salve o PNG novo por cima, com o mesmo nome. Se o
+desenho mudar de lugar dentro do PNG, acerte o ponto quente dele — o pixel que
+"clica": a ponta da seta, a ponta do dedo, o meio da palma — na tabela `FORMAS`
+de `scripts/ui/ponteiro_do_mouse.gd`. Cada pixel do desenho vira um pixel da
+tela até 1080 de altura, e dois a partir de 2160.
+
 ## Pintar o cenário
 
 Cada fase tem duas camadas de tiles:
@@ -167,8 +191,9 @@ Selecione o nó e use o Inspetor. As propriedades mais usadas:
   **`janela`** em segundos (alvo temporizado).
 - Portas entre as fases: todas são a porta da oficina (`porta_simulador.gd`) —
   a Ala de Pirólise com a arte dela (`porta_ala_eletrolise.tscn`) e as que ainda
-  não têm arte própria (Torre de Gases, Torre de Lançamento, as voltas ao
-  laboratório e a cápsula) com o `porta modelo.png` (`porta_modelo.tscn`).
+  não têm arte própria (as voltas ao laboratório e a cápsula) com o
+  `porta modelo.png` (`porta_modelo.tscn`). A porta verde do laboratório, que
+  levava à Torre de Lançamento, saiu em 2026-11-18: a torre está sem entrada.
   Mesma animação, mesmo botão: **E** (□ no controle), o `IconeInteragir` da
   porta — só a altura dele conta, o x vai sozinho para o meio. No Inspetor:
   **`cena_destino`** e o par **`tag_destino` / `tag_aqui`** — ao chegar, quem
@@ -187,6 +212,11 @@ Selecione o nó e use o Inspetor. As propriedades mais usadas:
   porta pode mandar para uma passagem e vice-versa. **`sentido`** diz o lado de
   fora (1 = direita) e **`distancia_entrada`** quanto ela anda para dentro ao
   chegar. O piso tem de continuar depois da linha.
+- `PlacaDeCaminho` (`scripts/fases/placa_de_caminho.gd`): a plaquinha verde de
+  rua com um nome e uma seta — a "DESTILADOR ➜" do fim do laboratório, que
+  mostra a saída para a fase 2. No Inspetor: **`texto`**, **`seta`** (nenhuma,
+  direita, esquerda) e **`tamanho_da_letra`**. No editor ela já aparece como
+  fica no jogo; a posição do nó é o meio da placa.
 - `MesaPuzzle`: **`puzzle_config`** guarda os slots, as peças e os textos do
   puzzle de arrastar.
 
@@ -587,7 +617,13 @@ Cada passo do roteiro diz a fala, o que o holofote acende, o botão pedido e os
 coeficientes que encerram o passo. Para o holofote trocar de lugar NO MEIO de
 uma fala, a timeline solta `[signal arg="nome"]` na frase certa e o passo
 declara esse nome em `"sinais"` (é assim que a moldura passa do "H = 2" para o
-"O = 1" quando ele fala de cada um). Os testes são
+"O = 1" quando ele fala de cada um).
+
+Logo depois de "Cilindros instalados!" ele pergunta se a pessoa quer a
+explicação: **Já sei balancear** pula o roteiro inteiro (sem holofote e sem
+seta, a equação fica toda dela) e a nota `balanceamento` vai para o caderno
+do mesmo jeito. Com a nota já no caderno, a equação abre direto, sem o
+roteiro. Ver "O caderno: as notas e as páginas", mais abaixo. Os testes são
 `tools/teste_puzzle_foguete.tscn`, `tools/teste_puzzle_macarico.tscn` e
 `tools/teste_balanceamento.tscn`; com `-- --capturas=<pasta>` e sem
 `--headless` eles salvam uma imagem de cada momento.
@@ -618,6 +654,23 @@ de cada uma (a arte é
 `assets/UI/Computador receptor/particulas_atomo.png`). Durante os testes, a
 tecla **L** resolve o puzzle na hora; o teste automático é
 `tools/teste_puzzle_carbono.tscn`.
+
+### O puzzle do elevador de carga (fase 1)
+
+`scenes/puzzle_carbono14.tscn`, aberto pelo terminal ao lado da plataforma
+(`ElevadorCarga/TerminalGuincho`), na mesma tela do computador dos puzzles do
+bumerangue e do maçarico. É a curiosidade do carbono-14, que antes o Dr. Chico
+contava no rádio, virada pergunta: **qual isótopo radioativo os cientistas
+usam para descobrir a idade de fósseis e artefatos arqueológicos de até 50 mil
+anos?** As respostas são três caixinhas de isótopo (o número de massa no
+canto, o símbolo e o nome): carbono-12, carbono-13 e carbono-14. A errada
+treme, fica vermelha e o rodapé diz por que não é ela; a certa mostra
+ELEVADOR LIBERADO! e o E liga a plataforma.
+
+A pergunta, as respostas, qual é a certa e o que o rodapé diz em cada erro
+ficam nas constantes do topo de `scripts/puzzle_carbono14.gd`; a posição e o
+tamanho das caixas, na cena (`GrupoPergunta/Respostas/Resposta1..3`). A tecla
+**L** resolve na hora; o teste é `tools/teste_puzzle_elevador.tscn`.
 
 ### O tutorial do bumerangue
 
@@ -697,7 +750,7 @@ precisa estar para a seta acordar. No Inspetor:
 |---|---|
 | `direcao` | Para onde a seta aponta |
 | `texto` | O que vai escrito ao lado (vazio = só a seta) |
-| `requer_habilidade` | Ferramenta que ela já precisa ter |
+| `requer_habilidade` | Ferramenta que ela já precisa ter (recém-ganha, a seta espera a ficha de coleta e o tutorial fecharem) |
 | `depois_de` | Nó que já precisa ter sido feito (uma porta derretida...) |
 | `ate` | Nó que, feito, aposenta a seta de vez |
 | `espera` | Segundos dentro do Gatilho antes de a seta aparecer |
@@ -705,16 +758,30 @@ precisa estar para a seta acordar. No Inspetor:
 | `manter_fora_do_gatilho` | Depois de acender, continua valendo fora do Gatilho |
 | `raio_de_chegada` | Chegou a essa distância do alvo, a seta some |
 
-Na Oficina elas moram em `GuiasDeCaminho/`, as duas valendo depois que a porta de
-metal de cima (`Patio/PortaMetal`) derrete e até a do elevador
-(`Patio/PortaMetal2`) derreter:
+Na Oficina elas moram em `GuiasDeCaminho/`:
+
+- `SetaPrimeiraCaixa` — sem texto. Assim que o tutorial do bumerangue fecha
+  ("jogue o bumerangue nas caixinhas"), a seta aparece logo embaixo da
+  primeira caixa elétrica (`Treino/AlvoFixo1`), apontando para cima — por cima
+  dela fica a lista de objetivos — e some de vez quando a caixa quebra. O
+  Gatilho cobre a região de onde a caixa aparece na tela; longe dali a seta
+  se esconde.
+
+As outras duas valem depois que a porta de metal de cima (`Patio/PortaMetal`)
+derrete e até a do elevador (`Patio/PortaMetal2`) derreter:
 
 - `SetaDescer` — o Gatilho cobre o topo do pilar do corredor das torretas
   (y = -64, x de 2720 a 2848). Parada 2 s em cima dele, aparece a seta para
   baixo, na borda esquerda do pilar: é por ali que se cai.
 - `SetaVoltarAoInicio` — o Gatilho cobre o chão lá de baixo. Logo depois da
   queda, a seta aponta para a esquerda, até a porta de metal que tranca o
-  elevador do pátio; some quando a Cacau chega perto da porta.
+  elevador do pátio; some quando a Cacau chega perto da porta. Na rampa das
+  bolas (`AreaBolasRampa`) ela não aparece: o export `esconder_em` aponta um
+  retângulo da fase onde a seta fica escondida (e o guia automático, quieto).
+
+Fora estas, postas à mão, o jogo inteiro tem a seta automática, que entra
+sozinha quando a Cacau se perde — ver "O guia de caminho", mais abaixo. Com uma
+`SetaGuia` na tela, ela fica quieta.
 
 ## Os objetivos (canto superior esquerdo)
 
@@ -747,12 +814,140 @@ objeto do cenário sabe que objetivo existe.
   PortaMetal`). Renomeou ou moveu um nó que o roteiro consulta? Rode
   `tools/teste_objetivos.gd` (abaixo) — ele confere todos os caminhos.
 
+## O caderno: as notas e as páginas
+
+O caderno começa só até a página 3 (a folha de rosto e a epígrafe). O resto
+chega em **notas**, e quem dá cada nota é o **Dr. Chico**: ele explica o
+puzzle e a Cacau anota — a nota entra no caderno sozinha, sem folha voando. O
+ícone do caderno pula, ganha a marca de nota nova e o aviso **NOTA ADICIONADA
+AO CADERNO** sobe quando a fala e o puzzle fecham (com o puzzle aberto ele
+espera). O caderno já fica na página da nota, mas a nota não muda a aba em que
+ele abre: se ele abrir no mapa, a aba **CADERNO** está com a mesma marca, e
+trocar para ela cai na nota. A marca apaga quando a pessoa vê o CADERNO.
+
+| Nota | Título | Páginas | Quem ensina |
+|---|---|---|---|
+| `atomo` | O Átomo | 4 a 9 | o puzzle do hidrogênio (world1) |
+| `eletrosfera` | Eletrosfera | 10 e 11 | o puzzle do oxigênio (world1) |
+| `balanceamento` | Balanceamento | 12 a 15 | o puzzle do foguete (world1) |
+| `gases` | Os Gases | 16 e 17 | o compressor (fase do nitrogênio) |
+| `destilacao` | Destilação | 18 e 19 | a coluna de destilação (o E nela) e a abertura do puzzle da amostra |
+
+Os puzzles podem vir em qualquer ordem: cada nota entra no lugar dela, e as
+páginas têm sempre o mesmo número. O puzzle do carbono (fase 1, o do
+bumerangue) não tem explicação: o átomo e a eletrosfera já estão no caderno.
+
+**"Já sei..."** Toda explicação começa com uma pergunta ("Quer que eu explique
+...?") e duas opções: **Quero, me explica!** e, em segundo, **Já sei montar**
+(hidrogênio e oxigênio), **Já sei balancear** (foguete) ou **Já sei como
+funciona** (compressor, destilação e coluna). Quem pula ganha a nota do mesmo
+jeito. Escolhe-se com o mouse, com o teclado (setas e Enter/Espaço) ou com o
+controle (direcional e ✕).
+
+**Quem anota é a conversa.** Na timeline, um evento de chamada, no fim da
+explicação **e** no ramo de quem pula:
+
+    do Caderno.anotar("gases")
+
+O ramo do "Já sei..." é sempre assim (as linhas de dentro com Tab):
+
+    - Já sei como funciona
+    	[signal arg="pular_explicacao"]
+    	do Caderno.anotar("gases")
+    	cientista: Então vai fundo: ...
+    	[end_timeline]
+
+O `pular_explicacao` avisa a tela que o roteiro acabou ali (o holofote apaga e
+o puzzle fica livre); o `[end_timeline]` não deixa a conversa seguir para as
+linhas de baixo. Anotar uma nota que já está no caderno não faz nada.
+
+**Cada explicação toca uma vez.** No hidrogênio e no oxigênio ela começa se a
+nota ainda não está no caderno — fechar o puzzle no meio dela não anota, e na
+próxima vez ela recomeça. No foguete, com o `balanceamento` no caderno, a
+equação abre sem o roteiro. O compressor e a destilação falam na primeira vez
+que a tela abre. A explicação da coluna (o E nela) dá para rever quando quiser.
+
+No world1 o Dr. Chico ainda não se apresentou: a caixa de fala diz
+**Desconhecido**. Não escreva "Dr. Chico" nas falas de lá.
+
+### O Dr. Chico explicando dentro do puzzle (hidrogênio e oxigênio)
+
+É o mesmo jeito do balanceamento guiado do foguete: ele fala por cima da tela,
+o holofote acende o que ele está citando e, quando ele pede uma ação, a seta
+aponta a peça certa e só ela responde (o resto dá uma cutucada no holofote).
+Quem conduz é `scripts/ui/explicacao_no_puzzle.gd`, e cada puzzle tem a sua
+constante `ROTEIRO`, no topo do script (`scripts/puzzle_hidrogenio.gd` e
+`scripts/puzzle_oxigenio.gd`). Cada passo do roteiro:
+
+- `"fala"` — a timeline dita no começo do passo (o nome do arquivo, sem `.dtl`);
+- `"mostrar"` / `"enfase"` — o que o holofote acende quando a fala abre (pelos
+  nomes do `retangulos_para()` do puzzle: `caixa`, `caixa_z`, `nucleo`,
+  `camada_k`...);
+- `"sinais"` — `{nome: {"mostrar", "enfase"}}`: um `[signal arg="nome"]` na
+  timeline leva o holofote para lá no meio da fala, na frase que comenta aquilo;
+- `"acao"` — a ação pedida, com a seta na peça (vazia = a pessoa decide);
+- `"meta"` — o que encerra o passo (o próton no núcleo, a camada K cheia, o
+  átomo montado); vazia = o passo acaba com a fala.
+
+As falas são `timelines/cientista_hidrogenio_1` a `_3` e
+`cientista_oxigenio_1` a `_3`: a `_1` pergunta e explica até a primeira ação,
+a `_2` comenta e manda terminar, e a `_3` comemora e anota. Para a tela
+continuar enxuta, o holofote não acende nos contadores do canto de baixo
+enquanto ele fala — a caixa com o nome de quem fala fica bem em cima deles.
+
+### As páginas
+
+Ficam em `scripts/paginas_caderno.gd`. A constante `PAGINAS` é a lista de
+páginas duplas, cada uma `[esquerda, direita]`, e cada face é um dicionário.
+As cores e as letras são as do caderno e saem de `scripts/ui/face_caderno.gd`:
+ao escrever uma página não se escolhe cor nenhuma. Os tipos de face:
+
+- `"desenho"` — uma arte (`"arte"`) com `"titulo"`;
+- `"propriedades"` — a lista de `"itens"`, cada um `{"formula", "texto"}`;
+- `"blocos"` — `"titulo"` (opcional) e a pilha de `"blocos"`, de cima para
+  baixo: `{"texto"}` (com `"cor": "fraca"` e `"alinhar": "direita"`
+  opcionais), `{"formula"}`, `{"espaco": px}` ou `{"desenho"}`;
+- `"passos"` — `"titulo"` e a lista de `"passos"`, numerados sozinhos.
+
+Os desenhos de um bloco (`"desenho": ...`):
+
+- `"atomo"` — o núcleo e as camadas: `"protons"`, `"neutrons"`, `"camadas"`
+  (os elétrons de cada uma) e `"raios"`;
+- `"equacao"` — a equação com os coeficientes (`"termos"`) e os nomes dos
+  dois lados embaixo (`"lados"`);
+- `"moleculas"` — as bolinhas de `"quantas"` moléculas da `"formula"`;
+- `"formula_anotada"` — a `"formula"` com setas nas `"marcas"` (o coeficiente
+  em cima, o índice embaixo);
+- `"embolos"` — o cilindro antes e depois de descer o êmbolo, com a tabelinha
+  das `"legendas"` (cada linha: `[o da esquerda, o nome da linha, o da
+  direita]`);
+- `"termometro"` — de `"de"` até `"ate"` °C, com o líquido até o `"nivel"` e as
+  `"marcas"` (`{"t", "texto"}`; `"fraca": true` para as de menos destaque).
+
+Nos textos, `*palavra*` vira marca-texto. Os números pequenos das fórmulas se
+escrevem já pequenos: `H₂O`, `O₂`, `N₂` (os caracteres ₀ a ₉).
+
+**Uma nota nova:** escreva as páginas nas `PAGINAS`, dê um nome a ela nas
+`NOTAS` (logo embaixo: o título do aviso e as páginas que ela traz) e ponha o
+`do Caderno.anotar("nome")` na conversa que a ensina — conversa nova precisa
+estar registrada no Dialogic (o editor do Dialogic faz isso ao criar a
+timeline). As notas vêm em sequência: cada página depois da 3 é de uma nota
+só, e o `tools/teste_notas_caderno.tscn` confere.
+
+A folha solta no mapa (`scenes/fases/componentes/nota_caderno.tscn`)
+continua existindo, para uma nota que se pega no chão com o E — hoje nenhuma
+está no mapa.
+
 ## O mapa (a aba MAPA do caderno)
 
-O **M** (△ no controle) abre o caderno, e o caderno tem duas abas no alto da
-tela: **CADERNO** e **MAPA**. **Q** e **E** trocam de aba (**L1** e **R1** no
-controle; clicar na aba também). O caderno abre na aba em que ficou — menos
-quando chega nota nova: aí abre no CADERNO, na página dela.
+O ícone no canto de baixo, à esquerda, tem os dois desenhos: o caderninho e o
+mapinha. O **M** (△ no controle) abre o caderno, e o caderno tem duas abas no
+alto da tela: **CADERNO** e **MAPA**. **Q** e **E** trocam de aba (**L1** e
+**R1** no controle; clicar na aba também). A primeira vez, ele abre no
+**MAPA**; depois, sempre na aba em que a Cacau ficou da última vez (nota nova
+não muda isso). A folha sai do desenho dela no ícone: o mapa do mapinha, o
+caderno do caderninho. Os dois desenhos ficam em `scripts/ui/caderno_icone.gd`
+(`DESENHO` e `DESENHO_MAPA`), e as abas usam os mesmos.
 
 O mapa é a planta do Centro de Lançamento no esquema das fases, numa folha de
 papel quadriculado:
@@ -804,6 +999,78 @@ Cacau e o resto): **`docs/mapa.png`**, com os nomes das salas, e
 ```
 godot --path . --windowed --resolution 800x450 res://tools/gerar_png_do_mapa.tscn
 ```
+
+## O guia de caminho (a seta que entra quando ela se perde)
+
+A lista do canto diz **o que** fazer; o **`GuiaDeCaminho`** (autoload,
+`scripts/guia_de_caminho.gd`) mostra **para onde** ir — mas só quando a Cacau
+precisa. Enquanto ela vai chegando mais perto do objetivo, nada aparece. Se ela
+passa um tempo sem chegar mais perto (perdida, indo para o lado errado, parada
+sem saber o que fazer), entra a seta amarela "POR AQUI", a mesma das
+`SetaGuia`:
+
+- **objetivo em outra cena**: a seta aponta a saída desta cena que leva até lá
+  pelo caminho mais curto (a porta, a ponta aberta do corredor, o alçapão do
+  fosso, o elevador de carga do telhado);
+- **objetivo nesta cena**: aponta o próprio objeto (o cilindro, o compressor,
+  o painel CHONPS).
+
+Com o lugar na tela, a seta fica em cima dele, sem texto; fora da tela, ela
+gruda na borda do lado dele, com o "POR AQUI". Nas pontas abertas (o fim do
+laboratório, as pontas dos corredores) ela fica deitada, na altura da Cacau,
+apontando para fora.
+
+A seta **sai sozinha** quando a Cacau anda um bom pedaço na direção certa,
+chega perto do lugar (ali o **E** dele já aparece), entra numa cena do caminho
+ou cumpre o objetivo. Empacou de novo no mesmo objetivo? Ela volta mais
+depressa. Entrar numa cena que **não** é o caminho (o simulador, no meio da
+ida para a oficina) não apaga a ajuda: se a seta estava na tela, ela continua,
+agora apontando a porta de volta.
+
+O relógio **só corre com a Cacau livre**: para durante fala, ficha de item,
+tela de puzzle, caderno aberto, pausa, troca de cena e cutscene (ela sem
+controle). E o guia nunca disputa com uma `SetaGuia` posta à mão: com uma
+delas na tela, ele fica quieto e o relógio volta ao zero.
+
+**Para ajustar**, os números ficam no topo de `scripts/guia_de_caminho.gd`:
+
+| Variável | Padrão | O que faz |
+|---|---|---|
+| `paciencia` | 25 s | Tempo livre sem chegar mais perto até a seta aparecer |
+| `paciencia_depois_de_ajudar` | 10 s | O mesmo, depois que a seta já apareceu uma vez para esse objetivo |
+| `paciencia_com_pressa` | `levar_amostra`: 6 s | Objetivos com pressa (a amostra gelada esquenta no caminho) |
+| `passo_de_progresso` | 48 px | Quanto ela precisa chegar mais perto para contar como "indo para o lugar certo" |
+| `avanco_para_sumir` | 400 px | Com a seta na tela, andar isso na direção certa a faz sair |
+| `raio_de_chegada` | 90 px | Perto assim do lugar, a seta sai e o relógio não corre |
+| `escala_da_seta` | 0,8 | Tamanho (1 = o das `SetaGuia`) |
+| `texto_na_borda` | "POR AQUI" | O texto da seta fora da tela |
+| `SEM_SETA` | `macarico` | Objetivos em que o guia nunca aparece (caminho em linha só); ponha ou tire ids daqui |
+
+No modo de desenvolvedor (F1), **F3** mostra a seta na hora, sem esperar, e
+escreve no Output o que o guia está pensando (o objetivo, o caminho e para onde
+aponta).
+
+**Onde cada objetivo fica.** A cena é a do `ONDE_FICA` do mapa (acima). O
+objeto é o do **`ALVOS`**, em `guia_de_caminho.gd`: o caminho do nó dentro da
+cena (`"cilindro": "CilindrosDeAr"`). Objetivo que se cumpre só de chegar
+("Entre na Ala de Pirólise") fica fora de `ALVOS`: o guia leva até a porta e
+pronto. Com mais de um objetivo na lista, ele acompanha o subitem antes do pai
+(a lenha antes do carvão), o obrigatório antes da dica e o de menos cenas até
+lá — e não troca de objetivo com a Cacau no meio do caminho entre dois.
+
+**Como as cenas se ligam.** **`LIGACOES`**, também lá: uma linha por sentido
+(`[de, para]`, ou `[de, para, "mochila"]` na passagem que pede ferramenta). A
+saída certa o guia acha sozinho: qualquer nó com `cena_destino` (porta, ponta
+aberta, alçapão, elevador) que leve à próxima cena do caminho. Saída feita por
+código, sem nó (o elevador de carga do telhado), a fase declara numa função
+`saidas_para_o_guia()` — ver `fase2_telhado.gd`.
+
+**Fase nova, porta nova, objetivo novo:** rode o teste do guia (em "Conferir se
+nada quebrou"). Ele abre cada cena e confere que toda saída está em `LIGACOES`
+(com a mesma ferramenta), que toda ligação tem a sua saída, que todo objetivo
+tem cena alcançável e objeto que existe, e testa a seta de verdade no corredor
+e no laboratório. Objetivo novo que se cumpre só de chegar entra, de propósito,
+na lista `SO_DE_CHEGAR` do teste.
 
 ## O que a fase lembra
 
@@ -902,7 +1169,7 @@ Da esquerda para a direita:
 | `fase2_torre.tscn` | A **rua**: o prédio escuro do compressor (com o portão de rolamento), a torre de tijolo e o prédio verde da destilação |
 | `fase2_sala_compressor.tscn` | A **sala do compressor**: o mesmo prédio escuro por dentro, com o compressor de ar e o puzzle do gás |
 | `fase2_torre_interior.tscn` | A **torre por dentro**: oito andares de subida até a porta do telhado |
-| `fase2_telhado.tscn` | O **telhado**: o cilindro de amostra, num chão de andar para a frente e para trás (como Final Fight) |
+| `fase2_telhado.tscn` | O **telhado**: os cilindros de amostra (pega-se um), num chão de andar para a frente e para trás (como Final Fight) |
 | `fase2_sala_destilacao.tscn` | A **sala de destilação**: montada igual à sala do compressor, com a mochila de N₂, a coluna e o cilindro verde de nitrogênio |
 
 **O caminho**, em ordem: pegar a **mochila de N₂** na sala de destilação (ela
@@ -942,9 +1209,12 @@ tags (`tag_aqui`/`tag_destino`), como no resto do jogo — o
   y 128 a 192, pintada no meio do caminho só para dar para ver) e, embaixo
   dela até o chão, o **tubo** que a empurra (colunas 56 e 58). No jogo, a
   plataforma e o tubo saem do `Cenario 2` e viram os nós `ElevadorDeCarga` e
-  `TuboDoElevador` (`scripts/fases/bloco_de_tiles.gd`). Parada, a plataforma
-  fica com a base no `Chao Do Elevador` (y = 512) e dá para pisar nela (o piso
-  fica `Altura Do Piso`, 32 px, abaixo do topo dela). Quem desce do telhado
+  `TuboDoElevador` (`scripts/fases/bloco_de_tiles.gd`). Até a Cacau descer do
+  telhado nele, a plataforma **espera lá no alto** (`Topo Do Percurso`), com o
+  tubo esticado até ela. Depois da primeira descida
+  (`MissaoNitrogenio.elevador_desceu`), ela fica parada com a base no
+  `Chao Do Elevador` (y = 512) e dá para pisar nela (o piso fica
+  `Altura Do Piso`, 32 px, abaixo do topo dela). Quem desce do telhado
   chega em cima dela lá no alto (`Topo Do Percurso`, y = −96, acima do que a
   câmera mostra) e desce até o chão em `Duracao Da Descida` (3 s). O tubo vai
   até a base da plataforma — o pintado é repetido para cima — e some por cima
@@ -1087,6 +1357,51 @@ destilação"): mexendo nas camadas ou na câmera de uma, mexa na outra igual.
   pressão para de subir. Com todo o ar no cilindro e pelo menos 20% líquido, a
   válvula fecha e a Cacau sai correndo com a amostra.
 
+  **O puzzle nasce na própria máquina**, sem trocar de tela: a Cacau sai da
+  frente dela (para a esquerda), o jogo para, a câmera chega perto (zoom 4,
+  com um véu escurecendo o resto da sala) e uma linha de luz desce pela
+  máquina trocando o aço pelo raio X da câmara — o mesmo desenho, pixel por
+  pixel (ver "A arte do compressor", logo abaixo). Em volta dela, com o mínimo
+  de texto: no alto, **uma** frase do que fazer agora (laranja no perigo,
+  verde quando está pronto); à esquerda, acima da Cacau, o ar lá dentro
+  escrito na própria equação P·V = n·R·T (o valor de agora embaixo de cada
+  letra) e o **OBJETIVO** (duas metas com uma barrinha de quanto falta e a
+  condição de não passar de 4 atm); as setas do êmbolo ao lado da câmara; à
+  direita do armário, o **resfriador** (o termômetro e as setas) e, rente ao
+  chão, o botão de fechar a válvula, com quanto a amostra aguentaria fechada
+  agora. As teclas ficam no pé. Fechando (ESC, ou entregando a amostra), tudo
+  some ao contrário e a câmera volta para a Cacau; a arte da sala fica como a
+  máquina ficou (o cabo e a placa do êmbolo embaixo, as garras abertas, o
+  cilindro gelado). Enquanto a linha passa, a máquina fica parada (o desenho
+  tem de bater com a arte na hora da troca). Os textos são as constantes
+  `TXT_...` do começo do script; a lista do objetivo é
+  `PecasDoLaboratorio.lista_de_metas`. No Laboratório a mesma tela abre
+  inteira, com o fundo e o título. Quem leva a câmera é
+  `scripts/fases/zoom_no_objeto.gd` e a linha de luz é
+  `scripts/ui/varredura_raio_x.gd` — a destilação usa os dois do mesmo jeito.
+
+  **O mouse.** O que se arrasta — o cabo vermelho do êmbolo e a plaquinha do
+  ponteiro do termômetro — vira a mão aberta com o ponteiro em cima (e a
+  fechada segurando). Até a pessoa arrastar cada um pela primeira vez, uma mão
+  desenhada mostra o gesto nele, com um contorno amarelo piscando
+  (`scripts/ui/dica_de_arrastar.gd`): primeiro no cabo, depois no termômetro.
+
+  **A arte do compressor.** A máquina do mapa é feita de camadas
+  (`assets/fase nitrogenio/compressor/`): `estrutura.png` (a base, as pernas,
+  o armário do resfriador e os canos — o que continua à vista com o puzzle
+  aberto), `cabo.png` (o cabo do êmbolo, que desce com ele), `aparelho.png` (a
+  câmara de aço, a válvula, o berço, as garras e o manômetro) e, entre elas, o
+  cilindro de sempre. Onde fica cada peça está em
+  `scripts/fases/arte_do_compressor.gd`, em pixels da arte, e é de lá que o
+  raio X tira as medidas — por isso essas imagens **não** se editam à mão:
+  mude a medida e gere de novo com
+  `godot --headless --path . res://tools/gerar_arte_do_compressor.tscn` (depois
+  abra o editor, ou rode com `--import`, para ele importar as imagens). Na cena
+  `compressor_de_ar.tscn`, a `Sprite` (a estrutura, com o `Contorno`) e o
+  `Aparelho` têm o canto em `offset` (-56, -92), escala 2 (o nó fica no chão,
+  no meio da máquina); o `Cabo` e o `CilindroAcoplado` o script põe onde o
+  `ArteDoCompressor` manda. O contorno branco é montado das camadas juntas.
+
 A física é de verdade, e mora toda em `scripts/laboratorio/`:
 `gas_fechado.gd` (gás ideal, trabalho do êmbolo, troca de calor, a condensação
 do ar com as pressões de vapor do N₂, O₂ e Ar) e `maquina_de_compressao.gd`
@@ -1124,15 +1439,30 @@ que é só desta sala são os objetos:
   ela não cobre janela nem luminária nos dois andares. Ver a seção dela, logo
   abaixo. Sem a
   amostra, o E abre a explicação do Dr. Chico; **com a amostra**, o E recebe o
-  cilindro, o relógio para e abre a tela em que a Cacau destila o ar
-  (`scenes/puzzle_destilacao.tscn`, script `scripts/puzzle_destilacao.gd`): o
-  simulador do Laboratório só com o ar. Ela esquenta o fundo até o vapor levar
+  cilindro, o relógio para e abre, em cima da própria coluna, o puzzle em que
+  a Cacau destila o ar (`scenes/puzzle_destilacao.tscn`, script
+  `scripts/puzzle_destilacao.gd`): o simulador do Laboratório só com o ar. Como
+  no compressor, a tela não troca: a Cacau dá uns passos para trás (para não
+  ficar embaixo da régua nem do termômetro), a câmera chega perto (zoom 2), a
+  linha de luz desce trocando o aço pelo raio X e só então aparecem os painéis;
+  o ponteiro do termômetro vira a mãozinha e, até a primeira vez que ela o
+  arrasta, uma mão desenhada mostra o gesto. Ela esquenta o fundo até o vapor levar
   quase todo o nitrogênio para o topo — pelo menos 75% dele
   (`RECUPERACAO_MINIMA`), com pelo menos 80% de pureza (`PUREZA_MINIMA`) — e o
   oxigênio ficar sendo a maioria no fundo; aí retira o nitrogênio do topo.
   Com a amostra do jogo, isso acontece com o fundo entre -190 e -183 °C (topo
   com 91 a 95% de N₂: nunca 100%). Acima dos -183 °C do oxigênio o fundo
-  ferve até secar e suja o topo, e só RECOMEÇAR desfaz;
+  ferve até secar e suja o topo, e só RECOMEÇAR desfaz.
+  A tela é enxuta como a do compressor: a frase do que fazer embaixo do título
+  (no começo, com a temperatura em que o ar ferve), a ficha da amostra à
+  esquerda (cada substância com a molécula, que é a legenda das cores, quanto
+  do ar ela é e onde ferve), a coluna só com a régua das temperaturas
+  (`com_plaquinhas = false` na ColunaDoSimulador), o termômetro com a marca de
+  onde cada substância ferve, e à direita o **OBJETIVO** (o nitrogênio no topo,
+  com a barrinha, e o oxigênio que tem de ficar no fundo) e os botões. O E
+  também retira o N₂. As plaquinhas de cada andar, a marca do ponto de bolha e
+  as fichas com onde está cada substância ficam só no Destilador do
+  Laboratório;
 - `CilindroDeNitrogenio` — o cilindro **verde** de N₂ (a amostra do elemento
   N). Fica escondido até a destilação acabar e salta da coluna para o lugar
   dele, depois da segunda janela; o campo `destilador` aponta para ela;
@@ -1249,9 +1579,23 @@ FAIXA" no `player.gd`).
   (o `PontoDeSaida` fica com os pés em y = 530) e só alcança o E dela andando
   para o fundo, perto da casinha. O telhado da casinha (a faixa de cornija na
   fileira 9) continua no `Terreno`, mas andando na faixa não dá para subir nele;
-- `CilindroDeAr` — o cilindro de amostra vazio
-  (`componentes/cilindro_do_telhado.tscn`): o E pega, a ficha sobe e a Cacau
-  diz para onde ele vai. Não volta mais;
+- `CilindrosDeAr` — a **estante de cilindros de amostra vazios**, em fileiras
+  (do fundo para a frente da faixa) e colunas
+  (`scripts/fases/cilindros_do_telhado.gd`). No editor ela aparece desenhada;
+  no jogo, cada lugar vira um `componentes/cilindro_do_telhado.tscn`. O nó fica
+  com y na base da fileira do fundo e x no primeiro cilindro (à esquerda) da
+  fileira da frente; no Inspector: `Fileiras` (4),
+  `Colunas` (7), `Entre Colunas` (20 px), `Entre Fileiras` (12 px),
+  `Escala Dos Cilindros` (0,6), `Desvio Por Fileira` (−6 px: cada fileira mais
+  do fundo anda 6 px para a esquerda, como o cenário do telhado, e o cilindro
+  de trás aparece entre os da frente; positivo vai para a direita) e
+  `Tom Do Fundo` (a sombra da fileira de trás). Só o cilindro **mais perto** da
+  Cacau acende o E; o E pega, a ficha sobe e a Cacau diz para onde ele vai. O
+  que ela pegou não volta mais; os outros ficam. **Um de cada vez**: com o
+  dela já pego (na mochila, no compressor, cheio de amostra, na coluna ou o
+  nitrogênio já colhido), o E num cilindro vira a fala
+  `cacau_um_cilindro_basta`. Andando para o fundo e para a frente, a Cacau
+  passa na frente ou atrás de cada fileira;
 - o **elevador de carga** (do telhado para a rua). A cabine é **pintada**:
   tudo, de qualquer camada de tile, dentro da `Area Do Elevador` (Inspector do
   nó raiz, `Fase2Telhado`; hoje x 1024 a 1120, y 480 a 608). Vale o **centro**
@@ -1274,6 +1618,59 @@ FAIXA" no `player.gd`).
 Chegar ao telhado marca a subida e, na primeira vez, a Cacau comenta
 (`cacau_torre_telhado`).
 
+**A antena de aviso.** No teto da casinha da escada fica uma torre de treliça
+com a luz vermelha de aviso para aviões piscando na ponta, como as dos prédios
+altos (`scripts/fx/antena_de_aviso.gd`). Ela nasce no jogo, então não aparece
+no editor: o lugar (`Pe Da Antena`, o meio da base), a altura e o ritmo da
+piscada ficam no Inspector da raiz do telhado, grupo **Antena** (desmarcar
+`Antena` tira ela). A cor e a força do brilho são do próprio script.
+
+**O lançamento (a cena do foguete).** Na primeira vez que a Cacau passa do
+meio do telhado rumo ao elevador, entram as faixas pretas de cinema, o HUD
+some e o Dr. Chico grita "CACAU!" lá da escada e vem correndo. Depois da
+primeira conversa (`cientista_lancamento_chegada`), os dois vão até a grade
+do fundo e a câmera abre devagar para o céu, até a lua entrar no quadro. Os
+holofotes da base acendem no horizonte, ele conta "3... 2... 1..." no balão e
+um foguete brasileiro sobe levando um satélite: o clarão esquenta os dois e a
+grade, a nuvem de fumaça rola por cima da beirada, o ronco chega um instante
+depois da luz (o som anda mais devagar) e o telhado treme. O foguete deita
+rumo à lua, solta os propulsores e some; o rastro fica no céu. Aí vem a
+conversa em que ele conta que ela vai para a **Lua**
+(`cientista_lancamento_lua`): antes do "Você vai... pra Lua." a caixa de fala
+some e, em silêncio, a câmera chega devagar nos dois (o suspense); no "EU?! PRA
+LUA?!" ela vira para ele num pulinho de susto, com o balão "?!", e só então
+fala; depois a caixa some, ela comemora (dois pulinhos e o coração) e a câmera
+volta para o céu.
+Depois vem o porquê de uma criança (a vírgula trocada nas contas do módulo
+lunar), ela fica processando e ele manda não pensar demais. Quando ele chega
+correndo, o parado dele toca acelerado (ofegante) e vai acalmando na conversa.
+No fim ele volta para a escada, a câmera e o HUD voltam e o rastro se desfaz
+devagar.
+
+- Acontece **uma vez só** e **não** com a amostra gelada na mão (o relógio
+  dela não espera): começa assim que ela estiver livre e no chão, sem outra
+  fala no ar;
+- tudo nasce na hora, nada fica gravado na cena: quem dirige é
+  `scripts/fases/lancamento_no_telhado.gd`; o foguete, a fumaça, os holofotes
+  e o clarão são desenhados em pixel art por `scripts/fx/foguete_ao_longe.gd`
+  (uma camada a mais no `BG`, na frente das `Nuvens`); as faixas de cinema são
+  `scripts/ui/faixas_de_cinema.gd`;
+- as regulagens ficam no Inspector do nó raiz (`Fase2Telhado`), grupo
+  **Lançamento**: `Cena Do Lancamento` (desligue para pular a cena),
+  `Gatilho Do Lancamento` (o x do mundo que dispara; 800),
+  `Beirada Do Lancamento` (onde ela para na grade; 880 — ele fica à esquerda),
+  `Beirada Do Fundo` (o y da beirada do fundo da laje, 508: o foguete parte
+  escondido logo abaixo dela) e `Zoom Do Ceu` (1,6: menor mostra mais céu);
+- **a música da cena** vai em `Musica Do Lancamento` (vazio = só os sons do
+  lançamento), com `Volume Da Musica Do Lancamento Db` e `Musica Entra`: na
+  chegada do Dr. Chico, na ignição (o padrão) ou na conversa. A trilha da fase
+  silencia quando os dois vão para a grade e volta no fim, com a música da
+  cena sumindo. Ela toca em loop até a cena acabar;
+- as falas são curtas de propósito; para mudar o texto, edite as duas
+  timelines (o teste `teste_lancamento` confere que nenhuma fala passa de 70
+  letras). As duas terminam com `leave --All--`: com os dois retratos na tela,
+  o Dialogic reclama no console se a timeline acabar sem tirá-los antes.
+
 **Sem o cilindro, não se desce.** Enquanto ele estiver no suporte, a
 `PortaEscada` fica travada: o E na porta dá a fala `cacau_pegar_cilindro_antes`
 ("Eu preciso pegar o cilindro antes!"). O E no elevador dá a mesma fala, e a
@@ -1286,7 +1683,8 @@ a porta e o elevador ficam livres.
 `cacau_compressor_concluido`, `cacau_amostra_pressa`, `cacau_degrau_alto`,
 `cacau_torre_telhado`, `cacau_cilindro_pego`, `cacau_elevador_parado`,
 `cacau_elevador_la_embaixo`, `cacau_pegar_cilindro_antes`,
-`cientista_destilacao` e `cacau_tem_nitrogenio`.
+`cientista_destilacao`, `cacau_tem_nitrogenio`, `cientista_lancamento_chegada` e
+`cientista_lancamento_lua`.
 
 **Atalhos de teste.** A tecla **L** deixa pronta na hora a amostra do
 compressor e a separação da destilação; a **N** equipa a mochila.
@@ -1376,6 +1774,14 @@ junte ou tire falas à vontade; cada marca só precisa continuar antes da fala
 que a comenta (marca que faltar é feita junto com a seguinte). Se o jogador
 passar as falas depressa, o desenho corre para alcançar.
 
+Depois da primeira fala (a do `raio_x`) ele pergunta se a Cacau quer a
+explicação: as marcas de `ar` a `fim` ficam dentro do **Quero, me explica!**
+(com Tab na frente), e o **Já sei como funciona** termina a conversa ali — a
+tela fecha sozinha. Os dois caminhos anotam `destilacao` no caderno (ver "O
+caderno: as notas e as páginas"). As falas do compressor
+(`cientista_compressor`, nota `gases`) e da abertura do puzzle da amostra
+(`cientista_destilacao`, nota `destilacao`) têm a mesma pergunta.
+
 **A tela** (`scenes/explicacao_destilador.tscn`, script
 `scripts/explicacao_destilador.gd`):
 
@@ -1445,15 +1851,29 @@ linha (a cor é o `modulate` dele).
 
 ## O corredor da torre
 
-A porta da torre, no laboratório, não cai direto na fase 2: ela dá em
-`scenes/fases/corredor_torre.tscn`. Andando até o fundo do corredor a cena
-troca sozinha para a fase 2, onde a Cacau entra andando pela esquerda; na
-volta é o mesmo caminho ao contrário, e a porta de dentro do corredor leva ao
-laboratório. Entre o corredor e a fase 2 não há porta: são duas pontas abertas.
+A ponta direita do laboratório é o espelho da esquerda: uma parede descendo do
+teto, com uma porta embaixo. Lá é a porta de laser (a saída para o prólogo);
+aqui é a `PortaMetalTorre`, a mesma porta de metal da oficina
+(`componentes/porta_metal_macarico.tscn`): só passa quem a derreter com o
+maçarico. A parede são tiles da camada `TileMap/Detalhes` — a coluna da
+esquerda espelhada, uma linha mais alta, para o pé dela encostar no alto da
+porta. Derretida a porta, a Cacau anda até o fim da sala, para a direita
+(embaixo da plaquinha TORRE DE GASES), e a cena troca sozinha para
+`scenes/fases/corredor_torre.tscn`. Andando até o fundo do corredor, a cena
+troca de novo, para a fase 2, onde ela entra andando pela esquerda; na volta é
+o mesmo caminho ao contrário. Depois da porta de metal são quatro pontas
+abertas, sem porta nenhuma:
 
 ```
-laboratório  PortaTorre  <->  PortaLab  [ corredor ]  SaidaTorre  <->  PassagemCorredor  fase 2
+laboratório  SaidaCorredor  <->  EntradaLab  [ corredor ]  SaidaTorre  <->  PassagemCorredor  fase 2
 ```
+
+No laboratório, a `SaidaCorredor` fica 24 px antes do fim da sala, com
+`distancia_entrada` curta (110): na volta, a Cacau para embaixo da plaquinha
+(`PlacaDestilador`), e não em cima do alçapão do fosso. O `PisoDaSaida`
+continua o chão para fora da linha, e a `ParedeDireita` fica lá atrás. No
+corredor, a `EntradaLab` é a ponta esquerda, com o `Colisoes/PisoDaEntrada`
+fazendo o mesmo papel.
 
 O corredor é pintado à mão, e o que cada nó dele faz (o cenário, a colisão
 pelos tiles, a camada de pilastras que passa na frente, a câmera mais perto e
@@ -1664,6 +2084,12 @@ balão de exclamação, a trilha pausada e, um respiro depois do piano,
 volumes e o respiro (`espera_antes_da_musica`) ficam na `ColisaoCenaFoguete`,
 grupo **Música**. No fim a trilha volta, já com a música do sol posto.
 
+A cena do lançamento, no telhado da fase 2, faz o mesmo: a trilha silencia
+quando os dois vão para a grade e volta no fim. A música dela (ainda vazia: só
+os sons do foguete) entra em `Musica Do Lancamento`, no grupo **Lançamento**
+do Inspector da raiz do telhado, e `Musica Entra` escolhe a hora — na chegada
+do Dr. Chico, na ignição ou na conversa (ver "O telhado").
+
 Toda música toca em loop e continua com o jogo pausado (caderno, mochila,
 puzzles). O teste:
 
@@ -1679,9 +2105,10 @@ autoload `ModoDev` (`scripts/modo_dev.gd`).
 
 | Tecla | O que faz |
 | --- | --- |
-| **F1** | Liga/desliga o modo. Ligando, a Cacau ganha todas as ferramentas e já sai voando. Desligar não tira as ferramentas. |
+| **F1** | Liga/desliga o modo. Ligando, a Cacau ganha todas as ferramentas e todas as páginas do caderno, e já sai voando. Desligar não tira as ferramentas. |
 | **V** | Voar/andar (com o modo ligado). |
 | **F2** | Menu de cenas: escolhe uma e vai direto para ela, no ponto de nascimento. Vale mesmo com o modo desligado. |
+| **F3** | Mostra já a seta do guia de caminho, sem esperar a paciência acabar, e escreve no Output o que ele está pensando (ver "O guia de caminho"). Vale mesmo com o modo desligado. |
 
 Com o modo ligado, nada machuca (cair no buraco faz voltar a voar), nenhuma
 porta de fase fica trancada, o elevador parado parte, a saída barrada deixa
@@ -1744,9 +2171,23 @@ alguns momentos do jogo:
 godot --headless --path . res://tools/teste_mapa.tscn
 ```
 
+As notas do caderno e as explicações do Dr. Chico têm três: as páginas (cada
+tipo de face e de desenho cabendo no papel), as notas (a numeração, as
+conversas que anotam, o aviso e a folha solta) e as explicações dentro dos
+puzzles do hidrogênio e do oxigênio (o holofote em cada fala, a seta, a peça
+que responde, o "Já sei montar" e fechar no meio). Com `-- --capturas=<pasta>`
+e sem `--headless`, os dois primeiros salvam as páginas e o aviso:
+
+```
+godot --headless --path . res://tools/teste_caderno.tscn
+godot --headless --path . res://tools/teste_notas_caderno.tscn
+godot --headless --path . res://tools/teste_explicacoes_do_cientista.tscn
+```
+
 As portas entre as fases têm o delas: a porta modelo, os pares de tags de todas
 as portas (quem sai por uma acha quem a recebe do outro lado) e as viagens de
-verdade — laboratório ↔ corredor ↔ Torre e alçapão do fosso ↔ subsolo:
+verdade — laboratório ↔ corredor ↔ Torre pelas pontas abertas e o alçapão do
+fosso ↔ subsolo:
 
 ```
 godot --headless --fixed-fps 60 --path . res://tools/teste_porta_modelo.tscn
@@ -1775,11 +2216,23 @@ godot --headless --fixed-fps 60 --path . res://tools/teste_lajes_vazadas.tscn
 ```
 
 O corredor da torre tem o dele: o cenário com os tiles do laboratório, o piso
-de metal, e a ida e a volta correndo de verdade (a cena troca sozinha no fundo,
-e na volta ela entra andando por lá):
+de metal, a plaquinha DESTILADOR no fim do laboratório, e a ida e a volta
+correndo de verdade nas duas pontas (a cena troca sozinha, e na volta ela entra
+andando por lá — no laboratório, sem parar em cima do fosso):
 
 ```
 godot --headless --fixed-fps 60 --path . res://tools/teste_corredor_torre.tscn
+```
+
+O guia de caminho tem o dele (o mapa do guia contra as saídas de todas as
+cenas, todo objetivo com cena alcançável e objeto que existe, os caminhos mais
+curtos e o fosso só com a mochila; e a seta de verdade: não aparece com a
+Cacau indo para o lugar certo, aparece parada longe dele, sai quando ela pega o
+rumo, volta mais depressa, continua na cena errada, não conta com o jogo
+pausado nem com uma `SetaGuia` na tela, e o F3):
+
+```
+godot --headless --fixed-fps 60 --path . res://tools/teste_guia_de_caminho.tscn
 ```
 
 O modo de desenvolvedor tem o dele (o voo atravessando parede e chão, a câmera
@@ -1808,19 +2261,21 @@ e sem `--headless`, salva uma imagem de cada momento:
 godot --headless --path . res://tools/teste_destilador.tscn
 ```
 
-A fase 2 tem três: o puzzle do compressor (a física do gás, o estouro, a
+A fase 2 tem quatro: o puzzle do compressor (a física do gás, o estouro, a
 amostra e o relógio dela), a fase inteira (as cinco cenas, os pares de portas
 e passagens, as travas da rua, o cilindro do telhado e o andar para a frente e
 para trás de lá, o primeiro degrau sem e
 com a mochila, os puzzles da torre, as janelas grandes da torre fora das
 portas, e a sala de destilação igual à do compressor, tile por
-tile e com a mesma câmera, fechada e com chão de concreto) e a subida da torre
-salto por salto:
+tile e com a mesma câmera, fechada e com chão de concreto), a subida da torre
+salto por salto e a cena do lançamento no telhado (o gatilho, a conversa, a
+câmera, o foguete, a comemoração, tudo voltando no fim e uma vez só):
 
 ```
 godot --headless --path . res://tools/teste_compressor.tscn
 godot --headless --path . res://tools/teste_fase2.tscn
 godot --headless --path . res://tools/teste_subida_torre.tscn
+godot --headless --path . res://tools/teste_lancamento.tscn
 ```
 
 Os morcegos dos corredores têm o deles (acordar, o bote e o aviso, o desvio, o

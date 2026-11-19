@@ -10,6 +10,10 @@ extends Control
 # outras são a plaquinha escura da barra de comandos. Clicar numa aba (ou numa
 # das teclas desenhadas) também troca.
 #
+# Os desenhos das abas são os do ícone do HUD (CadernoIcone): o caderninho e o
+# mapinha. Com nota nova esperando ser lida, a aba CADERNO tem a mesma marca
+# piscando que o caderninho do ícone.
+#
 # Quem decide qual aba vale, e quando trocar, é o autoload Caderno: aqui só se
 # desenha (e se avisa do clique).
 
@@ -19,25 +23,11 @@ signal aba_clicada(indice: int)
 const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 
 const NOMES := ["CADERNO", "MAPA"]
-## O desenho da aba do mapa, nas cores do caderninho do ícone
-## (CadernoIcone.CORES), um caractere por pixel: o mapa dobrado em três, com o
-## caminho tracejado até o X. A aba do caderno usa o próprio caderninho.
-const DESENHO_MAPA := [
-	"KKKKKKKKKKKKKKKKK",
-	"KPPPPPGBBBBGPPPPK",
-	"KPPPPPGBBBBGPRPRK",
-	"KPPPPPGBBBBGPPRPK",
-	"KPPPPPGBBBRGPRPRK",
-	"KPPPPPGBBRBGPPPPK",
-	"KPPPPPGRBBBGPPPPK",
-	"KPPPPRGBBBBGPPPPK",
-	"KPPPRPGBBBBGPPPPK",
-	"KPRPPPGBBBBGPPPPK",
-	"KPPPPPGBBBBGPPPPK",
-	"KKKKKKKKKKKKKKKKK",
-]
 ## Cada pixel do desenho vira um quadrado deste lado.
 const PIXEL := 2.0
+## A marca de nota nova na aba CADERNO: um pouco maior que o pixel do desenho,
+## para se ver de longe.
+const PIXEL_DA_MARCA := 3.0
 
 const TAM_NOME := 22
 const ESPACO_NOME := 2.0
@@ -58,6 +48,10 @@ var atual: int = 0:
 	set(valor):
 		atual = clampi(valor, 0, NOMES.size() - 1)
 		queue_redraw()
+
+## O ícone do HUD: enquanto a marca de nota nova dele está acesa, ela aparece
+## também na aba CADERNO.
+var icone: CadernoIcone = null
 
 ## Onde a troca está: anda de uma aba à outra em DURACAO.
 var _visual: float = 0.0
@@ -97,6 +91,11 @@ func caixa_da_aba(indice: int) -> Rect2:
 	return Rect2(x, SUBIDA, _larguras[indice], ALTURA_ABA)
 
 
+## A aba CADERNO está com a marca de nota nova?
+func tem_nota_nova() -> bool:
+	return icone != null and icone.novidade
+
+
 ## Os nomes (BotoesControle) das teclas das pontas: a que vai para a esquerda e
 ## a que vai para a direita.
 func teclas() -> PackedStringArray:
@@ -124,6 +123,10 @@ func _draw() -> void:
 		var tom := lerpf(0.82, 1.0, acesa)
 		_desenhar_pixels(_desenho(i), canto + Vector2(0, PIXEL), CadernoIcone.COR_SOMBRA, true)
 		_desenhar_pixels(_desenho(i), canto, Color(tom, tom, tom), false)
+		# Nota nova: a marca no canto de cima do caderninho, como no ícone.
+		if i == 0 and tem_nota_nova():
+			CadernoIcone.desenhar_marca(self, Vector2(canto.x + desenho.x - PIXEL_DA_MARCA * 3.0,
+				canto.y - PIXEL_DA_MARCA * 2.0), PIXEL_DA_MARCA)
 
 		var cor := EstiloHUD.com_alfa(EstiloHUD.CLARO, 0.72).lerp(FaceCaderno.TINTA_TITULO, acesa)
 		var base := roundf(caixa.get_center().y \
@@ -164,7 +167,7 @@ func _lado_tecla() -> float:
 
 
 func _desenho(indice: int) -> Array:
-	return CadernoIcone.DESENHO if indice == 0 else DESENHO_MAPA
+	return CadernoIcone.DESENHO if indice == 0 else CadernoIcone.DESENHO_MAPA
 
 
 func _tamanho_do_desenho(indice: int) -> Vector2:

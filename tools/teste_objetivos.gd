@@ -272,6 +272,15 @@ func _testar_setas() -> void:
 	await _segundos(0.3)
 	_checar(voltar._seta.mostrando(), "mesmo indo para o lado errado, a seta continua")
 
+	# Na rampa das bolas (AreaBolasRampa) ela não aparece: ali só atrapalha.
+	player.global_position = Vector2(6000, 470)
+	await _segundos(0.3)
+	_checar(not voltar._seta.mostrando(), "na rampa das bolas, a seta de voltar some")
+	_checar(voltar.guiando(), "mas continua valendo: o guia automático não põe outro POR AQUI ali")
+	player.global_position = Vector2(4500, 470)
+	await _segundos(0.3)
+	_checar(voltar._seta.mostrando(), "saindo da rampa, ela volta")
+
 	# Chegou na porta.
 	player.global_position = Vector2(390, 470)
 	await _segundos(0.3)

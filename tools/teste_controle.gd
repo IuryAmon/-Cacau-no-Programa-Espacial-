@@ -307,6 +307,9 @@ func _testar_hidrogenio() -> void:
 	await _quadros(3)
 	var resolvido := [false]
 	puzzle.puzzle_resolvido.connect(func() -> void: resolvido[0] = true)
+	# Com a nota do átomo no caderno, o puzzle abre sem a explicação do
+	# cientista (ela é testada no teste_explicacoes_do_cientista).
+	PaginasCaderno.guardar_nota("atomo")
 	puzzle.abrir_puzzle()
 	await _esperar(0.3)
 	_checar(CursorVirtual.ativo(), "cursor ligado no puzzle do hidrogênio")

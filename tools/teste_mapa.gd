@@ -22,10 +22,13 @@ extends Node
 #     fonte;
 #   * o que ele lê do jogo: o nome e o lugar da sala, as salas já visitadas, os
 #     elementos, as habilidades e até onde a Cacau anda na cena;
-#   * as abas: M abre no CADERNO; Q/E (L1/R1 no controle) e o clique trocam de
-#     aba, com a folha que sai deslizando para um lado e a que entra vindo do
-#     outro; no mapa não se folheia; o caderno lembra a aba, menos quando chega
-#     nota nova. O Q é tecla desenhada nova, no fim da lista dos botões.
+#   * as abas: a primeira vez, M abre no MAPA, saindo do mapinha do ícone;
+#     Q/E (L1/R1 no controle) e o clique trocam de aba, com a folha que sai
+#     deslizando para um lado e a que entra vindo do outro; no mapa não se
+#     folheia; depois o caderno abre sempre na última aba vista, e nota nova
+#     não muda a aba: a marca dela aparece na aba CADERNO e só apaga quando a
+#     pessoa vê o CADERNO, já na página da nota. O Q é tecla desenhada nova, no
+#     fim da lista dos botões.
 #
 #   godot --headless --path . res://tools/teste_mapa.tscn
 #
@@ -758,42 +761,33 @@ func _testar_abas() -> void:
 	var trocas: Array[int] = []
 	Caderno.aba_mudou.connect(func(aba: int) -> void: trocas.append(aba))
 	await _esperar(0.35)
-	_tecla(KEY_M)
-	await _esperar(Caderno.DURACAO_ABRIR + 0.1)
 	var tela := get_viewport().get_visible_rect()
 	var abas := Caderno.abas()
 	var livro := Caderno.livro()
-	_checar(Caderno.aberto() and Caderno.aba() == Caderno.Aba.CADERNO and livro.visible \
-		and not Caderno.mapa().visible, "M abre na aba CADERNO")
+	var mapa := Caderno.mapa()
+	var icone: CadernoIcone = Caderno.get_node("Icone")
+	var do_mapinha := icone.centro_do_mapa()
+	_checar(do_mapinha.x > icone.centro_do_caderno().x + 40.0 \
+		and icone.get_global_rect().has_point(do_mapinha), "o ícone tem o caderninho e, ao lado, o mapinha")
+	_tecla(KEY_M)
+	await _quadros(2)
+	# A folha anda em linha reta do desenho dela no ícone até o meio da tela
+	# (e, da do caderninho, ficaria a dezenas de px desta linha).
+	var meio_da_folha := mapa.position + mapa.pivot_offset
+	var no_caminho := Geometry2D.get_closest_point_to_segment(meio_da_folha, do_mapinha,
+		Caderno._centro_do_conteudo())
+	_checar(Caderno.aberto() and Caderno.aba() == Caderno.Aba.MAPA and mapa.visible and not livro.visible \
+		and meio_da_folha.distance_to(no_caminho) < 2.0,
+		"a primeira vez, M abre no MAPA, que sai do mapinha do ícone (%s)" % meio_da_folha)
+	await _esperar(Caderno.DURACAO_ABRIR + 0.1)
+	_checar(Caderno.aba() == Caderno.Aba.MAPA and mapa.visible and not livro.visible and trocas.is_empty(),
+		"aberto no MAPA, sem o caderno")
 	var faixa := abas.get_global_rect()
 	_checar(abas.visible and tela.encloses(faixa) and absf(faixa.get_center().x - tela.get_center().x) <= 1.0,
 		"as abas aparecem inteiras, no meio do alto da tela %s" % faixa)
-	_checar(abas.atual == Caderno.Aba.CADERNO and abas.teclas() == PackedStringArray(["tecla_q", "tecla_e"]),
-		"a aba CADERNO acesa, com Q e E nas pontas")
-	var desenho := Rect2(livro.position + CadernoLivro.CAIXA_DESENHO.position, CadernoLivro.CAIXA_DESENHO.size)
-	_checar(desenho.position.y >= faixa.end.y, "o caderno fica abaixo das abas %s" % desenho)
-	await _capturar("1_abas_caderno")
-
-	_tecla(KEY_E)
-	await _quadros(1)
-	_checar(Caderno.aba() == Caderno.Aba.MAPA and trocas == [Caderno.Aba.MAPA], "E troca para o MAPA")
-	var as_duas := false
-	var sai_pela_esquerda := false
-	var entra_pela_direita := false
-	var inicio := Time.get_ticks_msec()
-	while Caderno._aba_saindo >= 0 and Time.get_ticks_msec() - inicio < 2000:
-		if livro.visible and Caderno.mapa().visible:
-			as_duas = true
-			sai_pela_esquerda = sai_pela_esquerda or Caderno._deslize(Caderno.Aba.CADERNO) < 0
-			entra_pela_direita = entra_pela_direita or Caderno._deslize(Caderno.Aba.MAPA) > 0
-		await _quadros(1)
-	_checar(as_duas and sai_pela_esquerda and entra_pela_direita,
-		"na troca, o caderno sai pela esquerda enquanto o mapa entra pela direita")
-	await _quadros(2)
-	var mapa := Caderno.mapa()
+	_checar(abas.atual == Caderno.Aba.MAPA and abas.teclas() == PackedStringArray(["tecla_q", "tecla_e"]),
+		"a aba MAPA acesa, com Q e E nas pontas")
 	var caixa := Rect2(mapa.position, FolhaDoMapa.TAMANHO)
-	_checar(mapa.visible and not livro.visible and abas.atual == Caderno.Aba.MAPA,
-		"depois, só o mapa, com a aba MAPA acesa")
 	_checar(mapa.scale.is_equal_approx(Vector2.ONE) and mapa.position == mapa.position.round() \
 		and is_equal_approx(mapa.modulate.a, 1.0), "em tamanho natural, no pixel inteiro, aceso")
 	_checar(tela.encloses(caixa) and caixa.position.y >= faixa.end.y \
@@ -814,9 +808,35 @@ func _testar_abas() -> void:
 
 	_tecla(KEY_E)
 	await _quadros(1)
-	_checar(Caderno.aba() == Caderno.Aba.CADERNO, "E de novo volta ao CADERNO (as pontas se emendam)")
-	await _esperar(Caderno.DURACAO_TROCA + 0.05)
-	_checar(livro.visible and not mapa.visible, "e o caderno volta inteiro")
+	_checar(Caderno.aba() == Caderno.Aba.CADERNO and trocas == [Caderno.Aba.CADERNO],
+		"E troca para o CADERNO (as pontas se emendam)")
+	var as_duas := false
+	var sai_pela_esquerda := false
+	var entra_pela_direita := false
+	var inicio := Time.get_ticks_msec()
+	while Caderno._aba_saindo >= 0 and Time.get_ticks_msec() - inicio < 2000:
+		if livro.visible and mapa.visible:
+			as_duas = true
+			sai_pela_esquerda = sai_pela_esquerda or Caderno._deslize(Caderno.Aba.MAPA) < 0
+			entra_pela_direita = entra_pela_direita or Caderno._deslize(Caderno.Aba.CADERNO) > 0
+		await _quadros(1)
+	_checar(as_duas and sai_pela_esquerda and entra_pela_direita,
+		"na troca, o mapa sai pela esquerda enquanto o caderno entra pela direita")
+	await _quadros(2)
+	_checar(livro.visible and not mapa.visible and abas.atual == Caderno.Aba.CADERNO,
+		"depois, só o caderno, com a aba CADERNO acesa")
+	var desenho := Rect2(livro.position + CadernoLivro.CAIXA_DESENHO.position, CadernoLivro.CAIXA_DESENHO.size)
+	_checar(desenho.position.y >= faixa.end.y, "o caderno fica abaixo das abas %s" % desenho)
+	await _capturar("1_abas_caderno")
+
+	_tecla(KEY_M)
+	await _esperar(Caderno.DURACAO_FECHAR + 0.1)
+	_checar(not Caderno.aberto() and not get_tree().paused, "M fecha")
+	await _esperar(0.3)
+	_tecla(KEY_M)
+	await _esperar(Caderno.DURACAO_ABRIR + 0.1)
+	_checar(Caderno.aba() == Caderno.Aba.CADERNO and livro.visible and not mapa.visible,
+		"e abre de novo no CADERNO, onde ficou (o mapa é só a primeira vez)")
 	_tecla(KEY_Q)
 	await _quadros(1)
 	_checar(Caderno.aba() == Caderno.Aba.MAPA, "Q também troca")
@@ -868,15 +888,22 @@ func _testar_abas() -> void:
 		"fechado, mostrar_aba() só escolhe a aba em que ele vai abrir")
 	Caderno.mostrar_aba(Caderno.Aba.MAPA)
 	var nota: String = PaginasCaderno.NOTAS.keys()[0]
-	_checar(Caderno.guardar_nota(nota) and Caderno.aba() == Caderno.Aba.CADERNO,
-		"nota nova põe o caderno de volta na aba CADERNO")
-	Caderno.mostrar_aba(Caderno.Aba.MAPA)
+	_checar(Caderno.guardar_nota(nota) and Caderno.aba() == Caderno.Aba.MAPA and icone.novidade,
+		"nota nova não muda a aba (continua no MAPA): só acende a marca no ícone")
 	await _esperar(0.3)
 	_tecla(KEY_M)
 	await _esperar(Caderno.DURACAO_ABRIR + 0.1)
+	_checar(Caderno.aba() == Caderno.Aba.MAPA and mapa.visible and not livro.visible,
+		"com a nota esperando, o caderno abre no MAPA, onde ficou")
+	_checar(icone.novidade and abas.tem_nota_nova(),
+		"e a marca de nota nova aparece na aba CADERNO (no mapa a nota não foi vista)")
+	await _capturar("1b_nota_nova_na_aba")
+	_tecla(KEY_Q)
+	await _esperar(Caderno.DURACAO_TROCA + 0.05)
 	_checar(Caderno.aba() == Caderno.Aba.CADERNO and livro.visible and not mapa.visible \
 		and livro.pagina() == PaginasCaderno.lugar_da_nota(nota),
-		"e, com ela esperando, o caderno abre no CADERNO, na página dela, mesmo tendo ficado no mapa")
+		"trocando para o CADERNO, ele já está na página da nota")
+	_checar(not icone.novidade and not abas.tem_nota_nova(), "e a marca apaga, no ícone e na aba")
 	_tecla(KEY_M)
 	await _esperar(Caderno.DURACAO_FECHAR + 0.1)
 

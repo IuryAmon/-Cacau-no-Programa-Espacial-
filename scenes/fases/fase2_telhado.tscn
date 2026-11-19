@@ -12,7 +12,7 @@
 [ext_resource type="TileSet" uid="uid://b5lrdpi3srlcn" path="res://assets/tilesets/tileset_cidade.tres" id="10_bjvw1"]
 [ext_resource type="TileSet" uid="uid://b1re83kqucchr" path="res://assets/tilesets/tileset_fases.tres" id="11_tyitw"]
 [ext_resource type="PackedScene" uid="uid://cwp4650mie0be" path="res://scenes/fases/componentes/porta_predio.tscn" id="12_wq8sd"]
-[ext_resource type="PackedScene" path="res://scenes/fases/componentes/cilindro_do_telhado.tscn" id="21_0qxhd"]
+[ext_resource type="Script" uid="uid://375y1gm5x5hm" path="res://scripts/fases/cilindros_do_telhado.gd" id="21_0qxhd"]
 [ext_resource type="Script" uid="uid://dfboij7njb15c" path="res://scripts/luz/atmosfera.gd" id="25_jt031"]
 [ext_resource type="Script" uid="uid://c2bbsa80lmr8h" path="res://scripts/luz/postes_de_luz.gd" id="26_wq6mv"]
 [ext_resource type="PackedScene" uid="uid://bmgkds67hbool" path="res://scenes/player.tscn" id="27_6hh0h"]
@@ -22,7 +22,7 @@ size = Vector2(40, 2400)
 
 [node name="Fase2Telhado" type="Node2D" unique_id=48625387]
 script = ExtResource("1_f1qpt")
-metadata/_edit_horizontal_guides_ = [570.0, 564.0, 480.0, 608.0]
+metadata/_edit_horizontal_guides_ = [570.0, 564.0, 480.0, 639.0]
 
 [node name="BG" type="ParallaxBackground" parent="." unique_id=1105263348]
 
@@ -163,11 +163,15 @@ distancia_saida = 80.0
 position = Vector2(0, 109.3)
 
 [node name="IconeInteragir" parent="PortaEscada" index="5" unique_id=1603163199]
-frame_progress = 0.0073195193
+frame_progress = 0.46878317
 
-[node name="CilindroDeAr" parent="." unique_id=1075379240 instance=ExtResource("21_0qxhd")]
-position = Vector2(1367, 532)
-scale = Vector2(0.6, 0.6)
+[node name="CilindrosDeAr" type="Node2D" parent="." unique_id=1075379240]
+position = Vector2(1266, 528)
+script = ExtResource("21_0qxhd")
+fileiras = 4
+colunas = 7
+entre_colunas = 20.0
+entre_fileiras = 12.0
 
 [node name="Paredes" type="Node2D" parent="." unique_id=1693027514]
 
@@ -201,9 +205,9 @@ position = Vector2(320, 505)
 
 [node name="LimitesDaCamera" type="ReferenceRect" parent="." unique_id=917895524]
 visible = false
-offset_top = -40.0
+offset_top = 189.0
 offset_right = 1408.0
-offset_bottom = 600.0
+offset_bottom = 639.0
 mouse_filter = 2
 border_color = Color(1, 0.6, 0.2, 0.55)
 border_width = 2.0

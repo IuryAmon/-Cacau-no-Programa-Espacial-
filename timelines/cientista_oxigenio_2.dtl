@@ -1,0 +1,6 @@
+join cientista (cientista_mto_feliz) leftmost [mirrored="true"]
+cientista (cientista_mto_feliz): Camada K cheia: 2 elétrons!
+[signal arg="camada_l"]
+cientista (cientista_feliz): O resto vai para a camada L, que tem lugar para até 8.
+[signal arg="faltam"]
+cientista: São 8 elétrons ao todo, e 2 já estão na K. Quantos faltam? Complete a camada L!

@@ -39,6 +39,37 @@ extends TelaInterativa
 #                compressor do menu do Laboratório não é este puzzle: é o
 #                simulador de gases, scripts/laboratorio/compressor.gd.)
 #
+# A TELA mostra cada coisa num lugar só, e o mínimo de texto:
+#   embaixo do título   UMA frase do que fazer agora (laranja no perigo, verde
+#                       quando está pronto);
+#   à esquerda          o ar lá dentro, escrito na própria equação P·V = n·R·T,
+#                       com o valor de agora embaixo de cada letra;
+#   no meio             o aparelho, com o nome de cada controle junto dele (as
+#                       setas do ÊMBOLO, o termômetro do RESFRIADOR, com a marca
+#                       de onde o ar vira líquido);
+#   à direita           o OBJETIVO — duas metas com a barrinha de quanto falta e
+#                       a condição de não estourar — e o botão de fechar a
+#                       válvula, com quanto a amostra aguentaria fechada agora;
+#   no pé               as teclas.
+#
+# NO MAPA: na história a tela não troca. Quem abre é o CompressorDeAr, na sala
+# do compressor: a câmera chega perto da máquina (ZoomNoObjeto, zoom 4) e a
+# tela nasce em cima dela ("aparelho_no_mundo" é onde a arte da máquina está na
+# tela). Sem fundo: a câmara em raio X é desenhada na grade da própria arte
+# (CamaraDeCompressao.medidas_do_mapa, ArteDoCompressor) — o casco de aço vira
+# a câmara por dentro, o cilindro preso no berço vira o cilindro com o ar, o
+# cabo vermelho em cima é o cabo que se arrasta — e uma linha de luz desce
+# trocando uma pela outra (VarreduraRaioX). Depois aparecem as setas do êmbolo
+# e os painéis à esquerda, e o termômetro do resfriador à direita do armário.
+# Fechando, tudo some ao contrário. Sem "aparelho_no_mundo" (o Laboratório, os
+# testes), é a tela inteira de sempre.
+#
+# O MOUSE: o cabo do êmbolo e o ponteiro do termômetro são o que se arrasta.
+# Em cima deles, a seta do mouse vira a mãozinha aberta (MaoDoMouse) e, segurando,
+# a fechada; até a pessoa arrastar cada um pela primeira vez, uma mão desenhada
+# mostra o gesto em cima dele (DicaDeArrastar): primeiro no cabo, depois no
+# termômetro.
+#
 # CONTROLES: arraste o cabo do êmbolo (ou as setas ao lado da câmara; W/S ou
 # ↑/↓); arraste o ponteiro do termômetro (ou as setas embaixo dele; A/D ou
 # ←/→); o botão FECHAR A VÁLVULA (ou E). ESC fecha. No controle: o cursor, ✕
@@ -64,48 +95,85 @@ signal amostra_fechada(amostra: GasFechado, segundos: float)
 signal cilindro_estourou(como: Dictionary)
 ## A tela fechou sem terminar (ESC).
 signal fechou
+## No mapa: o raio X acabou de cobrir a máquina (quem abriu esconde a arte dela,
+## senão ela apareceria nas frestas do desenho) / vai começar a sair (a arte
+## volta, por baixo).
+signal revelada
+signal escondendo
 
 ## Na história, a tela se fecha por cima da fase; no Laboratório, é a cena.
 @export var modo_historia: bool = true
 ## A conversa do Dr. Chico na primeira vez que a tela abre (vazio = sem fala).
 @export var fala_de_abertura: String = ""
+## Onde a arte da máquina do mapa está na tela (ver "NO MAPA", no topo). Sem
+## área, a tela inteira de sempre.
+var aparelho_no_mundo: Rect2 = Rect2()
+
+## A pessoa já arrastou o cabo / o ponteiro do termômetro alguma vez (aí a mão
+## que mostra o gesto não aparece mais).
+static var arrastou_o_embolo: bool = false
+static var arrastou_o_termometro: bool = false
 
 const TXT_TITULO := "COMPRESSOR DE AR"
 const TXT_OBJETIVO := "OBJETIVO"
 const TXT_META_1 := "TODO O AR NO CILINDRO"
 const TXT_META_2 := "AR VIRANDO LÍQUIDO"
-const TXT_META_3 := "SEM ESTOURAR (ATÉ 4 atm)"
+const TXT_META_3 := "SEM PASSAR DE 4 atm"
 const TXT_FECHAR := "FECHAR A VÁLVULA"
 const TXT_RECOMECAR := "RECOMEÇAR"
-const TXT_AGUENTA := "FECHADO, AGUENTA"
+const TXT_AGUENTA := "FECHADO, AGUENTA %d s"
 const TXT_EMBOLO := "ÊMBOLO"
 const TXT_RESFRIADOR := "RESFRIADOR"
 const TXT_O_AR := "O AR LÁ DENTRO"
-const TXT_EQUACAO := "P · V = n · R · T"
+## A equação, um símbolo por coluna (com os sinais entre eles), e embaixo de
+## cada um o valor de agora e a unidade.
+const TXT_SIMBOLOS := ["P", "V", "n", "R", "T"]
+const TXT_SINAIS := ["·", "=", "·", "·"]
+const TXT_UNIDADES := ["atm", "L", "mol", "", "K"]
 const TXT_PRONTA := "AR LÍQUIDO NO CILINDRO!"
+const TXT_DA_AMOSTRA := "%s  ·  %d%% LÍQUIDO"
+const TXT_AGUENTA_NA_CORRIDA := "O CALOR DA SALA VAI ENTRANDO: AGUENTA %d s."
 const TXT_LEVE := "LEVE AO DESTILADOR, DEPRESSA!"
 const TXT_ESTOUROU := "O CILINDRO ESTOUROU!"
+const TXT_O_QUE_HOUVE := "A PRESSÃO CHEGOU A %s atm, E O CILINDRO SÓ AGUENTA 4. RESFRIE O AR ANTES DE APERTAR."
 const TXT_PINGA := "AR VIRA\nLÍQUIDO"
 
-## As dicas do rodapé, da mais urgente para a mais calma.
-const DICA_COMECO := "EMPURRE O ÊMBOLO PARA LEVAR O AR DA CÂMARA PARA O CILINDRO."
-const DICA_PERIGO := "CUIDADO! O CILINDRO SÓ AGUENTA 4 atm. RESFRIE O AR OU SUBA O ÊMBOLO."
-const DICA_ESQUENTOU := "APERTAR ESQUENTA O GÁS: AS MOLÉCULAS SAEM MAIS RÁPIDAS DO ÊMBOLO."
-const DICA_QUENTE := "MAIS QUENTE, AS MOLÉCULAS CORREM E BATEM MAIS FORTE: A PRESSÃO SOBE."
-const DICA_FRIO := "MAIS FRIO, AS MOLÉCULAS FICAM LENTAS E A PRESSÃO CAI. AGORA DÁ PARA APERTAR MAIS."
-const DICA_LIQUIDO := "O AR ESTÁ VIRANDO LÍQUIDO! NO LÍQUIDO AS MOLÉCULAS FICAM COLADINHAS."
-const DICA_RESFRIE_MAIS := "TODO O AR ESTÁ NO CILINDRO. NESTA PRESSÃO ELE SÓ VIRA LÍQUIDO ABAIXO DE %s."
-const DICA_PRONTA := "PRONTO! FECHE A VÁLVULA PARA SOLTAR O CILINDRO."
-const DICA_FECHANDO := "VÁLVULA FECHADA. SOLTANDO O CILINDRO..."
+## A frase do que fazer, embaixo do título — uma só, a mais urgente agora.
+const TXT_DICA_COMECO := "DESÇA O ÊMBOLO PARA EMPURRAR O AR DA CÂMARA PARA O CILINDRO."
+const TXT_DICA_PERIGO := "PRESSÃO ALTA! RESFRIE O AR OU SUBA O ÊMBOLO."
+const TXT_DICA_ESQUENTOU := "APERTAR ESQUENTA O AR, E O AR QUENTE EMPURRA MAIS."
+const TXT_DICA_QUENTE := "QUENTE, AS MOLÉCULAS BATEM MAIS FORTE: A PRESSÃO SOBE."
+const TXT_DICA_FRIO := "FRIO, AS MOLÉCULAS BATEM MAIS FRACO: DÁ PARA APERTAR MAIS."
+const TXT_DICA_LIQUIDO := "O AR ESTÁ VIRANDO LÍQUIDO!"
+const TXT_DICA_RESFRIE_MAIS := "AGORA RESFRIE: NESTA PRESSÃO O AR VIRA LÍQUIDO ABAIXO DE %s."
+const TXT_DICA_PRONTA := "PRONTO! FECHE A VÁLVULA."
+const TXT_DICA_FECHANDO := "VÁLVULA FECHADA. SOLTANDO O CILINDRO..."
 
-## Onde ficam os painéis (px da tela).
-const PAINEL_AR := Rect2(40, 108, 360, 330)
-const PAINEL_EQUACAO := Rect2(40, 456, 360, 128)
-const PAINEL_OBJETIVO := Rect2(1300, 108, 270, 196)
-const PAINEL_AGUENTA := Rect2(1300, 320, 270, 92)
-const BOTAO_FECHAR := Rect2(1300, 430, 270, 56)
-const BOTAO_RECOMECAR := Rect2(1300, 500, 270, 52)
-const RODAPE := Rect2(200, 800, 1200, 40)
+## As cores da frase do que fazer.
+const COR_DA_DICA_PERIGO := Color("ffb347")
+const COR_DA_DICA_PRONTA := Color("9be28a")
+const COR_PRESSAO := [Color("1f7a3d"), Color("a8740b"), Color("c0392b")]
+
+## Onde ficam os painéis (px da tela): à esquerda, o ar (a equação); à
+## direita, o objetivo e, embaixo dele, o botão.
+const PAINEL_EQUACAO := Rect2(40, 118, 344, 150)
+const PAINEL_OBJETIVO := Rect2(1300, 118, 270, 200)
+const BOTAO_FECHAR := Rect2(1300, 338, 270, 56)
+const BOTAO_RECOMECAR := Rect2(1300, 448, 270, 46)
+## A altura da frase do que fazer (logo embaixo do título) e a das teclas.
+const ALTURA_DA_DICA := 76.0
+const ALTURA_DAS_TECLAS := 866.0
+
+## No mapa (ver _montar_no_mundo): sem a plaquinha do título, a frase sobe; o
+## termômetro fica a este vão da beirada da arte (a plaquinha do ponteiro, à
+## esquerda dele, não encosta no armário); as setas do êmbolo, a este vão do
+## casco; e os painéis, empilhados à esquerda, com este espaço entre eles.
+const ALTURA_DA_DICA_NO_MAPA := 44.0
+const VAO_ATE_O_TERMOMETRO := 80.0
+const VAO_ATE_AS_SETAS := 24.0
+const MARGEM_NO_MAPA := 24.0
+const ENTRE_OS_PAINEIS := 16.0
+const DURACAO_DOS_PAINEIS := 0.3
 
 ## A cada toque nas setas: o êmbolo anda 1/50 do curso; o resfriador, 1 °C.
 const PASSO_DO_EMBOLO := 0.02
@@ -140,6 +208,16 @@ var _como_estourou: Dictionary = {}
 var _ja_condensou: bool = false
 var _pulo_da_meta: Array[float] = [0.0, 0.0, 0.0]
 var _metas: Array[bool] = [false, false, false]
+## Onde os painéis estão (os de sempre; no mapa, ver _montar_no_mundo).
+var _painel_equacao: Rect2 = PAINEL_EQUACAO
+var _painel_objetivo: Rect2 = PAINEL_OBJETIVO
+var _botao_fechar: Rect2 = BOTAO_FECHAR
+var _botao_recomecar: Rect2 = BOTAO_RECOMECAR
+var _altura_da_dica: float = ALTURA_DA_DICA
+var _varredura: VarreduraRaioX = null
+var _dica_do_mouse: DicaDeArrastar = null
+## Em que a mão da dica está ("embolo", "termometro" ou "").
+var _dica_no_alvo: String = ""
 
 @onready var camara: CamaraDeCompressao = $Camara
 @onready var termometro: Termometro = $Termometro
@@ -160,6 +238,10 @@ var _metas: Array[bool] = [false, false, false]
 func _ao_abrir() -> void:
 	if maquina == null:
 		maquina = MaquinaDeCompressao.new()
+	# No mapa, as medidas da câmara mudam antes de ela receber a máquina (é
+	# aí que ela espalha as moléculas).
+	if no_mundo():
+		_montar_no_mundo()
 	painel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	painel.draw.connect(_desenhar_o_painel)
 	frente.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -185,15 +267,162 @@ func _ao_abrir() -> void:
 	registrar_alvo("termometro", termometro.retangulo_de_pegar_na_tela, _pegar_o_ponteiro, _pode_mexer)
 	registrar_alvo("mais_quente", setas_resfriador.retangulo_do_botao.bind(1), mudar_resfriador.bind(1), _pode_mexer, true)
 	registrar_alvo("mais_frio", setas_resfriador.retangulo_do_botao.bind(-1), mudar_resfriador.bind(-1), _pode_mexer, true)
-	registrar_alvo("fechar_valvula", func() -> Rect2: return BOTAO_FECHAR, fechar_valvula, pode_fechar)
+	registrar_alvo("fechar_valvula", func() -> Rect2: return _botao_fechar, fechar_valvula, pode_fechar)
 	if not modo_historia:
-		registrar_alvo("recomecar", func() -> Rect2: return BOTAO_RECOMECAR, recomecar)
+		registrar_alvo("recomecar", func() -> Rect2: return _botao_recomecar, recomecar)
+	# O cabo e o ponteiro se arrastam: em cima deles, a mãozinha.
+	marcar_arrastavel("embolo")
+	marcar_arrastavel("termometro")
 
 	_ja_condensou = maquina.gas.fracao_liquida > 0.0
 	_metas = [_meta(0), _meta(1), _meta(2)]
 	_estado = Estado.JOGANDO
+	_dica_do_mouse = DicaDeArrastar.new()
+	_dica_do_mouse.name = "DicaDoMouse"
+	add_child(_dica_do_mouse)
+	if no_mundo():
+		_entrar_no_mundo()
+		return
 	if modo_historia and not fala_de_abertura.is_empty():
 		_falar(fala_de_abertura)
+	_mostrar_a_dica_do_mouse()
+
+
+## Aberta em cima da máquina do mapa?
+func no_mundo() -> bool:
+	return aparelho_no_mundo.has_area()
+
+
+# ─────────────────────────────────────────────────────────────
+# NO MAPA (em cima da arte da máquina)
+# ─────────────────────────────────────────────────────────────
+
+## A câmara em cima da arte do mapa, na grade dela; as setas do êmbolo à
+## esquerda do casco e, à esquerda delas, os painéis empilhados (a equação, o
+## objetivo e o botão); o termômetro do resfriador à direita do armário, com as
+## setas embaixo. Sem fundo e sem a plaquinha do título: a sala aparece em
+## volta (escurecida pelo véu do ZoomNoObjeto).
+func _montar_no_mundo() -> void:
+	titulo = ""
+	var fundo := get_node_or_null("Fundo") as CanvasItem
+	if fundo:
+		fundo.visible = false
+	var A := ArteDoCompressor
+	var pixel := aparelho_no_mundo.size.x / float(A.TAMANHO.x)
+	camara.position = aparelho_no_mundo.position.round()
+	camara.size = aparelho_no_mundo.size.round()
+	camara.medidas = CamaraDeCompressao.medidas_do_mapa(pixel)
+	var canto := camara.position
+
+	# O resfriador, do lado do armário, de cima para baixo: o termômetro (da
+	# altura do casco), as setas e, rente ao pé da máquina, o botão de fechar a
+	# válvula — o último passo fica no fim do caminho, e a coluna da esquerda
+	# termina acima da cabeça da Cacau (ela fica ali, ao lado da máquina).
+	var topo := canto.y + A.CASCO.position.y * pixel
+	var chao := canto.y + A.TAMANHO.y * pixel
+	var meio_do_termometro := roundf(canto.x + A.TAMANHO.x * pixel + VAO_ATE_O_TERMOMETRO + termometro.size.x * 0.5)
+	_botao_fechar = Rect2(roundf(meio_do_termometro - BOTAO_FECHAR.size.x * 0.5), chao - BOTAO_FECHAR.size.y,
+		BOTAO_FECHAR.size.x, BOTAO_FECHAR.size.y)
+	setas_resfriador.position = Vector2(roundf(meio_do_termometro - setas_resfriador.size.x * 0.5),
+		_botao_fechar.position.y - ENTRE_OS_PAINEIS - setas_resfriador.size.y)
+	termometro.position = Vector2(roundf(meio_do_termometro - termometro.size.x * 0.5), roundf(topo))
+	termometro.size = Vector2(termometro.size.x, setas_resfriador.position.y - 12.0 - termometro.position.y)
+
+	# O êmbolo: as setas do lado do casco, na altura do meio da câmara.
+	var meio_da_camara := canto.y + (A.CAMARA.position.y + A.CAMARA.size.y * 0.5) * pixel
+	setas_embolo.position = Vector2(roundf(canto.x + A.CASCO.position.x * pixel - VAO_ATE_AS_SETAS - setas_embolo.size.x),
+		roundf(meio_da_camara - setas_embolo.size.y * 0.5))
+
+	# A equação e o objetivo, um embaixo do outro, entre a beirada da tela e as
+	# setas. (O RECOMEÇAR é só do Laboratório: no mapa não aparece.)
+	var x := MARGEM_NO_MAPA
+	var largura := setas_embolo.position.x - VAO_ATE_AS_SETAS - x
+	_painel_equacao = Rect2(x, canto.y, largura, PAINEL_EQUACAO.size.y)
+	_painel_objetivo = Rect2(x, _painel_equacao.end.y + ENTRE_OS_PAINEIS, largura, PAINEL_OBJETIVO.size.y)
+	_altura_da_dica = ALTURA_DA_DICA_NO_MAPA
+
+	# A linha do raio X passa pela máquina de cima (o cabo) até o chão, do casco
+	# até o armário (os canos do resfriador também mudam).
+	_varredura = VarreduraRaioX.new()
+	_varredura.name = "Varredura"
+	camara.add_sibling(_varredura)
+	_varredura.preparar(camara, 0.0, A.BASE_DO_CHAO * pixel, (A.CASCO.position.x - 1) * pixel,
+		(A.ARMARIO.position.x + 1) * pixel)
+
+
+## A entrada: a linha desce trocando o aço pelo raio X, e só então aparecem as
+## setas, o termômetro e os painéis. Enquanto isso, a tela não responde.
+func _entrar_no_mundo() -> void:
+	bloqueada = true
+	_varredura.esconder_na_hora()
+	_mostrar_os_paineis(0.0)
+	await get_tree().process_frame
+	_varredura.revelar()
+	await _varredura.terminou
+	revelada.emit()
+	var aparecer := novo_tween()
+	aparecer.tween_method(_mostrar_os_paineis, 0.0, 1.0, DURACAO_DOS_PAINEIS)
+	await aparecer.finished
+	bloqueada = false
+	if modo_historia and not fala_de_abertura.is_empty():
+		_falar(fala_de_abertura)
+	_mostrar_a_dica_do_mouse()
+
+
+## A saída: os painéis somem, a linha sobe apagando o raio X e a arte da
+## máquina volta a aparecer por baixo.
+func _sair_do_mundo() -> void:
+	bloqueada = true
+	_dica_do_mouse.parar()
+	var sumir := novo_tween()
+	sumir.tween_method(_mostrar_os_paineis, painel.modulate.a, 0.0, DURACAO_DOS_PAINEIS * 0.6)
+	await sumir.finished
+	escondendo.emit()
+	_varredura.esconder()
+	await _varredura.terminou
+
+
+## O quanto aparecem (0 a 1) as coisas que não são a máquina.
+func _mostrar_os_paineis(alfa: float) -> void:
+	for no: CanvasItem in [painel, termometro, setas_resfriador, setas_embolo, _moldura, frente, _dica_do_mouse]:
+		if no:
+			no.modulate.a = alfa
+
+
+# ─────────────────────────────────────────────────────────────
+# A MÃO QUE MOSTRA O GESTO (até a primeira vez que a pessoa arrasta)
+# ─────────────────────────────────────────────────────────────
+
+## Primeiro o cabo do êmbolo (para baixo: o começo é apertar o ar); depois de
+## a pessoa arrastar o cabo e soltar, o ponteiro do termômetro (para baixo:
+## resfriar).
+func _mostrar_a_dica_do_mouse() -> void:
+	if _dica_do_mouse == null:
+		return
+	var alvo := ""
+	if not arrastou_o_embolo:
+		alvo = "embolo"
+	elif not arrastou_o_termometro:
+		alvo = "termometro"
+	# Já está mostrando esse: não recomeça o gesto.
+	if alvo == _dica_no_alvo and _dica_do_mouse.mostrando():
+		return
+	_dica_no_alvo = alvo
+	match alvo:
+		"embolo":
+			_dica_do_mouse.mostrar(camara.retangulo_do_cabo_na_tela, Vector2.DOWN, 48.0)
+		"termometro":
+			# A mão pega pela ponta da plaquinha (a seta), para o número ficar à vista.
+			_dica_do_mouse.mostrar(termometro.retangulo_do_ponteiro_na_tela, Vector2.DOWN, 44.0, Vector2(0.86, 0.5))
+		_:
+			_dica_do_mouse.parar()
+
+
+## O alvo que a mão está mostrando agora ("" = nenhum).
+func _alvo_da_dica() -> String:
+	if _dica_do_mouse == null or not _dica_do_mouse.mostrando():
+		return ""
+	return _dica_no_alvo
 
 
 # ─────────────────────────────────────────────────────────────
@@ -201,7 +430,7 @@ func _ao_abrir() -> void:
 # ─────────────────────────────────────────────────────────────
 
 func _pode_mexer() -> bool:
-	return _estado == Estado.JOGANDO and maquina.valvula_aberta and not maquina.estourado
+	return _estado == Estado.JOGANDO and not bloqueada and maquina.valvula_aberta and not maquina.estourado
 
 
 ## Uma seta do êmbolo: +1 desce (aperta), -1 sobe.
@@ -232,11 +461,28 @@ func _pegar_o_embolo() -> void:
 	# cabo não pula para debaixo do ponteiro).
 	var cabo := camara.retangulo_do_cabo()
 	_pegada_do_embolo = camara.global_position.y + cabo.get_center().y - ponteiro().y
+	# Achou o cabo: a mão que mostrava o gesto some (a do termômetro vem quando
+	# ela soltar).
+	if not arrastou_o_embolo:
+		arrastou_o_embolo = true
+		if _dica_do_mouse:
+			_dica_do_mouse.parar()
 
 
 func _pegar_o_ponteiro() -> void:
 	_arrastando = "termometro"
 	_levar_o_ponteiro(ponteiro())
+	if not arrastou_o_termometro:
+		arrastou_o_termometro = true
+		if _dica_do_mouse:
+			_dica_do_mouse.parar()
+
+
+## A pessoa soltou o que arrastava: se ainda falta mostrar o gesto de alguma
+## coisa, a mão aparece nela.
+func _soltar() -> void:
+	_arrastando = ""
+	_mostrar_a_dica_do_mouse()
 
 
 func _levar_o_ponteiro(ponto: Vector2) -> void:
@@ -272,13 +518,13 @@ func recomecar() -> void:
 	_ja_condensou = false
 	_clarao = 0.0
 	_tremor_da_tela = 0.0
-	position = Vector2.ZERO
+	_tremer(Vector2.ZERO)
 	tocar("tirar")
 
 
 func _ao_receber(event: InputEvent) -> bool:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		_arrastando = ""
+		_soltar()
 		return false
 	if event is InputEventMouseMotion and not _arrastando.is_empty():
 		if not _pode_mexer():
@@ -338,8 +584,8 @@ func _ao_pedir_para_voltar() -> void:
 	if _estado == Estado.PRONTA:
 		_entregar()
 		return
-	_fechar_a_tela()
-	fechou.emit()
+	_estado = Estado.FIM
+	_fechar_a_tela(func() -> void: fechou.emit())
 
 
 func dicas_do_controle() -> Array:
@@ -359,7 +605,9 @@ func _a_cada_quadro(delta: float) -> void:
 	if _camera_lenta > 0.0:
 		_camera_lenta = maxf(_camera_lenta - delta, 0.0)
 		passo *= CAMERA_LENTA
-	if _estado != Estado.FALANDO:
+	# No mapa, enquanto a linha do raio X passa (entrando ou saindo), a máquina
+	# fica parada: o desenho tem de bater com a arte da sala na hora da troca.
+	if _estado != Estado.FALANDO and not bloqueada:
 		camara.avancar(passo)
 
 	termometro.pedida = GasFechado.para_celsius(maquina.temperatura_pedida)
@@ -367,6 +615,11 @@ func _a_cada_quadro(delta: float) -> void:
 	termometro.em_foco = _arrastando == "termometro" or alvo_em_foco() == "termometro"
 	termometro.definir_marcas(_marcas_do_termometro())
 	camara.cabo_em_foco = _arrastando == "embolo" or alvo_em_foco() == "embolo"
+	arrastando_com_o_mouse = not _arrastando.is_empty()
+	if _dica_do_mouse:
+		_dica_do_mouse.pausada = _estado != Estado.JOGANDO or bloqueada or not _arrastando.is_empty()
+		var alvo_da_dica := _alvo_da_dica()
+		_dica_do_mouse.ponteiro_em_cima = alvo_da_dica != "" and alvo_sob_o_ponteiro() == alvo_da_dica
 
 	_proxima_previsao -= delta
 	if _proxima_previsao <= 0.0 and _estado == Estado.JOGANDO:
@@ -391,7 +644,7 @@ func _a_cada_quadro(delta: float) -> void:
 		Estado.EXPLODINDO:
 			_clarao = move_toward(_clarao, 0.0, delta / 0.55)
 			_tremor_da_tela = move_toward(_tremor_da_tela, 0.0, delta * 30.0)
-			position = Vector2(randf_range(-1, 1), randf_range(-1, 1)).round() * _tremor_da_tela
+			_tremer(Vector2(randf_range(-1, 1), randf_range(-1, 1)).round() * _tremor_da_tela)
 
 	painel.queue_redraw()
 	frente.queue_redraw()
@@ -448,6 +701,17 @@ func _ao_estourar() -> void:
 	_tocar("chiado")
 
 
+## A tela treme (o estrondo). No mapa, a câmera treme junto, para a sala e a
+## máquina não se desencontrarem do raio X.
+func _tremer(deslocamento: Vector2) -> void:
+	position = deslocamento
+	if not no_mundo():
+		return
+	var camera := get_viewport().get_camera_2d()
+	if camera:
+		camera.offset = -deslocamento / maxf(camera.zoom.x, 0.001)
+
+
 func _ao_estrondo() -> void:
 	_clarao = 1.0
 	_tremor_da_tela = 22.0
@@ -461,7 +725,7 @@ func _ao_estrondo() -> void:
 
 func _ao_terminar_a_explosao() -> void:
 	_estado = Estado.FIM
-	position = Vector2.ZERO
+	_tremer(Vector2.ZERO)
 	cilindro_estourou.emit(_como_estourou)
 
 
@@ -471,18 +735,28 @@ func _entregar() -> void:
 		return
 	_estado = Estado.FIM
 	tocar("botao")
+	var amostra := _amostra
+	var segundos := _segundos_da_amostra
+	var avisar := func() -> void: amostra_fechada.emit(amostra, segundos)
 	if modo_historia:
-		_fechar_a_tela()
-	amostra_fechada.emit(_amostra, _segundos_da_amostra)
+		_fechar_a_tela(avisar)
+	else:
+		avisar.call()
 
 
-func _fechar_a_tela() -> void:
+## Fecha a tela e, depois, avisa quem abriu (no mapa, depois de o raio X sair).
+func _fechar_a_tela(depois: Callable) -> void:
+	_arrastando = ""
+	arrastando_com_o_mouse = false
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	if no_mundo() and is_inside_tree():
+		await _sair_do_mundo()
 	var camada := get_parent()
 	if camada is CanvasLayer:
 		camada.queue_free()
 	else:
 		queue_free()
+	depois.call()
 
 
 # ─────────────────────────────────────────────────────────────
@@ -536,14 +810,22 @@ func _tocar(nome: String) -> void:
 # O PAINEL (desenhado)
 # ─────────────────────────────────────────────────────────────
 
+## A tela tem três lugares, e cada informação aparece num só:
+##   embaixo do título   a frase do que fazer agora (só uma);
+##   à esquerda          o ar lá dentro, na própria equação dos gases;
+##   no meio             o aparelho, com o nome de cada controle junto dele;
+##   à direita           o OBJETIVO, com uma barrinha para cada meta, e o botão.
 func _desenhar_o_painel() -> void:
-	_desenhar_o_ar()
+	_desenhar_a_dica()
 	_desenhar_a_equacao()
 	_desenhar_o_objetivo()
-	_desenhar_o_aguenta()
 	_desenhar_os_botoes()
 	_desenhar_os_nomes_dos_controles()
-	_desenhar_o_rodape()
+	PecasDoLaboratorio.dicas_de_teclado(painel, Vector2(800, ALTURA_DAS_TECLAS), [
+		[["tecla_w", "tecla_s"], TXT_EMBOLO],
+		[["tecla_a", "tecla_d"], TXT_RESFRIADOR],
+		[["tecla_e"], TXT_FECHAR],
+	])
 
 
 func _desenhar_a_frente() -> void:
@@ -555,115 +837,97 @@ func _desenhar_a_frente() -> void:
 		frente.draw_rect(Rect2(-position - Vector2(40, 40), size + Vector2(80, 80)), Color(1, 1, 1, _clarao))
 
 
+## O número com as casas fixas (a largura não pula enquanto ele muda) e vírgula.
 func _num(valor: float, casas: int) -> String:
-	return String.num(valor, casas).replace(".", ",")
+	return (("%." + str(casas) + "f") % valor).replace(".", ",")
 
 
-## Uma linha "NOME ........ valor" num painel.
-func _linha(caixa: Rect2, y: float, nome: String, valor: String, cor_valor: Color = EstiloHUD.TINTA) -> void:
-	PecasDoLaboratorio.escrever(painel, Vector2(caixa.position.x + 18.0, y), nome, 13, EstiloHUD.TINTA_FRACA)
-	var largura := PecasDoLaboratorio.largura(valor, 20)
-	PecasDoLaboratorio.escrever(painel, Vector2(caixa.end.x - 18.0 - largura, y - 4.0), valor, 20, cor_valor)
+## A frase do que fazer, embaixo do título: em laranja quando é perigo, em
+## verde quando está pronto.
+func _desenhar_a_dica() -> void:
+	var texto := _dica()
+	var cor := EstiloHUD.CLARO
+	if texto == TXT_DICA_PERIGO or texto == TXT_ESTOUROU:
+		cor = COR_DA_DICA_PERIGO
+	elif texto == TXT_DICA_PRONTA:
+		cor = COR_DA_DICA_PRONTA
+	PecasDoLaboratorio.escrever_claro_no_meio(painel, Vector2(size.x * 0.5, _altura_da_dica), texto, 15, cor)
 
 
-func _desenhar_o_ar() -> void:
-	var caixa := PAINEL_AR
+## O ar lá dentro, na própria equação dos gases: cada letra com o valor de
+## agora embaixo, e a unidade. A pressão tem a cor do manômetro. O "n" é todo o
+## ar da máquina e NÃO MUDA: o sistema é fechado (nada entra, nada sai), e o ar
+## que vira líquido continua lá dentro. (Com líquido no fundo, a pressão é a do
+## vapor por cima dele, e a conta P·V = n·R·T deixa de fechar — ver
+## GasFechado.)
+func _desenhar_a_equacao() -> void:
+	var caixa := _painel_equacao
 	EstiloHUD.ficha(painel, caixa)
 	PecasDoLaboratorio.escrever(painel, caixa.position + Vector2(18, 16), TXT_O_AR, 13, EstiloHUD.TINTA_FRACA)
-	var p := maquina.pressao()
-	var faixa := maquina.faixa_da_pressao(p)
-	var cor_p: Color = [Color("1f7a3d"), Color("a8740b"), Color("c0392b")][faixa]
-	var y := caixa.position.y + 52.0
-	var passo := 44.0
-	_linha(caixa, y, "PRESSÃO", _num(p, 2) + " atm", cor_p)
-	_linha(caixa, y + passo, "VOLUME", _num(maquina.gas.volume_do_gas(), 1) + " L")
-	_linha(caixa, y + passo * 2.0, "TEMPERATURA", MisturasDoDestilador.graus(roundf(maquina.gas.celsius())))
-	_linha(caixa, y + passo * 3.0, "GÁS", _num(maquina.gas.mols_de_gas(), 2) + " mol")
-	_linha(caixa, y + passo * 4.0, "LÍQUIDO", "%d%%" % roundi(maquina.gas.fracao_liquida * 100.0),
-		Color("1f5f9e") if maquina.gas.fracao_liquida > 0.0 else EstiloHUD.TINTA)
-	_linha(caixa, y + passo * 5.0, "NO CILINDRO", "%d%%" % roundi(maquina.fracao_no_cilindro() * 100.0))
-	# Uma bolinha vale 0,01 mol (6 × 10²¹ moléculas).
-	PecasDoLaboratorio.escrever(painel, Vector2(caixa.position.x + 18.0, caixa.end.y - 30.0),
-		"CADA BOLINHA = 0,01 mol", 11, EstiloHUD.TINTA_FRACA)
-
-
-## A equação dos gases com os números de agora: os dois lados batem (para o
-## gás; o líquido não entra na conta).
-func _desenhar_a_equacao() -> void:
-	var caixa := PAINEL_EQUACAO
-	EstiloHUD.ficha(painel, caixa)
-	PecasDoLaboratorio.escrever_no_meio(painel, Vector2(caixa.get_center().x, caixa.position.y + 30.0),
-		TXT_EQUACAO, 22, EstiloHUD.TINTA)
 	var gas := maquina.gas
 	var p := gas.pressao()
-	var v := gas.volume_do_gas()
-	var n := gas.mols_de_gas()
-	var t := gas.temperatura
-	var esquerda := _num(p, 2) + " × " + _num(v, 1)
-	var direita := _num(n, 2) + " × 0,082 × " + str(roundi(t))
-	PecasDoLaboratorio.escrever_no_meio(painel, Vector2(caixa.get_center().x, caixa.position.y + 66.0),
-		esquerda + "  =  " + direita, 13, EstiloHUD.TINTA)
-	PecasDoLaboratorio.escrever_no_meio(painel, Vector2(caixa.get_center().x, caixa.position.y + 96.0),
-		_num(p * v, 2) + "  =  " + _num(n * GasFechado.R * t, 2) + "   (T EM KELVIN)", 11, EstiloHUD.TINTA_FRACA)
+	var valores := [_num(p, 2), _num(gas.volume_do_gas(), 1), _num(gas.mols, 2),
+		_num(GasFechado.R, 3), str(roundi(gas.temperatura))]
+	var cores := [COR_PRESSAO[maquina.faixa_da_pressao(p)], EstiloHUD.TINTA, EstiloHUD.TINTA,
+		EstiloHUD.TINTA_FRACA, EstiloHUD.TINTA]
+	# Cinco colunas de letra e quatro estreitas de sinal, de ponta a ponta.
+	var coluna := 52.0
+	var sinal := (caixa.size.x - 28.0 - coluna * 5.0) / 4.0
+	var x := caixa.position.x + 14.0
+	var y_letra := caixa.position.y + 70.0
+	for i in TXT_SIMBOLOS.size():
+		var meio := x + coluna * 0.5
+		PecasDoLaboratorio.escrever_no_meio(painel, Vector2(meio, y_letra), TXT_SIMBOLOS[i], 28, EstiloHUD.TINTA)
+		PecasDoLaboratorio.escrever_no_meio(painel, Vector2(meio, y_letra + 40.0), valores[i], 15, cores[i])
+		PecasDoLaboratorio.escrever_no_meio(painel, Vector2(meio, y_letra + 60.0), TXT_UNIDADES[i], 11,
+			EstiloHUD.TINTA_FRACA)
+		x += coluna
+		if i < TXT_SINAIS.size():
+			PecasDoLaboratorio.escrever_no_meio(painel, Vector2(x + sinal * 0.5, y_letra), TXT_SINAIS[i], 22,
+				EstiloHUD.TINTA_FRACA)
+			x += sinal
 
 
+## O OBJETIVO: as duas metas com a barrinha de quanto falta, e a condição.
 func _desenhar_o_objetivo() -> void:
-	var caixa := PAINEL_OBJETIVO
-	EstiloHUD.ficha(painel, caixa)
-	PecasDoLaboratorio.escrever(painel, caixa.position + Vector2(18, 16), TXT_OBJETIVO, 13, EstiloHUD.TINTA_FRACA)
-	var textos := [TXT_META_1, TXT_META_2, TXT_META_3]
-	for i in 3:
-		var y := caixa.position.y + 52.0 + i * 46.0
-		var quadrado := Rect2(caixa.position.x + 18.0, y - 2.0, 22.0, 22.0).grow(roundf(_pulo_da_meta[i] * 3.0))
-		EstiloHUD.bloco(painel, quadrado, EstiloHUD.TINTA)
-		painel.draw_rect(quadrado.grow(-3.0), Color("3ecf72") if _metas[i] else EstiloHUD.PAPEL_DOBRA)
-		if _metas[i]:
-			# O visto, em pixels.
-			var c := quadrado.get_center()
-			for k in 3:
-				painel.draw_rect(Rect2(c + Vector2(-6 + k * 2, -1 + k * 2), Vector2(3, 3)), EstiloHUD.TINTA)
-			for k in 4:
-				painel.draw_rect(Rect2(c + Vector2(0 + k * 2, 3 - k * 3), Vector2(3, 3)), EstiloHUD.TINTA)
-		PecasDoLaboratorio.escrever_em_linhas(painel, Rect2(caixa.position.x + 50.0, y - 2.0, caixa.size.x - 66.0, 40.0),
-			String(textos[i]), 13, EstiloHUD.TINTA, 16.0, false)
-
-
-## Quanto a amostra aguentaria se a válvula fechasse agora (com o êmbolo no
-## fim): é o que diz se vale a pena esfriar mais.
-func _desenhar_o_aguenta() -> void:
-	var caixa := PAINEL_AGUENTA
-	var alfa := 1.0 if maquina.embolo_no_fim() and _estado == Estado.JOGANDO else 0.45
-	EstiloHUD.ficha(painel, caixa, alfa)
-	PecasDoLaboratorio.escrever(painel, caixa.position + Vector2(18, 14), TXT_AGUENTA, 13,
-		EstiloHUD.com_alfa(EstiloHUD.TINTA_FRACA, alfa))
-	var texto := "--"
-	var cor := EstiloHUD.TINTA
-	if maquina.embolo_no_fim() and _estado == Estado.JOGANDO:
-		if _previsao == INF:
-			texto = "SEM LIMITE"
-		else:
-			texto = "%d s ATÉ ESTOURAR" % roundi(_previsao)
-			cor = Color("c0392b") if _previsao < 25.0 else (Color("a8740b") if _previsao < 35.0 else Color("1f7a3d"))
-	elif _amostra != null:
-		texto = "%d s ATÉ ESTOURAR" % roundi(_segundos_da_amostra)
-	PecasDoLaboratorio.escrever(painel, caixa.position + Vector2(18, 44), texto, 20, EstiloHUD.com_alfa(cor, alfa))
+	var metas := [
+		{"texto": TXT_META_1, "feita": _metas[0], "pulo": _pulo_da_meta[0],
+			"progresso": maquina.fracao_no_cilindro()},
+		{"texto": TXT_META_2, "feita": _metas[1], "pulo": _pulo_da_meta[1],
+			"progresso": maquina.gas.fracao_liquida / MaquinaDeCompressao.FRACAO_LIQUIDA_DA_AMOSTRA},
+		{"texto": TXT_META_3, "feita": _metas[2], "pulo": _pulo_da_meta[2]},
+	]
+	var caixa := _painel_objetivo
+	caixa.size.y = PecasDoLaboratorio.altura_da_lista_de_metas(metas.size())
+	PecasDoLaboratorio.lista_de_metas(painel, caixa, TXT_OBJETIVO, metas)
 
 
 func _desenhar_os_botoes() -> void:
 	var foco := alvo_em_foco()
-	PecasDoLaboratorio.botao(painel, BOTAO_FECHAR, TXT_FECHAR, foco == "fechar_valvula",
+	PecasDoLaboratorio.botao(painel, _botao_fechar, TXT_FECHAR, foco == "fechar_valvula",
 		alvo_segurado() == "fechar_valvula", pode_fechar(), 20,
 		Color("bfe8c8") if pode_fechar() else EstiloHUD.PAPEL)
+	# Quanto a amostra aguentaria se a válvula fechasse agora: só aparece com
+	# todo o ar no cilindro, e é o que diz se vale a pena esfriar mais.
+	if maquina.embolo_no_fim() and _estado == Estado.JOGANDO and _previsao != INF:
+		var cor := COR_DA_DICA_PRONTA
+		if _previsao < 25.0:
+			cor = Color("ff8a80")
+		elif _previsao < 35.0:
+			cor = COR_DA_DICA_PERIGO
+		PecasDoLaboratorio.escrever_claro_no_meio(painel, Vector2(_botao_fechar.get_center().x, _botao_fechar.end.y + 26.0),
+			TXT_AGUENTA % roundi(_previsao), 13, cor)
 	if not modo_historia:
-		PecasDoLaboratorio.botao(painel, BOTAO_RECOMECAR, TXT_RECOMECAR, foco == "recomecar",
-			alvo_segurado() == "recomecar", true, 20, Color("d9b99b"))
+		PecasDoLaboratorio.botao(painel, _botao_recomecar, TXT_RECOMECAR, foco == "recomecar",
+			alvo_segurado() == "recomecar", true, 18, EstiloHUD.PAPEL_DOBRA)
 
 
 func _desenhar_os_nomes_dos_controles() -> void:
 	var setas := setas_embolo.get_global_rect()
-	PecasDoLaboratorio.escrever_no_meio(painel, Vector2(setas.get_center().x, setas.end.y + 14.0), TXT_EMBOLO, 11, EstiloHUD.CLARO)
+	PecasDoLaboratorio.escrever_claro_no_meio(painel, Vector2(setas.get_center().x, setas.end.y + 16.0), TXT_EMBOLO, 11)
 	var termo := termometro.get_global_rect()
-	PecasDoLaboratorio.escrever_no_meio(painel, Vector2(termo.get_center().x, termo.position.y - 12.0), TXT_RESFRIADOR, 11, EstiloHUD.CLARO)
+	PecasDoLaboratorio.escrever_claro_no_meio(painel, Vector2(termo.get_center().x, termo.position.y - 14.0),
+		TXT_RESFRIADOR, 11)
 
 
 func _dica() -> String:
@@ -671,60 +935,49 @@ func _dica() -> String:
 		Estado.EXPLODINDO, Estado.FIM:
 			return TXT_ESTOUROU if maquina.estourado else ""
 		Estado.FECHANDO:
-			return DICA_FECHANDO
+			return TXT_DICA_FECHANDO
 		Estado.PRONTA:
 			return ""
 	if maquina.amostra_pronta():
-		return DICA_PRONTA
+		return TXT_DICA_PRONTA
 	var faixa := maquina.faixa_da_pressao()
 	if faixa >= 1:
-		return DICA_PERIGO
+		return TXT_DICA_PERIGO
 	var gas_c := maquina.gas.celsius()
 	var serpentina_c := GasFechado.para_celsius(maquina.temperatura_da_serpentina)
 	if maquina.gas.fracao_liquida > 0.0:
-		return DICA_LIQUIDO
+		return TXT_DICA_LIQUIDO
 	if gas_c - serpentina_c > 25.0 and maquina.posicao > 0.05 and not is_equal_approx(maquina.posicao, maquina.alvo):
-		return DICA_ESQUENTOU
+		return TXT_DICA_ESQUENTOU
 	if maquina.embolo_no_fim():
 		var pinga := MisturasDoDestilador.graus(roundf(GasFechado.para_celsius(maquina.gas.temperatura_de_condensacao())))
-		return DICA_RESFRIE_MAIS % pinga
+		return TXT_DICA_RESFRIE_MAIS % pinga
 	if serpentina_c > 60.0:
-		return DICA_QUENTE
+		return TXT_DICA_QUENTE
 	if gas_c < -60.0:
-		return DICA_FRIO
-	return DICA_COMECO
-
-
-func _desenhar_o_rodape() -> void:
-	var texto := _dica()
-	if not texto.is_empty():
-		PecasDoLaboratorio.escrever_no_meio(painel, RODAPE.get_center(), texto, 15, EstiloHUD.CLARO)
-	PecasDoLaboratorio.dicas_de_teclado(painel, Vector2(800, 866), [
-		[["tecla_w", "tecla_s"], "ÊMBOLO"],
-		[["tecla_a", "tecla_d"], "RESFRIADOR"],
-		[["tecla_e"], "FECHAR A VÁLVULA"],
-	])
+		return TXT_DICA_FRIO
+	return TXT_DICA_COMECO
 
 
 func _desenhar_a_comemoracao() -> void:
 	var t := clampf(_relogio_do_estado / 0.35, 0.0, 1.0)
 	frente.draw_rect(Rect2(Vector2.ZERO, size), Color(EstiloHUD.VEU, 0.55 * t))
-	var caixa := Rect2(460, 250, 680, 330)
+	var caixa := Rect2(480, 270, 640, 300)
 	caixa.position.y += roundf((1.0 - ease(t, 0.3)) * 40.0)
 	EstiloHUD.ficha(frente, caixa, t)
 	var meio_x := caixa.get_center().x
-	PecasDoLaboratorio.escrever_no_meio(frente, Vector2(meio_x, caixa.position.y + 52.0), TXT_PRONTA, 30,
+	PecasDoLaboratorio.escrever_no_meio(frente, Vector2(meio_x, caixa.position.y + 54.0), TXT_PRONTA, 30,
 		EstiloHUD.com_alfa(Color("1f5f9e"), t))
 	var amostra := _amostra
 	if amostra != null:
-		var linha := "%s mol de ar  ·  %d%% líquido  ·  %s" % [_num(amostra.mols, 2),
-			roundi(amostra.fracao_liquida * 100.0), MisturasDoDestilador.graus(roundf(amostra.celsius()))]
+		var linha := TXT_DA_AMOSTRA % [MisturasDoDestilador.graus(roundf(amostra.celsius())),
+			roundi(amostra.fracao_liquida * 100.0)]
 		PecasDoLaboratorio.escrever_no_meio(frente, Vector2(meio_x, caixa.position.y + 112.0), linha, 18,
 			EstiloHUD.com_alfa(EstiloHUD.TINTA, t))
-		var aguenta := "FECHADO, O CALOR DA SALA VAI ENTRANDO: AGUENTA %d s ATÉ ESTOURAR." % roundi(_segundos_da_amostra)
-		PecasDoLaboratorio.escrever_em_linhas(frente, Rect2(caixa.position.x + 40.0, caixa.position.y + 150.0, caixa.size.x - 80.0, 60.0),
-			aguenta, 15, EstiloHUD.com_alfa(EstiloHUD.TINTA_FRACA, t), 22.0)
-	PecasDoLaboratorio.escrever_no_meio(frente, Vector2(meio_x, caixa.position.y + 236.0), TXT_LEVE, 22,
+		PecasDoLaboratorio.escrever_em_linhas(frente, Rect2(caixa.position.x + 50.0, caixa.position.y + 146.0,
+			caixa.size.x - 100.0, 60.0), TXT_AGUENTA_NA_CORRIDA % roundi(_segundos_da_amostra), 15,
+			EstiloHUD.com_alfa(EstiloHUD.TINTA_FRACA, t), 22.0)
+	PecasDoLaboratorio.escrever_no_meio(frente, Vector2(meio_x, caixa.position.y + 228.0), TXT_LEVE, 22,
 		EstiloHUD.com_alfa(Color("c0392b"), t * (0.75 + 0.25 * sin(_relogio_do_estado * 8.0))))
 	# A tecla de continuar das folhas (a ficha de coleta), presa na beirada.
 	if _relogio_do_estado > 0.6:
@@ -737,7 +990,6 @@ func _desenhar_o_que_houve() -> void:
 	EstiloHUD.ficha(frente, caixa)
 	PecasDoLaboratorio.escrever_no_meio(frente, Vector2(caixa.get_center().x, caixa.position.y + 46.0), TXT_ESTOUROU, 28,
 		Color("c0392b"))
-	var texto := "A PRESSÃO CHEGOU A %s atm, E O CILINDRO SÓ AGUENTA 4. RESFRIE O AR ANTES DE APERTAR." \
-		% _num(float(_como_estourou.get("pressao", 4.0)), 1)
+	var texto := TXT_O_QUE_HOUVE % _num(float(_como_estourou.get("pressao", 4.0)), 1)
 	PecasDoLaboratorio.escrever_em_linhas(frente, Rect2(caixa.position.x + 30.0, caixa.position.y + 84.0, caixa.size.x - 60.0, 90.0),
 		texto, 15, EstiloHUD.TINTA, 22.0)

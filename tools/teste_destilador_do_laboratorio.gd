@@ -615,8 +615,9 @@ func _testar_o_termometro() -> void:
 			finos.append("%s (%.2f px por grau)" % [dados["nome"], por_grau])
 	_checar(finos.is_empty(), "em toda mistura, um grau vale pelo menos 1 px do tubo %s" % [finos])
 	var pegar := termometro.retangulo_de_pegar()
-	_checar(pegar.encloses(termometro.retangulo_do_tubo().grow_individual(0, -14, 0, -14)) and pegar.size.x >= Termometro.LARGURA_DA_FICHA,
-		"a área de pegar cobre o tubo e o lugar do ponteiro")
+	_checar(pegar.encloses(termometro.retangulo_do_tubo().grow_individual(0, -14, 0, -14)) and pegar.size.x >= Termometro.LARGURA_DA_FICHA
+			and pegar.encloses(termometro.retangulo_do_ponteiro()),
+		"a área de pegar cobre o tubo, o lugar do ponteiro e a plaquinha inteira dele")
 	termometro.definir_faixa(5.0, 5.0)
 	_checar(termometro.maxima > termometro.minima, "uma escala sem tamanho é alargada, para não dividir por zero")
 	termometro.queue_free()

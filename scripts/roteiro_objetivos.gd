@@ -22,6 +22,7 @@ extends RefCounted
 #                                                         -> entregar o N
 #   subsolo    Subsolo em blecaute                       -> entregar o P e o S
 #   lancamento Torre de Lançamento                       -> embarque
+#              (sem entrada desde 2026-11-18: só aparece com a Cacau lá dentro)
 #
 # Dentro de uma cena da trilha (a fase 2, digamos), aparece a etapa atual DELA.
 # Fora de qualquer trilha (laboratório, world1 depois do prólogo, simulador),
@@ -81,6 +82,8 @@ const CAIXA_WORLD1 := "/root/World/Caixa"
 const ESPINHOS_TREINO := "/root/Fase1Oficina/Treino/EspinhosCaixa"
 const PORTA_METAL := "/root/Fase1Oficina/Patio/PortaMetal"
 const PORTA_METAL_ELEVADOR := "/root/Fase1Oficina/Patio/PortaMetal2"
+## A porta de metal da ponta direita do laboratório, a caminho da Torre de Gases.
+const PORTA_METAL_TORRE := "/root/Laboratório (world2)/PortaMetalTorre"
 ## A fornalha do pátio (RetortaCarbonizacao): a carga dela e o carvão pronto.
 const RETORTA_PATIO := "/root/Fase1_2Exterior/Patio/Retorta"
 const MESA_PURIFICADOR := "/root/FaseFinal/Plataforma/MesaPurificador"
@@ -88,6 +91,7 @@ const MESA_PURIFICADOR := "/root/FaseFinal/Plataforma/MesaPurificador"
 ## Todos os caminhos acima, para o teste conferir se ainda existem nas cenas.
 const CAMINHOS_POR_CENA := {
 	WORLD1: [CIENTISTA_WORLD1, ITEM_H2, ITEM_O2, CAIXA_WORLD1],
+	LAB: [PORTA_METAL_TORRE],
 	FASE1: [ESPINHOS_TREINO, PORTA_METAL, PORTA_METAL_ELEVADOR],
 	FASE1_2: [RETORTA_PATIO],
 	FASE_FINAL: [MESA_PURIFICADOR],
@@ -167,6 +171,7 @@ func _init(visitou: Callable) -> void:
 		_trilha("nitrogenio", "NITROGÊNIO", AmostraChonps.CORES["N"], [CORREDOR_TORRE, FASE2,
 				MissaoNitrogenio.CENA_COMPRESSOR, MissaoNitrogenio.CENA_DESTILACAO,
 				MissaoNitrogenio.CENA_TORRE, MissaoNitrogenio.CENA_TELHADO], [
+			[_obj("porta_torre", "Derreta a porta de metal da Torre de Gases", _passou_da_porta_da_torre)],
 			[_obj("entrar_torre", "Chegue à rua da Torre de Gases", _visitou.bind(FASE2))],
 			[_obj("mochila", "Pegue a mochila de N₂ na sala de destilação", _tem.bind("mochila"))],
 			[_obj("cilindro", "Suba a torre até o telhado e pegue o cilindro de amostra", _pegou_o_cilindro)],
@@ -191,8 +196,14 @@ func _init(visitou: Callable) -> void:
 				_entregou_p_e_s, _contar_p_e_s)],
 		]),
 
+		# A Torre de Lançamento ficou sem entrada: a porta verde do laboratório
+		# saiu em 2026-11-18. A trilha espera quieta (um portão, sem "Entre na
+		# Torre de Lançamento") até a Cacau estar lá dentro — hoje, só pelo modo
+		# dev. Quando a torre ganhar uma entrada de novo, volte o objetivo
+		# "entrar_lancamento" no lugar do portão (e o ALVO dele no
+		# GuiaDeCaminho, e o ONDE_FICA no PlantaDoMapa).
 		_trilha("lancamento", "TORRE DE LANÇAMENTO", Color(0.95, 0.55, 0.65), [FASE_FINAL, FINAL_ORBITA], [
-			[_obj("entrar_lancamento", "Entre na Torre de Lançamento", _visitou.bind(FASE_FINAL))],
+			_portao(_visitou.bind(FASE_FINAL)),
 			[_obj("purificador", "Suba a torre e monte o purificador de CO₂", _feito.bind(MESA_PURIFICADOR))],
 			[_obj("embarque", "Embarque na cápsula", _visitou.bind(FINAL_ORBITA))],
 		]),
@@ -293,9 +304,17 @@ func _entregou(letra: String) -> bool:
 #  Perguntas — Ala de Pirólise
 # ─────────────────────────────────────────────
 
+## A porta de metal no fim do laboratório: derretida, ou a Cacau já esteve do
+## outro lado dela (um jogo salvo de antes de a porta existir, ou o modo dev) —
+## senão o objetivo dela apareceria no próprio corredor, apontando para trás.
+func _passou_da_porta_da_torre() -> bool:
+	return EstadoMundo.ja_feito_caminho(PORTA_METAL_TORRE) or _visitou.call(CORREDOR_TORRE)
+
+
 func _tentou_porta_de_metal() -> bool:
 	return EstadoMundo.ja_feito_caminho(PORTA_METAL, PortaMetalMacarico.MARCA_TENTOU) \
-		or EstadoMundo.ja_feito_caminho(PORTA_METAL_ELEVADOR, PortaMetalMacarico.MARCA_TENTOU)
+		or EstadoMundo.ja_feito_caminho(PORTA_METAL_ELEVADOR, PortaMetalMacarico.MARCA_TENTOU) \
+		or EstadoMundo.ja_feito_caminho(PORTA_METAL_TORRE, PortaMetalMacarico.MARCA_TENTOU)
 
 
 ## Quantas toras a fornalha do pátio leva (o madeiras_necessarias dela).

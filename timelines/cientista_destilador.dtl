@@ -1,23 +1,31 @@
 join cientista (cientistaradio) right
 [signal arg="raio_x"]
 cientista (cientistaradio): Essa é a coluna de destilação, Cacau. Olha só como ela é por dentro!
-[signal arg="ar"]
-cientista: O ar entra aqui líquido, a -200 °C: nitrogênio, oxigênio e um pouquinho de argônio.
-[signal arg="ebulicao"]
-cientista: Cada um ferve numa temperatura diferente: é o ponto de ebulição.
-[signal arg="evaporar"]
-cientista: Mas evaporar, eles evaporam bem antes! Até a -200 °C umas moléculas escapam... e voltam.
-[signal arg="varal"]
-cientista: É assim que a roupa seca no varal, sem ferver. Ferver é o vapor fazer bolhas dentro do líquido.
-[signal arg="ferver"]
-cientista: O calor do ambiente entra e a mistura ferve a uns -194 °C, entre os pontos de ebulição deles!
-[signal arg="vapor"]
-cientista: O vapor sai rico em nitrogênio, que evapora mais fácil, mas leva oxigênio e argônio junto.
-[signal arg="esfriar"]
-cientista: Ele sobe e esfria: nas bandejas e lá no topo, perto do resfriador, vira líquido de novo.
-[signal arg="separar"]
-cientista: Em cada bandeja ele condensa e evapora outra vez, e fica mais rico em nitrogênio.
-[signal arg="pureza"]
-cientista: No topo, quase só nitrogênio; no fundo, o oxigênio é a maioria. Mas nada sai 100% puro!
-[signal arg="fim"]
-cientista: Separar uma mistura assim, um pouco a cada bandeja, é a destilação fracionada.
+cientista: Quer que eu explique como ela separa o ar?
+- Quero, me explica!
+	[signal arg="ar"]
+	cientista: O ar entra aqui líquido, a -200 °C: nitrogênio, oxigênio e um pouquinho de argônio.
+	[signal arg="ebulicao"]
+	cientista: Cada um ferve numa temperatura diferente: é o ponto de ebulição.
+	[signal arg="evaporar"]
+	cientista: Mas evaporar, eles evaporam bem antes! Até a -200 °C umas moléculas escapam... e voltam.
+	[signal arg="varal"]
+	cientista: É assim que a roupa seca no varal, sem ferver. Ferver é o vapor fazer bolhas dentro do líquido.
+	[signal arg="ferver"]
+	cientista: O calor do ambiente entra e a mistura ferve a uns -194 °C, entre os pontos de ebulição deles!
+	[signal arg="vapor"]
+	cientista: O vapor sai rico em nitrogênio, que evapora mais fácil, mas leva oxigênio e argônio junto.
+	[signal arg="esfriar"]
+	cientista: Ele sobe e esfria: nas bandejas e lá no topo, perto do resfriador, vira líquido de novo.
+	[signal arg="separar"]
+	cientista: Em cada bandeja ele condensa e evapora outra vez, e fica mais rico em nitrogênio.
+	[signal arg="pureza"]
+	cientista: No topo, quase só nitrogênio; no fundo, o oxigênio é a maioria. Mas nada sai 100% puro!
+	[signal arg="fim"]
+	cientista: Separar uma mistura assim, um pouco a cada bandeja, é a destilação fracionada.
+	do Caderno.anotar("destilacao")
+- Já sei como funciona
+	[signal arg="pular_explicacao"]
+	do Caderno.anotar("destilacao")
+	cientista: Então só anota os pontos de ebulição no caderno, pra não esquecer!
+	[end_timeline]

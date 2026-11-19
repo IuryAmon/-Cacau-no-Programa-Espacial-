@@ -82,6 +82,17 @@ const ALTURA_DO_TITULO := 36.0
 ## usa o cursor do controle. Desligado (as atividades), usa.
 @export var navegar_com_teclas: bool = false
 
+## Enquanto ligada, a tela não responde a nada (os puzzles abertos em cima do
+## mapa, enquanto o raio X entra e sai: ver VarreduraRaioX).
+var bloqueada: bool = false
+## Ligado enquanto a pessoa arrasta algo com o mouse (o cabo do êmbolo, o
+## ponteiro do termômetro): o cursor vira a mão fechada (MaoDoMouse).
+var arrastando_com_o_mouse: bool = false:
+	set(valor):
+		if valor != arrastando_com_o_mouse:
+			arrastando_com_o_mouse = valor
+			_atualizar_o_cursor(String(_alvo_no_ponto(_ponteiro).get("nome", "")))
+
 var _alvos: Array[Dictionary] = []
 ## O nome do alvo em foco: sob o ponteiro, ou escolhido pelas teclas ("" = nenhum).
 var _em_foco: String = ""
@@ -124,7 +135,7 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if _de_saida or TransicaoDeCena.em_curso():
+	if _de_saida or bloqueada or TransicaoDeCena.em_curso():
 		return
 	if event is InputEventMouseMotion:
 		_ponteiro = event.position
@@ -232,6 +243,16 @@ func registrar_alvo(nome: String, retangulo: Callable, ao_apertar: Callable,
 		"disponivel": disponivel, "repete": repete})
 
 
+## O alvo se ARRASTA (não só se clica): com o ponteiro em cima, a seta do mouse
+## vira a mão aberta; enquanto "arrastando_com_o_mouse", a mão fechada (os
+## desenhos são do PonteiroDoMouse, vestidos no começo do jogo).
+func marcar_arrastavel(nome: String) -> void:
+	var alvo := _alvo(nome)
+	if alvo.is_empty():
+		return
+	alvo["arrastavel"] = true
+
+
 func esquecer_alvo(nome: String) -> void:
 	for i in range(_alvos.size() - 1, -1, -1):
 		if _alvos[i]["nome"] == nome:
@@ -333,7 +354,24 @@ func _focar_sob_o_ponteiro() -> void:
 			_ao_mudar_o_foco(novo)
 	if _segurado != "" and _segurado != novo:
 		_segurado = ""
-	Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND if novo != "" else Input.CURSOR_ARROW)
+	_atualizar_o_cursor(novo)
+
+
+## A seta do mouse: a mão fechada arrastando, a aberta em cima do que se
+## arrasta, o dedo em cima do que se clica.
+func _atualizar_o_cursor(sob_o_ponteiro: String) -> void:
+	var forma := Input.CURSOR_ARROW
+	if arrastando_com_o_mouse:
+		forma = MaoDoMouse.CURSOR_SEGURANDO
+	elif sob_o_ponteiro != "":
+		forma = MaoDoMouse.CURSOR_DE_PEGAR if bool(_alvo(sob_o_ponteiro).get("arrastavel", false)) \
+			else Input.CURSOR_POINTING_HAND
+	Input.set_default_cursor_shape(forma)
+
+
+## O nome do alvo que está sob o ponteiro do mouse agora ("" = nenhum).
+func alvo_sob_o_ponteiro() -> String:
+	return String(_alvo_no_ponto(_ponteiro).get("nome", ""))
 
 
 func _apertar_o_foco() -> bool:
@@ -473,7 +511,7 @@ func usa_cursor() -> bool:
 ## Onde o cursor do controle pode parar: os alvos disponíveis.
 func alvos_do_cursor() -> Array[Rect2]:
 	var lista: Array[Rect2] = []
-	if _de_saida or navegar_com_teclas:
+	if _de_saida or bloqueada or navegar_com_teclas:
 		return lista
 	for alvo in _alvos:
 		if _disponivel(alvo):

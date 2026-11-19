@@ -1,0 +1,16 @@
+join cientista (cientista_feliz) leftmost [mirrored="true"]
+cientista (cientista_feliz): Essa gaiola pede o átomo de oxigênio. O núcleo já está pronto, falta completar a eletrosfera.
+cientista: Quer que eu explique onde ficam os elétrons?
+- Quero, me explica!
+	[signal arg="z"]
+	cientista (cientista_mto_feliz): O número de cima da caixinha é o Z: o oxigênio tem 8 prótons. Átomo neutro, então são 8 elétrons.
+	[signal arg="camadas"]
+	cientista (cientista_feliz): Os elétrons ficam em camadas, em volta do núcleo. A de dentro é a camada K, e a de fora, a L.
+	[signal arg="camada_k"]
+	cientista: A camada K é a menor: só cabem 2 elétrons nela. E ela enche primeiro.
+	cientista: Arraste 2 elétrons para a camada K.
+- Já sei montar
+	[signal arg="pular_explicacao"]
+	do Caderno.anotar("eletrosfera")
+	cientista (cientista_mto_feliz): Então mãos à obra! Se esquecer de alguma coisa, está tudo no seu caderno.
+	[end_timeline]

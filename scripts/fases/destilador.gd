@@ -18,15 +18,25 @@ extends Area2D
 # A AMOSTRA (o fim do caminho do nitrogênio, ver MissaoNitrogenio): quando a
 # Cacau chega correndo com o cilindro de ar líquido do compressor, o E não
 # explica — RECEBE a amostra. Ela vai até a coluna, o cilindro sai das costas
-# dela e encaixa na base, o relógio da amostra para ("CONECTADA!") e abre a
-# tela em que ela mesma destila o ar (scenes/puzzle_destilacao.tscn, campo
+# dela e encaixa na base, o relógio da amostra para ("CONECTADA!") e abre o
+# puzzle em que ela mesma destila o ar (scenes/puzzle_destilacao.tscn, campo
 # "tela_da_destilacao"). Fechar no meio deixa a amostra na coluna: o E volta
-# para a tela. Separado o ar e retirado o nitrogênio, sai o sinal
+# para o puzzle. Separado o ar e retirado o nitrogênio, sai o sinal
 # "nitrogenio_pronto" (o cilindro verde aparece na sala).
+#
+# DEPOIS DO NITROGÊNIO a coluna fica quieta: nem botão, nem contorno, e o E não
+# abre mais nada (nem o puzzle, nem a explicação). O cilindro verde salta bem
+# ao lado dela, e o E perto dele tem de ser só dele (ver interativa()).
+#
+# O PUZZLE NASCE NA PRÓPRIA COLUNA: o jogo para, a câmera chega perto
+# (ZoomNoObjeto) até a coluna do mapa ficar do tamanho exato da do puzzle
+# (ZOOM_DA_DESTILACAO) e a tela do puzzle abre por cima dela, sem fundo: uma
+# linha de luz desce trocando a arte de aço pelo raio X. Fechando, a linha
+# sobe, a coluna de aço reaparece e a câmera volta para a Cacau.
 #
 # A ARTE é "assets/fase nitrogenio/coluna de destilação.png", que tem dois
 # desenhos lado a lado: o de aço (o que se vê aqui, pelo region_rect do
-# Sprite) e o de raio X (que só a tela da explicação usa).
+# Sprite) e o de raio X (o da explicação e do puzzle).
 #
 # COMO EDITAR NO EDITOR:
 #   posição do nó -> no CHÃO, no meio da coluna: a arte cresce para cima dele
@@ -69,9 +79,23 @@ signal amostra_recebida
 signal nitrogenio_pronto
 
 const CAMADA_DA_DESTILACAO := 98
+## O zoom da câmera com o puzzle aberto: 2 deixa a coluna do mapa (arte em
+## escala 2) do tamanho exato da do puzzle (4 px da tela por pixel da arte).
+const ZOOM_DA_DESTILACAO := 2.0
+## Onde fica o alto da coluna na tela com o puzzle aberto (px), se os limites
+## da câmera deixarem.
+const ALTO_DA_COLUNA_NA_TELA := 96.0
+## Meia largura da Cacau (px do mundo), e a pressa dela ao sair da frente do
+## puzzle.
+const MEIA_LARGURA_DA_CACAU := 22.0
+const VELOCIDADE_DE_RECUAR := 260.0
 
 var _recebendo: bool = false
+## A Cacau está saindo da frente para o puzzle abrir.
+var _abrindo: bool = false
 var _destilacao: TelaDaDestilacao = null
+## A câmera do puzzle (do começo da chegada até ela voltar para a Cacau).
+var _zoom: ZoomNoObjeto = null
 
 var _jogador: Node2D = null
 var _tela: ExplicacaoDestilador = null
@@ -99,7 +123,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	var perto := _jogador != null and not explicando() and not _recebendo and not destilando()
+	var perto := _jogador != null and interativa() and not explicando() and not _recebendo \
+		and not destilando()
 	if perto != _dica_visivel:
 		_dica_visivel = perto
 		_atualizar_dica()
@@ -116,6 +141,8 @@ func _process(delta: float) -> void:
 ## e a tela da destilação abre; com a amostra já dentro, o E volta para essa
 ## tela. Fora disso, é a explicação do Dr. Chico.
 func usar() -> void:
+	if not interativa():
+		return
 	if MissaoNitrogenio.carregando_amostra():
 		receber_amostra()
 	elif MissaoNitrogenio.amostra_na_coluna:
@@ -124,8 +151,17 @@ func usar() -> void:
 		explicar()
 
 
+## A coluna ainda responde ao E? Só até o nitrogênio ser separado: depois
+## disso (com o cilindro verde esperando ao lado dela, ou já levado) ela não
+## abre mais o puzzle nem a explicação.
+func interativa() -> bool:
+	return not MissaoNitrogenio.nitrogenio_destilado and not Progresso.conquistou_celula("N")
+
+
+## O puzzle está aberto (ou a Cacau está saindo da frente, ou a câmera ainda
+## está indo ou voltando dele).
 func destilando() -> bool:
-	return _destilacao != null and is_instance_valid(_destilacao)
+	return _abrindo or (_destilacao != null and is_instance_valid(_destilacao)) or _zoom != null
 
 
 ## A Cacau entrega a amostra: ela vai até a coluna, o cilindro sai das costas
@@ -171,35 +207,104 @@ func receber_amostra() -> void:
 	abrir_destilacao()
 
 
-## A tela em que a pessoa separa o ar (com a amostra dentro da coluna).
+## O puzzle em que a pessoa separa o ar (com a amostra dentro da coluna): a
+## Cacau dá uns passos para trás, o jogo para, a câmera chega perto da coluna
+## e o puzzle nasce em cima dela.
 func abrir_destilacao() -> void:
 	if destilando() or tela_da_destilacao == null:
 		return
+	_abrindo = true
+	_dica_visivel = false
+	_atualizar_dica()
+	await _abrir_espaco_para_o_puzzle()
+	_parar_a_cacau(true)
+	# O contorno some já (o jogo parado não o apagaria).
+	_brilho_do_contorno = 0.0
+	_animar_contorno(0.0)
+	_olhar_para_a_coluna()
+	var recorte := recorte_no_mundo()
+	var meia_altura := get_viewport().get_visible_rect().size.y * 0.5 / ZOOM_DA_DESTILACAO
+	var centro := Vector2(recorte.get_center().x,
+		recorte.position.y - ALTO_DA_COLUNA_NA_TELA / ZOOM_DA_DESTILACAO + meia_altura)
+	_zoom = ZoomNoObjeto.chegar_perto(self, recorte, ZOOM_DA_DESTILACAO, centro)
+	_abrindo = false
+	await _zoom.chegou
+
 	var camada := CanvasLayer.new()
 	camada.name = "TelaDaDestilacao"
 	camada.layer = CAMADA_DA_DESTILACAO
 	camada.process_mode = Node.PROCESS_MODE_ALWAYS
 	_destilacao = tela_da_destilacao.instantiate() as TelaDaDestilacao
+	_destilacao.coluna_no_mundo = _zoom.na_tela(recorte)
 	if not MissaoNitrogenio.explicou_a_destilacao:
 		_destilacao.fala_de_abertura = fala_da_destilacao
 		MissaoNitrogenio.explicou_a_destilacao = true
 	_destilacao.nitrogenio_retirado.connect(_ao_retirar_o_nitrogenio)
 	_destilacao.fechou.connect(_ao_fechar_a_destilacao)
+	# O raio X cobriu a coluna de aço: ela some (senão apareceria nas frestas
+	# do desenho); saindo, ela volta antes de o raio X começar a subir.
+	_destilacao.revelada.connect(func() -> void: _sprite.visible = false)
+	_destilacao.escondendo.connect(func() -> void: _sprite.visible = true)
 	camada.add_child(_destilacao)
 	get_tree().current_scene.add_child(camada)
-	_parar_a_cacau(true)
+
+
+## Onde a arte de aço está no mundo (px do mundo).
+func recorte_no_mundo() -> Rect2:
+	return _sprite.get_global_transform() * _sprite.get_rect()
+
+
+## Se a Cacau está onde o puzzle vai desenhar (a régua e os nomes à esquerda
+## da coluna, o termômetro e as setas à direita), ela recua até sair de baixo
+## disso, do lado em que já está, e fica de frente para a coluna.
+func _abrir_espaco_para_o_puzzle() -> void:
+	var cacau := get_tree().get_first_node_in_group("player") as Node2D
+	if cacau == null or not cacau.has_method("recuar_ate_x"):
+		return
+	var recorte := recorte_no_mundo()
+	var livre: float
+	if cacau.global_position.x <= recorte.get_center().x:
+		livre = recorte.position.x - TelaDaDestilacao.LARGURA_DA_REGUA_E_NOMES / ZOOM_DA_DESTILACAO \
+			- MEIA_LARGURA_DA_CACAU
+		if cacau.global_position.x <= livre:
+			return
+	else:
+		livre = recorte.end.x + TelaDaDestilacao.ALCANCE_A_DIREITA / ZOOM_DA_DESTILACAO + MEIA_LARGURA_DA_CACAU
+		if cacau.global_position.x >= livre:
+			return
+	await cacau.recuar_ate_x(livre, VELOCIDADE_DE_RECUAR)
+
+
+## A tela do puzzle aberta agora (nula fora dele).
+func tela_da_destilacao_aberta() -> TelaDaDestilacao:
+	return _destilacao if _destilacao != null and is_instance_valid(_destilacao) else null
 
 
 func _ao_fechar_a_destilacao() -> void:
 	_destilacao = null
+	await _voltar_a_camera()
 	_parar_a_cacau(false)
 
 
 func _ao_retirar_o_nitrogenio() -> void:
+	# A pureza que a comemoração do puzzle mostrou: é a que a Cacau vai dizer
+	# quando pegar o cilindro (cacau_tem_nitrogenio).
+	var pureza := _destilacao.pureza_retirada() if is_instance_valid(_destilacao) else 0.0
 	_destilacao = null
+	await _voltar_a_camera()
 	_parar_a_cacau(false)
-	MissaoNitrogenio.concluir_destilacao()
+	MissaoNitrogenio.concluir_destilacao(pureza)
 	nitrogenio_pronto.emit()
+
+
+## A câmera do puzzle volta para a Cacau.
+func _voltar_a_camera() -> void:
+	_sprite.visible = true
+	var zoom := _zoom
+	if zoom and is_instance_valid(zoom):
+		zoom.voltar()
+		await zoom.voltou
+	_zoom = null
 
 
 func _parar_a_cacau(parar: bool) -> void:

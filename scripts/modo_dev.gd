@@ -6,11 +6,15 @@ extends CanvasLayer
 # jogo rodado pelo editor (build de debug), como as outras teclas de teste (K,
 # O, P, Ç): no jogo exportado as teclas não fazem nada.
 #
-#   F1   liga/desliga o modo. Ligando, a Cacau ganha todas as ferramentas e já
+#   F1   liga/desliga o modo. Ligando, a Cacau ganha todas as ferramentas e
+#        todas as páginas do caderno (Caderno.anotar_todas) e já
 #        sai voando. Desligar não tira as ferramentas.
 #   V    voar/andar (só com o modo ligado).
 #   F2   menu de cenas: escolhe uma e vai direto para ela (vale mesmo com o
 #        modo desligado). Setas/WASD escolhem, Enter vai, Esc ou F2 fecham.
+#   F3   a seta do GuiaDeCaminho aparece na hora, sem esperar a paciência dele
+#        acabar, e o Output diz o que o guia está pensando (o objetivo, o
+#        caminho de cenas, para onde aponta). Vale mesmo com o modo desligado.
 #
 # COM O MODO LIGADO
 #   * nada machuca: nem dano, nem queda no buraco (ela volta a voar) — ver
@@ -94,6 +98,8 @@ func _input(event: InputEvent) -> void:
 					fechar_menu()
 				else:
 					abrir_menu()
+			KEY_F3:
+				GuiaDeCaminho.mostrar_agora()
 			KEY_ESCAPE:
 				if not _menu.visible:
 					return
@@ -133,6 +139,8 @@ func alternar() -> void:
 	if ativo:
 		var pegas := dar_todas_as_ferramentas()
 		print("DEBUG [ModoDev]: ligado. Ferramentas novas -> ", pegas if not pegas.is_empty() else "nenhuma (já tinha todas)")
+		var notas := Caderno.anotar_todas()
+		print("DEBUG [ModoDev]: notas novas no caderno -> ", notas if not notas.is_empty() else "nenhuma (já tinha todas)")
 	else:
 		print("DEBUG [ModoDev]: desligado.")
 	_atualizar_faixa()

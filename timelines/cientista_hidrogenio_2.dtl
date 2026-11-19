@@ -1,0 +1,10 @@
+join cientista (cientista_mto_feliz) leftmost [mirrored="true"]
+cientista (cientista_mto_feliz): Isso! 1 próton no núcleo.
+[signal arg="a"]
+cientista (cientista_feliz): O número de baixo é a massa atômica, o A. Arredondando, 1,008 vira 1.
+cientista: A massa vem do núcleo: prótons mais nêutrons. Então os nêutrons são a massa menos os prótons.
+[signal arg="neutron"]
+cientista (cientista_serio): 1 menos 1 dá zero. Esse hidrogênio não tem nêutron nenhum, então o nêutron fica de fora!
+[signal arg="eletron"]
+cientista (cientista_feliz): E os elétrons? Num átomo neutro, são tantos quanto os prótons: 1 elétron, girando na eletrosfera.
+cientista (cientista_mto_feliz): Agora é com você. Termine de montar o átomo!

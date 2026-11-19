@@ -13,13 +13,13 @@ extends TelaInterativa
 # e SAIR, que fecha o jogo.
 #
 # O CENÁRIO é um pedaço do próprio jogo, montado como uma fase: a entrada da
-# base do world1 ao entardecer, que é onde e quando a história começa. O céu, o
-# sol, as nuvens, a serra e os pinheiros são os do world1; o gramado, o piso de
+# base do world1, DE NOITE, com a lua atrás da Cacau e do Dr. Chico. O céu, a
+# lua, as nuvens, a serra e os pinheiros são os das fases; o gramado, o piso de
 # pedra, o pilarete e o poste são tiles pintados, e a luz do poste acende
 # sozinha (PostesDeLuz), como nas fases. Na frente, a Cacau e o Dr. Chico, cada
 # um na animação de parado que tem no jogo. Quem acende tudo é o mesmo nó
-# Atmosfera das fases, preso no entardecer (ele não segue a hora da partida: o
-# menu não é uma fase).
+# Atmosfera das fases, preso na noite (ele não segue a hora da partida: o menu
+# não é uma fase).
 #
 # A tela não tem câmera: tudo fica em pixels da tela (1600 x 900), e a arte do
 # cenário está em escala 4 (nas fases é escala 2, com o zoom da câmera por cima).
@@ -31,7 +31,7 @@ extends TelaInterativa
 # ONDE MEXER:
 #   OPCOES e os textos logo abaixo   os botões e o que cada um diz.
 #   scenes/menu_principal.tscn       o cenário, nó por nó:
-#       BG/...                       o céu, o sol, as nuvens, a serra e as três
+#       BG/...                       o céu, a lua, as nuvens, a serra e as três
 #                                    fileiras de pinheiros;
 #       Cenario/Chao e Detalhes      o chão, o poste e os enfeites: são tiles,
 #                                    pinta-se como numa fase;
@@ -44,9 +44,9 @@ extends TelaInterativa
 # controle: direcional (ou analógico) e ✕.
 
 const OPCOES := [
-	{"chave": "historia", "nome": "MODO HISTÓRIA", "descricao": "A AVENTURA DA CACAU NO CENTRO DE LANÇAMENTO"},
-	{"chave": "laboratorio", "nome": "LABORATÓRIO", "descricao": "OS PUZZLES E AS SIMULAÇÕES, PARA BRINCAR"},
-	{"chave": "sair", "nome": "SAIR", "descricao": ""},
+	{"chave": "historia", "nome": "MODO HISTÓRIA"},
+	{"chave": "laboratorio", "nome": "LABORATÓRIO"},
+	{"chave": "sair", "nome": "SAIR"},
 ]
 
 ## O menu, por enquanto, fica sem música (a TrilhaSonora olha isto): sem isto,
@@ -67,11 +67,12 @@ const CONTORNO_DO_SUBTITULO := 8
 ## Do pé das caixas até o subtítulo, e dele até o primeiro botão.
 const ATE_O_SUBTITULO := 52.0
 const ATE_OS_BOTOES := 70.0
-const TAMANHO_DO_BOTAO := Vector2(480, 84)
+const TAMANHO_DO_BOTAO := Vector2(440, 72)
 const TAMANHO_DO_SAIR := Vector2(220, 56)
 const ENTRE_BOTOES := 22.0
 const TAM_NOME := 33
-const TAM_DESCRICAO := 11
+## O SAIR, menor, tem o nome menor.
+const TAM_NOME_DO_SAIR := 22
 
 @onready var painel: Control = $Interface/Painel
 
@@ -138,6 +139,11 @@ func _tamanho_do_botao(i: int) -> Vector2:
 	return TAMANHO_DO_SAIR if OPCOES[i]["chave"] == "sair" else TAMANHO_DO_BOTAO
 
 
+## O tamanho da letra do nome do botão número "i".
+func tamanho_do_nome(i: int) -> int:
+	return TAM_NOME_DO_SAIR if OPCOES[i]["chave"] == "sair" else TAM_NOME
+
+
 # ─────────────────────────────────────────────────────────────
 # DESENHO
 # ─────────────────────────────────────────────────────────────
@@ -156,15 +162,9 @@ func _desenhar() -> void:
 		var chave := String(dados["chave"])
 		var caixa := PecasDoLaboratorio.ficha_de_botao(painel, retangulo_do_botao(i), alvo_em_foco() == chave,
 			alvo_segurado() == chave)
-		var descricao := String(dados["descricao"])
-		if descricao.is_empty():
-			PecasDoLaboratorio.escrever_no_meio(painel, caixa.get_center() - Vector2(0, 1), String(dados["nome"]),
-				22, EstiloHUD.TINTA)
-			continue
-		PecasDoLaboratorio.escrever_no_meio(painel, Vector2(caixa.get_center().x, caixa.position.y + 32.0),
-			String(dados["nome"]), TAM_NOME, EstiloHUD.TINTA)
-		PecasDoLaboratorio.escrever_no_meio(painel, Vector2(caixa.get_center().x, caixa.end.y - 22.0), descricao,
-			TAM_DESCRICAO, EstiloHUD.TINTA_FRACA)
+		# Só o nome: ele já diz o que o botão faz.
+		PecasDoLaboratorio.escrever_no_meio(painel, caixa.get_center() - Vector2(0, 1), String(dados["nome"]),
+			tamanho_do_nome(i), EstiloHUD.TINTA)
 
 	PecasDoLaboratorio.dicas_de_teclado(painel, Vector2(_meio_da_coluna(), size.y - 34.0),
 		[[["tecla_w", "tecla_s"], "ESCOLHER"], [["tecla_e"], "ENTRAR"]])

@@ -40,6 +40,9 @@ var _equipamentos: EquipamentosHUD = null
 var _tutorial: TutorialFerramenta = null
 var _habilidade_no_tutorial: String = ""
 var _fechando_tutorial: bool = false
+## As ferramentas sendo apresentadas agora: da conquista até a ficha de
+## tutorial fechar (ou até a de coleta, para a ferramenta sem tutorial).
+var _em_apresentacao: Dictionary = {}
 
 
 func _ready() -> void:
@@ -103,7 +106,16 @@ func _on_habilidade_conquistada(habilidade: String) -> void:
 	if not apresentar_ferramentas:
 		_equipar(habilidade, true)
 		return
+	_em_apresentacao[habilidade] = true
 	_apresentar(habilidade, ficha)
+
+
+## True da hora em que a ferramenta é conquistada até a pessoa fechar a ficha
+## de tutorial dela. É o que a SetaGuia espera para apontar o primeiro uso: a
+## seta da primeira caixa só aparece depois do "jogue o bumerangue nas
+## caixinhas".
+func em_apresentacao(habilidade: String) -> bool:
+	return _em_apresentacao.has(habilidade)
 
 
 func _apresentar(habilidade: String, ficha: Dictionary) -> void:
@@ -122,11 +134,14 @@ func _apresentar(habilidade: String, ficha: Dictionary) -> void:
 			_equipar(habilidade, true)
 			# Com a ferramenta já equipada, a explicação de como se usa.
 			ensinar(habilidade)
+			if _habilidade_no_tutorial != habilidade:
+				_em_apresentacao.erase(habilidade)  # sem tutorial: acabou aqui
 		hud.popup_fechado.connect(ao_fechar, CONNECT_ONE_SHOT)
 		hud.exibir_popup(ficha["nome"], ficha["textura"], ficha["descricao"],
 			habilidade, false)
 	else:
 		_equipar(habilidade, true)
+		_em_apresentacao.erase(habilidade)
 
 
 # --- O TUTORIAL DA FERRAMENTA ---
@@ -157,6 +172,7 @@ func fechar_tutorial() -> void:
 	get_tree().paused = false
 	var habilidade := _habilidade_no_tutorial
 	_habilidade_no_tutorial = ""
+	_em_apresentacao.erase(habilidade)
 	tutorial_fechado.emit(habilidade)
 
 

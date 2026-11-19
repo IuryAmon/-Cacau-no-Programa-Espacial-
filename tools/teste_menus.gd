@@ -7,8 +7,9 @@ extends "res://tools/teste_de_tela.gd"
 #
 #   * o jogo abre pelo menu principal (a cena principal do projeto);
 #   * o menu tem MODO HISTÓRIA, LABORATÓRIO e SAIR, o nome do jogo escrito com
-#     as caixas dos elementos (Ca, Ca, U) e o céu do próprio jogo, preso no
-#     entardecer sem mexer na hora da partida;
+#     as caixas dos elementos (Ca, Ca, U) e o céu do próprio jogo, preso na
+#     noite (com a lua) sem mexer na hora da partida; os botões têm só o nome,
+#     sem frase embaixo;
 #   * o cenário do menu é feito só da arte do jogo (nenhuma imagem gerada por
 #     I.A.): a Cacau e o Dr. Chico na animação de parado que têm no jogo, ela
 #     no gramado e ele no piso da base, embaixo do poste aceso, sem ficar
@@ -250,25 +251,30 @@ func _testar_o_menu_principal() -> void:
 
 	var textos: Array = [menu.SUBTITULO]
 	var apertados := PackedStringArray()
+	var com_frase := PackedStringArray()
 	for i in menu.OPCOES.size():
 		var opcao: Dictionary = menu.OPCOES[i]
-		textos.append_array([opcao["nome"], opcao["descricao"]])
+		textos.append(opcao["nome"])
+		if opcao.size() != 2:
+			com_frase.append(opcao["nome"])
 		var cabem: float = botoes[i].size.x - 24.0
-		var tamanho: int = menu.TAM_NOME if not String(opcao["descricao"]).is_empty() else 22
-		if PecasDoLaboratorio.largura(String(opcao["nome"]), tamanho) > cabem \
-				or PecasDoLaboratorio.largura(String(opcao["descricao"]), menu.TAM_DESCRICAO) > cabem:
+		if PecasDoLaboratorio.largura(String(opcao["nome"]), menu.tamanho_do_nome(i)) > cabem:
 			apertados.append(opcao["nome"])
 	_checar(_letras_que_faltam(textos).is_empty(), "toda letra do menu existe na fonte [%s]" % _letras_que_faltam(textos))
-	_checar(apertados.is_empty(), "o nome e a descrição de cada opção cabem no botão %s" % [apertados])
+	_checar(com_frase.is_empty(), "cada botão tem só o nome, sem frase embaixo %s" % [com_frase])
+	_checar(apertados.is_empty(), "o nome de cada opção cabe no botão %s" % [apertados])
 
 	# O céu é o do jogo, e o menu não mexe na hora da partida. (O resto do
 	# cenário tem a parte dele: _testar_o_cenario_do_menu.)
 	var ceu := menu.get_node_or_null("BG/Ceu")
-	var sol := menu.get_node_or_null("BG/CamadaDoSol/Sol")
+	var lua := menu.get_node_or_null("BG/CamadaDaLua/Lua")
 	var atmosfera := menu.get_node_or_null("Atmosfera") as Atmosfera
-	_checar(ceu is CeuPixel and sol is AstroPixel, "o céu e o sol são os do jogo")
-	_checar(atmosfera != null and not atmosfera.segue_a_partida and atmosfera.momento == Atmosfera.Momento.ENTARDECER,
-		"aceso pela Atmosfera, presa no entardecer")
+	_checar(ceu is CeuPixel and lua is AstroPixel and (lua as AstroPixel).tipo == AstroPixel.Tipo.LUA,
+		"o céu e a lua são os do jogo")
+	_checar(atmosfera != null and not atmosfera.segue_a_partida and atmosfera.momento == Atmosfera.Momento.NOITE,
+		"aceso pela Atmosfera, presa na noite")
+	_checar(lua is AstroPixel and (lua as AstroPixel).presenca() > 0.9, "a lua está no céu (%.2f)" % [
+		(lua as AstroPixel).presenca() if lua is AstroPixel else 0.0])
 	_checar(Atmosfera.hora_da_partida() == hora_antes, "sem mexer na hora da partida")
 	_checar((menu.get_node("Interface") as CanvasLayer).layer > 0 and menu.painel.get_parent() == menu.get_node("Interface"),
 		"a interface fica numa camada por cima do fundo")
@@ -389,8 +395,8 @@ func _testar_o_cenario_do_menu() -> void:
 		var luz := luzes[0]
 		_checar(luz.global_position.y < corpo_do_chico.position.y \
 			and absf(luz.global_position.x - corpo_do_chico.get_center().x) <= luz.largura * 0.5, "a lâmpada fica em cima do Dr. Chico")
-		_checar(luz.intensidade > 0.0 and is_equal_approx(luz.intensidade, atmosfera.entardecer.postes),
-			"acesa na força do entardecer, como os postes do world1")
+		_checar(luz.intensidade > 0.0 and is_equal_approx(luz.intensidade, atmosfera.noite.postes),
+			"acesa na força da noite, como os postes das fases")
 
 	# O fundo: a serra e os pinheiros, mais desbotados quanto mais longe.
 	var profundidades: Array = []
@@ -407,13 +413,18 @@ func _testar_o_cenario_do_menu() -> void:
 		if nuvens == null or nuvens.vento >= 0.0:
 			para_a_esquerda = false
 	_checar(para_a_esquerda, "as nuvens vão para a esquerda, para onde o vento leva o cabelo da Cacau")
-	var sol := menu.get_node_or_null("BG/CamadaDoSol/Sol") as AstroPixel
-	var disco := Rect2(sol.global_position, Vector2.ZERO).grow(sol.raio_efetivo() * sol.global_scale.x)
-	var sol_a_vista := tela_inteira.encloses(disco)
+	var lua := menu.get_node_or_null("BG/CamadaDaLua/Lua") as AstroPixel
+	var disco := Rect2(lua.global_position, Vector2.ZERO).grow(lua.raio_efetivo() * lua.global_scale.x)
+	var lua_a_vista := tela_inteira.encloses(disco)
 	for peca in pecas_da_interface:
 		if peca.intersects(disco):
-			sol_a_vista = false
-	_checar(sol_a_vista, "o sol aparece inteiro, fora do nome e dos botões")
+			lua_a_vista = false
+	_checar(lua_a_vista, "a lua aparece inteira, fora do nome e dos botões")
+	var cabeca_da_cacau := (menu.get_node("Cenario/Cacau") as AnimatedSprite2D).global_position
+	var cabeca_do_chico := (menu.get_node("Cenario/DrChico") as AnimatedSprite2D).global_position
+	_checar(disco.end.y < minf(cabeca_da_cacau.y, cabeca_do_chico.y) \
+		and disco.position.x < cabeca_do_chico.x and disco.end.x > cabeca_da_cacau.x - 200.0,
+		"a lua fica atrás dos dois, no céu, sem cobrir ninguém")
 	await _foto("menu_1b_cenario")
 
 
@@ -469,7 +480,7 @@ func _testar_o_menu_do_laboratorio() -> void:
 	var textos: Array = [menu.titulo, menu.texto_de_voltar]
 	for dados: Dictionary in menu.ATIVIDADES:
 		chaves.append(dados["chave"])
-		textos.append_array([dados["nome"], dados["descricao"]])
+		textos.append(dados["nome"])
 		if not ResourceLoader.exists(String(dados["cena"])):
 			faltando.append(dados["cena"])
 	_checar(chaves == ["monte", "quiz", "balanceamento", "compressor", "destilador", "tabela"]
@@ -505,17 +516,15 @@ func _testar_o_menu_do_laboratorio() -> void:
 	_checar(not aviso.get_global_rect().intersects(cartoes[0]) and not aviso.get_global_rect().intersects(menu.retangulo_do_titulo()),
 		"o aviso de voltar não encosta em cartão nem no título")
 	var apertados := PackedStringArray()
+	var com_frase := PackedStringArray()
 	for dados: Dictionary in menu.ATIVIDADES:
-		# A descrição quebra na largura do fio que separa a figura do nome (24 px
-		# de cada lado); o nome, numa linha só, precisa de 16 px de respiro.
-		var cabem: float = menu.TAMANHO_DO_CARTAO.x - 48.0
+		# O nome, numa linha só, precisa de 16 px de respiro de cada lado.
 		if PecasDoLaboratorio.largura(String(dados["nome"]), menu.TAM_NOME) > menu.TAMANHO_DO_CARTAO.x - 32.0:
-			apertados.append("%s: o nome" % dados["chave"])
-		var linhas := PecasDoLaboratorio.contar_linhas(String(dados["descricao"]), menu.TAM_DESCRICAO, cabem)
-		var pe: float = menu.ALTURA_DA_FIGURA + 62.0 + PecasDoLaboratorio.altura_das_linhas(linhas, menu.TAM_DESCRICAO, menu.ENTRELINHA)
-		if pe > menu.TAMANHO_DO_CARTAO.y - 10.0:
-			apertados.append("%s: a descrição (%d linhas)" % [dados["chave"], linhas])
-	_checar(apertados.is_empty(), "o nome e a descrição de cada atividade cabem no cartão %s" % [apertados])
+			apertados.append(dados["chave"])
+		if dados.has("descricao"):
+			com_frase.append(dados["chave"])
+	_checar(com_frase.is_empty(), "cada cartão tem só o desenho e o nome, sem frase embaixo %s" % [com_frase])
+	_checar(apertados.is_empty(), "o nome de cada atividade cabe no cartão %s" % [apertados])
 
 	# Os átomos que giram nos cartões.
 	var atomos_certos := true

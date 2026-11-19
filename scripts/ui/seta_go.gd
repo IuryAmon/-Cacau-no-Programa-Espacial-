@@ -11,7 +11,9 @@ extends Control
 # acesa — e a cada piscada dá um empurrão na direção para onde aponta.
 #
 # Este nó só DESENHA. Onde a ponta fica e quando a seta aparece é decidido por
-# quem a usa (a SetaGuia, scripts/fases/seta_guia.gd, que vive na fase). É um
+# quem a usa: a SetaGuia (scripts/fases/seta_guia.gd), posta à mão numa fase,
+# ou o GuiaDeCaminho (scripts/guia_de_caminho.gd), o autoload que aponta o
+# caminho quando a Cacau passa tempo demais sem ir para onde deve. É um
 # Control numa CanvasLayer, em coordenadas de TELA: desenhada no mundo, ela
 # passaria pelo zoom da câmera e o texto sairia borrado.
 #
@@ -90,6 +92,17 @@ func esconder() -> void:
 
 func mostrando() -> bool:
 	return _pedida
+
+
+## Troca a direção. Com a seta na tela, ela some e surge de novo já virada (o
+## mesmo "pop" da entrada), em vez de girar no lugar.
+func virar(nova: int) -> void:
+	if nova == direcao:
+		return
+	direcao = nova
+	if _surgir > 0.0:
+		_surgir = 0.0
+		_t = 0.0
 
 
 func _process(delta: float) -> void:

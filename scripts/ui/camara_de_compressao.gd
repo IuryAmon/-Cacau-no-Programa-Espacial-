@@ -26,8 +26,11 @@ extends Control
 # e Ar roxo, na proporção do ar (78 + 21 + 1 = 100 no mol de ar da fase; cada
 # bolinha vale 0,01 mol).
 # Nada é sorteado contra a física:
-#   * a VELOCIDADE de cada uma vem da temperatura do gás (√T) e da massa dela
-#     (as pesadas andam mais devagar); cada uma tem a sua "sorte" (a
+#   * a VELOCIDADE de cada uma vem da temperatura do gás e da massa dela (as
+#     pesadas andam mais devagar). Na física ela anda com √T; o desenho
+#     EXAGERA (EXPOENTE_DA_TEMPERATURA), para a diferença saltar
+#     aos olhos: no ar da sala elas correm, no frio do resfriador ficam
+#     lentinhas; cada uma tem a sua "sorte" (a
 #     distribuição de Maxwell-Boltzmann), trocada de tempos em tempos, como se
 #     tivesse batido em outra;
 #   * o êmbolo descendo empurra quem bate nele: elas saem mais rápidas (é a
@@ -48,6 +51,13 @@ extends Control
 # da câmara e do cilindro estão na mesma proporção dos volumes da máquina (o
 # cilindro é ~1/8 do total): é isso que faz a conta das moléculas que estão no
 # cilindro bater com o desenho.
+#
+# NO MAPA: na história o puzzle abre em cima da máquina da sala do compressor,
+# e aí as medidas vêm da arte dela (medidas_do_mapa, ArteDoCompressor): a
+# câmara é desenhada na grade da arte, medidas.pixel px por pixel dela. O que é
+# igual por fora (as paredes, a válvula, as garras, o cabo, o cilindro) vem da
+# própria arte, e só o de dentro é desenhado — ver "No mapa", mais abaixo. Sem
+# isso (o Laboratório, os testes), valem as constantes (medidas_de_sempre).
 
 ## A máquina começou a estourar (o inchaço; o estrondo vem logo depois).
 signal estourando
@@ -95,8 +105,15 @@ const MASSA_DO_AR := 28.96
 const AMPLIACAO := 0.75
 ## O raio com que a molécula bate nas paredes.
 const RAIO := 6.0
-## A velocidade média (px/s) a 25 °C. Ela anda com √T.
-const VELOCIDADE_A_25 := 190.0
+## A velocidade média (px/s) a 25 °C, a temperatura em que a câmara começa.
+const VELOCIDADE_A_25 := 280.0
+## Como a velocidade segue a temperatura: v ∝ (T / 25 °C) ^ isto. A física diz
+## 0,5 (√T); o desenho usa 1,3, para o frio ficar bem visível: a −190 °C elas
+## andam a ~1/5 da velocidade da sala (com √T seria metade).
+const EXPOENTE_DA_TEMPERATURA := 1.3
+## Teto da conta acima (em vezes a velocidade da sala): quente demais, elas não
+## atravessam a câmara num quadro.
+const MAIS_RAPIDA := 2.4
 ## Quanto tempo, em média, até a molécula "bater em outra" e mudar de sorte.
 const TEMPO_ENTRE_CHOQUES := 1.6
 ## A gota: a gravidade dela e a pressa com que escorre pelo chão até o furo.
@@ -127,6 +144,149 @@ const COR_FRIO := Color("5fb8ff")
 const COR_VERDE := Color("3ecf72")
 const COR_AMARELO := Color("f2c84b")
 const COR_VERMELHO := Color("e8463a")
+
+## As medidas do desenho (px do nó). As de sempre são as constantes da
+## geometria lá em cima (a tela inteira, e o simulador do Laboratório). Aberta
+## em cima da máquina do mapa, a câmara troca por medidas_do_mapa(): as mesmas
+## peças, na grade da arte do compressor (ArteDoCompressor) — ver "No mapa",
+## no desenho.
+class Medidas:
+	var camara: Rect2
+	var parede: float
+	var gargalo: Rect2
+	var cilindro: Rect2
+	var parede_do_cilindro: float
+	var espessura_do_embolo: float
+	var haste: float
+	var manometro_centro: Vector2
+	var manometro_raio: float
+	var valvula: Rect2
+	var volante: Vector2
+	var raio_do_volante: float = 13.0
+	var na_fileira: int
+	var altura_da_fileira: float
+	## Onde as paredes da câmara começam (na tela inteira, no alto do nó).
+	var topo_das_paredes: float = 0.0
+	## A barra do cabo (largura e altura) e quanto ela desce por cima da haste.
+	var cabo: Vector2 = Vector2(128, 28)
+	var cabo_sobre_a_haste: float = 12.0
+	## Onde a geada da serpentina aparece (as faixas em que o cano corre).
+	var faixas_da_serpentina: Array[Rect2] = []
+	## No mapa: quantos px tem um pixel da arte (0 fora do mapa); as artes (a do
+	## aparelho, a do cabo com a haste e a do cilindro preso no berço — a mesma
+	## que o mapa mostra) e o canto do cilindro; os canos do resfriador por trás
+	## da máquina (faixas) e o cano da serpentina, que sobe pelas pernas e anda
+	## em zigue-zague dentro das paredes.
+	var pixel: float = 0.0
+	var arte_do_aparelho: Texture2D = null
+	var arte_do_cabo: Texture2D = null
+	var arte_do_cilindro: Texture2D = null
+	var arte_do_cilindro_gelado: Texture2D = null
+	var canto_do_cilindro: Vector2 = Vector2.ZERO
+	var canos_de_tras: Array[Rect2] = []
+	var serpentina: Array[PackedVector2Array] = []
+
+	func no_mapa() -> bool:
+		return pixel > 0.0
+
+
+## As medidas de sempre (as constantes).
+static func medidas_de_sempre() -> Medidas:
+	var m := Medidas.new()
+	m.camara = CAMARA
+	m.parede = PAREDE
+	m.gargalo = GARGALO
+	m.cilindro = CILINDRO
+	m.parede_do_cilindro = PAREDE_DO_CILINDRO
+	m.espessura_do_embolo = ESPESSURA_DO_EMBOLO
+	m.haste = HASTE
+	m.manometro_centro = MANOMETRO_CENTRO
+	m.manometro_raio = MANOMETRO_RAIO
+	m.valvula = VALVULA
+	m.volante = VOLANTE
+	m.na_fileira = NA_FILEIRA
+	m.altura_da_fileira = ALTURA_DA_FILEIRA
+	# A geada: nos 16 px de fora de cada parede, onde o cano desce.
+	m.faixas_da_serpentina = [
+		Rect2(CAMARA.position.x - PAREDE - 16.0, CAMARA.position.y, 16.0, CAMARA.size.y - 10.0),
+		Rect2(CAMARA.end.x + PAREDE, CAMARA.position.y, 16.0, CAMARA.size.y - 10.0),
+	]
+	return m
+
+
+## As medidas da máquina do mapa: o nó da câmara fica com o canto em cima do
+## canto da arte do compressor, e cada pixel da arte vale "pixel" px (8, com a
+## câmera em zoom 4: a arte está em escala 2 no mapa).
+static func medidas_do_mapa(pixel: float = 8.0) -> Medidas:
+	var A := ArteDoCompressor
+	var m := Medidas.new()
+	m.pixel = pixel
+	m.camara = A.em_px(A.CAMARA, pixel)
+	m.parede = A.PAREDE * pixel
+	m.topo_das_paredes = A.CASCO.position.y * pixel
+	m.gargalo = A.em_px(A.GARGALO, pixel)
+	m.cilindro = A.em_px(A.VAO_DO_CILINDRO, pixel)
+	m.parede_do_cilindro = pixel
+	m.espessura_do_embolo = A.EMBOLO * pixel
+	m.haste = A.HASTE * pixel
+	m.cabo = Vector2(A.BARRA_DO_CABO) * pixel
+	m.cabo_sobre_a_haste = 0.0
+	m.manometro_centro = A.MANOMETRO * pixel
+	m.manometro_raio = A.RAIO_DO_MANOMETRO * pixel
+	m.valvula = A.em_px(A.VALVULA, pixel)
+	m.volante = A.VOLANTE * pixel
+	m.raio_do_volante = A.RAIO_DO_VOLANTE * pixel
+	# A poça no cilindro fino: 4 por fileira, fileiras mais baixas (cabem as
+	# 100 moléculas, se o ar todo virar líquido).
+	m.na_fileira = 4
+	m.altura_da_fileira = 7.0
+	m.arte_do_aparelho = load(A.APARELHO) as Texture2D
+	m.arte_do_cabo = load(A.CABO) as Texture2D
+	m.arte_do_cilindro = load(A.ARTE_DO_CILINDRO) as Texture2D
+	m.arte_do_cilindro_gelado = load(A.ARTE_DO_CILINDRO_GELADO) as Texture2D
+	m.canto_do_cilindro = Vector2(A.CILINDRO) * pixel
+	# Os canos do resfriador (3 pixels de altura cada), das pernas ao armário.
+	var perna_esq: Rect2i = A.PERNAS[0]
+	var perna_dir: Rect2i = A.PERNAS[1]
+	var ate_o_armario := A.ARMARIO.position.x + 2
+	m.canos_de_tras = [
+		A.em_px(Rect2i(perna_dir.end.x, A.CANO_DE_IDA - 1, ate_o_armario - perna_dir.end.x, 3), pixel),
+		A.em_px(Rect2i(perna_esq.end.x, A.CANO_DE_VOLTA - 1, ate_o_armario - perna_esq.end.x, 3), pixel),
+	]
+	# A serpentina corre no aço de dentro de cada parede (sem o contorno).
+	var na_esquerda := A.em_px(Rect2i(A.CASCO.position.x + 1, A.CASCO.position.y + 1,
+		A.PAREDE - 1, A.CASCO.size.y - 2), pixel)
+	var na_direita := A.em_px(Rect2i(A.CASCO.end.x - A.PAREDE, A.CASCO.position.y + 1,
+		A.PAREDE - 1, A.CASCO.size.y - 2), pixel)
+	m.faixas_da_serpentina = [na_esquerda, na_direita]
+	m.serpentina = [
+		_serpentina_da_parede(na_esquerda, (A.CANO_DE_VOLTA + 0.5) * pixel, pixel),
+		_serpentina_da_parede(na_direita, (A.CANO_DE_IDA + 0.5) * pixel, pixel),
+	]
+	return m
+
+
+## O cano da serpentina de uma parede, no mapa: sobe por dentro da perna (do
+## cano do resfriador até a câmara) e, dentro da parede, sobe em zigue-zague
+## até a borda de cima.
+static func _serpentina_da_parede(faixa: Rect2, y_do_cano: float, pixel: float) -> PackedVector2Array:
+	var meio := faixa.get_center().x
+	var x_a := faixa.position.x + faixa.size.x * 0.25
+	var x_b := faixa.end.x - faixa.size.x * 0.25
+	var pontos := PackedVector2Array([Vector2(meio, y_do_cano), Vector2(meio, faixa.end.y)])
+	var y := faixa.end.y - pixel * 0.5
+	var lado := 0
+	while y > faixa.position.y + pixel:
+		var x := x_a if lado == 0 else x_b
+		pontos.append(Vector2(x, y))
+		pontos.append(Vector2(x, maxf(y - pixel * 1.5, faixa.position.y + pixel * 0.5)))
+		y -= pixel * 2.5
+		lado = 1 - lado
+	return pontos
+
+
+## As medidas do desenho agora (troque antes de entregar a máquina).
+var medidas: Medidas = medidas_de_sempre()
 
 ## Quem a câmara desenha. Sem máquina, nada.
 var maquina: MaquinaDeCompressao = null:
@@ -374,10 +534,12 @@ func _nova_molecula(chave: String, onde: Vector2) -> Molecula:
 	return m
 
 
-## A velocidade de agora desta molécula (px/s): √T, a massa dela e a sorte.
+## A velocidade de agora desta molécula (px/s): a temperatura (exagerada, ver
+## EXPOENTE_DA_TEMPERATURA), a massa dela e a sorte.
 func _velocidade_de(m: Molecula) -> float:
 	var t := maquina.gas.temperatura if maquina else 298.15
-	return VELOCIDADE_A_25 * sqrt(t / 298.15) * sqrt(MASSA_DO_AR / float(MASSAS[m.chave])) * m.sorte
+	var pela_temperatura := minf(pow(maxf(t, 1.0) / 298.15, EXPOENTE_DA_TEMPERATURA), MAIS_RAPIDA)
+	return VELOCIDADE_A_25 * pela_temperatura * sqrt(MASSA_DO_AR / float(MASSAS[m.chave])) * m.sorte
 
 
 ## Uma sorte da distribuição de velocidades em 2D (Rayleigh), com média
@@ -387,7 +549,9 @@ func _sortear_sorte() -> float:
 
 
 func _mover_moleculas(delta: float) -> void:
-	var passos := 2
+	# Passos curtos o bastante para a mais rápida não pular uma parede (uns 5 px).
+	var mais_rapida := VELOCIDADE_A_25 * MAIS_RAPIDA * 2.2
+	var passos := maxi(2, ceili(mais_rapida * delta / 5.0))
 	var dt := delta / passos
 	for i in passos:
 		for m in _moleculas:
@@ -436,17 +600,17 @@ func _mover_gas(m: Molecula, dt: float) -> void:
 ## está descendo, quica nele mais rápido (o choque elástico com uma parede que
 ## anda: v' = 2·v_parede − v).
 func _empurrar_pelo_embolo(m: Molecula) -> void:
-	if m.pos.x < CAMARA.position.x or m.pos.x > CAMARA.end.x:
+	if m.pos.x < medidas.camara.position.x or m.pos.x > medidas.camara.end.x:
 		return
 	var cara := _y_do_embolo + RAIO
-	if m.pos.y >= cara or m.pos.y > CAMARA.end.y:
+	if m.pos.y >= cara or m.pos.y > medidas.camara.end.y:
 		return
 	m.pos.y = cara
 	if m.vel.y < _velocidade_do_embolo:
 		m.vel.y = 2.0 * maxf(_velocidade_do_embolo, 0.0) - m.vel.y
 	# A câmara fechou de vez: quem estava nela desce pelo furo.
-	if CAMARA.end.y - _y_do_embolo < RAIO * 2.0 + 2.0:
-		m.pos = Vector2(randf_range(GARGALO.position.x + RAIO, GARGALO.end.x - RAIO), GARGALO.position.y + RAIO + 2.0)
+	if medidas.camara.end.y - _y_do_embolo < RAIO * 2.0 + 2.0:
+		m.pos = Vector2(randf_range(medidas.gargalo.position.x + RAIO, medidas.gargalo.end.x - RAIO), medidas.gargalo.position.y + RAIO + 2.0)
 		m.vel = Vector2(randf_range(-30, 30), absf(m.vel.y) + 40.0)
 
 
@@ -454,12 +618,12 @@ func _empurrar_pelo_embolo(m: Molecula) -> void:
 ## cilindro, cada um com a folga do raio. Com a válvula fechada, o cilindro fica
 ## de fora para quem está na câmara (e vice-versa).
 func _dentro(p: Vector2) -> bool:
-	var camara := Rect2(CAMARA.position.x + RAIO, _y_do_embolo + RAIO,
-		CAMARA.size.x - RAIO * 2.0, CAMARA.end.y - _y_do_embolo - RAIO * 2.0)
-	var gargalo := Rect2(GARGALO.position.x + RAIO, GARGALO.position.y - RAIO,
-		GARGALO.size.x - RAIO * 2.0, GARGALO.size.y + RAIO * 2.0)
-	var cilindro := Rect2(CILINDRO.position.x + RAIO, CILINDRO.position.y + RAIO,
-		CILINDRO.size.x - RAIO * 2.0, CILINDRO.size.y - RAIO * 2.0)
+	var camara := Rect2(medidas.camara.position.x + RAIO, _y_do_embolo + RAIO,
+		medidas.camara.size.x - RAIO * 2.0, medidas.camara.end.y - _y_do_embolo - RAIO * 2.0)
+	var gargalo := Rect2(medidas.gargalo.position.x + RAIO, medidas.gargalo.position.y - RAIO,
+		medidas.gargalo.size.x - RAIO * 2.0, medidas.gargalo.size.y + RAIO * 2.0)
+	var cilindro := Rect2(medidas.cilindro.position.x + RAIO, medidas.cilindro.position.y + RAIO,
+		medidas.cilindro.size.x - RAIO * 2.0, medidas.cilindro.size.y - RAIO * 2.0)
 	if camara.size.y > 0.0 and camara.has_point(p):
 		return true
 	if cilindro.has_point(p):
@@ -470,24 +634,24 @@ func _dentro(p: Vector2) -> bool:
 
 
 func _ponto_mais_perto_dentro(p: Vector2) -> Vector2:
-	var cilindro := CILINDRO.grow(-RAIO)
-	if p.y > GARGALO.position.y or CAMARA.end.y - _y_do_embolo < RAIO * 2.0 + 2.0:
+	var cilindro := medidas.cilindro.grow(-RAIO)
+	if p.y > medidas.gargalo.position.y or medidas.camara.end.y - _y_do_embolo < RAIO * 2.0 + 2.0:
 		return Vector2(clampf(p.x, cilindro.position.x, cilindro.end.x),
 			clampf(p.y, cilindro.position.y, cilindro.end.y))
-	return Vector2(clampf(p.x, CAMARA.position.x + RAIO, CAMARA.end.x - RAIO),
-		clampf(p.y, _y_do_embolo + RAIO, CAMARA.end.y - RAIO))
+	return Vector2(clampf(p.x, medidas.camara.position.x + RAIO, medidas.camara.end.x - RAIO),
+		clampf(p.y, _y_do_embolo + RAIO, medidas.camara.end.y - RAIO))
 
 
 ## Um lugar ao acaso no vão do gás, na proporção da área de cada parte (é o
 ## gás espalhado por igual).
 func _ponto_livre() -> Vector2:
-	var area_camara := CAMARA.size.x * maxf(CAMARA.end.y - _y_do_embolo, 0.0)
-	var area_cilindro := CILINDRO.size.x * CILINDRO.size.y
+	var area_camara := medidas.camara.size.x * maxf(medidas.camara.end.y - _y_do_embolo, 0.0)
+	var area_cilindro := medidas.cilindro.size.x * medidas.cilindro.size.y
 	if randf() * (area_camara + area_cilindro) < area_camara and area_camara > 0.0:
-		return Vector2(randf_range(CAMARA.position.x + RAIO, CAMARA.end.x - RAIO),
-			randf_range(_y_do_embolo + RAIO, CAMARA.end.y - RAIO))
-	return Vector2(randf_range(CILINDRO.position.x + RAIO, CILINDRO.end.x - RAIO),
-		randf_range(CILINDRO.position.y + RAIO, CILINDRO.end.y - RAIO))
+		return Vector2(randf_range(medidas.camara.position.x + RAIO, medidas.camara.end.x - RAIO),
+			randf_range(_y_do_embolo + RAIO, medidas.camara.end.y - RAIO))
+	return Vector2(randf_range(medidas.cilindro.position.x + RAIO, medidas.cilindro.end.x - RAIO),
+		randf_range(medidas.cilindro.position.y + RAIO, medidas.cilindro.end.y - RAIO))
 
 
 # ── O líquido ──
@@ -574,12 +738,12 @@ func _ferver(m: Molecula) -> void:
 ## até a vaga dela na poça.
 func _mover_gota(m: Molecula, dt: float) -> void:
 	var destino := _lugar_da_vaga(m.vaga)
-	var na_camara := m.pos.y < GARGALO.position.y - RAIO
+	var na_camara := m.pos.y < medidas.gargalo.position.y - RAIO
 	if na_camara:
 		m.vel.y += GRAVIDADE_DA_GOTA * dt
-		var chao := CAMARA.end.y - RAIO
-		var meio_do_furo := GARGALO.get_center().x
-		if m.pos.y + m.vel.y * dt >= chao and absf(m.pos.x - meio_do_furo) > GARGALO.size.x * 0.5 - RAIO:
+		var chao := medidas.camara.end.y - RAIO
+		var meio_do_furo := medidas.gargalo.get_center().x
+		if m.pos.y + m.vel.y * dt >= chao and absf(m.pos.x - meio_do_furo) > medidas.gargalo.size.x * 0.5 - RAIO:
 			# No chão: escorre até o furo.
 			m.pos.y = chao
 			m.vel.y = 0.0
@@ -587,7 +751,7 @@ func _mover_gota(m: Molecula, dt: float) -> void:
 		else:
 			m.vel.x = lerpf(m.vel.x, (meio_do_furo - m.pos.x) * 1.5, 1.0 - exp(-dt / 0.3))
 		m.pos += m.vel * dt
-		m.pos.x = clampf(m.pos.x, CAMARA.position.x + RAIO, CAMARA.end.x - RAIO)
+		m.pos.x = clampf(m.pos.x, medidas.camara.position.x + RAIO, medidas.camara.end.x - RAIO)
 		if m.pos.y < _y_do_embolo + RAIO:
 			m.pos.y = _y_do_embolo + RAIO
 	else:
@@ -642,13 +806,13 @@ func _por_na_poca(m: Molecula, na_hora: bool) -> void:
 ## cilindro, uma sim, uma não deslocada meia molécula (como laranjas numa
 ## caixa).
 func _lugar_da_vaga(i: int) -> Vector2:
-	var fileira := i / NA_FILEIRA
-	var coluna := i % NA_FILEIRA
-	var largura := (CILINDRO.size.x - RAIO * 2.0) / float(NA_FILEIRA)
-	var x := CILINDRO.position.x + RAIO + largura * (coluna + 0.5)
+	var fileira := i / medidas.na_fileira
+	var coluna := i % medidas.na_fileira
+	var largura := (medidas.cilindro.size.x - RAIO * 2.0) / float(medidas.na_fileira)
+	var x := medidas.cilindro.position.x + RAIO + largura * (coluna + 0.5)
 	if fileira % 2 == 1:
-		x += largura * 0.5 * (1.0 if coluna < NA_FILEIRA - 1 else -1.0)
-	var y := CILINDRO.end.y - 6.0 - fileira * ALTURA_DA_FILEIRA
+		x += largura * 0.5 * (1.0 if coluna < medidas.na_fileira - 1 else -1.0)
+	var y := medidas.cilindro.end.y - 6.0 - fileira * medidas.altura_da_fileira
 	var vibra := Vector2(sin(_tempo * 13.0 + i * 1.7), cos(_tempo * 11.0 + i * 2.3)) * 0.7
 	return Vector2(x, y) + vibra
 
@@ -660,8 +824,8 @@ func _superficie_da_poca() -> float:
 		if m.estado == 2 and not m.solta:
 			maior = maxi(maior, m.vaga)
 	if maior < 0:
-		return CILINDRO.end.y
-	return CILINDRO.end.y - 6.0 - (maior / NA_FILEIRA) * ALTURA_DA_FILEIRA - 6.0
+		return medidas.cilindro.end.y
+	return medidas.cilindro.end.y - 6.0 - (maior / medidas.na_fileira) * medidas.altura_da_fileira - 6.0
 
 
 # ─────────────────────────────────────────────────────────────
@@ -675,14 +839,14 @@ func _animar_nevoa(delta: float) -> void:
 	if _geada > 0.15 and _proxima_nevoa <= 0.0 and _nevoa.size() < 40:
 		_proxima_nevoa = 1.0
 		var lado := -1.0 if randf() < 0.5 else 1.0
-		var x := CAMARA.position.x - PAREDE - 10.0 if lado < 0.0 else CAMARA.end.x + PAREDE + 10.0
+		var x := medidas.camara.position.x - medidas.parede - 10.0 if lado < 0.0 else medidas.camara.end.x + medidas.parede + 10.0
 		if randf() < nevoa_no_cilindro:
-			x = randf_range(CILINDRO.position.x - 20.0, CILINDRO.end.x + 20.0)
-			_nevoa.append({"pos": Vector2(x, randf_range(CILINDRO.position.y + 20.0, CILINDRO.end.y - 10.0)),
+			x = randf_range(medidas.cilindro.position.x - 20.0, medidas.cilindro.end.x + 20.0)
+			_nevoa.append({"pos": Vector2(x, randf_range(medidas.cilindro.position.y + 20.0, medidas.cilindro.end.y - 10.0)),
 				"vel": Vector2(randf_range(-8, 8), randf_range(10, 22)), "vida": 0.0, "duracao": randf_range(1.6, 2.8),
 				"raio": randf_range(5.0, 10.0)})
 		else:
-			_nevoa.append({"pos": Vector2(x, randf_range(CAMARA.position.y + 20.0, CAMARA.end.y)),
+			_nevoa.append({"pos": Vector2(x, randf_range(medidas.camara.position.y + 20.0, medidas.camara.end.y)),
 				"vel": Vector2(lado * randf_range(4, 14), randf_range(12, 26)), "vida": 0.0,
 				"duracao": randf_range(1.6, 2.8), "raio": randf_range(5.0, 11.0)})
 	for i in range(_nevoa.size() - 1, -1, -1):
@@ -721,7 +885,7 @@ func esta_explodindo() -> bool:
 ## De onde a explosão sai (o clarão, a onda de choque, os jatos das
 ## rachaduras): o meio do cilindro, que é o que estoura.
 func _centro_da_explosao() -> Vector2:
-	return CILINDRO.get_center()
+	return medidas.cilindro.get_center()
 
 
 ## O cilindro incha, racha e chia; depois, o estrondo.
@@ -756,11 +920,11 @@ func _nova_rachadura() -> PackedVector2Array:
 	var p := Vector2.ZERO
 	match lado:
 		0:
-			p = Vector2(CILINDRO.position.x - PAREDE_DO_CILINDRO * 0.5, randf_range(CILINDRO.position.y + 20, CILINDRO.end.y - 20))
+			p = Vector2(medidas.cilindro.position.x - medidas.parede_do_cilindro * 0.5, randf_range(medidas.cilindro.position.y + 20, medidas.cilindro.end.y - 20))
 		1:
-			p = Vector2(CILINDRO.end.x + PAREDE_DO_CILINDRO * 0.5, randf_range(CILINDRO.position.y + 20, CILINDRO.end.y - 20))
+			p = Vector2(medidas.cilindro.end.x + medidas.parede_do_cilindro * 0.5, randf_range(medidas.cilindro.position.y + 20, medidas.cilindro.end.y - 20))
 		_:
-			p = Vector2(randf_range(CILINDRO.position.x + 10, CILINDRO.end.x - 10), CILINDRO.position.y - 2.0)
+			p = Vector2(randf_range(medidas.cilindro.position.x + 10, medidas.cilindro.end.x - 10), medidas.cilindro.position.y - 2.0)
 	return PackedVector2Array([p.round()])
 
 
@@ -778,7 +942,7 @@ func _estrondo() -> void:
 	for i in 26:
 		var angulo := randf() * TAU
 		var tamanho := Vector2(randf_range(6, 24), randf_range(5, 14)).round()
-		var origem := centro + Vector2(cos(angulo) * CILINDRO.size.x * 0.5, sin(angulo) * CILINDRO.size.y * 0.5)
+		var origem := centro + Vector2(cos(angulo) * medidas.cilindro.size.x * 0.5, sin(angulo) * medidas.cilindro.size.y * 0.5)
 		var cor: Color = [COR_CILINDRO, COR_CILINDRO_CLARO, COR_CILINDRO_ESCURO, COR_ACO][i % 4]
 		_cacos.append({"pos": origem, "vel": Vector2.from_angle(angulo) * randf_range(300, 680) + Vector2(0, -200),
 			"giro": randf() * TAU, "velocidade_do_giro": randf_range(-14, 14), "tamanho": tamanho,
@@ -792,7 +956,7 @@ func _estrondo() -> void:
 			"cor": Color(0.85, 0.95, 1.0, 0.85), "vida": 0.0, "tipo": "placa"})
 	# O volante da válvula, inteiro, voando e rodando.
 	if com_valvula:
-		_cacos.append({"pos": VOLANTE, "vel": Vector2(-260, -520), "giro": 0.0, "velocidade_do_giro": 22.0,
+		_cacos.append({"pos": medidas.volante, "vel": Vector2(-260, -520), "giro": 0.0, "velocidade_do_giro": 22.0,
 			"tamanho": Vector2(26, 26), "cor": Color("36f2fb"), "vida": 0.0, "tipo": "volante"})
 	# As moléculas, todas, lançadas para fora — as da câmara descem pelo furo
 	# primeiro (é o único caminho para fora dela).
@@ -800,9 +964,9 @@ func _estrondo() -> void:
 		m.solta = true
 		m.estado = 0
 		m.velocidade_do_giro *= 4.0
-		if m.pos.y < GARGALO.position.y:
+		if m.pos.y < medidas.gargalo.position.y:
 			m.pelo_gargalo = true
-			m.vel = (GARGALO.get_center() - m.pos).normalized() * randf_range(700, 1000)
+			m.vel = (medidas.gargalo.get_center() - m.pos).normalized() * randf_range(700, 1000)
 		else:
 			var fora := (m.pos - centro)
 			if fora.length() < 1.0:
@@ -833,11 +997,11 @@ func _depois_do_estrondo(delta: float) -> void:
 	for m in _moleculas:
 		if m.pelo_gargalo:
 			# Ainda na câmara: corre para o furo; passou dele, voa para fora.
-			if m.pos.y >= GARGALO.end.y:
+			if m.pos.y >= medidas.gargalo.end.y:
 				m.pelo_gargalo = false
 				m.vel = Vector2.from_angle(randf_range(0.0, PI)) * randf_range(500, 1000)
 			else:
-				var furo := Vector2(GARGALO.get_center().x, GARGALO.end.y + 10.0)
+				var furo := Vector2(medidas.gargalo.get_center().x, medidas.gargalo.end.y + 10.0)
 				m.vel = m.vel.lerp((furo - m.pos).normalized() * 900.0, 1.0 - exp(-delta / 0.05))
 		else:
 			m.vel *= pow(0.25, delta)
@@ -880,18 +1044,26 @@ func _animar_jatos(delta: float) -> void:
 ## A cara de baixo do êmbolo (y no nó), pela posição da máquina.
 func _y_do_embolo_alvo() -> float:
 	var posicao := maquina.posicao if maquina else 0.0
-	return lerpf(CAMARA.position.y, CAMARA.end.y, posicao)
+	return lerpf(medidas.camara.position.y, medidas.camara.end.y, posicao)
 
 
-## O cabo do êmbolo (onde se pega para arrastar), em px do nó.
+## O cabo do êmbolo (a barra onde se pega para arrastar), em px do nó.
 func retangulo_do_cabo() -> Rect2:
-	return Rect2(GARGALO.get_center().x - 64.0, _y_do_embolo - ESPESSURA_DO_EMBOLO - HASTE - 16.0, 128.0, 28.0)
+	var m := medidas
+	var topo := _y_do_embolo - m.espessura_do_embolo - m.haste - m.cabo.y + m.cabo_sobre_a_haste
+	return Rect2(m.gargalo.get_center().x - m.cabo.x * 0.5, topo, m.cabo.x, m.cabo.y)
+
+
+## O mesmo, na tela.
+func retangulo_do_cabo_na_tela() -> Rect2:
+	var r := retangulo_do_cabo()
+	return Rect2(global_position + r.position, r.size)
 
 
 ## A área inteira em que pegar arrasta o êmbolo: o cabo, a haste e a placa.
 func retangulo_de_pegar_o_embolo() -> Rect2:
-	return Rect2(CAMARA.position.x, _y_do_embolo - ESPESSURA_DO_EMBOLO - HASTE - 18.0,
-		CAMARA.size.x, ESPESSURA_DO_EMBOLO + HASTE + 18.0)
+	var de_cima := retangulo_do_cabo().position.y - 2.0
+	return Rect2(medidas.camara.position.x, de_cima, medidas.camara.size.x, _y_do_embolo - de_cima)
 
 
 ## O mesmo, na tela.
@@ -900,25 +1072,27 @@ func retangulo_de_pegar_o_embolo_na_tela() -> Rect2:
 	return Rect2(global_position + r.position, r.size)
 
 
-## A posição do êmbolo (0 a 1) que deixa o cabo na altura y (px da tela).
+## A posição do êmbolo (0 a 1) que deixa o meio do cabo na altura y (px da
+## tela, mais a "pegada": a distância do ponteiro ao meio do cabo).
 func posicao_no_ponto_da_tela(y_tela: float, pegada: float = 0.0) -> float:
 	var y := y_tela - global_position.y + pegada
-	return clampf(inverse_lerp(CAMARA.position.y, CAMARA.end.y, y + ESPESSURA_DO_EMBOLO + HASTE + 2.0), 0.0, 1.0)
+	var do_cabo_ao_embolo := _y_do_embolo - retangulo_do_cabo().get_center().y
+	return clampf(inverse_lerp(medidas.camara.position.y, medidas.camara.end.y, y + do_cabo_ao_embolo), 0.0, 1.0)
 
 
 ## Onde o manômetro está, na tela (para quem quiser destacar).
 func retangulo_do_manometro_na_tela() -> Rect2:
-	return Rect2(global_position + _centro_do_manometro() - Vector2.ONE * MANOMETRO_RAIO,
-		Vector2.ONE * MANOMETRO_RAIO * 2.0)
+	return Rect2(global_position + _centro_do_manometro() - Vector2.ONE * medidas.manometro_raio,
+		Vector2.ONE * medidas.manometro_raio * 2.0)
 
 
 func retangulo_do_cilindro_na_tela() -> Rect2:
-	return Rect2(global_position + CILINDRO.position - Vector2.ONE * PAREDE_DO_CILINDRO,
-		CILINDRO.size + Vector2.ONE * PAREDE_DO_CILINDRO * 2.0)
+	return Rect2(global_position + medidas.cilindro.position - Vector2.ONE * medidas.parede_do_cilindro,
+		medidas.cilindro.size + Vector2.ONE * medidas.parede_do_cilindro * 2.0)
 
 
 func retangulo_da_valvula_na_tela() -> Rect2:
-	return Rect2(global_position + VALVULA.position - Vector2(36, 8), VALVULA.size + Vector2(44, 16))
+	return Rect2(global_position + medidas.valvula.position - Vector2(36, 8), medidas.valvula.size + Vector2(44, 16))
 
 
 ## Quantas moléculas estão, de fato, desenhadas dentro do cilindro (gargalo
@@ -928,7 +1102,7 @@ func moleculas_no_cilindro() -> int:
 	for m in _moleculas:
 		if m.solta:
 			continue
-		if m.estado != 0 or m.pos.y >= GARGALO.position.y:
+		if m.estado != 0 or m.pos.y >= medidas.gargalo.position.y:
 			conta += 1
 	return conta
 
@@ -947,6 +1121,9 @@ func moleculas_liquidas() -> int:
 
 func _draw() -> void:
 	if maquina == null:
+		return
+	if medidas.no_mapa():
+		_desenhar_no_mapa()
 		return
 	draw_set_transform(_tremor)
 	_desenhar_serpentina_de_tras()
@@ -973,6 +1150,188 @@ func _draw() -> void:
 		_desenhar_explosao()
 
 
+# ── No mapa ──
+# Aberta em cima da máquina do mapa (medidas_do_mapa), a câmara é desenhada
+# na grade da arte do compressor (ArteDoCompressor), medidas.pixel px por
+# pixel dela. O que é igual por fora vem da própria arte — as paredes e o fundo
+# da câmara, a válvula, a cabeça do berço, as garras, o volante, o cabo e o
+# cilindro (o mesmo do mapa) — e só o que o raio X mostra por dentro é
+# desenhado: o vão com o ar, o êmbolo descendo, a poça, a serpentina dentro das
+# paredes, a comporta da válvula e o mostrador do manômetro. Por isso a troca da
+# arte pelo raio X não pula: a moldura é a mesma, pixel por pixel.
+
+func _desenhar_no_mapa() -> void:
+	draw_set_transform(_tremor)
+	_desenhar_canos_de_tras()
+	_desenhar_vao()
+	_desenhar_liquido()
+	if _fase != Fase.ESTOURADA:
+		_desenhar_moleculas()
+		_desenhar_cilindro_no_mapa()
+	_desenhar_aparelho_vazado()
+	_desenhar_serpentina_no_mapa()
+	_desenhar_embolo_no_mapa()
+	_desenhar_garras_no_mapa()
+	_desenhar_valvula_no_mapa()
+	_desenhar_manometro()
+	_desenhar_geada()
+	_desenhar_nevoa()
+	_desenhar_rachaduras()
+	if com_nomes and _fase == Fase.NORMAL:
+		_desenhar_nomes()
+	draw_set_transform(Vector2.ZERO)
+	if _fase == Fase.ESTOURADA:
+		_desenhar_explosao()
+
+
+## Os canos do resfriador, por trás da máquina, por cima dos da arte: na
+## temperatura da sala, com as cores dela (o azul dos canos); quanto mais longe
+## dela, mais na cor da serpentina (a luz em cima, a sombra embaixo).
+const CORES_DOS_CANOS_NA_ARTE: Array[Color] = [Color("dcf5ff"), Color("8fd8ff"), Color("5096c8")]
+
+func _desenhar_canos_de_tras() -> void:
+	var celsius := GasFechado.para_celsius(maquina.temperatura_da_serpentina)
+	var cor := _cor_da_temperatura(celsius)
+	var longe_da_sala := clampf(absf(celsius - GasFechado.para_celsius(MaquinaDeCompressao.TEMPERATURA_DA_SALA)) / 60.0, 0.0, 1.0)
+	var luz := CORES_DOS_CANOS_NA_ARTE[0].lerp(cor.lightened(0.45), longe_da_sala)
+	var meio := CORES_DOS_CANOS_NA_ARTE[1].lerp(cor, longe_da_sala)
+	var sombra := CORES_DOS_CANOS_NA_ARTE[2].lerp(cor.darkened(0.4), longe_da_sala)
+	var p := medidas.pixel
+	for faixa in medidas.canos_de_tras:
+		draw_rect(faixa, meio)
+		draw_rect(Rect2(faixa.position, Vector2(faixa.size.x, p)), luz)
+		draw_rect(Rect2(faixa.position.x, faixa.end.y - p, faixa.size.x, p), sombra)
+
+
+## A serpentina: sobe pelas pernas e anda em zigue-zague dentro das paredes.
+func _desenhar_serpentina_no_mapa() -> void:
+	var cor := _cor_da_temperatura(GasFechado.para_celsius(maquina.temperatura_da_serpentina))
+	for cano in medidas.serpentina:
+		_desenhar_cano(cano, cor, 4.0)
+
+
+## A arte do aparelho, vazada onde o raio X desenha outra coisa: o miolo da
+## câmara (com a borda de cima, que é a placa do êmbolo), o canal do gargalo
+## (pela válvula e pela cabeça do berço), as garras e o volante.
+func _desenhar_aparelho_vazado() -> void:
+	var A := ArteDoCompressor
+	var buracos: Array[Rect2i] = [
+		Rect2i(A.CAMARA.position.x, A.CASCO.position.y, A.CAMARA.size.x, A.CAMARA.end.y - A.CASCO.position.y),
+		A.GARGALO, A.quadrado_do_volante()]
+	buracos.append_array(A.garras())
+	var arte := _arte_vazada(medidas.arte_do_aparelho, buracos)
+	if arte:
+		draw_texture_rect(arte, Rect2(Vector2.ZERO, Vector2(arte.get_size()) * medidas.pixel), false)
+
+
+## O cilindro: a arte dele (a mesma do mapa: a de sempre ou, com o ar bem frio,
+## a gelada), com o vão de dentro e o canal do gargalo vazados — o gás e a poça já estão desenhados por baixo. Estourando,
+## ele incha e treme.
+func _desenhar_cilindro_no_mapa() -> void:
+	var A := ArteDoCompressor
+	var canal := Rect2i(A.GARGALO.position.x - A.CILINDRO.x, 0, A.GARGALO.size.x, A.GARGALO.end.y - A.CILINDRO.y)
+	var buracos: Array[Rect2i] = [A.VAO_NA_ARTE_DO_CILINDRO, canal]
+	# Com o ar bem frio, a arte gelada (a mesma regra do mapa: CompressorDeAr).
+	var textura := medidas.arte_do_cilindro
+	if medidas.arte_do_cilindro_gelado and maquina.gas.celsius() < A.CILINDRO_GELA_ABAIXO_DE:
+		textura = medidas.arte_do_cilindro_gelado
+	var arte := _arte_vazada(textura, buracos)
+	if arte == null:
+		return
+	var r := Rect2(medidas.canto_do_cilindro, Vector2(arte.get_size()) * medidas.pixel)
+	if _fase == Fase.INCHANDO:
+		var inchaco := ease(_tempo_da_explosao / TEMPO_DE_INCHAR, 2.2) * r.size.x * 0.06
+		r = r.grow_individual(inchaco, 0.0, inchaco, 0.0)
+		r.position.x += roundf(sin(_tempo * 60.0) * 2.0)
+	draw_texture_rect(arte, r, false)
+	# A pintura azul por dentro das paredes (no raio X, o miolo é o gás): a
+	# luz à esquerda, a sombra à direita, como na arte.
+	var largura_da_arte := float(arte.get_width())
+	var vao := ArteDoCompressor.VAO_NA_ARTE_DO_CILINDRO
+	var de_x := r.position.x + r.size.x * vao.position.x / largura_da_arte
+	var ate_x := r.position.x + r.size.x * vao.end.x / largura_da_arte
+	var faixa := roundf(medidas.pixel * 0.5)
+	draw_rect(Rect2(de_x, medidas.cilindro.position.y, faixa, medidas.cilindro.size.y), COR_CILINDRO_CLARO)
+	draw_rect(Rect2(ate_x - faixa, medidas.cilindro.position.y, faixa, medidas.cilindro.size.y), COR_CILINDRO_ESCURO)
+
+
+## O cabo com a haste (a arte dele) e, embaixo, a placa do êmbolo: a borda de
+## cima da câmara na arte (o contorno e as duas linhas de aço), descendo junto.
+## O desenho anda de pixel em pixel da arte (a conta das moléculas segue lisa).
+## Com o ponteiro em cima, a barra fica amarela.
+func _desenhar_embolo_no_mapa() -> void:
+	var A := ArteDoCompressor
+	var p := medidas.pixel
+	var descida := roundf((_y_do_embolo - medidas.camara.position.y) / p) * p
+	var cabo := retangulo_do_cabo()
+	cabo.position.y += medidas.camara.position.y + descida - _y_do_embolo
+	if medidas.arte_do_cabo:
+		draw_texture_rect(medidas.arte_do_cabo, Rect2(cabo.position, Vector2(cabo.size.x, cabo.size.y + medidas.haste)), false)
+	if cabo_em_foco:
+		var barra := cabo.grow(-p)
+		draw_rect(barra, COR_AMARELO)
+		draw_rect(Rect2(barra.position, Vector2(barra.size.x, p)), COR_AMARELO.lightened(0.45))
+	var borda := Rect2i(A.CAMARA.position.x, A.CASCO.position.y, A.CAMARA.size.x, A.CAMARA.position.y - A.CASCO.position.y)
+	if medidas.arte_do_aparelho:
+		draw_texture_rect_region(medidas.arte_do_aparelho,
+			Rect2(Vector2(borda.position) * p + Vector2(0.0, descida), Vector2(borda.size) * p), Rect2(borda))
+
+
+## As garras (a arte delas), que se abrem um pixel por vez quando o cilindro é
+## solto.
+func _desenhar_garras_no_mapa() -> void:
+	if medidas.arte_do_aparelho == null:
+		return
+	var p := medidas.pixel
+	var abre := roundf(_abertura_das_garras * 2.0) * p
+	var garras := ArteDoCompressor.garras()
+	for i in garras.size():
+		var g := garras[i]
+		var para_fora := -abre if i == 0 else abre
+		draw_texture_rect_region(medidas.arte_do_aparelho,
+			Rect2(Vector2(g.position) * p + Vector2(para_fora, 0.0), Vector2(g.size) * p), Rect2(g))
+
+
+## A comporta da válvula (desce no canal quando ela fecha) e o volante (a arte
+## dele), com os raios girando enquanto fecha. Estourado, o volante saiu voando.
+func _desenhar_valvula_no_mapa() -> void:
+	var p := medidas.pixel
+	if _fechamento > 0.0:
+		var canal := Rect2(medidas.gargalo.position.x, medidas.valvula.position.y, medidas.gargalo.size.x, medidas.valvula.size.y)
+		var comporta := Rect2(canal.position, Vector2(canal.size.x, roundf(canal.size.y * _fechamento)))
+		draw_rect(comporta, Color("c0392b"))
+		draw_rect(Rect2(comporta.position.x, comporta.end.y - 3.0, comporta.size.x, 3.0), Color("7b1d14"))
+	if _fase == Fase.ESTOURADA or not com_valvula or medidas.arte_do_aparelho == null:
+		return
+	var q := ArteDoCompressor.quadrado_do_volante()
+	draw_texture_rect_region(medidas.arte_do_aparelho, Rect2(Vector2(q.position) * p, Vector2(q.size) * p), Rect2(q))
+	if _fechamento > 0.0 and _fechamento < 1.0:
+		var c := medidas.volante
+		for i in 3:
+			var a := _giro_do_volante + i * TAU / 3.0
+			draw_line(c, c + Vector2.from_angle(a) * medidas.raio_do_volante * 0.65, Color("0b4e52"), 3.0)
+		draw_rect(Rect2(c - Vector2.ONE * p * 0.5, Vector2.ONE * p), EstiloHUD.CONTORNO)
+
+
+## Uma arte com retângulos transparentes (px dela), feita uma vez para cada
+## arte e cada jeito de vazar.
+static var _artes_vazadas := {}
+
+func _arte_vazada(textura: Texture2D, buracos: Array[Rect2i]) -> Texture2D:
+	if textura == null:
+		return null
+	var chave := "%d %s" % [textura.get_instance_id(), str(buracos)]
+	if not _artes_vazadas.has(chave):
+		var imagem := textura.get_image()
+		if imagem.is_compressed():
+			imagem.decompress()
+		imagem.convert(Image.FORMAT_RGBA8)
+		for buraco in buracos:
+			imagem.fill_rect(buraco, Color(0, 0, 0, 0))
+		_artes_vazadas[chave] = ImageTexture.create_from_image(imagem)
+	return _artes_vazadas[chave]
+
+
 # ── Peças ──
 
 func _cor_da_temperatura(celsius: float) -> Color:
@@ -984,28 +1343,31 @@ func _cor_da_temperatura(celsius: float) -> Color:
 func _desenhar_vao() -> void:
 	var cor := _cor_do_vao_agora()
 	# A câmara inteira (a parte de cima, acima do êmbolo, é o lado de fora da
-	# câmara: mais escura e sem gás).
-	draw_rect(Rect2(CAMARA.position.x, 0.0, CAMARA.size.x, CAMARA.end.y), COR_VAO.darkened(0.35))
-	draw_rect(Rect2(CAMARA.position.x, _y_do_embolo, CAMARA.size.x, CAMARA.end.y - _y_do_embolo), cor)
-	draw_rect(GARGALO, cor)
-	draw_rect(CILINDRO, cor)
+	# câmara: mais escura e sem gás). No mapa, ela fica aberta, como na arte:
+	# acima do êmbolo aparece a sala.
+	if not medidas.no_mapa():
+		draw_rect(Rect2(medidas.camara.position.x, medidas.topo_das_paredes, medidas.camara.size.x,
+			medidas.camara.end.y - medidas.topo_das_paredes), COR_VAO.darkened(0.35))
+	draw_rect(Rect2(medidas.camara.position.x, _y_do_embolo, medidas.camara.size.x, medidas.camara.end.y - _y_do_embolo), cor)
+	draw_rect(medidas.gargalo, cor)
+	draw_rect(medidas.cilindro, cor)
 	# A grade de raio X, bem fraca, no vão do gás.
 	var grade := Color(1, 1, 1, 0.035)
-	var x := CAMARA.position.x + 24.0
-	while x < CAMARA.end.x:
-		draw_rect(Rect2(x, _y_do_embolo, 2.0, CAMARA.end.y - _y_do_embolo), grade)
+	var x := medidas.camara.position.x + 24.0
+	while x < medidas.camara.end.x:
+		draw_rect(Rect2(x, _y_do_embolo, 2.0, medidas.camara.end.y - _y_do_embolo), grade)
 		x += 24.0
 
 
 func _desenhar_liquido() -> void:
 	var superficie := _superficie_da_poca()
-	if superficie >= CILINDRO.end.y - 0.5:
+	if superficie >= medidas.cilindro.end.y - 0.5:
 		return
-	var poca := Rect2(CILINDRO.position.x, superficie, CILINDRO.size.x, CILINDRO.end.y - superficie)
+	var poca := Rect2(medidas.cilindro.position.x, superficie, medidas.cilindro.size.x, medidas.cilindro.end.y - superficie)
 	draw_rect(poca, COR_LIQUIDO)
 	# A tona: uma linha clara que ondula.
-	var x := CILINDRO.position.x
-	while x < CILINDRO.end.x:
+	var x := medidas.cilindro.position.x
+	while x < medidas.cilindro.end.x:
 		var onda := roundf(sin(_tempo * 4.0 + x * 0.21) * 1.2)
 		draw_rect(Rect2(x, superficie + onda, 4.0, 2.0), COR_LIQUIDO_TONA)
 		x += 4.0
@@ -1021,10 +1383,10 @@ func _desenhar_moleculas() -> void:
 
 func _desenhar_embolo() -> void:
 	var y := roundf(_y_do_embolo)
-	var placa := Rect2(CAMARA.position.x, y - ESPESSURA_DO_EMBOLO, CAMARA.size.x, ESPESSURA_DO_EMBOLO)
+	var placa := Rect2(medidas.camara.position.x, y - medidas.espessura_do_embolo, medidas.camara.size.x, medidas.espessura_do_embolo)
 	# A haste e o cabo.
-	var meio := GARGALO.get_center().x
-	var haste := Rect2(meio - 9.0, y - ESPESSURA_DO_EMBOLO - HASTE, 18.0, HASTE)
+	var meio := medidas.gargalo.get_center().x
+	var haste := Rect2(meio - 9.0, y - medidas.espessura_do_embolo - medidas.haste, 18.0, medidas.haste)
 	draw_rect(haste.grow(2.0), EstiloHUD.CONTORNO)
 	draw_rect(haste, COR_ACO)
 	draw_rect(Rect2(haste.position.x + 3.0, haste.position.y, 3.0, haste.size.y), COR_ACO_CLARO)
@@ -1044,36 +1406,36 @@ func _desenhar_embolo() -> void:
 
 func _desenhar_paredes() -> void:
 	# As duas paredes da câmara, do alto até o fundo, e o fundo com o furo.
-	var esquerda := Rect2(CAMARA.position.x - PAREDE, 0.0, PAREDE, CAMARA.end.y + PAREDE)
-	var direita := Rect2(CAMARA.end.x, 0.0, PAREDE, CAMARA.end.y + PAREDE)
+	var esquerda := Rect2(medidas.camara.position.x - medidas.parede, 0.0, medidas.parede, medidas.camara.end.y + medidas.parede)
+	var direita := Rect2(medidas.camara.end.x, 0.0, medidas.parede, medidas.camara.end.y + medidas.parede)
 	for parede: Rect2 in [esquerda, direita]:
 		draw_rect(parede.grow(2.0), EstiloHUD.CONTORNO)
 		draw_rect(parede, COR_ACO)
 		draw_rect(Rect2(parede.position.x + 2.0, parede.position.y, 2.0, parede.size.y), COR_ACO_CLARO)
-	var fundo_esq := Rect2(CAMARA.position.x - PAREDE, CAMARA.end.y, GARGALO.position.x - CAMARA.position.x + PAREDE, PAREDE)
-	var fundo_dir := Rect2(GARGALO.end.x, CAMARA.end.y, CAMARA.end.x + PAREDE - GARGALO.end.x, PAREDE)
+	var fundo_esq := Rect2(medidas.camara.position.x - medidas.parede, medidas.camara.end.y, medidas.gargalo.position.x - medidas.camara.position.x + medidas.parede, medidas.parede)
+	var fundo_dir := Rect2(medidas.gargalo.end.x, medidas.camara.end.y, medidas.camara.end.x + medidas.parede - medidas.gargalo.end.x, medidas.parede)
 	for fundo: Rect2 in [fundo_esq, fundo_dir]:
 		draw_rect(Rect2(fundo.position.x, fundo.position.y, fundo.size.x, fundo.size.y + 2.0), EstiloHUD.CONTORNO)
 		draw_rect(fundo, COR_ACO)
 		draw_rect(Rect2(fundo.position.x, fundo.position.y, fundo.size.x, 2.0), COR_ACO_CLARO)
 	# Os rebites.
-	for y in range(20, int(CAMARA.end.y), 48):
-		for x: float in [CAMARA.position.x - PAREDE * 0.5, CAMARA.end.x + PAREDE * 0.5]:
+	for y in range(20, int(medidas.camara.end.y), 48):
+		for x: float in [medidas.camara.position.x - medidas.parede * 0.5, medidas.camara.end.x + medidas.parede * 0.5]:
 			draw_rect(Rect2(x - 1.0, y, 2.0, 2.0), COR_ACO_ESCURO)
 	# O gargalo: duas paredinhas descendo até o cilindro.
-	for x: float in [GARGALO.position.x - 6.0, GARGALO.end.x]:
-		var parede := Rect2(x, GARGALO.position.y, 6.0, GARGALO.size.y)
+	for x: float in [medidas.gargalo.position.x - 6.0, medidas.gargalo.end.x]:
+		var parede := Rect2(x, medidas.gargalo.position.y, 6.0, medidas.gargalo.size.y)
 		draw_rect(parede.grow(1.0), EstiloHUD.CONTORNO)
 		draw_rect(parede, COR_ACO)
 
 
 func _desenhar_cilindro() -> void:
-	var p := PAREDE_DO_CILINDRO
+	var p := medidas.parede_do_cilindro
 	# O inchaço da explosão estica a parede para fora.
 	var inchaco := 0.0
 	if _fase == Fase.INCHANDO:
 		inchaco = roundf(ease(_tempo_da_explosao / TEMPO_DE_INCHAR, 2.2) * 7.0 + sin(_tempo * 60.0) * 1.0)
-	var vao := CILINDRO.grow_individual(inchaco, 0.0, inchaco, inchaco * 0.5)
+	var vao := medidas.cilindro.grow_individual(inchaco, 0.0, inchaco, inchaco * 0.5)
 	var fora := vao.grow(p)
 	# O corpo azul: as laterais, o fundo arredondado e os ombros até o gargalo.
 	var cor := COR_CILINDRO
@@ -1096,13 +1458,13 @@ func _desenhar_cilindro() -> void:
 	var degraus := 4
 	for i in degraus:
 		var t := float(i) / degraus
-		var meio_largura := lerpf(fora.size.x * 0.5, GARGALO.size.x * 0.5 + 8.0, t)
+		var meio_largura := lerpf(fora.size.x * 0.5, medidas.gargalo.size.x * 0.5 + 8.0, t)
 		var y := vao.position.y - 2.0 - i * 3.0
-		var faixa := Rect2(CILINDRO.get_center().x - meio_largura, y, meio_largura * 2.0, 4.0)
+		var faixa := Rect2(medidas.cilindro.get_center().x - meio_largura, y, meio_largura * 2.0, 4.0)
 		draw_rect(faixa.grow(1.0), contorno)
 		draw_rect(faixa, cor if i < degraus - 1 else COR_CILINDRO_ESCURO)
 	# O vão de cima entre o ombro e o gargalo (o gás passa).
-	draw_rect(Rect2(GARGALO.position.x, vao.position.y - 14.0, GARGALO.size.x, 16.0), _cor_do_vao_agora())
+	draw_rect(Rect2(medidas.gargalo.position.x, vao.position.y - 14.0, medidas.gargalo.size.x, 16.0), _cor_do_vao_agora())
 	# O pé.
 	draw_rect(Rect2(fora.position.x + 8.0, fora.end.y, fora.size.x - 16.0, 6.0), Color("1b1b24"))
 
@@ -1117,12 +1479,12 @@ func _cor_do_vao_agora() -> Color:
 
 
 func _desenhar_valvula() -> void:
-	var corpo := VALVULA
+	var corpo := medidas.valvula
 	draw_rect(corpo.grow(2.0), EstiloHUD.CONTORNO)
 	draw_rect(corpo, COR_ACO)
 	draw_rect(Rect2(corpo.position.x, corpo.position.y, corpo.size.x, 3.0), COR_ACO_CLARO)
 	# O canal por dentro: aberto, ele mostra o gás; fechado, a comporta desce.
-	var canal := Rect2(GARGALO.position.x, corpo.position.y + 2.0, GARGALO.size.x, corpo.size.y - 4.0)
+	var canal := Rect2(medidas.gargalo.position.x, corpo.position.y + 2.0, medidas.gargalo.size.x, corpo.size.y - 4.0)
 	draw_rect(canal, _cor_do_vao_agora())
 	if _fechamento > 0.0:
 		var comporta := Rect2(canal.position.x - 2.0, canal.position.y, canal.size.x + 4.0,
@@ -1132,38 +1494,39 @@ func _desenhar_valvula() -> void:
 	# O volante, girando quando fecha (estourado, ele saiu voando).
 	if _fase == Fase.ESTOURADA or not com_valvula:
 		return
-	draw_line(VOLANTE + Vector2(12, 0), Vector2(corpo.position.x, VOLANTE.y), EstiloHUD.CONTORNO, 6.0)
-	draw_line(VOLANTE + Vector2(12, 0), Vector2(corpo.position.x, VOLANTE.y), COR_ACO, 3.0)
-	draw_circle(VOLANTE, 13.0, EstiloHUD.CONTORNO)
-	draw_circle(VOLANTE, 11.0, Color("36f2fb"))
-	draw_circle(VOLANTE, 7.0, Color("1c9ca2"))
+	draw_line(medidas.volante + Vector2(12, 0), Vector2(corpo.position.x, medidas.volante.y), EstiloHUD.CONTORNO, 6.0)
+	draw_line(medidas.volante + Vector2(12, 0), Vector2(corpo.position.x, medidas.volante.y), COR_ACO, 3.0)
+	draw_circle(medidas.volante, 13.0, EstiloHUD.CONTORNO)
+	draw_circle(medidas.volante, 11.0, Color("36f2fb"))
+	draw_circle(medidas.volante, 7.0, Color("1c9ca2"))
 	for i in 3:
 		var a := _giro_do_volante + i * TAU / 3.0
-		draw_line(VOLANTE, VOLANTE + Vector2.from_angle(a) * 10.0, Color("0b4e52"), 2.0)
-	draw_circle(VOLANTE, 3.0, EstiloHUD.CONTORNO)
+		draw_line(medidas.volante, medidas.volante + Vector2.from_angle(a) * 10.0, Color("0b4e52"), 2.0)
+	draw_circle(medidas.volante, 3.0, EstiloHUD.CONTORNO)
 
 
 ## O meio do mostrador do manômetro.
 func _centro_do_manometro() -> Vector2:
-	return MANOMETRO_CENTRO
+	return medidas.manometro_centro
 
 
 ## O cano que leva a pressão ao manômetro: da válvula, no gargalo, até o
 ## mostrador.
 func _desenhar_cano_do_manometro() -> void:
 	var c := _centro_do_manometro()
-	var cano := Rect2(VALVULA.end.x, VALVULA.position.y + 8.0, c.x - VALVULA.end.x, 8.0)
+	var cano := Rect2(medidas.valvula.end.x, medidas.valvula.position.y + 8.0, c.x - medidas.valvula.end.x, 8.0)
 	draw_rect(cano.grow(2.0), EstiloHUD.CONTORNO)
 	draw_rect(cano, COR_ACO)
-	var descida := Rect2(c.x - 4.0, cano.position.y, 8.0, c.y - MANOMETRO_RAIO - cano.position.y + 4.0)
+	var descida := Rect2(c.x - 4.0, cano.position.y, 8.0, c.y - medidas.manometro_raio - cano.position.y + 4.0)
 	draw_rect(descida.grow(2.0), EstiloHUD.CONTORNO)
 	draw_rect(descida, COR_ACO)
 
 
 func _desenhar_manometro() -> void:
 	var c := _centro_do_manometro()
-	var r := MANOMETRO_RAIO
-	_desenhar_cano_do_manometro()
+	var r := medidas.manometro_raio
+	if not medidas.no_mapa():
+		_desenhar_cano_do_manometro()
 	# O mostrador: aro de aço, papel, as três faixas, os riscos e os números.
 	draw_circle(c, r + 5.0, EstiloHUD.CONTORNO)
 	draw_circle(c, r + 3.0, COR_ACO)
@@ -1231,10 +1594,10 @@ func _arco_da_escala(c: Vector2, r: float, de: float, ate: float, cor: Color) ->
 func _desenhar_garras() -> void:
 	# Duas garras de aço, uma de cada lado do cilindro. Abrem quando ele é solto.
 	var abre := _abertura_das_garras * 10.0
-	var y := CILINDRO.position.y + 64.0
+	var y := medidas.cilindro.position.y + 64.0
 	for lado: float in [-1.0, 1.0]:
-		var x := CILINDRO.position.x - PAREDE_DO_CILINDRO - 14.0 - abre if lado < 0.0 \
-			else CILINDRO.end.x + PAREDE_DO_CILINDRO + abre
+		var x := medidas.cilindro.position.x - medidas.parede_do_cilindro - 14.0 - abre if lado < 0.0 \
+			else medidas.cilindro.end.x + medidas.parede_do_cilindro + abre
 		var garra := Rect2(x, y, 14.0, 22.0)
 		draw_rect(garra.grow(2.0), EstiloHUD.CONTORNO)
 		draw_rect(garra, Color("3a4160"))
@@ -1247,11 +1610,11 @@ func _desenhar_garras() -> void:
 ## voltando (as voltas são o que aumenta a área que troca calor).
 func _cano_da_serpentina(x_de_dentro: float, para_fora: float) -> PackedVector2Array:
 	var pontos := PackedVector2Array()
-	var y := CAMARA.position.y - 30.0
+	var y := medidas.camara.position.y - 30.0
 	pontos.append(Vector2(x_de_dentro + para_fora * 6.0, y))
-	y = CAMARA.position.y + 8.0
+	y = medidas.camara.position.y + 8.0
 	var lado := 0
-	while y < CAMARA.end.y - 6.0:
+	while y < medidas.camara.end.y - 6.0:
 		var x := x_de_dentro + para_fora * (4.0 if lado == 0 else 16.0)
 		pontos.append(Vector2(x, y))
 		pontos.append(Vector2(x, y + 14.0))
@@ -1270,16 +1633,16 @@ func _desenhar_cano(pontos: PackedVector2Array, cor: Color, grossura: float) -> 
 func _desenhar_serpentina_de_tras() -> void:
 	# O cano que desce colado nas duas paredes da câmara.
 	var cor := _cor_da_temperatura(GasFechado.para_celsius(maquina.temperatura_da_serpentina))
-	_desenhar_cano(_cano_da_serpentina(CAMARA.position.x - PAREDE, -1.0), cor, 6.0)
-	_desenhar_cano(_cano_da_serpentina(CAMARA.end.x + PAREDE, 1.0), cor, 6.0)
+	_desenhar_cano(_cano_da_serpentina(medidas.camara.position.x - medidas.parede, -1.0), cor, 6.0)
+	_desenhar_cano(_cano_da_serpentina(medidas.camara.end.x + medidas.parede, 1.0), cor, 6.0)
 	# A ligação de cima: as duas pontas vão para o resfriador (à direita, fora
 	# do nó, onde fica o termômetro dele).
-	var entrada := PackedVector2Array([Vector2(CAMARA.position.x - PAREDE - 6.0, CAMARA.position.y - 30.0),
-		Vector2(CAMARA.position.x - PAREDE - 6.0, CAMARA.position.y - 52.0),
-		Vector2(size.x, CAMARA.position.y - 52.0)])
+	var entrada := PackedVector2Array([Vector2(medidas.camara.position.x - medidas.parede - 6.0, medidas.camara.position.y - 30.0),
+		Vector2(medidas.camara.position.x - medidas.parede - 6.0, medidas.camara.position.y - 52.0),
+		Vector2(size.x, medidas.camara.position.y - 52.0)])
 	_desenhar_cano(entrada, cor, 6.0)
-	var volta := PackedVector2Array([Vector2(CAMARA.end.x + PAREDE + 6.0, CAMARA.position.y - 30.0),
-		Vector2(CAMARA.end.x + PAREDE + 6.0, CAMARA.position.y - 38.0), Vector2(size.x, CAMARA.position.y - 38.0)])
+	var volta := PackedVector2Array([Vector2(medidas.camara.end.x + medidas.parede + 6.0, medidas.camara.position.y - 30.0),
+		Vector2(medidas.camara.end.x + medidas.parede + 6.0, medidas.camara.position.y - 38.0), Vector2(size.x, medidas.camara.position.y - 38.0)])
 	_desenhar_cano(volta, cor, 6.0)
 
 
@@ -1288,9 +1651,9 @@ func _desenhar_serpentina_da_frente() -> void:
 	var cor := _cor_da_temperatura(GasFechado.para_celsius(maquina.temperatura_da_serpentina))
 	cor.a = 0.8
 	for i in 2:
-		var y := CILINDRO.position.y + 50.0 + i * 74.0
-		var volta := Rect2(CILINDRO.position.x - PAREDE_DO_CILINDRO - 4.0, y,
-			CILINDRO.size.x + PAREDE_DO_CILINDRO * 2.0 + 8.0, 5.0)
+		var y := medidas.cilindro.position.y + 50.0 + i * 74.0
+		var volta := Rect2(medidas.cilindro.position.x - medidas.parede_do_cilindro - 4.0, y,
+			medidas.cilindro.size.x + medidas.parede_do_cilindro * 2.0 + 8.0, 5.0)
 		draw_rect(volta.grow(1.0), Color(EstiloHUD.CONTORNO, 0.8))
 		draw_rect(volta, cor)
 
@@ -1302,32 +1665,51 @@ func _desenhar_geada() -> void:
 	# aparecem aos poucos (a ordem é fixa, para não piscar).
 	var semente := 7
 	var quantos := int(_geada * 90.0)
+	var faixas := medidas.faixas_da_serpentina
 	for i in quantos:
 		semente = (semente * 1103515245 + 12345) & 0x7fffffff
-		var lado := -1.0 if semente % 2 == 0 else 1.0
-		var x := (CAMARA.position.x - PAREDE - 16.0 if lado < 0.0 else CAMARA.end.x + PAREDE) + float(semente % 16)
+		var faixa := faixas[semente % faixas.size()]
+		var x := faixa.position.x + float(semente % int(faixa.size.x))
 		semente = (semente * 1103515245 + 12345) & 0x7fffffff
-		var y := CAMARA.position.y + float(semente % int(CAMARA.size.y - 10.0))
+		var y := faixa.position.y + float(semente % int(faixa.size.y))
 		draw_rect(Rect2(x, y, 2.0, 2.0), COR_GEADA)
 	var no_cilindro := int(_geada_no_cilindro * 70.0)
 	for i in no_cilindro:
 		semente = (semente * 1103515245 + 12345) & 0x7fffffff
 		var lado := semente % 3
 		semente = (semente * 1103515245 + 12345) & 0x7fffffff
-		var y := CILINDRO.position.y + float(semente % int(CILINDRO.size.y))
-		var x := CILINDRO.position.x - PAREDE_DO_CILINDRO + float(semente % 5) if lado == 0 \
-			else CILINDRO.end.x + PAREDE_DO_CILINDRO - 2.0 - float(semente % 5)
+		var y := medidas.cilindro.position.y + float(semente % int(medidas.cilindro.size.y))
+		var x := medidas.cilindro.position.x - medidas.parede_do_cilindro + float(semente % 5) if lado == 0 \
+			else medidas.cilindro.end.x + medidas.parede_do_cilindro - 2.0 - float(semente % 5)
 		if lado == 2:
-			x = CILINDRO.position.x + float(semente % int(CILINDRO.size.x))
-			y = CILINDRO.end.y + 2.0 + float(semente % 5)
+			x = medidas.cilindro.position.x + float(semente % int(medidas.cilindro.size.x))
+			y = medidas.cilindro.end.y + 2.0 + float(semente % 5)
 		draw_rect(Rect2(x, y, 2.0, 2.0), Color(COR_GEADA, 0.9))
 
 
 func _desenhar_nevoa() -> void:
+	var p := medidas.pixel
 	for n in _nevoa:
 		var t := float(n["vida"]) / float(n["duracao"])
 		var alfa := sin(t * PI) * 0.22
-		draw_circle(n["pos"], n["raio"], Color(0.85, 0.93, 1.0, alfa))
+		var cor := Color(0.85, 0.93, 1.0, alfa)
+		if p > 0.0:
+			# No mapa, em cima da parede da sala, um círculo liso parecia
+			# mancha: a névoa vira pontinhos de gelo na grade da arte (um pixel
+			# claro com a cruz em volta, mais fraca) escorrendo da máquina.
+			cor.a = sin(t * PI) * 0.6
+			_pontinho_de_gelo(n["pos"], cor, p)
+		else:
+			draw_circle(n["pos"], n["raio"], cor)
+
+
+## Um pixel da arte (p px) no ponto, com a cruz em volta mais fraca.
+func _pontinho_de_gelo(ponto: Vector2, cor: Color, p: float) -> void:
+	var canto := (ponto / p).floor() * p
+	draw_rect(Rect2(canto, Vector2(p, p)), cor)
+	var fraca := Color(cor, cor.a * 0.35)
+	for lado: Vector2 in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
+		draw_rect(Rect2(canto + lado * p, Vector2(p, p)), fraca)
 
 
 func _desenhar_rachaduras() -> void:
@@ -1346,17 +1728,35 @@ func _desenhar_rachaduras() -> void:
 		draw_circle(pos, 2.0 + t * 7.0, Color(0.95, 0.98, 1.0, (1.0 - t) * 0.45))
 
 
+## Os nomes das peças, do lado de fora delas (nada escrito por cima das
+## moléculas: a câmara é a caixa grande, não precisa de nome).
 func _desenhar_nomes() -> void:
 	var cor := Color(EstiloHUD.CLARO, 0.75)
-	# "CÂMARA" anda logo embaixo do êmbolo, enquanto houver câmara para nomear.
-	if CAMARA.end.y - _y_do_embolo > 40.0:
-		EstiloHUD.rotulo(self, FONTE, Vector2(CAMARA.position.x + 10.0, _y_do_embolo + 20.0), "CÂMARA", 11, cor)
-	var x_do_cilindro := CILINDRO.position.x - PAREDE_DO_CILINDRO - 96.0
-	EstiloHUD.rotulo(self, FONTE, Vector2(x_do_cilindro, CILINDRO.end.y - 18.0), "CILINDRO", 11, cor)
-	EstiloHUD.rotulo(self, FONTE, Vector2(x_do_cilindro, CILINDRO.end.y - 4.0), "3 L", 11, cor)
-	EstiloHUD.rotulo(self, FONTE, Vector2(VOLANTE.x - 90.0, VOLANTE.y + 5.0), "VÁLVULA", 11, cor)
-	EstiloHUD.rotulo(self, FONTE, _centro_do_manometro() + Vector2(MANOMETRO_RAIO + 12.0, 4.0),
+	if medidas.no_mapa():
+		_desenhar_nomes_no_mapa(cor)
+		return
+	var x_do_cilindro := medidas.cilindro.position.x - medidas.parede_do_cilindro - 96.0
+	EstiloHUD.rotulo(self, FONTE, Vector2(x_do_cilindro, medidas.cilindro.end.y - 18.0), "CILINDRO", 11, cor)
+	EstiloHUD.rotulo(self, FONTE, Vector2(x_do_cilindro, medidas.cilindro.end.y - 4.0), "3 L", 11, cor)
+	EstiloHUD.rotulo(self, FONTE, Vector2(medidas.volante.x - 90.0, medidas.volante.y + 5.0), "VÁLVULA", 11, cor)
+	EstiloHUD.rotulo(self, FONTE, _centro_do_manometro() + Vector2(medidas.manometro_raio + 12.0, 4.0),
 		"PRESSÃO", 11, cor)
+
+
+## No mapa, os nomes ficam nos vãos da máquina: CILINDRO e 3 L entre a perna
+## da esquerda e o cilindro, VÁLVULA à esquerda do volante e PRESSÃO embaixo
+## do mostrador.
+func _desenhar_nomes_no_mapa(cor: Color) -> void:
+	var perna: Rect2i = ArteDoCompressor.PERNAS[0]
+	var x := (perna.end.x + 1) * medidas.pixel
+	EstiloHUD.rotulo(self, FONTE, Vector2(x, medidas.cilindro.end.y - 18.0), "CILINDRO", 11, cor)
+	EstiloHUD.rotulo(self, FONTE, Vector2(x, medidas.cilindro.end.y - 4.0), "3 L", 11, cor)
+	var valvula := FONTE.get_string_size("VÁLVULA", HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+	EstiloHUD.rotulo(self, FONTE, Vector2(medidas.volante.x - medidas.raio_do_volante - 10.0 - valvula,
+		medidas.volante.y + 5.0), "VÁLVULA", 11, cor)
+	var pressao := FONTE.get_string_size("PRESSÃO", HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+	var c := _centro_do_manometro()
+	EstiloHUD.rotulo(self, FONTE, Vector2(c.x - pressao * 0.5, c.y + medidas.manometro_raio + 24.0), "PRESSÃO", 11, cor)
 
 
 func _desenhar_explosao() -> void:

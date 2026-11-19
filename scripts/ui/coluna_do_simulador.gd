@@ -243,6 +243,11 @@ var ritmo_dos_pulos: float = 1.0
 ## A eficiência das bandejas desta coluna (ver EFICIENCIA_DA_BANDEJA). Vale a
 ## partir do próximo reiniciar().
 var eficiencia: float = EFICIENCIA_DA_BANDEJA
+## Com as plaquinhas de temperatura de cada andar ao lado da régua (o
+## Laboratório). Sem elas (o puzzle da fase, que mostra a temperatura do fundo
+## no termômetro), fica só a régua colorida, com o nome do resfriador no alto e
+## o de onde vem o calor embaixo.
+@export var com_plaquinhas: bool = true
 
 
 func _ready() -> void:
@@ -1459,6 +1464,13 @@ func _desenhar_a_regua() -> void:
 ## nome do resfriador, e embaixo da do fundo, de onde vem o calor.
 func _desenhar_as_plaquinhas() -> void:
 	var topo := andares() - 1
+	if not com_plaquinhas:
+		# Só os dois nomes, encostados à esquerda da régua: o resfriador na
+		# altura do topo, o calor na do fundo.
+		var direita := -(DISTANCIA_DA_REGUA + LARGURA_DA_REGUA + DISTANCIA_DA_PLAQUINHA + 2.0)
+		_legenda_encostada(Vector2(direita, roundf(_arte.meio_do_andar(topo) * ESCALA)), LEGENDA_DO_RESFRIADOR)
+		_legenda_encostada(Vector2(direita, roundf(_arte.meio_do_andar(0) * ESCALA)), String(_mistura.get("calor", "")))
+		return
 	for andar in andares():
 		var texto := MisturasDoDestilador.graus(roundf(temperatura_do_andar(andar)))
 		var dona := dono_do_andar(andar)
@@ -1471,6 +1483,17 @@ func _desenhar_as_plaquinhas() -> void:
 			_legenda(Vector2(caixa.get_center().x, caixa.position.y), LEGENDA_DO_RESFRIADOR, false)
 		elif andar == 0:
 			_legenda(Vector2(caixa.get_center().x, caixa.end.y), String(_mistura.get("calor", "")), true)
+
+
+## Letra miúda e clara, com contorno, encostada à esquerda de um ponto (cada
+## linha termina nele), com as linhas centradas na altura dele.
+func _legenda_encostada(direita_meio: Vector2, texto: String) -> void:
+	var linhas := texto.split("\n")
+	var y := direita_meio.y + 4.0 - (linhas.size() - 1) * 7.5
+	for linha in linhas:
+		var largura := FONTE.get_string_size(linha, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+		EstiloHUD.rotulo(self, FONTE, Vector2(roundf(direita_meio.x - largura), y), linha, 11, EstiloHUD.CLARO)
+		y += 15.0
 
 
 ## Letra miúda e clara, com contorno, centrada em cima de um ponto (ou embaixo).

@@ -23,6 +23,11 @@ extends CanvasLayer
 # acertar uma seta de 20 px com o polegar. Uma moldura de cantos marca o alvo
 # sob o cursor e a barra no pé da tela diz o que cada botão faz ali.
 #
+# O desenho do cursor é o mesmo do mouse (PonteiroDoMouse, os PNGs do
+# Roret_Cursor), na forma que a tela pede: a seta, a mão que aponta (que dobra
+# o dedo no clique), a mão aberta e a fechada dos arrastos. Este autoload é
+# também quem veste o cursor do mouse com esses desenhos, no começo do jogo.
+#
 # O clique é de verdade: os eventos de mouse vão por Input.parse_input_event,
 # na posição do cursor. O puzzle não sabe (nem precisa saber) que não é um
 # mouse. Eles saem com o dispositivo Controle.DISPOSITIVO_VIRTUAL, para o
@@ -91,10 +96,6 @@ const FONTE := preload("res://assets/fonts/ari-w9500-display.ttf")
 const TAM_DICA := 13
 const ESPACO_DICA := 1.6
 const ALTURA_BARRA := 46.0
-## A seta do ponteiro, com a ponta na origem.
-const SETA := [Vector2(0, 0), Vector2(0, 19), Vector2(4.5, 15), Vector2(8, 22.5),
-	Vector2(11.2, 21), Vector2(7.8, 13.8), Vector2(13.6, 13.8)]
-const ESCALA_SETA := 1.3
 
 var _tela: Node = null
 var _ativo: bool = false
@@ -132,6 +133,16 @@ func _ready() -> void:
 	_desenho.draw.connect(_desenhar)
 	add_child(_desenho)
 	visible = false
+	# O cursor do mouse: os desenhos do Roret_Cursor no lugar dos do sistema. A
+	# janela indo para uma tela de outro tamanho pode pedir outra escala.
+	PonteiroDoMouse.instalar()
+	get_viewport().size_changed.connect(func() -> void: PonteiroDoMouse.instalar())
+
+
+func _exit_tree() -> void:
+	# O jogo fechando: as texturas dos cursores não podem sobrar para depois
+	# do servidor de desenho.
+	PonteiroDoMouse.soltar_as_texturas()
 
 
 ## True enquanto o cursor (ou só a barra) está na tela.
@@ -141,6 +152,7 @@ func ativo() -> bool:
 
 func _process(delta: float) -> void:
 	_tempo += delta
+	PonteiroDoMouse.acompanhar_o_clique()
 	var tela := _tela_aberta()
 	var deve := tela != null and Controle.em_uso and Dialogic.current_timeline == null \
 		and not Inventario.popup_aberto
@@ -495,7 +507,7 @@ func _desenhar() -> void:
 	if _com_cursor:
 		if _moldura_alfa > 0.0:
 			_desenhar_moldura(_alfa * _moldura_alfa)
-		_desenhar_seta(_alfa)
+		_desenhar_ponteiro(_alfa)
 	_desenhar_barra(_alfa)
 
 
@@ -517,27 +529,28 @@ func _desenhar_moldura(alfa: float) -> void:
 		_desenho.draw_polyline(pontos, EstiloHUD.com_alfa(COR_ACENTO, alfa), 3.0, true)
 
 
-func _desenhar_seta(alfa: float) -> void:
-	var escala := ESCALA_SETA * (1.0 - 0.14 * _clique)
-	if _segurando:
-		escala *= 0.92
-	var sobre_alvo := _alvo_sob(_pos) >= 0 \
-		or Input.get_current_cursor_shape() == Input.CURSOR_POINTING_HAND
-
-	if sobre_alvo or _segurando:
-		var raio := 11.0 + 2.0 * sin(_tempo * 6.0)
-		_desenho.draw_arc(_pos, raio, 0.0, TAU, 28, EstiloHUD.com_alfa(COR_TRACO, 0.7 * alfa), 5.0, true)
-		_desenho.draw_arc(_pos, raio, 0.0, TAU, 28, EstiloHUD.com_alfa(COR_ACENTO, alfa), 2.5, true)
-
-	var pontos := PackedVector2Array()
-	var sombra := PackedVector2Array()
-	for p: Vector2 in SETA:
-		pontos.append(_pos + p * escala)
-		sombra.append(_pos + p * escala + Vector2(2.0, 3.0))
-	_desenho.draw_colored_polygon(sombra, Color(0, 0, 0, 0.35 * alfa))
-	var recheio := Color.WHITE.lerp(COR_ACENTO, 0.6) if _segurando else Color.WHITE
-	_desenho.draw_colored_polygon(pontos, EstiloHUD.com_alfa(recheio, alfa))
-	_desenho.draw_polyline(EstiloHUD.fechar(pontos), EstiloHUD.com_alfa(COR_TRACO, alfa), 2.0, true)
+## O ponteiro: o desenho do cursor do mouse (PonteiroDoMouse) para a forma que
+## a tela pede agora — a seta, a mão que aponta (de dedo dobrado no clique e
+## enquanto o ✕ está segurado), a mão aberta ou a fechada nos arrastos. Em cima
+## de um alvo, ou segurando o ✕, a seta vira a mão que aponta mesmo numa tela
+## que não troca o cursor do mouse (as peças do hidrogênio). Do mesmo tamanho
+## na tela que o cursor do mouse: cada pixel do desenho vira
+## PonteiroDoMouse.escala() pixels da janela, descontado o quanto a tela do
+## jogo (1600 x 900) está esticada, e o canto cai num pixel inteiro dela.
+func _desenhar_ponteiro(alfa: float) -> void:
+	var forma := Input.get_current_cursor_shape()
+	if forma == Input.CURSOR_ARROW and (_segurando or _alvo_sob(_pos) >= 0):
+		forma = Input.CURSOR_POINTING_HAND
+	var clicando := _segurando or _clique > 0.0
+	var textura := PonteiroDoMouse.textura(forma, clicando)
+	if textura == null:
+		return
+	var na_janela := get_viewport().get_screen_transform()
+	var pixel := float(PonteiroDoMouse.escala()) / maxf(na_janela.get_scale().x, 0.01)
+	var canto := _pos - PonteiroDoMouse.ponto_quente(forma, clicando) * pixel
+	canto = na_janela.affine_inverse() * (na_janela * canto).round()
+	_desenho.draw_texture_rect(textura, Rect2(canto, textura.get_size() * pixel), false,
+		Color(1, 1, 1, alfa))
 
 
 ## A barra de comandos no pé da tela: botão desenhado + o que ele faz ali.

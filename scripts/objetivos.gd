@@ -119,15 +119,18 @@ func _registrar_area() -> void:
 # ─────────────────────────────────────────────
 
 ## Os objetivos que a lista mostra agora (os da etapa da vez que ainda faltam),
-## na ordem do roteiro: {"id", "texto", "pai", e "titulo" e "cor" da trilha}.
-## É o que o mapa do caderno aponta (FolhaDoMapa).
+## na ordem do roteiro: {"id", "texto", "pai", "titulo" e "cor" da trilha, e
+## "opcional" — é dica ou adiantamento, o "aparece" do roteiro, e não segura a
+## etapa}. É o que o mapa do caderno aponta (FolhaDoMapa) e o que a seta do
+## GuiaDeCaminho persegue.
 func atuais() -> Array[Dictionary]:
 	var ultimas := _ultimas_etapas()
 	var t := _trilha_da_vez(ultimas)
 	var lista: Array[Dictionary] = []
 	for objetivo in _desejados(t, ultimas):
 		lista.append({"id": objetivo["id"], "texto": objetivo["texto"], "pai": objetivo["pai"],
-			"titulo": _roteiro.trilhas[t]["titulo"], "cor": _roteiro.trilhas[t]["cor"]})
+			"titulo": _roteiro.trilhas[t]["titulo"], "cor": _roteiro.trilhas[t]["cor"],
+			"opcional": (objetivo["aparece"] as Callable).is_valid()})
 	return lista
 
 

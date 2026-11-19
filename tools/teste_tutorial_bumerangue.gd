@@ -515,6 +515,13 @@ func _testar_na_fase() -> void:
 	await _esperar_ate(func() -> bool: return Inventario.popup_aberto)
 	_checar(Inventario.popup_aberto and not FerramentasHUD.tutorial_aberto(),
 		"primeiro sobe a ficha de coleta, sem o tutorial por cima")
+	var seta: SetaGuia = fase.get_node_or_null("GuiasDeCaminho/SetaPrimeiraCaixa")
+	var caixa: CaixaEletrica = fase.get_node_or_null("Treino/AlvoFixo1")
+	_checar(seta != null and caixa != null and seta.texto.is_empty() and seta.requer_habilidade == "bumerangue"
+		and seta.get_node_or_null(seta.ate) == caixa,
+		"a seta da primeira caixa existe, sem texto, e vale do bumerangue até a caixa quebrar")
+	_checar(FerramentasHUD.em_apresentacao("bumerangue") and not seta._seta.mostrando(),
+		"com a ficha de coleta na tela, a seta ainda não aparece")
 	if _capturando():
 		await _esperar(0.9)
 		await _capturar("0_ficha_de_coleta")
@@ -530,6 +537,8 @@ func _testar_na_fase() -> void:
 		and EstiloHUD.desenho_da_tecla("F", equipado["acao"]) == "tecla_f",
 		"nos equipamentos, embaixo do bumerangue, a tecla e o F desenhado")
 	_checar(get_tree().paused and Interacao.ocupada(), "o mundo continua parado e o E e do tutorial")
+	_checar(FerramentasHUD.em_apresentacao("bumerangue") and not seta._seta.mostrando(),
+		"nem com o tutorial na tela")
 	_checar(not Interacao.livre_para(&"arremessar"), "com ele na tela, o F nao arremessa nada")
 	var ficha: TutorialFerramenta = FerramentasHUD._tutorial
 	_checar(ficha.visible and ficha.telinha() is DemoBumerangue, "a ficha esta na tela com a telinha")
@@ -590,6 +599,14 @@ func _testar_na_fase() -> void:
 	_checar(equipamentos.is_processing()
 		and equipamentos._quadro_das_teclas == BotoesControle.quadro_atual(),
 		"com o jogo andando e os equipamentos quietos, a tecla continua afundando em loop")
+	# Com o tutorial fechado, a seta aponta a primeira caixa: de baixo para
+	# cima, com a ponta logo embaixo dela (a caixa fica no alto da parede, e
+	# acima dela é a lista de objetivos).
+	var na_tela: Vector2 = caixa.get_global_transform_with_canvas().origin
+	_checar(not FerramentasHUD.em_apresentacao("bumerangue") and seta._seta.mostrando()
+		and seta.direcao == SetaGo.Direcao.CIMA and absf(seta._seta.ponta.x - na_tela.x) < 4.0
+		and seta._seta.ponta.y > na_tela.y and seta._seta.ponta.distance_to(na_tela) < 60.0,
+		"depois do tutorial, a seta aponta a primeira caixa (ponta %s, caixa %s)" % [seta._seta.ponta, na_tela])
 	await _capturar("6_jogo_com_os_equipamentos")
 
 	print("  . de controle, os quatro botoes saem e o direcional nao")
@@ -615,7 +632,13 @@ func _testar_na_fase() -> void:
 	_tecla(KEY_CTRL)
 	await _quadros(3)
 
+	print("  . a caixa quebrada aposenta a seta")
+	caixa.atingir_bumerangue()
+	await _quadros(3)
+	_checar(seta._aposentada and not seta._seta.mostrando(), "a primeira caixa quebrou: a seta some de vez")
+
 	# Deixa tudo como estava para quem rodar outra coisa em seguida.
+	EstadoMundo.desmarcar_caminho(str(caixa.get_path()))
 	Progresso._habilidades.erase("bumerangue")
 	fase.queue_free()
 	await get_tree().process_frame

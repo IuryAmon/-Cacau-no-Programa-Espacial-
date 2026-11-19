@@ -1,0 +1,6 @@
+join cacau (cacau_feliz) left
+join cientista (cientista_feliz) right
+cientista (cientista_feliz): Cacau! Corre, senão você vai perder!
+cacau: Perder o quê?!
+cientista (cientista_mto_feliz): Vem comigo, pra beirada!
+leave --All--

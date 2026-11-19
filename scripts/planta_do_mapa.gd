@@ -184,14 +184,15 @@ const ONDE_FICA := {
 	"lenha": PATIO, "retirar_carvao": PATIO,
 	"entregar_c": LAB,
 	# Nitrogênio
-	"entrar_torre": RUA, "mochila": DESTILACAO, "cilindro": TELHADO, "comprimir": COMPRESSOR,
+	"porta_torre": LAB, "entrar_torre": RUA, "mochila": DESTILACAO, "cilindro": TELHADO, "comprimir": COMPRESSOR,
 	"levar_amostra": DESTILACAO, "destilar": DESTILACAO, "pegar_n": DESTILACAO, "entregar_n": LAB,
 	# Enxofre e fósforo: a chegada é no átrio; o resto, nas alas
 	"entrar_subsolo": SUBSOLO, "pegar_p": [SUBSOLO, "fosforo"],
 	"botas": [SUBSOLO, "enxofre"], "pegar_s": [SUBSOLO, "enxofre"], "entregar_ps": LAB,
-	# Torre de Lançamento: a porta fica no laboratório; o resto, fora da planta
-	# (sem losango, mas o carimbo diz o nome do lugar)
-	"entrar_lancamento": LAB, "purificador": LANCAMENTO, "embarque": LANCAMENTO,
+	# Torre de Lançamento: fora da planta (sem losango, mas o carimbo diz o nome
+	# do lugar). Ela está sem entrada desde 2026-11-18 (a porta verde do
+	# laboratório saiu): estes dois só aparecem com a Cacau lá dentro.
+	"purificador": LANCAMENTO, "embarque": LANCAMENTO,
 }
 
 ## O trilho padrão (cena sem "trilho"): uma linha deitada a 70% da altura da

@@ -1,8 +1,15 @@
 join cientista (cientista_feliz) leftmost [mirrored="true"]
 cientista (cientista_feliz): Cilindros instalados! Agora falta acertar a estequiometria da combustão.
-[signal arg="mostrar_reagentes_e_produtos"]
-cientista: Estequiometria é o nome que damos ao cálculo das quantidades de reagentes e produtos envolvidos em uma reação química.
-cientista (cientista_mto_feliz): Lavoisier mostrou que, numa reação química, nada se cria, nada se perde, tudo se transforma.
-cientista: Ou seja, cada átomo dos reagentes precisa aparecer nos produtos, na mesma quantidade. Acertar isso é balancear a equação.
-[signal arg="uma_de_cada"]
-cientista (cientista_feliz): Vamos balancear juntos. Para começar, precisamos adicionar uma molécula de cada. Afinal, a reação precisa ter todos os reagentes e todos os produtos.
+cientista: Quer que eu explique como balancear a equação?
+- Quero, me explica!
+	[signal arg="mostrar_reagentes_e_produtos"]
+	cientista: Estequiometria é o nome que damos ao cálculo das quantidades de reagentes e produtos envolvidos em uma reação química.
+	cientista (cientista_mto_feliz): Lavoisier mostrou que, numa reação química, nada se cria, nada se perde, tudo se transforma.
+	cientista: Ou seja, cada átomo dos reagentes precisa aparecer nos produtos, na mesma quantidade. Acertar isso é balancear a equação.
+	[signal arg="uma_de_cada"]
+	cientista (cientista_feliz): Vamos balancear juntos. Para começar, precisamos adicionar uma molécula de cada. Afinal, a reação precisa ter todos os reagentes e todos os produtos.
+- Já sei balancear
+	[signal arg="pular_explicacao"]
+	do Caderno.anotar("balanceamento")
+	cientista (cientista_mto_feliz): Então é com você! Quando todos os elementos estiverem igualados, inicie a simulação.
+	[end_timeline]

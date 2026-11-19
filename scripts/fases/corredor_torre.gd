@@ -2,15 +2,16 @@ extends FaseBase
 
 # --- CORREDOR DA TORRE (entre o laboratório e a fase do nitrogênio) ---
 #
-# A porta da torre, no laboratório, não cai mais direto na fase 2: ela dá neste
-# corredor, e é andando até o fundo dele que se chega à torre de destilação. Na
-# volta é o mesmo caminho ao contrário.
+# Andando para a direita, para fora do laboratório, a Cacau cai neste corredor,
+# e é andando até o fundo dele que se chega à torre de destilação. Na volta é o
+# mesmo caminho ao contrário.
 #
-#   laboratório  PortaTorre  <->  PortaLab  [ corredor ]  SaidaTorre  <->  PassagemCorredor  fase 2
+#   laboratório  SaidaCorredor  <->  EntradaLab  [ corredor ]  SaidaTorre  <->  PassagemCorredor  fase 2
 #
-# Entre o corredor e a fase 2 não há porta: são duas pontas abertas. Ela sai
-# andando pelo fundo daqui e entra andando pela esquerda de lá — e a volta é o
-# mesmo ao contrário.
+# Não há porta nenhuma no caminho: são pontas abertas (PassagemDeCena). Ela sai
+# andando pela direita do laboratório e entra andando pela esquerda daqui; sai
+# andando pelo fundo daqui e entra andando pela esquerda da fase 2 — e a volta
+# é o mesmo ao contrário.
 #
 # O cenário é pintado à mão, todo com o tileset_fases.tres.
 #
@@ -43,9 +44,14 @@ extends FaseBase
 #               `aproximacao_vertical` é a altura — a tela mostra 520 px e a
 #               pilastra tem 384 (520 ÷ 384 = 1,36), então ela cabe inteira, o
 #               capitel no alto e a base embaixo.
-#   Colisoes/   só a ParedeEsquerda: um batente invisível na beirada esquerda
-#               da tela, onde não há tile de parede para segurar a Cacau.
-#   PortaLab    a porta por onde ela chega do laboratório (e volta para ele).
+#   Colisoes/   o que segura a Cacau fora do quadro, à esquerda, onde não há
+#               tile: o PisoDaEntrada (um chão invisível que continua o piso
+#               para fora da tela, para ela chegar e sair andando) e, no fim
+#               dele, a ParedeEsquerda.
+#   EntradaLab  a ponta esquerda, outra PassagemDeCena (sentido -1): é por ela
+#               que ela chega andando do laboratório, e cruzando-a de volta
+#               (para a esquerda) ela sai andando pela direita de lá. O par
+#               dela no laboratório é a SaidaCorredor.
 #   SaidaTorre  a ponta aberta, uma PassagemDeCena (passagem_de_cena.gd): cruzou
 #               a linha, troca de cena. É também por onde ela entra andando
 #               quando volta da torre. O par dela na fase 2 é a
